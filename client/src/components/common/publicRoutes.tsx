@@ -1,18 +1,18 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAppData } from "../../context/AppContext";
+import { useAppData } from "../../context/AppContext"
 
 const PublicRoutes = () => {
+      const {isAuth, loading} = useAppData();
 
-      const { isAuth, loading } = useAppData();
-
-      if (loading) return (
-            <div className="flex items-center justify-center min-h-screen">
-                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      if (loading) {
+            return <div className="min-h-screen w-full flex items-center justify-center bg-amber-50">
+                  <h1 className="text-lg text-gray-600 font-semibold">Loading...</h1>
             </div>
+      }
+
+      return (
+            isAuth ? <Navigate to={"/"} replace /> : <Outlet />
       );
-
-      return isAuth ? <Navigate to="/home" replace /> : <Outlet />;
-
 };
 
 export default PublicRoutes;

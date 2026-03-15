@@ -1,46 +1,51 @@
 import { useState } from "react";
+import { UtensilsCrossed } from "lucide-react";
 import { useAppData } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { authBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
-import { UtensilsCrossed } from "lucide-react";
 
 type Role = "customer" | "rider" | "seller" | null;
 const SelectRole = () => {
 
       const [role, setRole] = useState<Role>(null);
 
+      const roles: Role[] = ["customer", "rider", "seller"];
+
       const { setUser } = useAppData();
       const navigate = useNavigate();
 
-      const roles: Role[] = ["customer", "rider", "seller"];
-
-      const addRoles = async () => {
+      const addRole = async () => {
             try {
                   const token = localStorage.getItem("token");
-                  const { data } = await axios.put(`${import.meta.env.VITE_API_URL}/api/v1/auth/add-role`, { role }, {
+                  const { data } = await axios.put(`${authBaseUrl}/api/v1/auth/add-role`, { role }, {
                         headers: {
                               Authorization: `Bearer ${token}`
-                        }
+                        },
+                        withCredentials: true
                   });
 
-                  localStorage.setItem("token", data.token);
-                  setUser(data.data);
-                  toast.success(data.message);
-                  console.log(data);
-                  navigate("/home");
-            } catch (error) {
-                  console.log(error);
-                  toast.error(axios.isAxiosError(error) ? error.response?.data?.message : "Something went wrong");
+                  if (data.success) {
+                        localStorage.setItem("token", data.token);
+                        toast.success(data.message || "Role Updated Successfully");
+                        setUser(data.data);
+                        navigate("/", { replace: true });
+                  } else {
+                        toast.error(data.message || "Failed to update role");
+                  }
+            } catch (error: any) {
+                  const message = error.response?.data?.message;
+                  toast.error(message || "Problem while updating role");
             }
-      }
+      };
 
       return (
             <div className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
                   <div className="max-w-md w-full space-y-6">
                         <h1 className="text-center w-full flex items-center justify-center">
                               <span className="text-3xl font-extrabold text-gradient flex items-center gap-2">
-                                    <UtensilsCrossed className="w-7 h-7 text-[#C22630]" /><span>আবার খাবো</span>
+                                    <UtensilsCrossed className="w-7 h-7 text-primary" /><span>আবার খাবো</span>
                               </span>
                         </h1>
                         <div className="w-full space-y-6">
@@ -67,7 +72,7 @@ const SelectRole = () => {
                                     ))}
                               </div>
                               <button
-                                    onClick={addRoles}
+                                    onClick={addRole}
                                     disabled={!role}
                                     className={`w-full rounded-xl px-4 py-3 text-sm font-semibold transition
                                           ${role ? "bg-blue-500 text-white hover:bg-blue-600 cursor-pointer"

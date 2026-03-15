@@ -11,7 +11,7 @@ export interface User {
 export interface LocationData {
       latitude: number;
       longitude: number;
-      fomattedAddress: string;
+      formattedAddress: string;
 };
 
 export interface AppContextType {
@@ -21,8 +21,25 @@ export interface AppContextType {
       setUser: React.Dispatch<React.SetStateAction<User | null>>;
       setLoading: React.Dispatch<React.SetStateAction<boolean>>;
       setIsAuth: React.Dispatch<React.SetStateAction<boolean>>;
-      fatchUser: () => Promise<void>;
       location: LocationData | null;
       city: string;
       locationLoading: boolean;
+};
+
+export interface IRestaurant {
+      _id: string;
+      name: string;
+      description: string;
+      image: string;
+      ownerId: string;
+      phone: number;
+      isVerified: boolean;
+
+      autoLocation: {
+            type: "Point";
+            coordinates: [number, number];
+            formattedAddress: string;
+      };
+      isOpen: boolean;
+      createdAt: Date;
 };

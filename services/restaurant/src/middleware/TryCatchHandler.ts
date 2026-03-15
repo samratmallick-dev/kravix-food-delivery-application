@@ -5,9 +5,11 @@ export const TryCatch = (handler: RequestHandler): RequestHandler => {
             try {
                   await handler(req, res, next);
             } catch (error: any) {
-                  return res.status(500).json({
+                  const statusCode = error.response?.status || 500;
+                  const message = error.response?.data?.message || error.message || "Something went wrong";
+                  return res.status(statusCode).json({
                         success: false,
-                        message: error.message || "Something went wrong",
+                        message,
                         error: true,
                         stack: process.env.NODE_ENV === "development" ? error.stack : {},
                         data: {}

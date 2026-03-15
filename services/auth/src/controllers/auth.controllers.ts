@@ -98,7 +98,7 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
 
       return res.status(200).json({
             success: true,
-            message: "Role updated",
+            message: "Role Updated Successfully",
             token,
             data: updateUser
       });

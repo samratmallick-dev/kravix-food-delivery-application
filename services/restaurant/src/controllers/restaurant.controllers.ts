@@ -70,7 +70,7 @@ export const addRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Res
       }
 
       const { data: updateResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/upload-image`, {
-            buffer: fileBuffer
+            image: fileBuffer
       });
 
 
