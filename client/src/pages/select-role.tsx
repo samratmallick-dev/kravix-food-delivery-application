@@ -19,7 +19,7 @@ const SelectRole = () => {
       const addRole = async () => {
             try {
                   const token = localStorage.getItem("token");
-                  const { data } = await axios.put(`${authBaseUrl}/api/v1/auth/add-role`, { role }, {
+                  const { data } = await axios.put(`${authBaseUrl}/add-role`, { role }, {
                         headers: {
                               Authorization: `Bearer ${token}`
                         },

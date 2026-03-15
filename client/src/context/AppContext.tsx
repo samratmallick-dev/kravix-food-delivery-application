@@ -14,7 +14,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
       const [user, setUser] = useState<User | null>(null);
       const [isAuth, setIsAuth] = useState(false);
-      const [loading, setLoading] = useState(false);
+      const [loading, setLoading] = useState(true);
 
       const [location, setLocation] = useState<LocationData | null>(null);
       const [locationLoading, setLocationLoading] = useState(false);
@@ -27,7 +27,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                         throw new Error("Missing token");
                   }
 
-                  const { data } = await axios.get(`${authBaseUrl}/api/v1/auth/profile`, {
+                  const { data } = await axios.get(`${authBaseUrl}/profile`, {
                         headers: {
                               Authorization: `Bearer ${token}`
                         }
@@ -36,7 +36,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                   setIsAuth(true);
             } catch (error: any) {
                   console.log(error);
-                  toast.error(error.response?.data?.message || "Failed to fetch user")
                   setUser(null);
                   setIsAuth(false);
             } finally {
@@ -48,6 +47,42 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             fetchUser();
       }, []);
 
+      useEffect(() => {
+            if (!navigator.geolocation) {
+                  toast.error("Geolocation is not supported by your browser");
+                  return;
+            }
+            setLocationLoading(true);
+            navigator.geolocation.getCurrentPosition(async (possition) => {
+                  const { latitude, longitude } = possition.coords;
+                  try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const data = await response.json();
+                        setLocation({
+                              latitude,
+                              longitude,
+                              formattedAddress: data.display_name || "current location"
+                        });
+
+                        setCity(
+                              data.address.city_district ||
+                              data.address.suburb ||
+                              data.address.town ||
+                              data.address.village ||
+                              data.address.city ||
+                              data.address.county ||
+                              "Your Location"
+                        );
+                        setLocationLoading(false);
+                  } catch (error) {
+                        console.error("Error fetching location data:", error);
+                        toast.error("Failed to fetch location data");
+                        setCity("Fetching Your City");
+                        setLocationLoading(false)
+                  }
+            });
+      }, []);
+
       return (
             <AppContext.Provider
                   value={{
@@ -55,11 +90,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                         setIsAuth,
                         loading,
                         setLoading,
+                        locationLoading,
                         user,
                         setUser,
                         location,
-                        city,
-                        locationLoading
+                        city
                   }}
             >
                   {children}
@@ -67,7 +102,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       );
 };
 
-export const useAppData = () : AppContextType => {
+export const useAppData = (): AppContextType => {
       const context = useContext(AppContext);
       if (!context) throw new Error("useAppData must be used within AppProvider");
       return context;

@@ -60,7 +60,7 @@ export const isAuthenticated = async (
                   secretKey
             ) as JwtPayload;
 
-            if (!decodedToken || !decodedToken.user) {
+            if (!decodedToken || !decodedToken._id) {
                   res.status(401).json({
                         message: "Invalid Token",
                         success: false,
@@ -69,7 +69,7 @@ export const isAuthenticated = async (
                   return;
             }
 
-            req.user = decodedToken.user;
+            req.user = decodedToken as unknown as IUser;
 
             next();
       } catch (error) {
@@ -91,7 +91,7 @@ export const isSeller = async (
 
       const user = req.user;
 
-      if (user && user?.role !== "seller") {
+      if (!user || user.role !== "seller") {
             res.status(401).json({
                   message: "Unauthorized - User is not a seller",
                   success: false,

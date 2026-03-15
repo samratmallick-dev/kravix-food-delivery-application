@@ -1,20 +1,23 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import axios from "axios";
-
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { User } from "../model/User.js";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { oauth2client } from "../config/google/google.js";
 
-const tokengenerator = (user: any) => {
+interface TokenPayload {
+      _id: string;
+      name: string;
+      email: string;
+      image: string;
+      role: string | null;
+}
+
+const tokengenerator = (user: TokenPayload): string => {
       const secretkey = process.env.JWT_SECRET as string || "default_secret_key";
 
-      const token = jwt.sign(
-            {user},
-            secretkey,
-            { expiresIn: "15d" }
-      );
+      const token = jwt.sign(user, secretkey, { expiresIn: "15d" });
 
       return token;
 };
@@ -51,7 +54,13 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
             })
       }
 
-      const token = tokengenerator(user);
+      const token = tokengenerator({
+            _id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            image: user.image,
+            role: user.role ?? null
+      });
 
       return res.status(200).json({
             success: true,
@@ -94,7 +103,21 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
             { new: true }
       );
 
-      const token = tokengenerator(updateUser);
+      if (!updateUser) {
+            return res.status(404).json({
+                  success: false,
+                  message: "User not found",
+                  error: true
+            });
+      }
+
+      const token = tokengenerator({
+            _id: updateUser._id.toString(),
+            name: updateUser.name,
+            email: updateUser.email,
+            image: updateUser.image,
+            role: updateUser.role ?? null
+      });
 
       return res.status(200).json({
             success: true,
@@ -115,10 +138,11 @@ export const getUserProfile = TryCatch(async (req: AuthenticatedRequest, res) =>
                   user: null
             });
       }
+      const freshUser = await User.findById(user._id).lean();
       return res.status(200).json({
             success: true,
             message: "User profile retrieved successfully",
             error: false,
-            data: user
+            data: { ...freshUser, restaurantId: (user as any).restaurantId ?? null }
       });
 });

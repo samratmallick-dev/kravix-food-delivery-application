@@ -6,6 +6,7 @@ export interface User {
       email: string;
       image: string;
       role: string | null;
+      restaurantId?: string | null;
 };
 
 export interface LocationData {

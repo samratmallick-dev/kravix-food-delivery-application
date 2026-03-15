@@ -6,14 +6,19 @@ import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 
-const tokengenerator = (user: any) => {
+interface TokenPayload {
+      _id: string;
+      name: string;
+      email: string;
+      image: string;
+      role: string | null;
+      restaurantId?: string;
+}
+
+const tokengenerator = (user: TokenPayload): string => {
       const secretkey = process.env.JWT_SECRET as string || "default_secret_key";
 
-      const token = jwt.sign(
-            {user},
-            secretkey,
-            { expiresIn: "15d" }
-      );
+      const token = jwt.sign(user, secretkey, { expiresIn: "15d" });
 
       return token;
 };
@@ -87,11 +92,21 @@ export const addRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Res
             }
       });
 
+      const token = tokengenerator({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            image: user.image,
+            role: user.role,
+            restaurantId: restaurant._id.toString()
+      });
+
       return res.status(201).json({
             message: "Restaurant created successfully",
             success: true,
             error: false,
-            data: restaurant
+            data: restaurant,
+            token
       });
 });
 
@@ -115,13 +130,14 @@ export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res:
             });
       }
 
-      const restaurantId = req.user?.restaurantId;
-      if (!restaurantId) {
+      if (!req.user?.restaurantId) {
             const token = tokengenerator({
-                  user: {
-                        ...user,
-                        restaurantId: restaurant._id
-                  }
+                  _id: user._id,
+                  name: user.name,
+                  email: user.email,
+                  image: user.image,
+                  role: user.role,
+                  restaurantId: restaurant._id.toString()
             });
 
             return res.status(200).json({
@@ -132,7 +148,7 @@ export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res:
                   token
             });
       }
-      
+
       return res.status(200).json({
             message: "Restaurant retrieved successfully",
             success: true,
