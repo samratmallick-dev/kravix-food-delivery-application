@@ -176,6 +176,6 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
                   </div>
             </div>
       );
-}
+};
 
 export default AddRestaurant;

@@ -3,6 +3,7 @@ import type { IRestaurant } from "../types/types";
 import axios from "axios";
 import { restaurantBaseUrl } from "../components/common/constant";
 import AddRestaurant from "../components/restaurant/addRestaurant";
+import RestaurantProfile from "../components/restaurant/restaurantProfile";
 
 const Restaurant = () => {
 
@@ -50,7 +51,7 @@ const Restaurant = () => {
       }
       return (
             <div>
-                  Restaurant
+                  <RestaurantProfile restaurant={restaurant} />
             </div>
       );
 }
