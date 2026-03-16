@@ -27,7 +27,7 @@ export const addRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Res
       const user = req.user;
 
       if (!user) {
-            return res.status(401).json({
+            return res.status(403).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -113,7 +113,7 @@ export const addRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Res
 export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
       if (!user) {
-            return res.status(401).json({
+            return res.status(403).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -154,5 +154,80 @@ export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res:
             success: true,
             error: false,
             data: restaurant
+      });
+});
+
+export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const user = req.user;
+      if (!user) {
+            return res.status(403).json({
+                  message: "User not authenticated",
+                  success: false,
+                  error: true
+            });
+      }
+
+      const { status } = req.body;
+      if (typeof status !== "boolean") {
+            return res.status(400).json({
+                  message: "Status must be a boolean value",
+                  success: false,
+                  error: true
+            });
+      }
+
+      const updateRestaurantStatus = await Restaurant.findOneAndUpdate(
+            { ownerId: user._id },
+            { isOpen: status },
+            { new: true }
+      );
+
+      if (!updateRestaurantStatus) {
+            return res.status(400).json({
+                  message: "Failed to update restaurant status",
+                  success: false,
+                  error: true
+            });
+      }
+
+      return res.status(200).json({
+            message: "Restaurant status updated successfully",
+            success: true,
+            error: false,
+            data: updateRestaurantStatus
+      });
+});
+
+export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const user = req.user;
+      if (!user) {
+            return res.status(403).json({
+                  message: "User not authenticated",
+                  success: false,
+                  error: true
+            });
+      }
+
+      const { name, description } = req.body;
+
+      const updateRestaurant = await Restaurant.findOneAndUpdate(
+            { ownerId: user._id },
+            { name, description },
+            { new: true }
+      );
+
+      if(!updateRestaurant) {
+            return res.status(400).json({
+                  message: "Failed to update restaurant",
+                  success: false,
+                  error: true
+            });
+      }
+
+      return res.status(200).json({
+            message: "Restaurant updated successfully",
+            success: true,
+            error: false,
+            data: updateRestaurant
       });
 });

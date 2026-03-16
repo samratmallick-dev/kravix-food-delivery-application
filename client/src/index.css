@@ -8,3 +8,7 @@
 @theme {
       --color-primary: #C22630;
 }
+
+button {
+      @apply cursor-pointer;
+}
