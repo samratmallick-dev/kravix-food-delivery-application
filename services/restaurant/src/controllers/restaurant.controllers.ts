@@ -183,7 +183,7 @@ export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest,
       );
 
       if (!updateRestaurantStatus) {
-            return res.status(400).json({
+            return res.status(404).json({
                   message: "Failed to update restaurant status",
                   success: false,
                   error: true
@@ -217,7 +217,7 @@ export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
       );
 
       if(!updateRestaurant) {
-            return res.status(400).json({
+            return res.status(404).json({
                   message: "Failed to update restaurant",
                   success: false,
                   error: true
