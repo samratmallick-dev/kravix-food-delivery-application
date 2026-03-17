@@ -17,6 +17,6 @@ router.route("/my-restaurant").get(isAuthenticated, isSeller, fetchMyRestaurant)
 router.route("/status").put(isAuthenticated, isSeller, updateRestaurantStatus);
 router.route("/update").put(isAuthenticated, isSeller, updateRestaurant);
 router.route("/all").get(isAuthenticated, getNearestRestaurant);
-router.route("/get").get(isAuthenticated, fetchSingleRestaurant);
+router.route("/:id").get(isAuthenticated, fetchSingleRestaurant);
 
 export default router;
