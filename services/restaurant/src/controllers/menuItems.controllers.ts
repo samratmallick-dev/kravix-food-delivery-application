@@ -96,7 +96,7 @@ export const getAllMenuItems = TryCatch(async (req: AuthenticatedRequest, res: R
             });
       }
 
-      const menuItems = await MenuItem.findById({restaurantId: restaurantId});
+      const menuItems = await MenuItem.find({restaurantId: restaurantId});
       return res.status(200).json({
             message: "Menu items fetched successfully",
             success: true,
@@ -197,7 +197,7 @@ export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequ
             });  
       }
 
-      menuItem.isAvailabe = !menuItem.isAvailabe;
+      menuItem.isAvailable = !menuItem.isAvailable;
       await menuItem.save();
       return res.status(200).json({
             message: "Menu item availability toggled successfully",

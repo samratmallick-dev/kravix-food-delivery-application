@@ -36,6 +36,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                   setIsAuth(true);
             } catch (error: any) {
                   console.log(error);
+                  toast.error(error.response.data.message);
                   setUser(null);
                   setIsAuth(false);
             } finally {
@@ -48,6 +49,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       }, []);
 
       useEffect(() => {
+            const cached = sessionStorage.getItem("locationData");
+            if (cached) {
+                  const { latitude, longitude, formattedAddress, city: cachedCity } = JSON.parse(cached);
+                  setLocation({ latitude, longitude, formattedAddress });
+                  setCity(cachedCity);
+                  return;
+            }
+
             if (!navigator.geolocation) {
                   toast.error("Geolocation is not supported by your browser");
                   return;
@@ -56,29 +65,33 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             navigator.geolocation.getCurrentPosition(async (possition) => {
                   const { latitude, longitude } = possition.coords;
                   try {
-                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const response = await fetch(
+                              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+                              { headers: { "User-Agent": "AbarKhabo/1.0" } }
+                        );
+                        if (response.status === 429) {
+                              throw new Error("Rate limited");
+                        }
                         const data = await response.json();
-                        setLocation({
-                              latitude,
-                              longitude,
-                              formattedAddress: data.display_name || "current location"
-                        });
-
-                        setCity(
+                        const resolvedCity =
                               data.address.city_district ||
                               data.address.suburb ||
                               data.address.town ||
                               data.address.village ||
                               data.address.city ||
                               data.address.county ||
-                              "Your Location"
-                        );
+                              "Your Location";
+                        const formattedAddress = data.display_name || "current location";
+
+                        setLocation({ latitude, longitude, formattedAddress });
+                        setCity(resolvedCity);
+                        sessionStorage.setItem("locationData", JSON.stringify({ latitude, longitude, formattedAddress, city: resolvedCity }));
                         setLocationLoading(false);
                   } catch (error) {
                         console.error("Error fetching location data:", error);
                         toast.error("Failed to fetch location data");
-                        setCity("Fetching Your City");
-                        setLocationLoading(false)
+                        setCity("Your Location");
+                        setLocationLoading(false);
                   }
             });
       }, []);

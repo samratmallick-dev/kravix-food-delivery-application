@@ -6,7 +6,7 @@ export interface IMenuItem extends Document {
       description: string;
       price: number;
       imageUrl?: string;
-      isAvailabe: boolean;
+      isAvailable: boolean;
       createdAt: Date;
       updatedAt: Date;
 };
@@ -35,9 +35,10 @@ const menuItemSchema: Schema = new Schema<IMenuItem>({
             type: String,
             required: false
       },
-      isAvailabe: {
+      isAvailable: {
             type: Boolean,
             required: true,
+            default: true
       },
 },{timestamps: true});
 
