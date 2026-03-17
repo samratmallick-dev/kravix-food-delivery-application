@@ -16,8 +16,10 @@ app.use(express.urlencoded({ extended: true }));
 
 import restaurantRouter from "./routes/restaurant.routes.js";
 import menuItemRouter from "./routes/menuItem.routes.js";
+import cartRouter from "./routes/cart.routes.js";
 app.use('/api/v1/restaurants', restaurantRouter);
 app.use('/api/v1/menu', menuItemRouter);
+app.use('/api/v1/cart', cartRouter);
 app.get('/', (req, res) => {
       res.send('Hello World!');
 });
