@@ -7,7 +7,7 @@ import { BiMapPin, BiSearch } from "react-icons/bi";
 
 const Navbar = () => {
 
-      const { isAuth, city } = useAppData();
+      const { isAuth, city, quantity } = useAppData();
 
       const currentLocation = useLocation();
 
@@ -40,6 +40,7 @@ const Navbar = () => {
                                           <Link
                                                 to="/account"
                                                 className="flex gap-2 items-center bg-gray-200 hover:bg-primary md:px-5 md:py-2 p-2 rounded-lg group transition-all duration-300 ease-in-out"
+                                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                           >
                                                 <User2
                                                       size={24}
@@ -55,6 +56,7 @@ const Navbar = () => {
                                           <Link
                                                 to="/login"
                                                 className="flex gap-2 items-center bg-gray-200 hover:bg-primary md:px-5 md:py-2 p-2 rounded-lg group transition-all duration-300 ease-in-out"
+                                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                           >
                                                 <User2
                                                       size={24}
@@ -68,9 +70,9 @@ const Navbar = () => {
                                           </Link>
                                     )
                               }
-                              <Link to="/cart" className="relative ">
+                              <Link to="/cart" className="relative" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                                     <ShoppingCart size={26} className="text-primary" />
-                                    <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-5 h-5 bg-primary text-gray-200 rounded-full">0</span>
+                                    <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-5 h-5 bg-primary text-gray-200 rounded-full">{quantity}</span>
                               </Link>
                         </div>
                   </div>
@@ -78,7 +80,10 @@ const Navbar = () => {
                         isHomePage && (
                               <div className="border-t border-gray-400 py-2 px-3">
                                     <div
-                                          onClick={() => inputRef.current?.focus()}
+                                          onClick={() => {
+                                                inputRef.current?.focus();
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                          }}
                                           className={`w-full container-app flex items-center border shadow-sm rounded-lg py-2 cursor-text transition-colors duration-300 ${isFocused ? "border-primary" : "border-gray-600"}`}
                                     >
                                           <div className={`flex items-center gap-2 px-3 border-r text-gray-700 transition-colors duration-300 ${isFocused ? "border-primary" : "border-gray-600"}`}>

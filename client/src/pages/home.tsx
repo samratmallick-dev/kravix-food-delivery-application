@@ -73,7 +73,7 @@ const Home = () => {
                         <h1 className="font-semibold md:text-2xl text-xl text-wrap text-primary">Your Nearest Restaurants</h1>
                         {
                               retaurants.length > 0 ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                           {
                                                 retaurants.map((restaurant) => {
                                                       const [resLong, resLat] = restaurant.autoLocation.coordinates;

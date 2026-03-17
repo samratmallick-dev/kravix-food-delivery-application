@@ -1,8 +1,8 @@
 import axios from "axios";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { authBaseUrl } from "../components/common/constant";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { authBaseUrl, cartBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
-import type { AppContextType, LocationData, User } from "../types/types";
+import type { ICart, AppContextType, LocationData, User } from "../types/types";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -19,6 +19,10 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       const [location, setLocation] = useState<LocationData | null>(null);
       const [locationLoading, setLocationLoading] = useState(false);
       const [city, setCity] = useState("Fetching Your City");
+
+      const [cart, setCart] = useState<ICart[]>([]);
+      const [subTotal, setSubTotal] = useState(0);
+      const [quantity, setQuantity] = useState(0);
 
       async function fetchUser() {
             try {
@@ -44,9 +48,36 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             }
       };
 
+      const fetchCart = useCallback(async () => {
+            if (!user || user.role !== "customer") {
+                  setCart([]);
+                  setSubTotal(0);
+                  setQuantity(0);
+                  return;
+            }
+            try {
+                  const token = localStorage.getItem("token");
+                  if (!token) throw new Error("Missing token");
+
+                  const { data } = await axios.get(`${cartBaseUrl}/all`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                  });
+
+                  setCart(data.data.cart || []);
+                  setSubTotal(data.data.subTotal || 0);
+                  setQuantity(data.data.cartLength || 0);
+            } catch (error: any) {
+                  console.log(error);
+            }
+      }, [user]);
+
       useEffect(() => {
             fetchUser();
       }, []);
+
+      useEffect(() => {
+            fetchCart();
+      }, [fetchCart]);
 
       useEffect(() => {
             const cached = sessionStorage.getItem("locationData");
@@ -107,7 +138,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                         user,
                         setUser,
                         location,
-                        city
+                        city,
+                        cart,
+                        fetchCart,
+                        quantity,
+                        subTotal
                   }}
             >
                   {children}

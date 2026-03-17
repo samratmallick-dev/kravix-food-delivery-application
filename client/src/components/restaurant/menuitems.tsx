@@ -1,10 +1,11 @@
 import { useState } from "react";
 import type { IMenuItem } from "../../types/types";
-import { Eye, Loader, Trash2 } from "lucide-react";
+import { Eye, Loader, Minus, Plus, Trash2 } from "lucide-react";
 import { BsCartPlus, BsEyeSlash } from "react-icons/bs";
 import axios from "axios";
-import { menuBaseUrl } from "../common/constant";
+import { cartBaseUrl, menuBaseUrl } from "../common/constant";
 import toast from "react-hot-toast";
+import { useAppData } from "../../context/AppContext";
 
 interface MenuItemProps {
       items: IMenuItem[];
@@ -14,6 +15,8 @@ interface MenuItemProps {
 
 const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
       const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
+      const [loadingAction, setLoadingAction] = useState<"inc" | "dec" | "add" | null>(null);
+      const { fetchCart, cart } = useAppData();
 
       const handleDeleteItem = async (itemId: string) => {
             const conform = window.confirm("Are you sure you want to delete this item?");
@@ -48,12 +51,77 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             }
       };
 
+      const addToCart = async (restaurantId: string, itemId: string) => {
+            try {
+                  setLoadingItemId(itemId);
+                  setLoadingAction("add");
+                  const { data } = await axios.post(`${cartBaseUrl}/add`, {
+                        restaurantId, itemId
+                  }, {
+                        headers: {
+                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                        }, withCredentials: true
+                  });
+
+                  toast.success(data.message);
+                  fetchCart();
+            } catch (error: any) {
+                  console.log(error);
+                  toast.error(error.response.data.message);
+            } finally {
+                  setLoadingItemId(null);
+                  setLoadingAction(null);
+            }
+      };
+
+      const increaseItem = async (itemId: string) => {
+            try {
+                  setLoadingItemId(itemId);
+                  setLoadingAction("inc");
+                  await axios.patch(`${cartBaseUrl}/inc`, { itemId }, {
+                        headers: {
+                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                        }, withCredentials: true
+                  });
+                  await fetchCart();
+            } catch (error: any) {
+                  console.log(error);
+                  toast(error.response.data.message);
+            } finally {
+                  setLoadingItemId(null);
+                  setLoadingAction(null);
+            }
+      };
+
+      const decreaseItem = async (itemId: string) => {
+            try {
+                  setLoadingItemId(itemId);
+                  setLoadingAction("dec");
+                  await axios.patch(`${cartBaseUrl}/dec`, { itemId }, {
+                        headers: {
+                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                        }, withCredentials: true
+                  });
+                  await fetchCart();
+            } catch (error: any) {
+                  console.log(error);
+                  toast(error.response.data.message);
+            } finally {
+                  setLoadingItemId(null);
+                  setLoadingAction(null);
+            }
+      };
+
 
       return (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {
                         items && items.map((item) => {
                               const isLoading = loadingItemId === item._id;
+                              const isIncLoading = isLoading && loadingAction === "inc";
+                              const isDecLoading = isLoading && loadingAction === "dec";
+                              const isAddLoading = isLoading && loadingAction === "add";
+                              const cartItem = cart.find(c => (typeof c.itemId === "object" ? c.itemId._id : c.itemId) === item._id);
                               return (
                                     <div
                                           key={item._id}
@@ -91,16 +159,34 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                                                         <Trash2 size={16} />
                                                                   </button>
                                                             </div>
+                                                      ) : cartItem ? (
+                                                            <div className="flex items-center border border-green-500 rounded-full overflow-hidden">
+                                                                  <button
+                                                                        disabled={isLoading}
+                                                                        onClick={() => decreaseItem(item._id)}
+                                                                        className="px-2 py-1 text-green-600 hover:bg-green-50 disabled:text-gray-400 transition"
+                                                                  >
+                                                                        {isDecLoading ? <Loader size={12} className="animate-spin" /> : <Minus size={12} />}
+                                                                  </button>
+                                                                  <span className="text-sm font-semibold text-green-600 min-w-[20px] text-center">{cartItem.quantity}</span>
+                                                                  <button
+                                                                        disabled={isLoading}
+                                                                        onClick={() => increaseItem(item._id)}
+                                                                        className="px-2 py-1 text-green-600 hover:bg-green-50 disabled:text-gray-400 transition"
+                                                                  >
+                                                                        {isIncLoading ? <Loader size={12} className="animate-spin" /> : <Plus size={12} />}
+                                                                  </button>
+                                                            </div>
                                                       ) : (
                                                             <button
                                                                   disabled={!item.isAvailable || isLoading}
-                                                                  onClick={() => { }}
+                                                                  onClick={() => addToCart(item.restaurantId, item._id)}
                                                                   className={`flex items-center justify-center rounded-lg p-2 ${!item.isAvailable || isLoading
-                                                                              ? "cursor-not-allowed text-gray-400"
-                                                                              : "text-red-500 hover:bg-red-50"
+                                                                        ? "cursor-not-allowed text-gray-400"
+                                                                        : "text-red-500 hover:bg-red-50"
                                                                         }`}
                                                             >
-                                                                  {isLoading ? <Loader size={18} className="animate-spin" /> : <BsCartPlus />}
+                                                                  {isAddLoading ? <Loader size={18} className="animate-spin" /> : <BsCartPlus />}
                                                             </button>
                                                       )}
 
