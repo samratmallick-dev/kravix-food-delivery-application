@@ -60,94 +60,92 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
       };
 
       return (
-            <div className="w-full max-w-xl container mx-auto rounded-lg shadow-sm overflow-hidden">
-                  {
-                        restaurant && restaurant.image && (
-                              <img src={restaurant.image} alt={restaurant.name} className="w-full h-64 object-cover" />
-                        )
-                  }
+            <div className="w-full bg-white rounded-b-2xl shadow-md overflow-hidden">
+                  {/* Banner + Avatar */}
+                  <div className="relative">
+                        <div className="h-56 bg-linear-to-r from-primary/20 to-orange-100 overflow-hidden">
+                              {restaurant.image && (
+                                    <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-fill object-center" />
+                              )}
+                        </div>
+                        {/* Status badge */}
+                        <span className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full shadow ${
+                              isOpen ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                        }`}>
+                              {isOpen ? "● OPEN" : "● CLOSED"}
+                        </span>
+                  </div>
 
-                  <div className="p-5 space-y-4">
-                        {
-                              isSeller && <div className="flex items-start justify-between gap-2">
-                                    <div>
-                                          {
-                                                editMode ? (
-                                                      <input
-                                                            value={name}
-                                                            onChange={(e) => setName(e.target.value)}
-                                                            className="w-full text-lg font-semibold border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
-                                                      />
-                                                ) : (
-                                                      <h2 className="text-2xl font-semibold">{restaurant.name}</h2>
-                                                )
-                                          }
-                                          <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                                                <BiMapPin size={24} className="text-primary" />
-                                                {
-                                                      restaurant?.autoLocation.formattedAddress || "Location unavailable"
-                                                }
-                                          </div>
+                  <div className="p-5 sm:p-6 space-y-4">
+                        {/* Name row */}
+                        <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                    {editMode ? (
+                                          <input
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
+                                                className="w-full text-lg font-bold border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary"
+                                          />
+                                    ) : (
+                                          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 truncate">{restaurant.name}</h2>
+                                    )}
+                                    <div className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
+                                          <BiMapPin size={16} className="text-primary shrink-0" />
+                                          <span className="truncate">{restaurant?.autoLocation?.formattedAddress || "Location unavailable"}</span>
                                     </div>
+                              </div>
+                              {isSeller && (
                                     <button
                                           onClick={() => setEditMode(!editMode)}
-                                          className="text-gray-500 hover:text-primary"
+                                          className={`p-2 rounded-lg border transition ${
+                                                editMode ? "border-primary text-primary bg-primary/10" : "border-gray-200 text-gray-500 hover:text-primary hover:border-primary"
+                                          }`}
                                     >
-                                          <Edit size={18} />
+                                          <Edit size={16} />
                                     </button>
-                              </div>
-                        }
-                        {
-                              editMode ? (
-                                    <textarea
-                                          value={description}
-                                          onChange={(e) => setDescription(e.target.value)}
-                                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                                          placeholder="Add Your Restaurnat Description"
-                                    />
-                              ) : (
-                                    <p className="text-gray-700 text-sm">{restaurant.description || "No description added"}</p>
-                              )
-                        }
+                              )}
+                        </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-600">
-                              <span className={`text-sm font-medium ${isOpen ? "text-green-600" : "text-red-600"}`}>
-                                    {isOpen ? "OPEN" : "CLOSED"}
-                              </span>
-                              <div className="flex items-center gap-3">
-                                    {
-                                          editMode && (
-                                                <button
-                                                      className="flex items-center gap-1 rounded-lg bg-blue-600 text-gray-200 px-3 py-1.5 text-sm hover:bg-blue-700 cursor-pointer"
-                                                      onClick={saveChanges}
-                                                      disabled={loading}
-                                                >
-                                                      <SaveAll size={16} /> Save Changes
-                                                </button>
-                                          )
-                                    }
-                                    {
-                                          isSeller && (
-                                                <button
-                                                      onClick={toggleOpenStatus}
-                                                      className={`px-3 py-1.5 text-sm rounded-lg ${isOpen ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"} text-gray-200`}
-                                                >
-                                                      {isOpen ? "Close Restaurant" : "Open Restaurant"}
-                                                </button>
-                                          )
-                                    }
+                        {/* Description */}
+                        {editMode ? (
+                              <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    rows={3}
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+                                    placeholder="Add your restaurant description"
+                              />
+                        ) : (
+                              <p className="text-gray-600 text-sm leading-relaxed">{restaurant.description || "No description added"}</p>
+                        )}
+
+                        {/* Footer row */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-100">
+                              <p className="text-xs text-gray-400">
+                                    Since {new Date(restaurant.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                    {editMode && (
+                                          <button
+                                                className="flex items-center gap-1.5 rounded-lg bg-primary text-white px-4 py-1.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-60 cursor-pointer transition"
+                                                onClick={saveChanges}
+                                                disabled={loading}
+                                          >
+                                                <SaveAll size={15} /> {loading ? "Saving..." : "Save"}
+                                          </button>
+                                    )}
+                                    {isSeller && (
+                                          <button
+                                                onClick={toggleOpenStatus}
+                                                className={`px-4 py-1.5 text-sm font-medium rounded-lg transition ${
+                                                      isOpen ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border border-green-200 hover:bg-green-100"
+                                                }`}
+                                          >
+                                                {isOpen ? "Close Restaurant" : "Open Restaurant"}
+                                          </button>
+                                    )}
                               </div>
                         </div>
-                        <p className="text-xs text-gray-400">
-                              Created at : {new Date(restaurant.createdAt).toLocaleDateString(
-                                    "en-US",
-                                    {
-                                          year: "numeric",
-                                          month: "short",
-                                          day: "numeric",
-                                    },
-                              )}
-                        </p>
                   </div>
             </div>
       );

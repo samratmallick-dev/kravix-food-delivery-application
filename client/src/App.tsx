@@ -8,6 +8,8 @@ import Navbar from "./components/navbar/navbar";
 import Account from "./pages/account";
 import { useAppData } from "./context/AppContext";
 import Restaurant from "./pages/restaurant";
+import CustomerRestaurantPage from "./pages/customerRestaurantPage";
+import Footer from "./components/home/footer";
 
 const App = () => {
 
@@ -28,10 +30,12 @@ const App = () => {
                         </Route>
                         <Route element={<ProtectedRoutes />}>
                               <Route path="/" element={<Home />} />
+                              <Route path="/restaurant/:id" element={<CustomerRestaurantPage />} />
                               <Route path="/select-role" element={<SelectRole />} />
                               <Route path="/account" element={<Account />} />
                         </Route>
                   </Routes>
+                  <Footer />
             </BrowserRouter>
       );
 }

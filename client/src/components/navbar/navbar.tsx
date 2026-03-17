@@ -30,8 +30,8 @@ const Navbar = () => {
       }, [search])
 
       return (
-            <div className="w-full bg-slate-100 shadow-sm">
-                  <div className="container w-full mx-auto flex items-center justify-between gap-2 px-4 py-3 md:h-24 h-20">
+            <div className="w-full bg-background/70 shadow-md">
+                  <div className="container-app w-full mx-auto flex items-center justify-between gap-2 px-4 py-3 md:h-24 h-20">
                         <Logo />
                         <div className="flex items-center gap-3">
 
@@ -79,7 +79,7 @@ const Navbar = () => {
                               <div className="border-t border-gray-400 py-2 px-3">
                                     <div
                                           onClick={() => inputRef.current?.focus()}
-                                          className={`w-full container mx-auto flex items-center border shadow-sm rounded-lg py-2 cursor-text transition-colors duration-300 ${isFocused ? "border-primary" : "border-gray-600"}`}
+                                          className={`w-full container-app flex items-center border shadow-sm rounded-lg py-2 cursor-text transition-colors duration-300 ${isFocused ? "border-primary" : "border-gray-600"}`}
                                     >
                                           <div className={`flex items-center gap-2 px-3 border-r text-gray-700 transition-colors duration-300 ${isFocused ? "border-primary" : "border-gray-600"}`}>
                                                 <BiMapPin size={18} className="text-primary" />

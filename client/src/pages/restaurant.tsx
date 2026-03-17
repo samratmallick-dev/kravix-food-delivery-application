@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { IMenuItem, IRestaurant } from "../types/types";
 import axios from "axios";
 import { menuBaseUrl, restaurantBaseUrl } from "../components/common/constant";
@@ -60,7 +60,7 @@ const Restaurant = () => {
                               Authorization: `Bearer ${localStorage.getItem("token")}`
                         }, withCredentials: true
                   });
-                  
+
                   setMenuItem(Array.isArray(data.data) ? data.data : []);
             } catch (error) {
                   console.log(error);
@@ -75,8 +75,9 @@ const Restaurant = () => {
 
       if (loading) {
             return (
-                  <div className="w-full h-screen flex items-center justify-center">
-                        <span className="text-2xl font-bold text-primary animate-pulse">Loading Your Restaurant...</span>
+                  <div className="w-full h-screen flex flex-col items-center justify-center gap-3">
+                        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                        <span className="text-base font-medium text-gray-500">Loading your restaurant...</span>
                   </div>
             );
       }
@@ -85,38 +86,49 @@ const Restaurant = () => {
             return <AddRestaurant fetchMyRestaurant={fetchMyRestaurant} />
       }
       return (
-            <div className="min-h-screen bg-gray-50">
-                  <div className=" px-4 py-6 space-y-10">
-                        <RestaurantProfile restaurant={restaurant} onUpdate={setRestaurant} isSeller={true} />
-                        <div className="rounded-xl bg-white shadow-sm">
-                              <div className="flex items-center  border-gray-600">
+            <div className="min-h-screen bg-background">
+                  <RestaurantProfile restaurant={restaurant} onUpdate={setRestaurant} isSeller={true} />
+                  <div className="w-full container-app sm:px-6 py-8 space-y-6">
+
+                        <div className="rounded-2xl bg-white shadow-md overflow-hidden">
+                              {/* Tabs */}
+                              <div className="flex border-b border-gray-100">
                                     {[
                                           { label: "Menu", value: "menu" },
-                                          { label: "Add Menu Item", value: "add-item" },
+                                          { label: "Add Item", value: "add-item" },
                                           { label: "Sales", value: "sales" },
-                                    ].map((item, index, arr) => (
-                                          <React.Fragment key={item.value}>
-                                                <button
-                                                      onClick={() => handleTabChange(item.value as SellerTab)}
-                                                      className={` flex-1 px-4 py-3 text-sm font-medium transition cursor-pointer border-gray-600 ${tab === item.value ? "border-b-2 border-primary text-primary" : "text-gray-600 hover:text-gray-800"
-                                                            }`}
-                                                >{item.label}</button>
-                                                {index < arr.length - 1 && <div className="w-px h-8 bg-gray-600 self-center" />}
-                                          </React.Fragment>
+                                    ].map((item) => (
+                                          <button
+                                                key={item.value}
+                                                onClick={() => handleTabChange(item.value as SellerTab)}
+                                                className={`flex-1 py-3.5 text-sm font-medium transition cursor-pointer ${tab === item.value
+                                                            ? "border-b-2 border-primary text-primary bg-primary/30"
+                                                            : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                                      }`}
+                                          >
+                                                {item.label}
+                                          </button>
                                     ))}
                               </div>
-                              <div className="rounded-lg p-6">
-                                    {tab === "menu" && <Menuitems
-                                          items={menuItem}
-                                          onItemDelete={() => {
-                                                fetchMenuItem(restaurant._id)
-                                          }}
-                                          isSeller={true}
-                                    />}
-                                    {tab === "add-item" && <AddMenuItems onItemAdded={() => {
-                                          fetchMenuItem(restaurant._id)
-                                    }} />}
-                                    {tab === "sales" && <div>Sales Analytics Coming Soon...</div>}
+
+                              {/* Tab content */}
+                              <div className="p-4 sm:p-6">
+                                    {tab === "menu" && (
+                                          <Menuitems
+                                                items={menuItem}
+                                                onItemDelete={() => fetchMenuItem(restaurant._id)}
+                                                isSeller={true}
+                                          />
+                                    )}
+                                    {tab === "add-item" && (
+                                          <AddMenuItems onItemAdded={() => fetchMenuItem(restaurant._id)} />
+                                    )}
+                                    {tab === "sales" && (
+                                          <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-2">
+                                                <span className="text-4xl">📊</span>
+                                                <p className="text-sm font-medium">Sales Analytics Coming Soon</p>
+                                          </div>
+                                    )}
                               </div>
                         </div>
                   </div>

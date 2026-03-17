@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { IMenuItem } from "../../types/types";
 import { Eye, Loader, Trash2 } from "lucide-react";
-import { BsCart, BsEyeSlash } from "react-icons/bs";
+import { BsCartPlus, BsEyeSlash } from "react-icons/bs";
 import axios from "axios";
 import { menuBaseUrl } from "../common/constant";
 import toast from "react-hot-toast";
@@ -50,7 +50,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
 
 
       return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {
                         items && items.map((item) => {
                               const isLoading = loadingItemId === item._id;
@@ -100,7 +100,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                                                               : "text-red-500 hover:bg-red-50"
                                                                         }`}
                                                             >
-                                                                  {isLoading ? <Loader size={18} className="animate-spin" /> : <BsCart />}
+                                                                  {isLoading ? <Loader size={18} className="animate-spin" /> : <BsCartPlus />}
                                                             </button>
                                                       )}
 

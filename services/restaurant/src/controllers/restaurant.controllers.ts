@@ -233,8 +233,7 @@ export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
 });
 
 export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const { latitude, longitude } = req.params;
-      const { radius = 5000, search = "" } = req.query;
+      const { latitude, longitude, radius = 5000, search = "" } = req.query;
       if (!latitude || !longitude) {
             return res.status(400).json({
                   message: "Latitude and longitude are required",
