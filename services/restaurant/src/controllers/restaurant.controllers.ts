@@ -216,7 +216,7 @@ export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
             { new: true }
       );
 
-      if(!updateRestaurant) {
+      if (!updateRestaurant) {
             return res.status(404).json({
                   message: "Failed to update restaurant",
                   success: false,
@@ -229,5 +229,83 @@ export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
             success: true,
             error: false,
             data: updateRestaurant
+      });
+});
+
+export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const { latitude, longitude } = req.params;
+      const { radius = 5000, search = "" } = req.query;
+      if (!latitude || !longitude) {
+            return res.status(400).json({
+                  message: "Latitude and longitude are required",
+                  success: false,
+                  error: true
+            });
+      }
+
+      const query: any = {
+            isVerified : true
+      };
+
+      if(search && typeof search === "string") {
+            query.name = { $regex: search, $options: "i" };
+      }
+
+      const restaurants = await Restaurant.aggregate([
+            {
+                  $geoNear: {
+                        near: {
+                              type: "Point",
+                              coordinates: [Number(longitude), Number(latitude)]
+                        },
+                        distanceField: "distance",
+                        maxDistance: Number(radius),
+                        spherical: true,
+                        query
+                  }
+            },
+            {
+                  $sort: {
+                        distance: 1,
+                        isOpen: -1
+                  }
+            },
+            {
+                  $addFields: {
+                        distanceKm: {
+                              $round: [{
+                                    $divide: ["$distance", 1000]
+                              }, 2]
+                        }
+                  }
+            }
+      ]);
+
+      return res.status(200).json({
+            message: "Restaurants fetched successfully",
+            success: true,
+            error: false,
+            count: restaurants.length,
+            data: restaurants
+      });
+});
+
+export const fetchSingleRestaurant = TryCatch(async(req: AuthenticatedRequest, res: Response) => {
+      const { id } = req.params;
+      const restaurant = await Restaurant.findById({
+            _id: id,
+      });
+      if (!restaurant) {
+            return res.status(404).json({
+                  message: "Restaurant not found",
+                  success: false,
+                  error: true
+            });
+      }
+      return res.status(200).json({
+            message: "Restaurant fetched successfully",
+            success: true,
+            error: false,
+            data: restaurant
       });
 });
