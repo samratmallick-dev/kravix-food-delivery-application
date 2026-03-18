@@ -11,6 +11,8 @@ import Restaurant from "./pages/restaurant";
 import CustomerRestaurantPage from "./pages/customerRestaurantPage";
 import Footer from "./components/home/footer";
 import Cart from "./pages/cart";
+import AddAddressPage from "./pages/address";
+import SearchPage from "./pages/search";
 
 const App = () => {
 
@@ -31,7 +33,9 @@ const App = () => {
                         </Route>
                         <Route element={<ProtectedRoutes />}>
                               <Route path="/" element={<Home />} />
+                              <Route path="/search" element={<SearchPage />} />
                               <Route path="/restaurant/:id" element={<CustomerRestaurantPage />} />
+                              <Route path="/address" element={<AddAddressPage />} />
                               <Route path="/cart" element={<Cart />} />
                               <Route path="/select-role" element={<SelectRole />} />
                               <Route path="/account" element={<Account />} />

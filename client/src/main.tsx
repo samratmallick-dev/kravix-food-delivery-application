@@ -6,6 +6,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'react-hot-toast';
 import { googleClientId } from './components/common/constant.ts';
 import { AppProvider } from './context/AppContext.tsx';
+import "leaflet/dist/leaflet.css";
 
 createRoot(document.getElementById('root')!).render(
       <StrictMode>

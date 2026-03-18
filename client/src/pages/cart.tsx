@@ -1,14 +1,24 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useAppData } from "../context/AppContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { IRestaurant } from "../types/types";
 import axios from "axios";
-import { cartBaseUrl } from "../components/common/constant";
+import { cartBaseUrl, addressBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { BiMapPin, BiPhone, BiChevronDown } from "react-icons/bi";
+
+interface SavedAddress {
+      _id: string;
+      formatedAddress: string;
+      mobile: number;
+      location: {
+            coordinates: [number, number]; // [lng, lat]
+      };
+}
 
 const restaurantIcon = L.divIcon({
       className: "",
@@ -28,8 +38,9 @@ const customerIcon = L.divIcon({
 
 const FitBounds = ({ positions }: { positions: [number, number][] }) => {
       const map = useMap();
-      if (positions.length > 1) {
-            map.fitBounds(L.latLngBounds(positions), { padding: [40, 40] });
+      const valid = positions.filter(([lat, lng]) => isFinite(lat) && isFinite(lng));
+      if (valid.length > 1) {
+            map.fitBounds(L.latLngBounds(valid), { padding: [40, 40] });
       }
       return null;
 };
@@ -44,6 +55,29 @@ const Cart = () => {
       const [loadingItemDec, setLoadingItemDec] = useState<string | null>(null);
       const [clearingCart, setClearingCart] = useState(false);
       const [confirmClear, setConfirmClear] = useState(false);
+      const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+      const [selectedAddress, setSelectedAddress] = useState<SavedAddress | null>(null);
+      const [addressDropdownOpen, setAddressDropdownOpen] = useState(false);
+
+      useEffect(() => {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            axios.get(`${addressBaseUrl}/all`, { headers: { Authorization: `Bearer ${token}` } })
+                  .then(({ data }) => {
+                        const addrs: SavedAddress[] = data.data || [];
+                        setSavedAddresses(addrs);
+                        if (addrs.length > 0) setSelectedAddress(addrs[0]);
+                  })
+                  .catch(() => {});
+      }, []);
+
+      const deliveryLocation = selectedAddress
+            ? {
+                  latitude: selectedAddress.location.coordinates[1],
+                  longitude: selectedAddress.location.coordinates[0],
+                  formattedAddress: selectedAddress.formatedAddress
+            }
+            : location;
 
       if (!cart || cart.length === 0 || quantity === 0) {
             return (
@@ -121,22 +155,16 @@ const Cart = () => {
             }
       };
 
-      const chackout = () => {
+      const checkout = () => {
             navigate("/checkout");
       };
 
       return (
             <div className="container-app py-8 min-h-screen">
                   <h1 className="text-2xl font-bold text-gray-800 mb-6">Your Cart</h1>
-
                   <div className="flex flex-col lg:flex-row gap-6">
-
-                        {/* Left: Restaurant + Items */}
                         <div className="flex-1 space-y-4">
-
-                              {/* Restaurant Card */}
                               <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-                                    {/* Info Row */}
                                     <div className="flex items-center gap-4 p-4">
                                           {restaurant.image && (
                                                 <img
@@ -161,8 +189,6 @@ const Cart = () => {
                                                 </div>
                                           </div>
                                     </div>
-
-                                    {/* Location */}
                                     {restaurant.autoLocation && (
                                           <div className="border-t border-border">
                                                 <div className="flex items-start gap-2 px-4 py-3">
@@ -181,8 +207,61 @@ const Cart = () => {
                                                       </div>
                                                 </div>
 
-                                                {/* Leaflet Map */}
+                                                {/* Delivery Address Selector */}
+                                                <div className="px-4 pb-3">
+                                                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Deliver To</p>
+                                                      {savedAddresses.length === 0 ? (
+                                                            <Link
+                                                                  to="/address"
+                                                                  className="flex items-center gap-2 text-xs text-primary hover:underline"
+                                                            >
+                                                                  <BiMapPin size={13} /> Add a delivery address
+                                                            </Link>
+                                                      ) : (
+                                                            <div className="relative">
+                                                                  <button
+                                                                        onClick={() => setAddressDropdownOpen((o) => !o)}
+                                                                        className="w-full flex items-start justify-between gap-2 rounded-lg border bg-gray-50 px-3 py-2 text-sm text-left hover:bg-white transition"
+                                                                  >
+                                                                        <div className="flex items-start gap-2 min-w-0">
+                                                                              <BiMapPin size={14} className="text-primary mt-0.5 shrink-0" />
+                                                                              <div className="min-w-0">
+                                                                                    <p className="text-gray-800 text-xs font-medium line-clamp-1">{selectedAddress?.formatedAddress}</p>
+                                                                                    <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
+                                                                                          <BiPhone size={10} /> {selectedAddress?.mobile}
+                                                                                    </p>
+                                                                              </div>
+                                                                        </div>
+                                                                        <BiChevronDown size={16} className={`shrink-0 mt-0.5 text-gray-400 transition-transform ${addressDropdownOpen ? "rotate-180" : ""}`} />
+                                                                  </button>
+                                                                  {addressDropdownOpen && (
+                                                                        <ul className="absolute z-[1000] mt-1 w-full rounded-lg border bg-white shadow-lg max-h-44 overflow-y-auto">
+                                                                              {savedAddresses.map((addr) => (
+                                                                                    <li
+                                                                                          key={addr._id}
+                                                                                          onClick={() => { setSelectedAddress(addr); setAddressDropdownOpen(false); }}
+                                                                                          className={`flex items-start gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 border-b last:border-0 ${selectedAddress?._id === addr._id ? "bg-red-50" : ""}`}
+                                                                                    >
+                                                                                          <BiMapPin size={13} className="text-primary mt-0.5 shrink-0" />
+                                                                                          <div>
+                                                                                                <p className="text-xs text-gray-800 line-clamp-2">{addr.formatedAddress}</p>
+                                                                                                <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5"><BiPhone size={10} /> {addr.mobile}</p>
+                                                                                          </div>
+                                                                                    </li>
+                                                                              ))}
+                                                                              <li className="px-3 py-2 border-t">
+                                                                                    <Link to="/address" className="text-xs text-primary hover:underline flex items-center gap-1">
+                                                                                          <BiMapPin size={12} /> Add new address
+                                                                                    </Link>
+                                                                              </li>
+                                                                        </ul>
+                                                                  )}
+                                                            </div>
+                                                      )}
+                                                </div>
+
                                                 <div className="h-56 w-full">
+                                                      {isFinite(restaurant.autoLocation.coordinates[1]) && isFinite(restaurant.autoLocation.coordinates[0]) && (
                                                       <MapContainer
                                                             center={[
                                                                   restaurant.autoLocation.coordinates[1],
@@ -196,15 +275,13 @@ const Cart = () => {
                                                                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                                                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                                                             />
-
                                                             <FitBounds
                                                                   positions={[
                                                                         [restaurant.autoLocation.coordinates[1], restaurant.autoLocation.coordinates[0]],
-                                                                        ...(location ? [[location.latitude, location.longitude] as [number, number]] : []),
+                                                                        ...(deliveryLocation ? [[deliveryLocation.latitude, deliveryLocation.longitude] as [number, number]] : []),
                                                                   ]}
                                                             />
-
-                                                            {/* Restaurant Marker */}
+                                                            {isFinite(restaurant.autoLocation.coordinates[1]) && isFinite(restaurant.autoLocation.coordinates[0]) && (
                                                             <Marker
                                                                   position={[
                                                                         restaurant.autoLocation.coordinates[1],
@@ -219,24 +296,23 @@ const Cart = () => {
                                                                         </div>
                                                                   </Popup>
                                                             </Marker>
-
-                                                            {/* Customer Marker */}
-                                                            {location && (
+                                                            )}
+                                                            {deliveryLocation && isFinite(deliveryLocation.latitude) && isFinite(deliveryLocation.longitude) && (
                                                                   <>
                                                                         <Marker
-                                                                              position={[location.latitude, location.longitude]}
+                                                                              position={[deliveryLocation.latitude, deliveryLocation.longitude]}
                                                                               icon={customerIcon}
                                                                         >
                                                                               <Popup>
                                                                                     <div className="text-sm">
-                                                                                          <p className="font-semibold text-blue-600">Your Location</p>
-                                                                                          <p className="text-gray-500 text-xs mt-0.5">{location.formattedAddress}</p>
+                                                                                          <p className="font-semibold text-blue-600">Delivery Address</p>
+                                                                                          <p className="text-gray-500 text-xs mt-0.5">{deliveryLocation.formattedAddress}</p>
                                                                                     </div>
                                                                               </Popup>
                                                                         </Marker>
                                                                         <Polyline
                                                                               positions={[
-                                                                                    [location.latitude, location.longitude],
+                                                                                    [deliveryLocation.latitude, deliveryLocation.longitude],
                                                                                     [restaurant.autoLocation.coordinates[1], restaurant.autoLocation.coordinates[0]],
                                                                               ]}
                                                                               pathOptions={{ color: "#C22630", weight: 2, dashArray: "6 6" }}
@@ -244,21 +320,20 @@ const Cart = () => {
                                                                   </>
                                                             )}
                                                       </MapContainer>
+                                                      )}
                                                 </div>
-
-                                                {/* Legend */}
                                                 <div className="flex items-center gap-4 px-4 py-2.5 bg-gray-50 text-xs text-gray-500">
                                                       <span className="flex items-center gap-1.5">
                                                             <span className="w-3 h-3 rounded-full bg-primary inline-block" />
                                                             Restaurant
                                                       </span>
-                                                      {location && (
+                                                      {deliveryLocation && (
                                                             <span className="flex items-center gap-1.5">
                                                                   <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />
-                                                                  Your Location
+                                                                  Delivery Address
                                                             </span>
                                                       )}
-                                                      {location && (
+                                                      {deliveryLocation && (
                                                             <span className="flex items-center gap-1.5">
                                                                   <span className="w-4 border-t-2 border-dashed border-primary inline-block" />
                                                                   Route
@@ -268,8 +343,6 @@ const Cart = () => {
                                           </div>
                                     )}
                               </div>
-
-                              {/* Cart Items */}
                               <div className="bg-white rounded-2xl shadow-sm border border-border divide-y divide-border">
                                     {cart.map((cartItem) => {
                                           const item = cartItem.itemId as import("../types/types").IMenuItem;
@@ -277,7 +350,6 @@ const Cart = () => {
                                           const decLoading = loadingItemDec === item._id;
                                           return (
                                                 <div key={cartItem._id} className="flex gap-3 p-4">
-                                                      {/* Image */}
                                                       {item.imageUrl ? (
                                                             <img
                                                                   src={item.imageUrl}
@@ -289,8 +361,6 @@ const Cart = () => {
                                                                   <span className="text-2xl">🍽️</span>
                                                             </div>
                                                       )}
-
-                                                      {/* Details */}
                                                       <div className="flex-1 min-w-0 flex flex-col justify-between">
                                                             <div>
                                                                   <p className="font-semibold text-gray-800 text-sm leading-snug">{item.name}</p>
@@ -298,7 +368,6 @@ const Cart = () => {
                                                                         <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{item.description}</p>
                                                                   )}
                                                             </div>
-                                                            {/* Bottom row: price + controls + total */}
                                                             <div className="flex items-center justify-between mt-2">
                                                                   <p className="text-primary font-bold text-sm">₹{item.price}</p>
                                                                   <div className="flex items-center gap-2">
@@ -333,8 +402,6 @@ const Cart = () => {
                                           );
                                     })}
                               </div>
-
-                              {/* Clear Cart */}
                               {confirmClear ? (
                                     <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
                                           <span className="text-sm text-red-600 font-medium mr-1">Clear entire cart?</span>
@@ -372,8 +439,6 @@ const Cart = () => {
                                     </button>
                               )}
                         </div>
-
-                        {/* Right: Order Summary */}
                         <div className="lg:w-80 xl:w-96">
                               <div className="bg-white rounded-2xl shadow-sm border border-border p-5 sticky top-24 space-y-4">
                                     <h2 className="font-bold text-gray-800 text-lg">Order Summary</h2>
@@ -409,10 +474,14 @@ const Cart = () => {
                                     </div>
 
                                     <button
-                                          onClick={chackout}
-                                          className="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-primary/90 transition active:scale-95"
+                                          onClick={checkout}
+                                          disabled={!restaurant.isOpen}
+                                          className={`w-full py-3 rounded-xl font-semibold transition text-white ${restaurant.isOpen
+                                                      ? "bg-primary hover:bg-primary/90 cursor-pointer"
+                                                      : "bg-gray-400 cursor-not-allowed"
+                                                }`}
                                     >
-                                          Proceed to Checkout
+                                          {restaurant.isOpen ? "Proceed to Checkout" : "Restaurant is not open"}
                                     </button>
 
                                     <button

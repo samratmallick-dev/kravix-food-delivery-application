@@ -18,6 +18,7 @@ const Home = () => {
 
       const [retaurants, setRestaurants] = useState<IRestaurant[]>([]);
       const [loading, setLoading] = useState(true);
+      const [searching, setSearching] = useState(false);
 
       const getDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
             const R = 6371;
@@ -34,7 +35,8 @@ const Home = () => {
                   throw new Error("You need to give parmission of your location to continue");
             }
             try {
-                  setLoading(true);
+                  if (search) setSearching(true);
+                  else setLoading(true);
                   const { data } = await axios.get(`${restaurantBaseUrl}/all`, {
                         params: {
                               latitude: location.latitude,
@@ -47,6 +49,7 @@ const Home = () => {
                   });
                   setRestaurants(data.data || []);
                   setLoading(false);
+                  setSearching(false);
             } catch (error: any) {
                   console.log(error);
                   toast.error(error.response?.data?.message || "Failed to fetch restaurants");
@@ -57,7 +60,7 @@ const Home = () => {
             fetchRestaurant();
       }, [location, search]);
 
-      if (loading || !location) {
+      if ((loading && !searching) || !location) {
             return (
                   <div className="flex items-center justify-center h-screen">
                         <p className="text-xl font-semibold">Finding Restaurant near you...</p>
@@ -71,6 +74,9 @@ const Home = () => {
                   <FeatureBanmner />
                   <div className="container-app py-5 space-y-3">
                         <h1 className="font-semibold md:text-2xl text-xl text-wrap text-primary">Your Nearest Restaurants</h1>
+                        {searching && (
+                              <p className="text-sm text-gray-400 animate-pulse">Searching...</p>
+                        )}
                         {
                               retaurants.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

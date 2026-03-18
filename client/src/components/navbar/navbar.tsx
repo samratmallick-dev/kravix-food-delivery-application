@@ -1,4 +1,4 @@
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAppData } from "../../context/AppContext";
 import { useEffect, useRef, useState } from "react";
 import Logo from "./logo";
@@ -9,9 +9,11 @@ const Navbar = () => {
 
       const { isAuth, city, quantity } = useAppData();
 
+      const navigate = useNavigate();
       const currentLocation = useLocation();
-
+      const isSearchPage = currentLocation.pathname === "/search";
       const isHomePage = currentLocation.pathname === "/";
+      const showSearch = isHomePage || isSearchPage;
 
       const [searchParams, SetSearchParms] = useSearchParams("");
       const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -21,16 +23,16 @@ const Navbar = () => {
       useEffect(() => {
             const timmer = setTimeout(() => {
                   if (search) {
-                        SetSearchParms({ search });
-                  } else {
-                        SetSearchParms({});
+                        navigate(`/search?search=${encodeURIComponent(search)}`);
+                  } else if (isSearchPage) {
+                        navigate("/search");
                   }
             }, 0);
             return () => clearTimeout(timmer);
       }, [search])
 
       return (
-            <div className="w-full bg-background/70 shadow-md">
+            <div className="w-full bg-background shadow-md">
                   <div className="container-app w-full mx-auto flex items-center justify-between gap-2 px-4 py-3 md:h-24 h-20">
                         <Logo />
                         <div className="flex items-center gap-3">
@@ -77,7 +79,7 @@ const Navbar = () => {
                         </div>
                   </div>
                   {
-                        isHomePage && (
+                        showSearch && (
                               <div className="border-t border-gray-400 py-2 px-3">
                                     <div
                                           onClick={() => {
