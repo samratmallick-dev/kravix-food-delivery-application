@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import axios from "axios";
+import { google } from "googleapis";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { User } from "../model/User.js";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
-import { oauth2client } from "../config/google/google.js";
 
 interface TokenPayload {
       _id: string;
@@ -33,10 +33,14 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
                   error: true
             });
       }
+      
+      const freshClient = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            "postmessage"
+      );
 
-      const googleResponse = await oauth2client.getToken(code);
-
-      oauth2client.setCredentials(googleResponse.tokens);
+      const googleResponse = await freshClient.getToken(code);
 
       const userResponse = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleResponse.tokens.access_token}`);
 
