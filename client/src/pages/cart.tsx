@@ -1,11 +1,11 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useAppData } from "../context/AppContext";
 import { useEffect, useState } from "react";
-import type { IRestaurant } from "../types/types";
+import type { IMenuItem, IRestaurant } from "../types/types";
 import axios from "axios";
 import { cartBaseUrl, addressBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
-import { ArrowRight, ShoppingBag } from "lucide-react";
+import { ArrowRight, ShoppingBag, Trash2 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -103,7 +103,11 @@ const Cart = () => {
 
       const platformFee = 7;
 
-      const totalAmount = subTotal + deliveryFee + platformFee;
+      const foodGST = +(subTotal * 0.05).toFixed(2);
+      const deliveryGST = +(deliveryFee * 0.18).toFixed(2);
+      const totalGST = +(foodGST + deliveryGST).toFixed(2);
+
+      const totalAmount = subTotal + deliveryFee + platformFee + totalGST;
 
       const increaseItem = async (itemId: string) => {
             try {
@@ -235,7 +239,7 @@ const Cart = () => {
                                                                         <BiChevronDown size={16} className={`shrink-0 mt-0.5 text-gray-400 transition-transform ${addressDropdownOpen ? "rotate-180" : ""}`} />
                                                                   </button>
                                                                   {addressDropdownOpen && (
-                                                                        <ul className="absolute z-[1000] mt-1 w-full rounded-lg border bg-white shadow-lg max-h-44 overflow-y-auto">
+                                                                        <ul className="absolute z-1000 mt-1 w-full rounded-lg border bg-white shadow-lg max-h-44 overflow-y-auto">
                                                                               {savedAddresses.map((addr) => (
                                                                                     <li
                                                                                           key={addr._id}
@@ -345,7 +349,7 @@ const Cart = () => {
                               </div>
                               <div className="bg-white rounded-2xl shadow-sm border border-border divide-y divide-border">
                                     {cart.map((cartItem) => {
-                                          const item = cartItem.itemId as import("../types/types").IMenuItem;
+                                          const item = cartItem.itemId as IMenuItem;
                                           const incLoading = loadingItemInc === item._id;
                                           const decLoading = loadingItemDec === item._id;
                                           return (
@@ -428,13 +432,7 @@ const Cart = () => {
                                           onClick={() => setConfirmClear(true)}
                                           className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-red-500 text-sm font-medium hover:bg-red-100 hover:border-red-300 transition active:scale-95"
                                     >
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <polyline points="3 6 5 6 21 6" />
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                                                <path d="M10 11v6" />
-                                                <path d="M14 11v6" />
-                                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                                          </svg>
+                                          <Trash2 size={18} />
                                           Clear Cart
                                     </button>
                               )}
@@ -459,6 +457,10 @@ const Cart = () => {
                                           <div className="flex justify-between text-gray-600">
                                                 <span>Platform Fee</span>
                                                 <span>₹{platformFee}</span>
+                                          </div>
+                                          <div className="flex justify-between text-gray-600">
+                                                <span>GST</span>
+                                                <span>₹{totalGST}</span>
                                           </div>
                                     </div>
 

@@ -13,6 +13,7 @@ import Footer from "./components/home/footer";
 import Cart from "./pages/cart";
 import AddAddressPage from "./pages/address";
 import SearchPage from "./pages/search";
+import Checkout from "./pages/checkout";
 
 const App = () => {
 
@@ -22,7 +23,7 @@ const App = () => {
 
       const isSeller = user?.role === "seller";
 
-      if(isSeller) return <Restaurant />
+      if (isSeller) return <Restaurant />
 
       return (
             <BrowserRouter>
@@ -35,6 +36,7 @@ const App = () => {
                               <Route path="/" element={<Home />} />
                               <Route path="/search" element={<SearchPage />} />
                               <Route path="/restaurant/:id" element={<CustomerRestaurantPage />} />
+                              <Route path="/checkout" element={<Checkout />} />
                               <Route path="/address" element={<AddAddressPage />} />
                               <Route path="/cart" element={<Cart />} />
                               <Route path="/select-role" element={<SelectRole />} />

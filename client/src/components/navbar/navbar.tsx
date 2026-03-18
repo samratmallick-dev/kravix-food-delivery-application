@@ -92,7 +92,7 @@ const Navbar = () => {
                                                 <BiMapPin size={18} className="text-primary" />
                                                 <span className="text-sm truncate max-w-36">{city}</span>
                                           </div>
-                                          <div className="flex-1 flex items-center gap-2 px-2">
+                                          <div className="flex-1 flex items-center gap-2 px-2 bg-background">
                                                 <BiSearch size={20} className="text-primary" />
                                                 <input
                                                       ref={inputRef}
