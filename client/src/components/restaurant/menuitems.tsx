@@ -64,7 +64,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   });
 
                   toast.success(data.message);
-                  fetchCart();
+                  await fetchCart();
             } catch (error: any) {
                   console.log(error);
                   toast.error(error.response.data.message);
@@ -168,7 +168,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                                                   >
                                                                         {isDecLoading ? <Loader size={12} className="animate-spin" /> : <Minus size={12} />}
                                                                   </button>
-                                                                  <span className="text-sm font-semibold text-green-600 min-w-[20px] text-center">{cartItem.quantity}</span>
+                                                                  <span className="text-sm font-semibold text-green-600 min-w-5 text-center">{cartItem.quantity}</span>
                                                                   <button
                                                                         disabled={isLoading}
                                                                         onClick={() => increaseItem(item._id)}

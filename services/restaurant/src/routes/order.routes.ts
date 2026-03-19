@@ -5,6 +5,6 @@ import { createOrder, fetchOrderForPayment } from "../controllers/order.controll
 const router = Router();
 
 router.route("/create").post(isAuthenticated, createOrder);
-router.route("/fetch-payment").get(fetchOrderForPayment);
+router.route("/fetch-payment/:id").get(fetchOrderForPayment);
 
 export default router;
