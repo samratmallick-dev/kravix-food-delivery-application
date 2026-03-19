@@ -1,13 +1,17 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import type { IMenuItem, IRestaurant } from "../types/types";
 import { useEffect, useState } from "react";
 import { menuBaseUrl, restaurantBaseUrl } from "../components/common/constant";
 import axios from "axios";
 import RestaurantProfile from "../components/restaurant/restaurantProfile";
 import Menuitems from "../components/restaurant/menuitems";
+import { useAppData } from "../context/AppContext";
+import { ShoppingCart } from "lucide-react";
 
 const CustomerRestaurantPage = () => {
       const { id } = useParams();
+      const navigate = useNavigate();
+      const { cart } = useAppData();
 
       const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
       const [menuItem, setMenuItem] = useState<IMenuItem[]>([]);
@@ -73,6 +77,18 @@ const CustomerRestaurantPage = () => {
                   <div className="container-app p-4">
                         <Menuitems items={menuItem} onItemDelete={() => {}} isSeller={false} />
                   </div>
+                  {cart.length > 0 && (
+                        <button
+                              onClick={() => {
+                                    navigate("/cart");
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                              }}
+                              className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-all z-50"
+                        >
+                              <ShoppingCart size={18} />
+                              View Cart ({cart.length})
+                        </button>
+                  )}
             </div>
       );
 }

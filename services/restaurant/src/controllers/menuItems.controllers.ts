@@ -5,6 +5,7 @@ import { Restaurant } from "../model/Restaurant.js";
 import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import { MenuItem } from "../model/MenuItems.js";
+import mongoose from "mongoose";
 
 export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
@@ -155,6 +156,73 @@ export const deleteMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Re
       });
 
 }); 
+
+export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const { search = "", latitude, longitude, radius = 5000 } = req.query;
+
+      if (!latitude || !longitude) {
+            return res.status(400).json({
+                  message: "Latitude and longitude are required",
+                  success: false,
+                  error: true
+            });
+      }
+
+      const matchingItems = await MenuItem.find({
+            name: { $regex: search as string, $options: "i" },
+            isAvailable: true
+      }).select("restaurantId name price imageUrl description");
+
+      if (!matchingItems.length) {
+            return res.status(200).json({
+                  message: "No food items found",
+                  success: true,
+                  error: false,
+                  data: []
+            });
+      }
+
+      const restaurantIds = [...new Set(matchingItems.map((item) => item.restaurantId.toString()))];
+
+      const restaurants = await Restaurant.aggregate([
+            {
+                  $geoNear: {
+                        near: { type: "Point", coordinates: [Number(longitude), Number(latitude)] },
+                        distanceField: "distance",
+                        maxDistance: Number(radius),
+                        spherical: true,
+                        query: {
+                              _id: { $in: restaurantIds.map((id) => new mongoose.Types.ObjectId(id)) },
+                              isVerified: true
+                        }
+                  }
+            },
+            { $sort: { distance: 1, isOpen: -1 } },
+            { $addFields: { distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] } } }
+      ]);
+
+      const restaurantMap = new Map(restaurants.map((r: any) => [r._id.toString(), r]));
+
+      const results = matchingItems
+            .filter((item) => restaurantMap.has(item.restaurantId.toString()))
+            .map((item) => ({
+                  item: {
+                        _id: item._id,
+                        name: item.name,
+                        price: item.price,
+                        imageUrl: item.imageUrl,
+                        description: item.description
+                  },
+                  restaurant: restaurantMap.get(item.restaurantId.toString())
+            }));
+
+      return res.status(200).json({
+            message: "Food search results fetched successfully",
+            success: true,
+            error: false,
+            data: results
+      });
+});
 
 export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequest, res: Response) =>{
       const user = req.user;

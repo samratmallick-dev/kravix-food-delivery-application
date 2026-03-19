@@ -61,6 +61,17 @@ export interface IMenuItem {
       updatedAt: Date;
 };
 
+export interface IFoodSearchResult {
+      item: {
+            _id: string;
+            name: string;
+            price: number;
+            imageUrl?: string;
+            description: string;
+      };
+      restaurant: IRestaurant & { distanceKm: number };
+};
+
 export interface ICart {
       _id: string;
       userId: string;

@@ -2,9 +2,11 @@ import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { Response } from "express";
 import { Restaurant } from "../model/Restaurant.js";
+import { MenuItem } from "../model/MenuItems.js";
 import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 interface TokenPayload {
       _id: string;
@@ -242,43 +244,52 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
             });
       }
 
-      const query: any = {
-            isVerified : true
+      const geoNearStage = {
+            $geoNear: {
+                  near: { type: "Point", coordinates: [Number(longitude), Number(latitude)] },
+                  distanceField: "distance",
+                  maxDistance: Number(radius),
+                  spherical: true,
+                  query: { isVerified: true }
+            }
       };
 
-      if(search && typeof search === "string") {
-            query.name = { $regex: search, $options: "i" };
-      }
+      const sortAndProject = [
+            { $sort: { distance: 1, isOpen: -1 } },
+            { $addFields: { distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] } } }
+      ];
 
-      const restaurants = await Restaurant.aggregate([
-            {
-                  $geoNear: {
-                        near: {
-                              type: "Point",
-                              coordinates: [Number(longitude), Number(latitude)]
-                        },
-                        distanceField: "distance",
-                        maxDistance: Number(radius),
-                        spherical: true,
-                        query
-                  }
-            },
-            {
-                  $sort: {
-                        distance: 1,
-                        isOpen: -1
-                  }
-            },
-            {
-                  $addFields: {
-                        distanceKm: {
-                              $round: [{
-                                    $divide: ["$distance", 1000]
-                              }, 2]
-                        }
-                  }
+      let restaurants: any[] = [];
+
+      if (search && typeof search === "string") {
+            // First: match by restaurant name
+            const byName = await Restaurant.aggregate([
+                  { ...geoNearStage, $geoNear: { ...geoNearStage.$geoNear, query: { isVerified: true, name: { $regex: search, $options: "i" } } } },
+                  ...sortAndProject
+            ]);
+
+            // Second: find restaurants that have matching menu items
+            const matchingItems = await MenuItem.find({
+                  name: { $regex: search, $options: "i" },
+                  isAvailable: true
+            }).distinct("restaurantId");
+
+            const byMenuItems = matchingItems.length > 0
+                  ? await Restaurant.aggregate([
+                        { ...geoNearStage, $geoNear: { ...geoNearStage.$geoNear, query: { isVerified: true, _id: { $in: matchingItems.map((id: any) => new mongoose.Types.ObjectId(id.toString())) } } } },
+                        ...sortAndProject
+                  ])
+                  : [];
+
+            // Merge, deduplicate by _id
+            const seen = new Set<string>();
+            for (const r of [...byName, ...byMenuItems]) {
+                  const key = r._id.toString();
+                  if (!seen.has(key)) { seen.add(key); restaurants.push(r); }
             }
-      ]);
+      } else {
+            restaurants = await Restaurant.aggregate([geoNearStage, ...sortAndProject]);
+      }
 
       return res.status(200).json({
             message: "Restaurants fetched successfully",
