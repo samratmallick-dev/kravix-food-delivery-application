@@ -103,7 +103,20 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
             };
       });
 
-      const deliveryFee = (subTotal < 250) ? 49 : 0;
+      const [longitude, latitude] = address.location.coordinates;
+      const [restLng, restLat] = restaurant.autoLocation.coordinates;
+      const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+      const dLat = toRad(latitude - restLat);
+      const dLng = toRad(longitude - restLng);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(restLat)) * Math.cos(toRad(latitude)) * Math.sin(dLng / 2) ** 2;
+      const distance = +(6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(2);
+
+      const deliveryFee = (() => {
+            if (subTotal >= 250) return 0;
+            return Math.ceil(distance <= 3 ? 35 : 35 + (distance - 3) * 9);
+      })();
+
       const platformFee = 7;
       const foodGST = +(subTotal * 0.05).toFixed(2);
       const deliveryGST = +(deliveryFee * 0.18).toFixed(2);
@@ -111,16 +124,6 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
       const totalAmount = subTotal + deliveryFee + platformFee + totalGST;
 
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-
-      const [longitude, latitude] = address.location.coordinates;
-      const [restLng, restLat] = restaurant.autoLocation.coordinates;
-
-      const toRad = (deg: number) => (deg * Math.PI) / 180;
-      const R = 6371;
-      const dLat = toRad(latitude - restLat);
-      const dLng = toRad(longitude - restLng);
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(restLat)) * Math.cos(toRad(latitude)) * Math.sin(dLng / 2) ** 2;
-      const distance = +(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(2);
 
       const BASE_PAY = 35;
       const BASE_KM = 3;
@@ -148,7 +151,7 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
                   latitude: latitude,
                   longitude: longitude
             },
-            paymentMode: paymentMethod,
+            paymentMethod: paymentMethod,
             paymentStatus: "pending",
             status: "placed",
             expiresAt: expiresAt
@@ -176,7 +179,7 @@ export const fetchOrderForPayment = TryCatch(async (req, res) => {
             });
       }
 
-      const { orderId } = req.params;
+      const { id: orderId } = req.params;
 
       const order = await Order.findById(orderId);
       

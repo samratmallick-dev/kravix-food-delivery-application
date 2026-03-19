@@ -290,10 +290,11 @@ const AddAddressPage = () => {
                               <div className="flex items-center gap-2 rounded-lg border bg-gray-50 px-3 py-2 focus-within:border-[#E23744] focus-within:bg-white transition">
                                     <BiPhone size={18} className="text-gray-400 shrink-0" />
                                     <input
-                                          type="number"
+                                          type="tel"
                                           placeholder="Mobile number"
                                           value={mobile}
-                                          onChange={(e) => setMobile(e.target.value)}
+                                          maxLength={10}
+                                          onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
                                           className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
                                     />
                               </div>

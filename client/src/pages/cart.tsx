@@ -1,49 +1,11 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useAppData } from "../context/AppContext";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import type { IMenuItem, IRestaurant } from "../types/types";
 import axios from "axios";
-import { cartBaseUrl, addressBaseUrl } from "../components/common/constant";
+import { cartBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import { ArrowRight, ShoppingBag, Trash2 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { BiMapPin, BiPhone, BiChevronDown } from "react-icons/bi";
-
-interface SavedAddress {
-      _id: string;
-      formatedAddress: string;
-      mobile: number;
-      location: {
-            coordinates: [number, number]; // [lng, lat]
-      };
-}
-
-const restaurantIcon = L.divIcon({
-      className: "",
-      html: `<div style="width:16px;height:16px;background:#C22630;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>`,
-      iconSize: [16, 16],
-      iconAnchor: [8, 8],
-      popupAnchor: [0, -12],
-});
-
-const customerIcon = L.divIcon({
-      className: "",
-      html: `<div style="width:16px;height:16px;background:#2563eb;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>`,
-      iconSize: [16, 16],
-      iconAnchor: [8, 8],
-      popupAnchor: [0, -12],
-});
-
-const FitBounds = ({ positions }: { positions: [number, number][] }) => {
-      const map = useMap();
-      const valid = positions.filter(([lat, lng]) => isFinite(lat) && isFinite(lng));
-      if (valid.length > 1) {
-            map.fitBounds(L.latLngBounds(valid), { padding: [40, 40] });
-      }
-      return null;
-};
 
 const Cart = () => {
 
@@ -55,29 +17,27 @@ const Cart = () => {
       const [loadingItemDec, setLoadingItemDec] = useState<string | null>(null);
       const [clearingCart, setClearingCart] = useState(false);
       const [confirmClear, setConfirmClear] = useState(false);
-      const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
-      const [selectedAddress, setSelectedAddress] = useState<SavedAddress | null>(null);
-      const [addressDropdownOpen, setAddressDropdownOpen] = useState(false);
 
-      useEffect(() => {
-            const token = localStorage.getItem("token");
-            if (!token) return;
-            axios.get(`${addressBaseUrl}/all`, { headers: { Authorization: `Bearer ${token}` } })
-                  .then(({ data }) => {
-                        const addrs: SavedAddress[] = data.data || [];
-                        setSavedAddresses(addrs);
-                        if (addrs.length > 0) setSelectedAddress(addrs[0]);
-                  })
-                  .catch(() => {});
-      }, []);
+      const restaurant = (cart?.[0]?.restaurantId as IRestaurant) ?? null;
+      const platformFee = 7;
 
-      const deliveryLocation = selectedAddress
-            ? {
-                  latitude: selectedAddress.location.coordinates[1],
-                  longitude: selectedAddress.location.coordinates[0],
-                  formattedAddress: selectedAddress.formatedAddress
-            }
-            : location;
+      const deliveryFee = useMemo(() => {
+            if (subTotal >= 250) return 0;
+            if (!location || !isFinite(location.latitude) || !isFinite(location.longitude)) return 49;
+            if (!restaurant?.autoLocation?.coordinates) return 49;
+            const [restLng, restLat] = restaurant.autoLocation.coordinates;
+            const toRad = (deg: number) => (deg * Math.PI) / 180;
+            const dLat = toRad(location.latitude - restLat);
+            const dLng = toRad(location.longitude - restLng);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(restLat)) * Math.cos(toRad(location.latitude)) * Math.sin(dLng / 2) ** 2;
+            const distance = +(6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(2);
+            return Math.ceil(distance <= 3 ? 35 : 35 + (distance - 3) * 9);
+      }, [subTotal, location, restaurant?.autoLocation?.coordinates]);
+
+      const foodGST = +(subTotal * 0.05).toFixed(2);
+      const deliveryGST = +(deliveryFee * 0.18).toFixed(2);
+      const totalGST = +(foodGST + deliveryGST).toFixed(2);
+      const totalAmount = subTotal + deliveryFee + platformFee + totalGST;
 
       if (!cart || cart.length === 0 || quantity === 0) {
             return (
@@ -96,18 +56,6 @@ const Cart = () => {
                   </div>
             );
       }
-
-      const restaurant = cart[0].restaurantId as IRestaurant;
-
-      const deliveryFee = subTotal < 250 ? 49 : 0;
-
-      const platformFee = 7;
-
-      const foodGST = +(subTotal * 0.05).toFixed(2);
-      const deliveryGST = +(deliveryFee * 0.18).toFixed(2);
-      const totalGST = +(foodGST + deliveryGST).toFixed(2);
-
-      const totalAmount = subTotal + deliveryFee + platformFee + totalGST;
 
       const increaseItem = async (itemId: string) => {
             try {
@@ -161,6 +109,7 @@ const Cart = () => {
 
       const checkout = () => {
             navigate("/checkout");
+            window.scrollTo({ top: 0, behavior: "smooth" });
       };
 
       return (
@@ -209,140 +158,6 @@ const Cart = () => {
                                                                   Open in Google Maps →
                                                             </a>
                                                       </div>
-                                                </div>
-
-                                                {/* Delivery Address Selector */}
-                                                <div className="px-4 pb-3">
-                                                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Deliver To</p>
-                                                      {savedAddresses.length === 0 ? (
-                                                            <Link
-                                                                  to="/address"
-                                                                  className="flex items-center gap-2 text-xs text-primary hover:underline"
-                                                            >
-                                                                  <BiMapPin size={13} /> Add a delivery address
-                                                            </Link>
-                                                      ) : (
-                                                            <div className="relative">
-                                                                  <button
-                                                                        onClick={() => setAddressDropdownOpen((o) => !o)}
-                                                                        className="w-full flex items-start justify-between gap-2 rounded-lg border bg-gray-50 px-3 py-2 text-sm text-left hover:bg-white transition"
-                                                                  >
-                                                                        <div className="flex items-start gap-2 min-w-0">
-                                                                              <BiMapPin size={14} className="text-primary mt-0.5 shrink-0" />
-                                                                              <div className="min-w-0">
-                                                                                    <p className="text-gray-800 text-xs font-medium line-clamp-1">{selectedAddress?.formatedAddress}</p>
-                                                                                    <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
-                                                                                          <BiPhone size={10} /> {selectedAddress?.mobile}
-                                                                                    </p>
-                                                                              </div>
-                                                                        </div>
-                                                                        <BiChevronDown size={16} className={`shrink-0 mt-0.5 text-gray-400 transition-transform ${addressDropdownOpen ? "rotate-180" : ""}`} />
-                                                                  </button>
-                                                                  {addressDropdownOpen && (
-                                                                        <ul className="absolute z-1000 mt-1 w-full rounded-lg border bg-white shadow-lg max-h-44 overflow-y-auto">
-                                                                              {savedAddresses.map((addr) => (
-                                                                                    <li
-                                                                                          key={addr._id}
-                                                                                          onClick={() => { setSelectedAddress(addr); setAddressDropdownOpen(false); }}
-                                                                                          className={`flex items-start gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 border-b last:border-0 ${selectedAddress?._id === addr._id ? "bg-red-50" : ""}`}
-                                                                                    >
-                                                                                          <BiMapPin size={13} className="text-primary mt-0.5 shrink-0" />
-                                                                                          <div>
-                                                                                                <p className="text-xs text-gray-800 line-clamp-2">{addr.formatedAddress}</p>
-                                                                                                <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5"><BiPhone size={10} /> {addr.mobile}</p>
-                                                                                          </div>
-                                                                                    </li>
-                                                                              ))}
-                                                                              <li className="px-3 py-2 border-t">
-                                                                                    <Link to="/address" className="text-xs text-primary hover:underline flex items-center gap-1">
-                                                                                          <BiMapPin size={12} /> Add new address
-                                                                                    </Link>
-                                                                              </li>
-                                                                        </ul>
-                                                                  )}
-                                                            </div>
-                                                      )}
-                                                </div>
-
-                                                <div className="h-56 w-full">
-                                                      {isFinite(restaurant.autoLocation.coordinates[1]) && isFinite(restaurant.autoLocation.coordinates[0]) && (
-                                                      <MapContainer
-                                                            center={[
-                                                                  restaurant.autoLocation.coordinates[1],
-                                                                  restaurant.autoLocation.coordinates[0],
-                                                            ]}
-                                                            zoom={15}
-                                                            className="h-full w-full"
-                                                            scrollWheelZoom={false}
-                                                      >
-                                                            <TileLayer
-                                                                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                                                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                                                            />
-                                                            <FitBounds
-                                                                  positions={[
-                                                                        [restaurant.autoLocation.coordinates[1], restaurant.autoLocation.coordinates[0]],
-                                                                        ...(deliveryLocation ? [[deliveryLocation.latitude, deliveryLocation.longitude] as [number, number]] : []),
-                                                                  ]}
-                                                            />
-                                                            {isFinite(restaurant.autoLocation.coordinates[1]) && isFinite(restaurant.autoLocation.coordinates[0]) && (
-                                                            <Marker
-                                                                  position={[
-                                                                        restaurant.autoLocation.coordinates[1],
-                                                                        restaurant.autoLocation.coordinates[0],
-                                                                  ]}
-                                                                  icon={restaurantIcon}
-                                                            >
-                                                                  <Popup>
-                                                                        <div className="text-sm">
-                                                                              <p className="font-semibold text-primary">{restaurant.name}</p>
-                                                                              <p className="text-gray-500 text-xs mt-0.5">{restaurant.autoLocation.formattedAddress}</p>
-                                                                        </div>
-                                                                  </Popup>
-                                                            </Marker>
-                                                            )}
-                                                            {deliveryLocation && isFinite(deliveryLocation.latitude) && isFinite(deliveryLocation.longitude) && (
-                                                                  <>
-                                                                        <Marker
-                                                                              position={[deliveryLocation.latitude, deliveryLocation.longitude]}
-                                                                              icon={customerIcon}
-                                                                        >
-                                                                              <Popup>
-                                                                                    <div className="text-sm">
-                                                                                          <p className="font-semibold text-blue-600">Delivery Address</p>
-                                                                                          <p className="text-gray-500 text-xs mt-0.5">{deliveryLocation.formattedAddress}</p>
-                                                                                    </div>
-                                                                              </Popup>
-                                                                        </Marker>
-                                                                        <Polyline
-                                                                              positions={[
-                                                                                    [deliveryLocation.latitude, deliveryLocation.longitude],
-                                                                                    [restaurant.autoLocation.coordinates[1], restaurant.autoLocation.coordinates[0]],
-                                                                              ]}
-                                                                              pathOptions={{ color: "#C22630", weight: 2, dashArray: "6 6" }}
-                                                                        />
-                                                                  </>
-                                                            )}
-                                                      </MapContainer>
-                                                      )}
-                                                </div>
-                                                <div className="flex items-center gap-4 px-4 py-2.5 bg-gray-50 text-xs text-gray-500">
-                                                      <span className="flex items-center gap-1.5">
-                                                            <span className="w-3 h-3 rounded-full bg-primary inline-block" />
-                                                            Restaurant
-                                                      </span>
-                                                      {deliveryLocation && (
-                                                            <span className="flex items-center gap-1.5">
-                                                                  <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />
-                                                                  Delivery Address
-                                                            </span>
-                                                      )}
-                                                      {deliveryLocation && (
-                                                            <span className="flex items-center gap-1.5">
-                                                                  <span className="w-4 border-t-2 border-dashed border-primary inline-block" />
-                                                                  Route
-                                                            </span>
-                                                      )}
                                                 </div>
                                           </div>
                                     )}
@@ -438,7 +253,7 @@ const Cart = () => {
                               )}
                         </div>
                         <div className="lg:w-80 xl:w-96">
-                              <div className="bg-white rounded-2xl shadow-sm border border-border p-5 sticky top-24 space-y-4">
+                              <div className="bg-white rounded-2xl shadow-sm border border-border p-5 space-y-4">
                                     <h2 className="font-bold text-gray-800 text-lg">Order Summary</h2>
 
                                     <div className="space-y-2 text-sm">
@@ -464,7 +279,7 @@ const Cart = () => {
                                           </div>
                                     </div>
 
-                                    {deliveryFee > 0 && (
+                                    {deliveryFee > 0 && subTotal < 250 && (
                                           <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
                                                 🎉 Add ₹{250 - subTotal} more for free delivery!
                                           </p>
@@ -479,8 +294,8 @@ const Cart = () => {
                                           onClick={checkout}
                                           disabled={!restaurant.isOpen}
                                           className={`w-full py-3 rounded-xl font-semibold transition text-white ${restaurant.isOpen
-                                                      ? "bg-primary hover:bg-primary/90 cursor-pointer"
-                                                      : "bg-gray-400 cursor-not-allowed"
+                                                ? "bg-primary hover:bg-primary/90 cursor-pointer"
+                                                : "bg-gray-400 cursor-not-allowed"
                                                 }`}
                                     >
                                           {restaurant.isOpen ? "Proceed to Checkout" : "Restaurant is not open"}

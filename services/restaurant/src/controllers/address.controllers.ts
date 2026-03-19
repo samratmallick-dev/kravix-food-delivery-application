@@ -94,9 +94,17 @@ export const getMyAddress = TryCatch(async (req: AuthenticatedRequest, res: Resp
 
       const addresses = await Address.find({ userId: user._id.toString() }).sort({createdAt: -1});
 
+      const data = addresses.map(a => ({
+            _id: a._id,
+            mobile: a.mobile,
+            formatedAddress: a.formatedAddress,
+            longitude: a.location.coordinates[0],
+            latitude: a.location.coordinates[1],
+      }));
+
       return res.status(200).json({
             message: "Addresses fetched successfully.",
-            data: addresses,
+            data,
             error: false,
             success: true
       });
