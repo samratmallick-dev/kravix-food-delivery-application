@@ -15,7 +15,7 @@ interface Address {
 };
 
 const Checkout = () => {
-      const { cart, fetchCart, subTotal, quantity, location: userLocation } = useAppData();
+      const { cart, subTotal, quantity, location: userLocation } = useAppData();
       const [addresses, setAddresses] = useState<Address[]>([]);
       const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
       const [loadingAddress, setLoadingAddress] = useState(true);
@@ -100,7 +100,6 @@ const Checkout = () => {
                                     });
                                     toast.success("🎉 Payment Successful!");
                                     navigate("/payment-success/" + response.razorpay_payment_id);
-                                    await fetchCart();
                               } catch (error: any) {
                                     toast.error(error.response?.data?.message || "Payment verification failed!");
                               }
