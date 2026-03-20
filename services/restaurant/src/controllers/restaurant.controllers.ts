@@ -246,7 +246,7 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
 
       const geoNearStage = {
             $geoNear: {
-                  near: { type: "Point", coordinates: [Number(longitude), Number(latitude)] },
+                  near: { type: "Point" as const, coordinates: [Number(longitude), Number(latitude)] as [number, number] },
                   distanceField: "distance",
                   maxDistance: Number(radius),
                   spherical: true,
@@ -255,20 +255,17 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
       };
 
       const sortAndProject = [
-            { $sort: { distance: 1, isOpen: -1 } },
+            { $sort: { distance: 1 as const, isOpen: -1 as const } },
             { $addFields: { distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] } } }
       ];
 
       let restaurants: any[] = [];
 
       if (search && typeof search === "string") {
-            // First: match by restaurant name
             const byName = await Restaurant.aggregate([
                   { ...geoNearStage, $geoNear: { ...geoNearStage.$geoNear, query: { isVerified: true, name: { $regex: search, $options: "i" } } } },
                   ...sortAndProject
             ]);
-
-            // Second: find restaurants that have matching menu items
             const matchingItems = await MenuItem.find({
                   name: { $regex: search, $options: "i" },
                   isAvailable: true
@@ -281,7 +278,6 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
                   ])
                   : [];
 
-            // Merge, deduplicate by _id
             const seen = new Set<string>();
             for (const r of [...byName, ...byMenuItems]) {
                   const key = r._id.toString();
