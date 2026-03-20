@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 4000;
 Promise.all([ConnectDb(), connectRabbitMQ()]).then(() => {
       startPayment();
       const server = app.listen(PORT, () => {
-            console.log(`[server]: Server is running at http://localhost:${PORT}`);
+            console.log(`[Restaurant server]: Restaurant Server is running at http://localhost:${PORT}`);
       });
       
       server.on("error", (err) => {

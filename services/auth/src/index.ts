@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3000;
 
 ConnectDb().then(() => {
       const server = app.listen(PORT, () => {
-            console.log(`[server]: Server is running at http://localhost:${PORT}`);
+            console.log(`[Auth server]: Auth Server is running at http://localhost:${PORT}`);
       });
       
       server.on("error", (err) => {

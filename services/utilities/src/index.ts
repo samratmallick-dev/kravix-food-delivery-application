@@ -31,5 +31,5 @@ app.use("/api/v1/cloudinary", cloudinaryRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 
 app.listen(Port, () => {
-      console.log(`[server]: Server is running at http://localhost:${Port}`);
+      console.log(`[Utilities server]: Utilities Server is running at http://localhost:${Port}`);
 });
