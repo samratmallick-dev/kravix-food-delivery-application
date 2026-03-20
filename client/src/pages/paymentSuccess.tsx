@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppData } from "../context/AppContext";
 import { useEffect } from "react";
+import { CheckCircle } from "lucide-react";
 
 const PaymentSuccess = () => {
       const { fetchCart } = useAppData();
@@ -15,10 +16,8 @@ const PaymentSuccess = () => {
             <div className="container-app min-h-[calc(100vh-80px)] flex items-center justify-center py-10">
                   <div className="bg-white rounded-2xl shadow-sm border border-border p-8 max-w-md w-full text-center space-y-5">
                         <div className="flex items-center justify-center">
-                              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center animate-bounce">
-                                    <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
+                              <div className="flex justify-center mb-4">
+                                    <CheckCircle className="w-20 h-20 text-green-500" strokeWidth={1.5} />
                               </div>
                         </div>
 
@@ -42,10 +41,10 @@ const PaymentSuccess = () => {
                                     Order More
                               </button>
                               <button
-                                    onClick={() => navigate("/")}
+                                    onClick={() => navigate("/orders")}
                                     className="w-full py-3 rounded-xl font-semibold text-primary border border-primary hover:bg-primary/5 transition active:scale-95"
                               >
-                                    Back to Home
+                                    Your orders
                               </button>
                         </div>
                   </div>

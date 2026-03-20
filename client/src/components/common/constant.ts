@@ -6,4 +6,6 @@ export const addressBaseUrl = import.meta.env.VITE_API_URL_ADDRESS;
 export const orderBaseUrl = import.meta.env.VITE_API_URL_ORDER;
 export const paymentBaseUrl = import.meta.env.VITE_API_URL_PAYMENT;
 
+export const stripPublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
 export const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;

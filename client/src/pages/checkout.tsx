@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppData } from "../context/AppContext";
 import axios from "axios";
-import { addressBaseUrl, orderBaseUrl, paymentBaseUrl } from "../components/common/constant";
+import { addressBaseUrl, orderBaseUrl, paymentBaseUrl, stripPublishableKey } from "../components/common/constant";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { ICart, IMenuItem, IRestaurant } from "../types/types";
 import toast from "react-hot-toast";
+import { loadStripe } from "@stripe/stripe-js";
 
 interface Address {
       _id: string;
@@ -100,6 +101,7 @@ const Checkout = () => {
                                     });
                                     toast.success("🎉 Payment Successful!");
                                     navigate("/payment-success/" + response.razorpay_payment_id);
+                                     window.scrollTo({ top: 0, behavior: "smooth" });
                               } catch (error: any) {
                                     toast.error(error.response?.data?.message || "Payment verification failed!");
                               }
@@ -116,12 +118,31 @@ const Checkout = () => {
             }
       };
 
+      const stripePromise = loadStripe(stripPublishableKey);
+
       const payWithStripe = async () => {
             try {
                   setLoadingStripe(true);
                   const order = await createOrder("stripe");
                   if (!order) return;
-                  console.log("Stripe Checkout", order);
+                  const { orderId } = order;
+                  try {
+                        const stripe = await stripePromise;
+                        if (!stripe) throw new Error("Stripe failed to load");
+
+                        const { data } = await axios.post(`${paymentBaseUrl}/stripe/create`, {
+                              orderId
+                        });
+
+                        if(data.data.url) {
+                              window.location.href = data.data.url;
+                        } else {
+                              toast.error("Failed to create stripe payment session.");
+                        }
+                  } catch (error) {
+                        console.log(error);
+                        toast.error("Payment failed");
+                  }
             } catch (error) {
                   toast.error("Something went wrong! Please refresh the page.");
             } finally {
@@ -363,7 +384,7 @@ const Checkout = () => {
                                     </div>
 
                                     <button
-                                          onClick={() => selectedPayment === "razorpay" ? payWithRazorpay() : payWithStripe()}
+                                          onClick={() => {selectedPayment === "razorpay" ? payWithRazorpay() : payWithStripe()}}
                                           disabled={!selectedAddressId || !selectedPayment || loadingRazorpay || loadingStripe || creatingOrders}
                                           className="mt-4 w-full py-3 rounded-xl font-semibold text-white transition bg-primary hover:bg-primary/90 disabled:bg-gray-300 disabled:cursor-not-allowed active:scale-95"
                                     >
@@ -373,8 +394,8 @@ const Checkout = () => {
                                                       Processing...
                                                 </span>
                                           ) : !selectedAddressId ? "Select a delivery address"
-                                            : !selectedPayment ? "Select a payment method"
-                                            : `Pay ₹${total} via ${selectedPayment === "razorpay" ? "Razorpay" : "Stripe"}`}
+                                                : !selectedPayment ? "Select a payment method"
+                                                      : `Pay ₹${total} via ${selectedPayment === "razorpay" ? "Razorpay" : "Stripe"}`}
                                     </button>
                               </div>
                         </div>
