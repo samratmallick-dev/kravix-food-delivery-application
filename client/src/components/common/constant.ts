@@ -5,6 +5,7 @@ export const cartBaseUrl = import.meta.env.VITE_API_URL_CART;
 export const addressBaseUrl = import.meta.env.VITE_API_URL_ADDRESS;
 export const orderBaseUrl = import.meta.env.VITE_API_URL_ORDER;
 export const paymentBaseUrl = import.meta.env.VITE_API_URL_PAYMENT;
+export const realtimeSocketBaseUrl = import.meta.env.VITE_API_URL_REALTIME_SOCKET;
 
 export const stripPublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
