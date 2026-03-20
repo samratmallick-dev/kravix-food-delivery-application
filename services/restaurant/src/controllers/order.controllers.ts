@@ -309,7 +309,8 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
       }, {
             headers: {
                   "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
-            }
+            },
+            withCredentials: true
       });
 
       return res.status(200).json({
