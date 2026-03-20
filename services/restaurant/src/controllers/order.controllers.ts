@@ -6,7 +6,6 @@ import { Cart } from "../model/Cart.js";
 import { IMenuItem } from "../model/MenuItems.js";
 import { Restaurant } from "../model/Restaurant.js";
 import { Order } from "../model/Order.js";
-import axios from "axios";
 
 export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
@@ -183,7 +182,7 @@ export const fetchOrderForPayment = TryCatch(async (req, res) => {
       const { id: orderId } = req.params;
 
       const order = await Order.findById(orderId);
-
+      
       if (!order) {
             return res.status(404).json({
                   success: false,
@@ -199,7 +198,7 @@ export const fetchOrderForPayment = TryCatch(async (req, res) => {
                   error: true
             });
       }
-
+      
       return res.status(200).json({
             success: true,
             message: "Order fetched successfully",
@@ -208,174 +207,5 @@ export const fetchOrderForPayment = TryCatch(async (req, res) => {
                   totalAmount: order.totalAmount,
                   currency: "INR"
             }
-      });
-});
-
-export const fetchRestaurantOrders = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
-      if (!user) {
-            return res.status(401).json({
-                  success: false,
-                  message: "Unauthorized User",
-                  error: true
-            })
-      }
-
-      const { restaurantId } = req.params;
-      if (!restaurantId) {
-            return res.status(400).json({
-                  success: false,
-                  message: "Restaurant Id is required",
-                  error: true
-            })
-      }
-
-      const limit = req.query.limit ? Number(req.query.limit) : 0;
-
-      const orders = await Order.find({
-            restaurantId: restaurantId,
-            paymentStatus: "paid"
-      }).sort({ createdAt: -1 }).limit(limit);
-
-      return res.status(200).json({
-            success: true,
-            message: "Orders fetched successfully",
-            data: {
-                  count: orders.length,
-                  orders
-            }
-      });
-});
-
-const ALLOWED_STATUSES = ["accepted", "preparing", "ready_for_rider"] as const;
-
-export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
-      if (!user) {
-            return res.status(401).json({
-                  success: false,
-                  message: "Unauthorized User",
-                  error: true
-            })
-      }
-
-      const { status } = req.body;
-      if (!ALLOWED_STATUSES.includes(status)) {
-            return res.status(400).json({
-                  success: false,
-                  message: "Invalid order status",
-                  error: true
-            });
-      }
-
-      const { orderId } = req.params;
-      const order = await Order.findById(orderId);
-      if (!order) {
-            return res.status(404).json({
-                  success: false,
-                  message: "Order not found",
-                  error: true
-            });
-      }
-
-      if (order.paymentStatus !== "paid") {
-            return res.status(400).json({
-                  success: false,
-                  message: "Order not completed",
-                  error: true
-            });
-      }
-
-      const restaurant = await Restaurant.findById(order.restaurantId);
-
-      if (restaurant?.ownerId !== user._id.toString()) {
-            return res.status(403).json({
-                  success: false,
-                  message: "Access denied. You don't have permission to update this order.",
-                  error: true
-            });
-      }
-
-      order.status = status;
-      await order.save();
-
-      await axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`, {
-            event: "order:update",
-            room: `user:${order.userId}`,
-            payload: {
-                  orderId: order._id,
-                  status: order.status
-            }
-      }, {
-            headers: {
-                  "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
-            }
-      });
-
-      return res.status(200).json({
-            success: true,
-            message: "Order status updated successfully",
-            data: order
-      });
-});
-
-export const getMyOrders = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
-      if (!user) {
-            return res.status(401).json({
-                  success: false,
-                  message: "Unauthorized User",
-                  error: true
-            })
-      }
-
-      const orders = await Order.find({
-            userId: user._id.toString(),
-            paymentStatus: "paid"
-      }).sort({ createdAt: -1 });
-
-      return res.status(200).json({
-            success: true,
-            message: "Orders fetched successfully",
-            data: {
-                  count: orders.length,
-                  orders
-            }
-      });
-});
-
-export const getSingleOrder = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
-      if (!user) {
-            return res.status(401).json({
-                  success: false,
-                  message: "Unauthorized User",
-                  error: true
-            })
-      }
-
-      const { orderId } = req.params;
-
-      const order = await Order.findById(orderId);
-      if (!order) {
-            return res.status(404).json({
-                  success: false,
-                  message: "Order not found",
-                  error: true
-            });
-      }
-
-      if(order.userId !== user._id.toString()) {
-            return res.status(403).json({
-                  success: false,
-                  message: "Access denied. You don't have permission to view this order.",
-                  error: true
-            });
-      }
-
-      return res.status(200).json({
-            success: true,
-            message: "Order fetched successfully",
-            data: order
       });
 });
