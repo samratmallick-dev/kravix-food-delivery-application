@@ -7,12 +7,15 @@ import { Toaster } from 'react-hot-toast';
 import { googleClientId } from './components/common/constant.ts';
 import { AppProvider } from './context/AppContext.tsx';
 import "leaflet/dist/leaflet.css";
+import { SocketProvider } from './context/SocketContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
       <StrictMode>
             <GoogleOAuthProvider clientId={googleClientId}>
                   <AppProvider>
-                        <App />
+                        <SocketProvider>
+                              <App />
+                        </SocketProvider>
                   </AppProvider>
                   <Toaster />
             </GoogleOAuthProvider>
