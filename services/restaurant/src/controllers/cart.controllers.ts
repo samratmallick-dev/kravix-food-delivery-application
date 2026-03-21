@@ -63,7 +63,7 @@ export const addToCart = TryCatch(async (req: AuthenticatedRequest, res: Respons
                   $inc: { quantity: 1 },
                   $setOnInsert: { userId, restaurantId, itemId }
             },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
+            { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
       );
 
       const statusCode = cartItem.quantity === 1 ? 201 : 200;
@@ -137,7 +137,7 @@ export const incrementCart = TryCatch(async (req: AuthenticatedRequest, res: Res
             {
                   $inc: { quantity: 1 }
             },
-            { new: true }
+            { returnDocument: 'after' }
       );
 
       if (!cartItem) {

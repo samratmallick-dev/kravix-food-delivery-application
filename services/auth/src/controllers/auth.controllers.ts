@@ -104,7 +104,7 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
       const updateUser = await User.findByIdAndUpdate(
             user._id,
             { role },
-            { new: true }
+            { returnDocument: 'after' }
       );
 
       if (!updateUser) {

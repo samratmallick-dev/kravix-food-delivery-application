@@ -76,7 +76,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   await fetchCart();
             } catch (error: any) {
                   console.log(error);
-                  toast.error(error.response.data.message);
+                  toast.error(error.response?.data?.message || "Failed to add item to cart");
             } finally {
                   setLoadingItemId(null);
                   setLoadingAction(null);
@@ -95,7 +95,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   await fetchCart();
             } catch (error: any) {
                   console.log(error);
-                  toast(error.response.data.message);
+                  toast.error(error.response?.data?.message || "Failed to update cart");
             } finally {
                   setLoadingItemId(null);
                   setLoadingAction(null);
@@ -114,7 +114,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   await fetchCart();
             } catch (error: any) {
                   console.log(error);
-                  toast(error.response.data.message);
+                  toast.error(error.response?.data?.message || "Failed to update cart");
             } finally {
                   setLoadingItemId(null);
                   setLoadingAction(null);

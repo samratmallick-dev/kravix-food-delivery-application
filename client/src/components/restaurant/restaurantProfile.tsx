@@ -63,7 +63,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
             <div className="w-full bg-white rounded-b-2xl shadow-md overflow-hidden">
                   {/* Banner + Avatar */}
                   <div className="relative">
-                        <div className="h-56 bg-linear-to-r from-primary/20 to-orange-100 overflow-hidden">
+                        <div className={`h-56 bg-linear-to-r from-primary/20 to-orange-100 overflow-hidden ${!restaurant.isOpen && "grayscale brightness-75 opacity-80"}`}>
                               {restaurant.image && (
                                     <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-fill object-center" />
                               )}

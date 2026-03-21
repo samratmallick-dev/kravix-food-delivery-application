@@ -95,9 +95,12 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
 
       if (orders.length === 0) {
             return (
-                  <div className="pt-10 container-app flex flex-col items-center justify-center gap-3 text-gray-400">
-                        <ShoppingBag size={48} strokeWidth={1.2} />
-                        <p className="text-lg font-medium">No orders yet</p>
+                  <div className="container-app py-6">
+                        <h1 className="text-gray-700 font-semibold text-2xl mb-6">Orders</h1>
+                        <div className="flex flex-col items-center justify-center h-72 gap-3 text-gray-400">
+                              <ShoppingBag size={40} strokeWidth={1.5} />
+                              <p className="text-sm">No orders yet</p>
+                        </div>
                   </div>
             );
       }

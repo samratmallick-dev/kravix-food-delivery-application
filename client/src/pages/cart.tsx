@@ -37,7 +37,7 @@ const Cart = () => {
       const foodGST = +(subTotal * 0.05).toFixed(2);
       const deliveryGST = +(deliveryFee * 0.18).toFixed(2);
       const totalGST = +(foodGST + deliveryGST).toFixed(2);
-      const totalAmount = subTotal + deliveryFee + platformFee + totalGST;
+      const totalAmount = (subTotal + deliveryFee + platformFee + totalGST).toFixed(2);
 
       if (!cart || cart.length === 0 || quantity === 0) {
             return (

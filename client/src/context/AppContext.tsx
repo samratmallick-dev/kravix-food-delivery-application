@@ -40,7 +40,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                   setIsAuth(true);
             } catch (error: any) {
                   console.log(error);
-                  toast.error(error.response.data.message);
+                  toast.error(error?.response?.data?.message || "Something went wrong");
                   setUser(null);
                   setIsAuth(false);
             } finally {
@@ -49,16 +49,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       };
 
       const fetchCart = useCallback(async () => {
-            if (!user || user.role !== "customer") {
+            const token = localStorage.getItem("token");
+            if (!token) {
                   setCart([]);
                   setSubTotal(0);
                   setQuantity(0);
                   return;
             }
             try {
-                  const token = localStorage.getItem("token");
-                  if (!token) throw new Error("Missing token");
-
                   const { data } = await axios.get(`${cartBaseUrl}/all`, {
                         headers: { Authorization: `Bearer ${token}` }
                   });
@@ -69,7 +67,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             } catch (error: any) {
                   console.log(error);
             }
-      }, [user]);
+      }, []);
 
       useEffect(() => {
             fetchUser();

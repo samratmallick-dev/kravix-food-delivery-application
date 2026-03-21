@@ -301,7 +301,7 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
 
       await axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`, {
             event: "order:update",
-            room: `user:${order.userId}`,
+            room: `User:${order.userId}`,
             payload: {
                   orderId: order._id,
                   status: order.status

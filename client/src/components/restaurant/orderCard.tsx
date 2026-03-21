@@ -87,8 +87,7 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
 
                         <div className="flex items-start justify-between gap-3">
                               <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-0.5">Order ID</p>
-                                    <p className="text-base font-bold text-gray-800 font-mono">#{order._id.slice(-8).toUpperCase()}</p>
+                                    <p className="text-base font-semibold uppercase tracking-widest text-gray-400 mb-0.5">Order ID: <span className="font-bold text-gray-800 font-mono">#{order._id.slice(-8).toUpperCase()}</span></p>
                                     <p className="text-xs text-gray-400 mt-0.5">{order.items.reduce((sum, i) => sum + i.quantity, 0)} items</p>
                               </div>
                               <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${statusCfg.badge}`}>
@@ -119,6 +118,14 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
                               <div className="flex justify-between text-gray-400">
                                     <span>Delivery fee</span>
                                     <span className="tabular-nums">₹{order.deliveryFee.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between text-gray-400">
+                                    <span>Platform fee</span>
+                                    <span className="tabular-nums">₹{order.platformFee.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between text-gray-400">
+                                    <span>GST</span>
+                                    <span className="tabular-nums">₹{(order.subtotal * 0.05 + order.deliveryFee * 0.18).toFixed(2)}</span>
                               </div>
                               <div className="flex justify-between font-bold text-gray-800 pt-1.5 border-t border-dashed border-gray-200 mt-1.5">
                                     <span>Total</span>

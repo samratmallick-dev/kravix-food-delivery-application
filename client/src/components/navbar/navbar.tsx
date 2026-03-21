@@ -8,12 +8,13 @@ import SearchBar from "./SearchBar";
 import { useMobile } from "../common/useMobile";
 
 const Navbar = () => {
-      const { isAuth, city, quantity } = useAppData();
+      const { isAuth, user, city, quantity } = useAppData();
       const currentLocation = useLocation();
       const isMobile = useMobile();
       const isSearchPage = currentLocation.pathname === "/search";
       const isHomePage = currentLocation.pathname === "/";
       const showSearch = isHomePage || isSearchPage;
+      const isCustomer = isAuth && user?.role === "customer";
 
       return (
             <div className="w-full bg-background shadow-md">
@@ -39,12 +40,16 @@ const Navbar = () => {
                                           {!isMobile && <span className="text-gray-500 group-hover:text-white font-medium transition-colors duration-300">Login</span>}
                                     </Link>
                               )}
-                              <Link to="/cart" className="relative" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                                    <ShoppingCart size={isMobile ? 22 : 26} className="text-primary" />
-                                    <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-5 h-5 bg-primary text-gray-200 rounded-full text-xs">
-                                          {quantity}
-                                    </span>
-                              </Link>
+                              {isCustomer && (
+                                    <Link to="/cart" className="relative" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                                          <ShoppingCart size={isMobile ? 22 : 26} className="text-primary" />
+                                          {quantity > 0 && (
+                                                <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-5 h-5 bg-primary text-gray-200 rounded-full text-xs">
+                                                      {quantity}
+                                                </span>
+                                          )}
+                                    </Link>
+                              )}
                         </div>
                   </div>
 

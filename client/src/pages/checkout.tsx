@@ -54,7 +54,7 @@ const Checkout = () => {
       const foodGST = +(subTotal * 0.05).toFixed(2);
       const deliveryGST = +(deliveryFee * 0.18).toFixed(2);
       const totalGST = +(foodGST + deliveryGST).toFixed(2);
-      const total = +(subTotal + deliveryFee + platformFee + totalGST).toFixed(2);
+      const total = (subTotal + deliveryFee + platformFee + totalGST).toFixed(2);
 
       const createOrder = async (paymentMethod: "razorpay" | "stripe") => {
             if (!selectedAddressId) return null;
