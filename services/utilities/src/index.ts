@@ -4,7 +4,7 @@ import cors from "cors";
 import { corsOptions } from "./config/cors.js";
 import { connectRabbitMQ } from "./config/rabitmq.js";
 
-const Port = process.env.PORT || 5000;
+const Port = process.env.PORT || 8888;
 
 const app = express();
 

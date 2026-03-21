@@ -201,7 +201,7 @@ const OrderDetails = () => {
                         <p className="text-sm font-semibold text-gray-700">Delivery Address</p>
                         <div className="flex items-start gap-2 text-sm text-gray-500">
                               <MapPin size={15} className="mt-0.5 shrink-0 text-gray-400" />
-                              <span className="break-words">{order.deliveryAddress.formatedAddress}</span>
+                              <span className="wrap-break-word">{order.deliveryAddress.formatedAddress}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                               <Phone size={15} className="shrink-0 text-gray-400" />

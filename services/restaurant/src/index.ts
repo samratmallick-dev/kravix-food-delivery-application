@@ -4,7 +4,7 @@ import ConnectDb from "./config/db/db.js";
 import { connectRabbitMQ } from "./config/rabbitmq.js";
 import { startPayment } from "./config/paymentConsumer.js";
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 9000;
 
 Promise.all([ConnectDb(), connectRabbitMQ()]).then(() => {
       startPayment();

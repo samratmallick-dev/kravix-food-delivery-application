@@ -1,12 +1,12 @@
 import "dotenv/config";
 import { app } from './app.js';
-import ConnectDb from "./config/db/db.js";
+import ConnectDb from "./config/db.js";
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 7000;
 
 ConnectDb().then(() => {
       const server = app.listen(PORT, () => {
-            console.log(`[Auth server]: Auth Server is running at http://localhost:${PORT}`);
+            console.log(`[Rider server]: Rider Server is running at http://localhost:${PORT}`);
       });
       
       server.on("error", (err) => {
