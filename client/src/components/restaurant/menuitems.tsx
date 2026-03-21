@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { IMenuItem } from "../../types/types";
 import { Eye, Loader, Minus, Plus, Trash2 } from "lucide-react";
 import { BsCartPlus, BsEyeSlash } from "react-icons/bs";
@@ -14,9 +14,14 @@ interface MenuItemProps {
 }
 
 const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
+      const [localItems, setLocalItems] = useState<IMenuItem[]>(items);
       const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
       const [loadingAction, setLoadingAction] = useState<"inc" | "dec" | "add" | null>(null);
       const { fetchCart, cart } = useAppData();
+
+      useEffect(() => {
+            setLocalItems(items);
+      }, [items]);
 
       const handleDeleteItem = async (itemId: string) => {
             const conform = window.confirm("Are you sure you want to delete this item?");
@@ -37,6 +42,9 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
       };
 
       const toggleMenuItemAvailability = async (itemId: string) => {
+            setLocalItems(prev =>
+                  prev.map(i => i._id === itemId ? { ...i, isAvailable: !i.isAvailable } : i)
+            );
             try {
                   const response = await axios.patch(`${menuBaseUrl}/availability/${itemId}`, {}, {
                         headers: {
@@ -44,10 +52,11 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                         }, withCredentials: true
                   });
                   toast.success(response.data.message);
-                  onItemDelete();
             } catch (error: any) {
-                  console.log(error);
-                  toast.error(error.response?.data?.message || "Failed to delete menu item");
+                  setLocalItems(prev =>
+                        prev.map(i => i._id === itemId ? { ...i, isAvailable: !i.isAvailable } : i)
+                  );
+                  toast.error(error.response?.data?.message || "Failed to toggle availability");
             }
       };
 
@@ -116,7 +125,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
       return (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {
-                        items && items.map((item) => {
+                        localItems && localItems.map((item) => {
                               const isLoading = loadingItemId === item._id;
                               const isIncLoading = isLoading && loadingAction === "inc";
                               const isDecLoading = isLoading && loadingAction === "dec";

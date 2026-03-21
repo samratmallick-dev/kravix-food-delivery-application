@@ -11,7 +11,7 @@ export const startPayment = async () => {
                   const event = JSON.parse(msg.content.toString());
 
                   if (event.type !== "PAYMENT_SUCCESS") {
-                        channel.ack(msg)
+                        channel.ack(msg);
                         return;
                   }
 
@@ -39,19 +39,23 @@ export const startPayment = async () => {
                         return;
                   }
                   console.log("✅ Order Placed: ", order._id);
-
-                  await axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`, {
-                        event: "order:new",
-                        room: `restaurant: ${order.restaurantId}`,
-                        payload: {
-                              orderId: order._id,
-                        }
-                  }, {
-                        headers: {
-                              "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
+                  
+                  await axios.post(
+                        `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+                        {
+                              event: "order:new",
+                              room: `Restaurant:${order.restaurantId}`,
+                              payload: {
+                                    orderId: order._id,
+                              }
                         },
-                        withCredentials: true
-                  })
+                        {
+                              headers: {
+                                    "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
+                              },
+                              withCredentials: true
+                        }
+                  );
 
                   channel.ack(msg);
             } catch (error) {
@@ -59,5 +63,4 @@ export const startPayment = async () => {
                   channel.ack(msg);
             }
       });
-
 };

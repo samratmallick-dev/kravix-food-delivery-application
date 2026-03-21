@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BiSearch } from "react-icons/bi";
 import { X } from "lucide-react";
@@ -19,9 +19,10 @@ interface SearchBarProps {
       onSearch?: (value: string) => void;
       redirectOnFocus?: boolean;
       autoFocus?: boolean;
+      locationPrefix?: React.ReactNode;
 }
 
-const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoFocus = false }: SearchBarProps) => {
+const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoFocus = false, locationPrefix }: SearchBarProps) => {
       const { location } = useAppData();
       const navigate = useNavigate();
       const inputRef = useRef<HTMLInputElement>(null);
@@ -134,7 +135,8 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
 
       return (
             <div ref={containerRef} className="relative w-full">
-                  <div className="flex items-center border border-gray-300 rounded-lg bg-white px-4 py-3 gap-3 shadow-sm">
+                  <div className="flex items-center border border-gray-300 rounded-lg bg-white px-4 py-2 gap-3 shadow-sm">
+                        {locationPrefix}
                         <input
                               ref={inputRef}
                               autoFocus={autoFocus}
@@ -143,7 +145,7 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
                               onFocus={handleFocus}
                               onKeyDown={handleKeyDown}
                               placeholder="Search for restaurants and food"
-                              className="flex-1 outline-none text-gray-700 text-sm bg-transparent placeholder-gray-400"
+                              className="flex-1 min-w-0 outline-none text-gray-700 text-sm bg-transparent placeholder-gray-400"
                         />
                         {value ? (
                               <button onClick={handleClear} className="text-gray-400 hover:text-gray-600 transition-colors">

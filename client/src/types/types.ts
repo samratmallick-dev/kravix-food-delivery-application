@@ -51,7 +51,7 @@ export interface IRestaurant {
 
 export interface IMenuItem {
       _id: string;
-      restaurantId : string;
+      restaurantId: string;
       name: string;
       description: string;
       price: number;
@@ -75,9 +75,52 @@ export interface IFoodSearchResult {
 export interface ICart {
       _id: string;
       userId: string;
-      restaurantId : string | IRestaurant;
+      restaurantId: string | IRestaurant;
       itemId: string | IMenuItem;
-      quantity:number;
+      quantity: number;
+      createdAt: Date;
+      updatedAt: Date;
+};
+
+export interface IOrder {
+      _id: string;
+      userId: string;
+      restaurantId: string;
+      restaurantName: string;
+      riderId?: string | null;
+      riderPhoneNumber: number | null;
+      riderName: string | null;
+      distance: number;
+      riderAmount: number;
+
+      items: {
+            itemId: string;
+            name: string;
+            price: number;
+            quantity: number;
+      }[];
+
+      subtotal: number;
+      deliveryFee: number;
+      platformFee: number;
+      totalAmount: number;
+
+      addressId: string;
+      deliveryAddress: {
+            formatedAddress: string;
+            mobile: number;
+            latitude: number;
+            longitude: number;
+      };
+
+      status: | "placed" | "accepted" | "preparing" | "ready_for_rider" | "rider_assigned" | "picked_up" | "delivered" | "cancelled";
+
+      paymentMethod: "razorpay" | "stripe";
+
+      paymentStatus: "pending" | "paid" | "failed";
+
+      expiresAt: Date;
+
       createdAt: Date;
       updatedAt: Date;
 };

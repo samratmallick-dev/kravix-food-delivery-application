@@ -11,8 +11,9 @@ export const socketEmit = async (req: Request, res: Response) => {
                   });
             }
 
-            const {event, room, payload} = req.body;
-            if(!event || room) {
+            const { event, room, payload } = req.body;
+
+            if (!event || !room) {
                   return res.status(400).json({
                         success: false,
                         message: "Event and room are required",
@@ -31,7 +32,7 @@ export const socketEmit = async (req: Request, res: Response) => {
                   message: "Event emitted successfully",
                   error: false
             });
-            
+
       } catch (error) {
             return res.status(500).json({
                   success: false,

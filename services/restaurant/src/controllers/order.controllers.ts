@@ -315,6 +315,7 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
 
       return res.status(200).json({
             success: true,
+            error: false,
             message: "Order status updated successfully",
             data: order
       });

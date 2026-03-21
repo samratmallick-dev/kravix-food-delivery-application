@@ -30,7 +30,7 @@ export interface IOrder extends Document {
             longitude: number;
       };
 
-      status: | "placed" | "confirmed" | "preparing" | "ready_for_rider" | "rider_assigned" | "picked_up" | "delivered" | "cancelled";
+      status: | "placed" | "accepted" | "preparing" | "ready_for_rider" | "rider_assigned" | "picked_up" | "delivered" | "cancelled";
 
       paymentMethod: "razorpay" | "stripe";
 
@@ -125,7 +125,7 @@ const orderSchema: Schema = new Schema<IOrder>({
             type: String,
             enum: [
                   "placed",
-                  "confirmed",
+                  "accepted",
                   "preparing",
                   "ready_for_rider",
                   "rider_assigned",

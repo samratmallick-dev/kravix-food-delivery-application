@@ -8,11 +8,13 @@ import axios from "axios";
 import { restaurantBaseUrl } from "../components/common/constant";
 import FeatureBanmner from "../components/home/featureBanner";
 import RestaurantsCard from "../components/restaurant/restaurantsCard";
+import { useMobile } from "../components/common/useMobile";
 
 const Home = () => {
 
       const { location } = useAppData();
       const [searchParams] = useSearchParams();
+      const isMobile = useMobile();
 
       const search = searchParams.get("search") || "";
 
@@ -63,7 +65,7 @@ const Home = () => {
       if ((loading && !searching) || !location) {
             return (
                   <div className="flex items-center justify-center h-screen">
-                        <p className="text-xl font-semibold">Finding Restaurant near you...</p>
+                        <p className={`font-semibold ${isMobile ? "text-base" : "text-xl"}`}>Finding Restaurant near you...</p>
                   </div>
             );
       }
@@ -73,7 +75,7 @@ const Home = () => {
                   <Hero />
                   <FeatureBanmner />
                   <div className="container-app py-5 space-y-3">
-                        <h1 className="font-semibold md:text-2xl text-xl text-wrap text-primary">Your Nearest Restaurants</h1>
+                        <h1 className={`font-semibold text-wrap text-primary ${isMobile ? "text-lg" : "text-2xl"}`}>Your Nearest Restaurants</h1>
                         {searching && (
                               <p className="text-sm text-gray-400 animate-pulse">Searching...</p>
                         )}

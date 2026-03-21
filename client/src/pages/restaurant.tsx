@@ -6,6 +6,8 @@ import AddRestaurant from "../components/restaurant/addRestaurant";
 import RestaurantProfile from "../components/restaurant/restaurantProfile";
 import Menuitems from "../components/restaurant/menuitems";
 import AddMenuItems from "../components/restaurant/addMenuItems";
+import RestaurantOrders from "../components/restaurant/restaurantOrders";
+import { useMobile } from "../components/common/useMobile";
 
 type SellerTab = "menu" | "add-item" | "sales";
 
@@ -13,6 +15,7 @@ const Restaurant = () => {
 
       const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
       const [loading, setLoading] = useState(true);
+      const isMobile = useMobile();
 
       const [tab, setTab] = useState<SellerTab>(
             () => (localStorage.getItem("restaurantTab") as SellerTab) || "menu"
@@ -88,10 +91,10 @@ const Restaurant = () => {
       return (
             <div className="min-h-screen bg-background">
                   <RestaurantProfile restaurant={restaurant} onUpdate={setRestaurant} isSeller={true} />
+                  <RestaurantOrders restaurantId={restaurant._id} />
                   <div className="w-full container-app sm:px-6 py-8 space-y-6">
 
                         <div className="rounded-2xl bg-white shadow-md overflow-hidden">
-                              {/* Tabs */}
                               <div className="flex border-b border-gray-100">
                                     {[
                                           { label: "Menu", value: "menu" },
@@ -101,17 +104,16 @@ const Restaurant = () => {
                                           <button
                                                 key={item.value}
                                                 onClick={() => handleTabChange(item.value as SellerTab)}
-                                                className={`flex-1 py-3.5 text-sm font-medium transition cursor-pointer ${tab === item.value
+                                                className={`flex-1 text-sm font-medium transition cursor-pointer ${isMobile ? "py-2.5" : "py-3.5"} ${tab === item.value
                                                             ? "border-b-2 border-primary text-primary bg-primary/30"
                                                             : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                                                       }`}
                                           >
-                                                {item.label}
+                                                {isMobile && item.value === "add-item" ? "+Item" : item.label}
                                           </button>
                                     ))}
                               </div>
 
-                              {/* Tab content */}
                               <div className="p-4 sm:p-6">
                                     {tab === "menu" && (
                                           <Menuitems

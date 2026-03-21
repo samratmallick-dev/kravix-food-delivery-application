@@ -7,11 +7,13 @@ import RestaurantProfile from "../components/restaurant/restaurantProfile";
 import Menuitems from "../components/restaurant/menuitems";
 import { useAppData } from "../context/AppContext";
 import { ShoppingCart } from "lucide-react";
+import { useMobile } from "../components/common/useMobile";
 
 const CustomerRestaurantPage = () => {
       const { id } = useParams();
       const navigate = useNavigate();
       const { cart } = useAppData();
+      const isMobile = useMobile();
 
       const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
       const [menuItem, setMenuItem] = useState<IMenuItem[]>([]);
@@ -83,9 +85,10 @@ const CustomerRestaurantPage = () => {
                                     navigate("/cart");
                                     window.scrollTo({ top: 0, behavior: "smooth" });
                               }}
-                              className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-all z-50"
+                              className="fixed left-1/2 -translate-x-1/2 flex items-center gap-2 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-all z-50"
+                              style={{ bottom: isMobile ? 16 : 24, padding: isMobile ? "10px 20px" : "12px 24px", fontSize: isMobile ? "0.875rem" : "1rem" }}
                         >
-                              <ShoppingCart size={18} />
+                              <ShoppingCart size={isMobile ? 16 : 18} />
                               View Cart ({cart.length})
                         </button>
                   )}

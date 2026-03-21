@@ -4,12 +4,14 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { paymentBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import { CheckCircle, Home, ShoppingBag } from "lucide-react";
+import { useMobile } from "../components/common/useMobile";
 
 const OrderSuccess = () => {
       const [params] = useSearchParams();
       const sessionId = params.get("session_id");
       const navigate = useNavigate();
       const hasVerified = useRef(false);
+      const isMobile = useMobile();
 
       useEffect(() => {
             if (!sessionId || hasVerified.current) return;
@@ -31,11 +33,11 @@ const OrderSuccess = () => {
       },[sessionId]);
       return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-                  <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+                  <div className="max-w-md w-full bg-white rounded-lg shadow-lg text-center" style={{ padding: isMobile ? "24px 16px" : "32px" }}>
                         <div className="flex justify-center mb-4">
-                              <CheckCircle className="w-20 h-20 text-green-500" strokeWidth={1.5} />
+                              <CheckCircle className={`text-green-500 ${isMobile ? "w-14 h-14" : "w-20 h-20"}`} strokeWidth={1.5} />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Successful!</h1>
+                        <h1 className={`font-bold text-gray-900 mb-2 ${isMobile ? "text-xl" : "text-2xl"}`}>Order Successful!</h1>
                         <p className="text-gray-500 mb-8">Thank you for your order. Your food will be delivered soon.</p>
                         <div className="flex flex-col gap-3">
                               <button

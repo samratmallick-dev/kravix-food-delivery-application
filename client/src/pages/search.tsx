@@ -9,12 +9,14 @@ import RestaurantsCard from "../components/restaurant/restaurantsCard";
 import SearchBar from "../components/navbar/SearchBar";
 import { BsCartPlus } from "react-icons/bs";
 import { Loader, Minus, Plus } from "lucide-react";
+import { useMobile } from "../components/common/useMobile";
 
 const SearchPage = () => {
       const { location, cart, fetchCart } = useAppData();
       const [searchParams, setSearchParams] = useSearchParams();
       const search = searchParams.get("search") || "";
       const searchType = (searchParams.get("type") as "restaurant" | "food") || "restaurant";
+      const isMobile = useMobile();
 
       const [restaurants, setRestaurants] = useState<IRestaurant[]>([]);
       const [foodResults, setFoodResults] = useState<IFoodSearchResult[]>([]);
@@ -123,7 +125,7 @@ const SearchPage = () => {
                   <SearchBar initialValue={search} onSearch={handleSearch} autoFocus />
 
                   <div className="flex items-center justify-between flex-wrap gap-3">
-                        <h1 className="font-semibold md:text-2xl text-xl text-primary">
+                        <h1 className={`font-semibold text-primary ${isMobile ? "text-lg" : "text-2xl"}`}>
                               {search
                                     ? `Results for "${search}"`
                                     : searchType === "restaurant" ? "All Restaurants" : "All Food Items"}
