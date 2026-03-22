@@ -8,13 +8,6 @@ const Port = process.env.PORT || 8888;
 
 const app = express();
 
-connectRabbitMQ().then(() => {
-      console.log("RabbitMQ connected");
-}).catch ((err) => {
-      console.error("Failed to connect to RabbitMQ", err);
-      process.exit(1);
-});
-
 app.use(cors(corsOptions));
 app.options("/{*path}", cors(corsOptions));
 app.use((req, res, next) => {
@@ -30,6 +23,13 @@ import paymentRoutes from "./routes/payment.routes.js";
 app.use("/api/v1/cloudinary", cloudinaryRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 
-app.listen(Port, () => {
-      console.log(`[Utilities server]: Utilities Server is running at http://localhost:${Port}`);
-});
+connectRabbitMQ()
+      .then(() => {
+            app.listen(Port, () => {
+                  console.log(`[Utilities server]: Utilities Server is running at http://localhost:${Port}`);
+            });
+      })
+      .catch((err) => {
+            console.error("Failed to connect to RabbitMQ", err);
+            process.exit(1);
+      });

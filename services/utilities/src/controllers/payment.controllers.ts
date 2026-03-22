@@ -192,17 +192,17 @@ export const verifyStripe = async (req: Request, res: Response) => {
 
             const session = await stript.checkout.sessions.retrieve(sessionId);
 
-            if (!session) {
+            if (!session || session.payment_status !== "paid") {
                   return res.status(400).json({
                         success: false,
                         error: true,
-                        message: "Payment intent not found"
+                        message: "Payment not completed or session not found"
                   });
             }
 
             const orderId = session.metadata?.orderId as string;
 
-            if(!orderId) {
+            if (!orderId) {
                   return res.status(400).json({
                         success: false,
                         error: true,
@@ -223,6 +223,7 @@ export const verifyStripe = async (req: Request, res: Response) => {
             });
 
       } catch (error) {
+            console.error("Stripe verify error:", error);
             const errorMessage = error instanceof Error ? error.message : "Internal server error";
             return res.status(500).json({
                   success: false,
