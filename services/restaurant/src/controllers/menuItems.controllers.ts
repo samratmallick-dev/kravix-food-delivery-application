@@ -171,7 +171,7 @@ export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Resp
       const matchingItems = await MenuItem.find({
             name: { $regex: search as string, $options: "i" },
             isAvailable: true
-      }).select("restaurantId name price imageUrl description");
+      }).select("restaurantId name price imageUrl description isAvailable");
 
       if (!matchingItems.length) {
             return res.status(200).json({
@@ -211,7 +211,8 @@ export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Resp
                         name: item.name,
                         price: item.price,
                         imageUrl: item.imageUrl,
-                        description: item.description
+                        description: item.description,
+                        isAvailable: item.isAvailable
                   },
                   restaurant: restaurantMap.get(item.restaurantId.toString())
             }));
@@ -267,6 +268,34 @@ export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequ
 
       menuItem.isAvailable = !menuItem.isAvailable;
       await menuItem.save();
+
+      const payload: Record<string, any> = {
+            itemId: menuItem._id.toString(),
+            isAvailable: menuItem.isAvailable
+      };
+
+      if (menuItem.isAvailable) {
+            payload.item = {
+                  _id: menuItem._id,
+                  name: menuItem.name,
+                  price: menuItem.price,
+                  imageUrl: menuItem.imageUrl,
+                  description: menuItem.description,
+                  isAvailable: true
+            };
+            payload.restaurant = restaurant;
+      }
+
+      axios.post(
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            {
+                  event: "menuitem:availability",
+                  room: `RestaurantStatus:${menuItem.restaurantId}`,
+                  payload
+            },
+            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
+      ).catch((err) => console.error("Socket emit failed:", err.message));
+
       return res.status(200).json({
             message: "Menu item availability toggled successfully",
             success: true,

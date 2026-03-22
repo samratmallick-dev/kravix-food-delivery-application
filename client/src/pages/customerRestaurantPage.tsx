@@ -8,12 +8,14 @@ import Menuitems from "../components/restaurant/menuitems";
 import { useAppData } from "../context/AppContext";
 import { ShoppingCart } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
+import { useSocket } from "../context/SocketContext";
 
 const CustomerRestaurantPage = () => {
       const { id } = useParams();
       const navigate = useNavigate();
       const { cart } = useAppData();
       const isMobile = useMobile();
+      const { socket } = useSocket();
 
       const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
       const [menuItem, setMenuItem] = useState<IMenuItem[]>([]);
@@ -55,6 +57,27 @@ const CustomerRestaurantPage = () => {
             }
       }, [id]);
 
+      useEffect(() => {
+            if (!socket || !id) return;
+
+            socket.emit("join:restaurant", id);
+
+            socket.on("restaurant:status", ({ isOpen }: { isOpen: boolean }) => {
+                  setRestaurant((prev) => prev ? { ...prev, isOpen } : prev);
+            });
+
+            socket.on("menuitem:availability", ({ itemId, isAvailable }: { itemId: string; isAvailable: boolean }) => {
+                  setMenuItem((prev) =>
+                        prev.map((m) => m._id === itemId ? { ...m, isAvailable } : m)
+                  );
+            });
+
+            return () => {
+                  socket.off("restaurant:status");
+                  socket.off("menuitem:availability");
+            };
+      }, [socket, id]);
+
       if (loading) {
             return (
                   <div className="flex items-center justify-center h-screen">
@@ -75,6 +98,7 @@ const CustomerRestaurantPage = () => {
             <div className="w-full min-h-auto bg-background">
                   <RestaurantProfile
                         restaurant={restaurant} onUpdate={setRestaurant} isSeller={false}
+                        fetchMyRestaurant={fetchRestaurant}
                   />
                   <div className="container-app p-4">
                         <Menuitems items={menuItem} onItemDelete={() => {}} isSeller={false} />

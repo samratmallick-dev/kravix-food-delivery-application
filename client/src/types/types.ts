@@ -68,6 +68,7 @@ export interface IFoodSearchResult {
             price: number;
             imageUrl?: string;
             description: string;
+            isAvailable: boolean;
       };
       restaurant: IRestaurant & { distanceKm: number };
 };
@@ -123,4 +124,14 @@ export interface IOrder {
 
       createdAt: Date;
       updatedAt: Date;
+};
+
+export interface IRider {
+      _id: string;
+      picture: string;
+      phoneNumber: string;
+      aadhaarNumber: string;
+      drivingLicesce: string;
+      isVerified: boolean;
+      isAvailable: boolean;
 };

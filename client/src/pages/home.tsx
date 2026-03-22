@@ -9,12 +9,14 @@ import { restaurantBaseUrl } from "../components/common/constant";
 import FeatureBanmner from "../components/home/featureBanner";
 import RestaurantsCard from "../components/restaurant/restaurantsCard";
 import { useMobile } from "../components/common/useMobile";
+import { useSocket } from "../context/SocketContext";
 
 const Home = () => {
 
       const { location } = useAppData();
       const [searchParams] = useSearchParams();
       const isMobile = useMobile();
+      const { socket } = useSocket();
 
       const search = searchParams.get("search") || "";
 
@@ -61,6 +63,20 @@ const Home = () => {
             if (!location) return;
             fetchRestaurant();
       }, [location, search]);
+
+      useEffect(() => {
+            if (!socket) return;
+
+            retaurants.forEach((r) => socket.emit("join:restaurant", r._id));
+
+            socket.on("restaurant:status", ({ isOpen, restaurantId }: { isOpen: boolean; restaurantId: string }) => {
+                  setRestaurants((prev) =>
+                        prev.map((r) => r._id === restaurantId ? { ...r, isOpen } : r)
+                  );
+            });
+
+            return () => { socket.off("restaurant:status"); };
+      }, [socket, retaurants.length]);
 
       if ((loading && !searching) || !location) {
             return (

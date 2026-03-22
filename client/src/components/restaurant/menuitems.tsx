@@ -6,6 +6,7 @@ import axios from "axios";
 import { cartBaseUrl, menuBaseUrl } from "../common/constant";
 import toast from "react-hot-toast";
 import { useAppData } from "../../context/AppContext";
+import { useSocket } from "../../context/SocketContext";
 
 interface MenuItemProps {
       items: IMenuItem[];
@@ -18,10 +19,23 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
       const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
       const [loadingAction, setLoadingAction] = useState<"inc" | "dec" | "add" | null>(null);
       const { fetchCart, cart } = useAppData();
+      const { socket } = useSocket();
 
       useEffect(() => {
             setLocalItems(items);
       }, [items]);
+
+      useEffect(() => {
+            if (!socket) return;
+
+            socket.on("menuitem:availability", ({ itemId, isAvailable }: { itemId: string; isAvailable: boolean }) => {
+                  setLocalItems((prev) =>
+                        prev.map((i) => i._id === itemId ? { ...i, isAvailable } : i)
+                  );
+            });
+
+            return () => { socket.off("menuitem:availability"); };
+      }, [socket]);
 
       const handleDeleteItem = async (itemId: string) => {
             const conform = window.confirm("Are you sure you want to delete this item?");

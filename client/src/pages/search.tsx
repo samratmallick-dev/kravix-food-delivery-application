@@ -1,7 +1,7 @@
 import { useSearchParams } from "react-router-dom";
 import { useAppData } from "../context/AppContext";
 import type { IRestaurant, IFoodSearchResult } from "../types/types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { restaurantBaseUrl, menuBaseUrl, cartBaseUrl } from "../components/common/constant";
@@ -10,6 +10,7 @@ import SearchBar from "../components/navbar/SearchBar";
 import { BsCartPlus } from "react-icons/bs";
 import { Loader, Minus, Plus } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
+import { useSocket } from "../context/SocketContext";
 
 const SearchPage = () => {
       const { location, cart, fetchCart } = useAppData();
@@ -17,12 +18,14 @@ const SearchPage = () => {
       const search = searchParams.get("search") || "";
       const searchType = (searchParams.get("type") as "restaurant" | "food") || "restaurant";
       const isMobile = useMobile();
+      const { socket } = useSocket();
 
       const [restaurants, setRestaurants] = useState<IRestaurant[]>([]);
       const [foodResults, setFoodResults] = useState<IFoodSearchResult[]>([]);
       const [loading, setLoading] = useState(false);
       const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
       const [loadingAction, setLoadingAction] = useState<"inc" | "dec" | "add" | null>(null);
+      const joinedRooms = useRef<Set<string>>(new Set());
 
       const getDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
             const R = 6371;
@@ -97,6 +100,7 @@ const SearchPage = () => {
       useEffect(() => {
             if (!location?.latitude || !location.longitude) return;
             setLoading(true);
+            joinedRooms.current.clear();
             const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
 
             if (searchType === "restaurant") {
@@ -113,12 +117,75 @@ const SearchPage = () => {
                         params: { latitude: location.latitude, longitude: location.longitude, search },
                         headers
                   }).then(({ data }) => {
-                        setFoodResults(data.data || []);
+                        const results: IFoodSearchResult[] = data.data || [];
+                        setFoodResults(results);
+                        if (socket) {
+                              results.forEach(({ restaurant: r }) => {
+                                    if (!joinedRooms.current.has(r._id)) {
+                                          socket.emit("join:restaurant", r._id);
+                                          joinedRooms.current.add(r._id);
+                                    }
+                              });
+                        }
                   }).catch((error: any) => {
                         toast.error(error.response?.data?.message || "Failed to fetch food items");
                   }).finally(() => setLoading(false));
             }
       }, [location, search, searchType]);
+
+      useEffect(() => {
+            if (!socket || restaurants.length === 0) return;
+
+            restaurants.forEach((r) => socket.emit("join:restaurant", r._id));
+
+            socket.on("restaurant:status", ({ isOpen, restaurantId }: { isOpen: boolean; restaurantId: string }) => {
+                  setRestaurants((prev) =>
+                        prev.map((r) => r._id === restaurantId ? { ...r, isOpen } : r)
+                  );
+            });
+
+            return () => { socket.off("restaurant:status"); };
+      }, [socket, restaurants.length]);
+
+      useEffect(() => {
+            if (!socket || !location?.latitude || !location.longitude || searchType !== "food") return;
+
+            const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+            axios.get(`${restaurantBaseUrl}/all`, {
+                  params: { latitude: location.latitude, longitude: location.longitude },
+                  headers
+            }).then(({ data }) => {
+                  const nearby: IRestaurant[] = data.data || [];
+                  nearby.forEach(({ _id }) => {
+                        if (!joinedRooms.current.has(_id)) {
+                              socket.emit("join:restaurant", _id);
+                              joinedRooms.current.add(_id);
+                        }
+                  });
+            }).catch(() => {});
+      }, [socket, searchType, location]);
+
+      useEffect(() => {
+            if (!socket || searchType !== "food") return;
+
+            socket.on("menuitem:availability", ({ itemId, isAvailable, item, restaurant: r }: { itemId: string; isAvailable: boolean; item?: IFoodSearchResult["item"]; restaurant?: IFoodSearchResult["restaurant"] }) => {
+                  if (!isAvailable) {
+                        setFoodResults((prev) => prev.filter((f) => f.item._id !== itemId));
+                  } else if (item && r) {
+                        if (!joinedRooms.current.has(r._id)) {
+                              socket.emit("join:restaurant", r._id);
+                              joinedRooms.current.add(r._id);
+                        }
+                        setFoodResults((prev) =>
+                              prev.some((f) => f.item._id === itemId)
+                                    ? prev
+                                    : [...prev, { item, restaurant: r }]
+                        );
+                  }
+            });
+
+            return () => { socket.off("menuitem:availability"); };
+      }, [socket, searchType]);
 
       return (
             <div className="container-app py-6 space-y-5">

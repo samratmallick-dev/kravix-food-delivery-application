@@ -8,10 +8,13 @@ import Menuitems from "../components/restaurant/menuitems";
 import AddMenuItems from "../components/restaurant/addMenuItems";
 import RestaurantOrders from "../components/restaurant/restaurantOrders";
 import { useMobile } from "../components/common/useMobile";
+import { useAppData } from "../context/AppContext";
 
 type SellerTab = "menu" | "add-item" | "sales";
 
 const Restaurant = () => {
+
+      const { user } = useAppData();
 
       const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
       const [loading, setLoading] = useState(true);
@@ -38,7 +41,6 @@ const Restaurant = () => {
 
                   console.log(data);
 
-
                   if (data.token) {
                         localStorage.setItem("token", data.token);
                   }
@@ -52,7 +54,7 @@ const Restaurant = () => {
 
       useEffect(() => {
             fetchMyRestaurant();
-      }, []);
+      }, [user]);
 
       const [menuItem, setMenuItem] = useState<IMenuItem[]>([]);
 
@@ -90,7 +92,7 @@ const Restaurant = () => {
       }
       return (
             <div className="min-h-screen bg-background">
-                  <RestaurantProfile restaurant={restaurant} onUpdate={setRestaurant} isSeller={true} />
+                  <RestaurantProfile restaurant={restaurant} onUpdate={setRestaurant} isSeller={true} fetchMyRestaurant={fetchMyRestaurant} />
                   <RestaurantOrders restaurantId={restaurant._id} />
                   <div className="w-full container-app sm:px-6 py-8 space-y-6">
 
@@ -105,8 +107,8 @@ const Restaurant = () => {
                                                 key={item.value}
                                                 onClick={() => handleTabChange(item.value as SellerTab)}
                                                 className={`flex-1 text-sm font-medium transition cursor-pointer ${isMobile ? "py-2.5" : "py-3.5"} ${tab === item.value
-                                                            ? "border-b-2 border-primary text-primary bg-primary/30"
-                                                            : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                                      ? "border-b-2 border-primary text-primary bg-primary/30"
+                                                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                                                       }`}
                                           >
                                                 {isMobile && item.value === "add-item" ? "+Item" : item.label}

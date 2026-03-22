@@ -5,14 +5,16 @@ import { restaurantBaseUrl } from "../common/constant";
 import toast from "react-hot-toast";
 import { BiMapPin } from "react-icons/bi";
 import { Edit, SaveAll } from "lucide-react";
+import { useAppData } from "../../context/AppContext";
 
 interface props {
       restaurant: IRestaurant;
       isSeller: boolean;
-      onUpdate: (restaurant: IRestaurant) => void
+      onUpdate: (restaurant: IRestaurant) => void;
+      fetchMyRestaurant: () => Promise<void>
 };
 
-const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
+const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }: props) => {
 
       const [editMode, setEditMode] = useState(false);
       const [name, setName] = useState(restaurant.name);
@@ -32,7 +34,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
                   );
                   toast.success(data.message);
                   setIsOpen(data.data.isOpen);
-
+                  fetchMyRestaurant();
             } catch (error: any) {
                   console.log(error);
                   toast.error(error instanceof Error ? error.message : error.response.data.message);
@@ -50,6 +52,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
                   });
                   onUpdate(data.data);
                   toast.success(data.message);
+                  fetchMyRestaurant();
             } catch (error: any) {
                   console.log(error);
                   toast.error(error instanceof Error ? error.message : (error.response.data.message || "Failed to update restaurant"));
@@ -58,6 +61,28 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
                   setEditMode(false);
             }
       };
+
+      const {setIsAuth, setUser} = useAppData()
+
+      const logoutHandler = async () => {
+            try {
+                  await axios.put(`${restaurantBaseUrl}/status`, { status: false },
+                        {
+                              headers: {
+                                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                              },
+                              withCredentials: true
+                        }
+                  );
+                  localStorage.removeItem("token");
+                  setIsAuth(false);
+                  setUser(null);
+                  toast.success("Logout Successfull");
+            } catch (error) {
+                  console.log(error);
+                  toast.error(error instanceof Error ? error.message : "Failed to logout");
+            }
+      }
 
       return (
             <div className="w-full bg-white rounded-b-2xl shadow-md overflow-hidden">
@@ -142,6 +167,14 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
                                                 }`}
                                           >
                                                 {isOpen ? "Close Restaurant" : "Open Restaurant"}
+                                          </button>
+                                    )}
+                                    {isSeller && (
+                                          <button
+                                                onClick={logoutHandler}
+                                                className="px-4 py-1.5 text-sm font-medium rounded-lg transition bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                                          >
+                                                Logout
                                           </button>
                                     )}
                               </div>

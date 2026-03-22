@@ -18,16 +18,21 @@ import PaymentSuccess from "./pages/paymentSuccess";
 import OrderSuccess from "./pages/orderSuccess";
 import CustomerOrder from "./pages/customerOrder";
 import OrderDetails from "./pages/orderDetails";
+import RiderDashboard from "./pages/Rider";
+import AppSkeleton from "./components/common/AppSkeleton";
 
 const App = () => {
 
       const { user, loading } = useAppData();
 
-      if (loading) return null;
+      if (loading) return <AppSkeleton />;
 
       const isSeller = user?.role === "seller";
 
       if (isSeller) return <Restaurant />
+      if(user && user.role === "rider") {
+            return <RiderDashboard />
+      }
 
       return (
             <div>

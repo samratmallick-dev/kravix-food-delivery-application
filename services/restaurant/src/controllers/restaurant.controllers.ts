@@ -191,6 +191,15 @@ export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest,
                   error: true
             });
       }
+      axios.post(
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            {
+                  event: "restaurant:status",
+                  room: `RestaurantStatus:${updateRestaurantStatus._id}`,
+                  payload: { isOpen: updateRestaurantStatus.isOpen, restaurantId: updateRestaurantStatus._id.toString() }
+            },
+            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
+      ).catch((err) => console.error("Socket emit failed:", err.message));
 
       return res.status(200).json({
             message: "Restaurant status updated successfully",

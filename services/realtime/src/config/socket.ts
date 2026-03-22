@@ -81,6 +81,12 @@ export const initializeSocket = (server: http.Server) => {
                   socket.join(`Restaurant:${user.restaurantId}`);
             }
 
+            socket.on("join:restaurant", (restaurantId: string) => {
+                  if (restaurantId) {
+                        socket.join(`RestaurantStatus:${restaurantId}`);
+                  }
+            });
+
             console.log("🟢 User connected:", userId);
             console.log("🌐 Origin:", socket.handshake.headers.origin);
             console.log("📦 Rooms:", [...socket.rooms]);

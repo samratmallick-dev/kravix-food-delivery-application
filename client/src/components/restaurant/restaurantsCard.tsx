@@ -17,17 +17,15 @@ const RestaurantsCard = ({ id, name, image, distance, isOpen }: RestaurantProps)
                         navigate(`/restaurant/${id}`);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className={`cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white ${!isOpen && "grayscale brightness-75 opacity-80"}`}
+                  className="cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white relative"
             >
-                  <div className="relative h-48 w-full">
+                  <div className={`h-48 w-full ${!isOpen && "grayscale brightness-75 opacity-80"}`}>
                         <img src={image} alt={name} className="h-full w-full object-cover" />
-                        <span
-                              className={`absolute top-2 right-2 text-xs font-semibold px-2 py-0.5 rounded-full ${isOpen ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                                    }`}
-                        >
-                              {isOpen ? "Open" : "Closed"}
-                        </span>
                   </div>
+                  <span className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full shadow z-10 ${isOpen ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                        }`}>
+                        {isOpen ? "● OPEN" : "● CLOSED"}
+                  </span>
 
                   <div className="p-3">
                         <h3 className="font-semibold text-gray-900 truncate">{name}</h3>
