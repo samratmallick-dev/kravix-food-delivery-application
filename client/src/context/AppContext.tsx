@@ -90,38 +90,47 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                   return;
             }
             setLocationLoading(true);
-            navigator.geolocation.getCurrentPosition(async (possition) => {
-                  const { latitude, longitude } = possition.coords;
-                  try {
-                        const response = await fetch(
-                              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-                              { headers: { "User-Agent": "AbarKhabo/1.0" } }
-                        );
-                        if (response.status === 429) {
-                              throw new Error("Rate limited");
-                        }
-                        const data = await response.json();
-                        const resolvedCity =
-                              data.address.city_district ||
-                              data.address.suburb ||
-                              data.address.town ||
-                              data.address.village ||
-                              data.address.city ||
-                              data.address.county ||
-                              "Your Location";
-                        const formattedAddress = data.display_name || "current location";
+            navigator.geolocation.getCurrentPosition(
+                  async (possition) => {
+                        const { latitude, longitude } = possition.coords;
+                        try {
+                              const response = await fetch(
+                                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+                                    { headers: { "User-Agent": "AbarKhabo/1.0" } }
+                              );
+                              if (response.status === 429) {
+                                    throw new Error("Rate limited");
+                              }
+                              const data = await response.json();
+                              const resolvedCity =
+                                    data.address.city_district ||
+                                    data.address.suburb ||
+                                    data.address.town ||
+                                    data.address.village ||
+                                    data.address.city ||
+                                    data.address.county ||
+                                    "Your Location";
+                              const formattedAddress = data.display_name || "current location";
 
-                        setLocation({ latitude, longitude, formattedAddress });
-                        setCity(resolvedCity);
-                        sessionStorage.setItem("locationData", JSON.stringify({ latitude, longitude, formattedAddress, city: resolvedCity }));
-                        setLocationLoading(false);
-                  } catch (error) {
-                        console.error("Error fetching location data:", error);
-                        toast.error("Failed to fetch location data");
+                              setLocation({ latitude, longitude, formattedAddress });
+                              setCity(resolvedCity);
+                              sessionStorage.setItem("locationData", JSON.stringify({ latitude, longitude, formattedAddress, city: resolvedCity }));
+                        } catch (error) {
+                              console.error("Error fetching location data:", error);
+                              toast.error("Failed to fetch location data");
+                              setCity("Your Location");
+                        } finally {
+                              setLocationLoading(false);
+                        }
+                  },
+                  (error) => {
+                        console.error("Geolocation error:", error);
+                        toast.error("Unable to retrieve your location");
                         setCity("Your Location");
                         setLocationLoading(false);
-                  }
-            });
+                  },
+                  { timeout: 8000, maximumAge: 60000 }
+            );
       }, []);
 
       return (
