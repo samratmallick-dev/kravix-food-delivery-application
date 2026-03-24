@@ -8,7 +8,7 @@ import SearchBar from "./SearchBar";
 import { useMobile } from "../common/useMobile";
 
 const Navbar = () => {
-      const { isAuth, user, city, quantity } = useAppData();
+      const { isAuth, user, city, location, quantity } = useAppData();
       const currentLocation = useLocation();
       const isMobile = useMobile();
       const isSearchPage = currentLocation.pathname === "/search";
@@ -58,8 +58,8 @@ const Navbar = () => {
                               <div className="container-app">
                                     {isSearchPage ? (
                                           <div className="flex items-center gap-2 text-gray-600 py-1">
-                                                <BiMapPin size={18} className="text-primary" />
-                                                <span className="text-sm truncate max-w-xs">{city}</span>
+                                                <BiMapPin size={18} className="text-primary shrink-0" />
+                                                <span className="text-sm">{location?.formattedAddress || city}</span>
                                           </div>
                                     ) : (
                                           <SearchBar redirectOnFocus={isHomePage} locationPrefix={

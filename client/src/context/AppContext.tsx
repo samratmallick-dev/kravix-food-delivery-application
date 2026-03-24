@@ -10,6 +10,19 @@ interface AppProviderProps {
       children: ReactNode;
 };
 
+const isCacheStillValid = (
+      cachedLat: number,
+      cachedLng: number,
+      freshLat: number,
+      freshLng: number,
+      thresholdDeg = 0.001 
+): boolean => {
+      return (
+            Math.abs(cachedLat - freshLat) < thresholdDeg &&
+            Math.abs(cachedLng - freshLng) < thresholdDeg
+      );
+};
+
 export const AppProvider = ({ children }: AppProviderProps) => {
 
       const [user, setUser] = useState<User | null>(null);
@@ -77,30 +90,52 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       }, [fetchCart]);
 
       useEffect(() => {
-            const cached = sessionStorage.getItem("locationData");
-            if (cached) {
-                  const { latitude, longitude, formattedAddress, city: cachedCity } = JSON.parse(cached);
-                  setLocation({ latitude, longitude, formattedAddress });
-                  setCity(cachedCity);
+            if (!navigator.geolocation) {
+                  const cached = sessionStorage.getItem("locationData");
+                  if (cached) {
+                        try {
+                              const { latitude, longitude, formattedAddress, city: cachedCity } = JSON.parse(cached);
+                              setLocation({ latitude, longitude, formattedAddress });
+                              setCity(cachedCity ?? "Your Location");
+                        } catch {
+                              sessionStorage.removeItem("locationData");
+                        }
+                  } else {
+                        toast.error("Geolocation is not supported by your browser");
+                  }
                   return;
             }
 
-            if (!navigator.geolocation) {
-                  toast.error("Geolocation is not supported by your browser");
-                  return;
-            }
             setLocationLoading(true);
+
             navigator.geolocation.getCurrentPosition(
-                  async (possition) => {
-                        const { latitude, longitude } = possition.coords;
+                  async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const cached = sessionStorage.getItem("locationData");
+                        if (cached) {
+                              try {
+                                    const parsed = JSON.parse(cached);
+                                    if (isCacheStillValid(parsed.latitude, parsed.longitude, latitude, longitude)) {
+                                          setLocation({ latitude, longitude, formattedAddress: parsed.formattedAddress });
+                                          setCity(parsed.city ?? "Your Location");
+                                          setLocationLoading(false);
+                                          return;
+                                    } else {
+                                          console.log("Location changed, clearing stale sessionStorage cache");
+                                          sessionStorage.removeItem("locationData");
+                                    }
+                              } catch {
+                                    sessionStorage.removeItem("locationData");
+                              }
+                        }
+
                         try {
                               const response = await fetch(
                                     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
                                     { headers: { "User-Agent": "AbarKhabo/1.0" } }
                               );
-                              if (response.status === 429) {
-                                    throw new Error("Rate limited");
-                              }
+                              if (response.status === 429) throw new Error("Rate limited");
+
                               const data = await response.json();
                               const resolvedCity =
                                     data.address.city_district ||
@@ -114,22 +149,39 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
                               setLocation({ latitude, longitude, formattedAddress });
                               setCity(resolvedCity);
-                              sessionStorage.setItem("locationData", JSON.stringify({ latitude, longitude, formattedAddress, city: resolvedCity }));
+                              sessionStorage.setItem(
+                                    "locationData",
+                                    JSON.stringify({ latitude, longitude, formattedAddress, city: resolvedCity })
+                              );
                         } catch (error) {
                               console.error("Error fetching location data:", error);
                               toast.error("Failed to fetch location data");
                               setCity("Your Location");
+                              setLocation({ latitude, longitude, formattedAddress: `${latitude}, ${longitude}` });
                         } finally {
                               setLocationLoading(false);
                         }
                   },
                   (error) => {
                         console.error("Geolocation error:", error);
-                        toast.error("Unable to retrieve your location");
-                        setCity("Your Location");
+                        const cached = sessionStorage.getItem("locationData");
+                        if (cached) {
+                              try {
+                                    const { latitude, longitude, formattedAddress, city: cachedCity } = JSON.parse(cached);
+                                    setLocation({ latitude, longitude, formattedAddress });
+                                    setCity(cachedCity ?? "Your Location");
+                                    console.warn("GPS failed, using cached location as fallback");
+                              } catch {
+                                    sessionStorage.removeItem("locationData");
+                                    toast.error("Unable to retrieve your location");
+                              }
+                        } else {
+                              toast.error("Unable to retrieve your location");
+                              setCity("Your Location");
+                        }
                         setLocationLoading(false);
                   },
-                  { timeout: 8000, maximumAge: 60000 }
+                  { timeout: 8000, maximumAge: 0 }
             );
       }, []);
 
@@ -144,6 +196,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                         user,
                         setUser,
                         location,
+                        setLocation,
                         city,
                         cart,
                         fetchCart,

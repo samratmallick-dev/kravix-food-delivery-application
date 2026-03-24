@@ -26,7 +26,7 @@ app.use("/api/v1/payment", paymentRoutes);
 connectRabbitMQ()
       .then(() => {
             app.listen(Port, () => {
-                  console.log(`[Utilities server]: Utilities Server is running at http://localhost:${Port}`);
+                  console.log(`[Utilities Service]: Utilities Service is running at http://localhost:${Port}`);
             });
       })
       .catch((err) => {
