@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { IOrder } from "../../types/types";
 import { ORDER_ACTION } from "../../utils/orderFlow";
 import axios from "axios";
 import { orderBaseUrl } from "../common/constant";
 import toast from "react-hot-toast";
-import { MapPin, CreditCard, ChevronRight, Loader2 } from "lucide-react";
+import { MapPin, CreditCard, ChevronRight, Loader2, RefreshCw } from "lucide-react";
 
 interface props {
       order: IOrder;
@@ -57,12 +57,37 @@ const PAYMENT_STATUS_STYLE: Record<string, string> = {
 
 const OrderCard = ({ order, onStatusUpdate }: props) => {
       const [loading, setLoading] = useState(false);
+      const [retryVisible, setRetryVisible] = useState(false);
+      const prevStatusRef = useRef<string | null>(null);
+      const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+      useEffect(() => {
+            const prevStatus = prevStatusRef.current;
+            prevStatusRef.current = order.status;
+            if (order.status === "ready_for_rider" && prevStatus !== "ready_for_rider") {
+                  setRetryVisible(false);
+                  if (timerRef.current) clearTimeout(timerRef.current);
+                  timerRef.current = setTimeout(() => setRetryVisible(true), 10000);
+            }
+
+            if (order.status !== "ready_for_rider") {
+                  setRetryVisible(false);
+                  if (timerRef.current) clearTimeout(timerRef.current);
+            }
+
+            return () => {
+                  if (timerRef.current) clearTimeout(timerRef.current);
+            };
+      }, [order.status]);
+
       const action = ORDER_ACTION[order.status as keyof typeof ORDER_ACTION] || [];
       const statusCfg = STATUS_CONFIG[order.status] ?? { label: order.status, dot: "bg-gray-400", badge: "bg-gray-50 text-gray-600 ring-1 ring-gray-200" };
 
       const updateStatus = async (status: string) => {
             try {
                   setLoading(true);
+                  setRetryVisible(false);
+                  if (timerRef.current) clearTimeout(timerRef.current);
                   const { data } = await axios.put(
                         `${orderBaseUrl}/update-status/${order._id}`,
                         { status },
@@ -70,6 +95,9 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
                   );
                   toast.success(data.message || "Order status updated successfully");
                   onStatusUpdate(order._id, status as IOrder["status"]);
+                  if (status === "ready_for_rider") {
+                        timerRef.current = setTimeout(() => setRetryVisible(true), 10000);
+                  }
             } catch (error: any) {
                   const message = error instanceof Error ? error.message : error.response?.data?.message;
                   toast.error(message);
@@ -173,6 +201,17 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
                                     ))}
                               </div>
                         )}
+                        {
+                              order.status === "ready_for_rider" && retryVisible && (
+                                    <button
+                                          onClick={() => updateStatus("ready_for_rider")}
+                                          disabled={loading}
+                                          className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-xl border-2 border-violet-400 text-violet-600 hover:bg-violet-50 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+                                    >
+                                          {loading ? <Loader2 size={14} className="animate-spin" /> : <><RefreshCw size={14} /> Retry Rider Assignment</>}
+                                    </button>
+                              )
+                        }
                   </div>
             </div>
       );

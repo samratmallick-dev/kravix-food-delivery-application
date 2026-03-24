@@ -87,6 +87,12 @@ export const initializeSocket = (server: http.Server) => {
                   }
             });
 
+            socket.on("join:rider", (riderId: string) => {
+                  if (riderId) {
+                        socket.join(`Rider:${riderId}`);
+                  }
+            });
+
             console.log("🟢 User connected:", userId);
             console.log("🌐 Origin:", socket.handshake.headers.origin);
             console.log("📦 Rooms:", [...socket.rooms]);

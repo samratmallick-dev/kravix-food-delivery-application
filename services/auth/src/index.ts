@@ -4,16 +4,14 @@ import ConnectDb from "./config/db/db.js";
 
 const PORT = process.env.PORT || 8000;
 
-ConnectDb().then(() => {
-      const server = app.listen(PORT, () => {
-            console.log(`[Auth server]: Auth Server is running at http://localhost:${PORT}`);
+const server = app.listen(PORT, () => {
+      console.log(`[Auth server]: Auth Server is running at http://localhost:${PORT}`);
+      ConnectDb().catch((err) => {
+            console.error("MongoDB connection failed: ", err);
       });
-      
-      server.on("error", (err) => {
-            console.log("Err: ", err);
-            process.exit(1);
-      });
-}).catch((err) => {
-      console.log("Mongodb connection failed !!! ", err);
+});
+
+server.on("error", (err) => {
+      console.log("Err: ", err);
       process.exit(1);
 });

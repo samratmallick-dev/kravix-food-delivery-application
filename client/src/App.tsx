@@ -18,7 +18,7 @@ import PaymentSuccess from "./pages/paymentSuccess";
 import OrderSuccess from "./pages/orderSuccess";
 import CustomerOrder from "./pages/customerOrder";
 import OrderDetails from "./pages/orderDetails";
-import RiderDashboard from "./pages/Rider";
+import RiderDashboard from "./pages/rider";
 import AppSkeleton from "./components/common/AppSkeleton";
 
 const App = () => {
@@ -27,11 +27,19 @@ const App = () => {
 
       if (loading) return <AppSkeleton />;
 
-      const isSeller = user?.role === "seller";
-
-      if (isSeller) return <Restaurant />
+      if(user && user.role === "seller") {
+            return (
+                  <BrowserRouter>
+                        <Restaurant />
+                  </BrowserRouter>
+            );
+      }
       if(user && user.role === "rider") {
-            return <RiderDashboard />
+            return (
+                  <BrowserRouter>
+                        <RiderDashboard />
+                  </BrowserRouter>
+            );
       }
 
       return (

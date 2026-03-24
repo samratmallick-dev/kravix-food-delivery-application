@@ -56,9 +56,20 @@ export const addRiderProfile = TryCatch(async (req: AuthenticatedRequest, res: R
             });
       }
 
-      const existingRiderProfile = await Rider.findOne({ userId: user._id});
+      const lat = Number(latitude);
+      const lng = Number(longitude);
 
-      if(existingRiderProfile){
+      if (isNaN(lat) || isNaN(lng)) {
+            return res.status(400).json({
+                  success: false,
+                  message: "Latitude and longitude must be valid numbers",
+                  error: true
+            });
+      }
+
+      const existingRiderProfile = await Rider.findOne({ userId: user._id });
+
+      if (existingRiderProfile) {
             return res.status(409).json({
                   success: false,
                   message: "Rider profile already exists",
@@ -74,7 +85,7 @@ export const addRiderProfile = TryCatch(async (req: AuthenticatedRequest, res: R
             drivingLicesce: drivingLicesce,
             location: {
                   type: "Point",
-                  coordinates: [longitude, latitude]
+                  coordinates: [lng, lat]
             }
       });
 
@@ -115,13 +126,23 @@ export const fetchMyProfile = TryCatch(async (req: AuthenticatedRequest, res: Re
             });
       }
 
+      const [storedLng, storedLat] = riderProfile.location.coordinates;
+
       return res.status(200).json({
             success: true,
             message: "Rider profile fetched successfully",
             error: false,
-            data: riderProfile
+            data: {
+                  ...riderProfile.toObject(),
+                  location: {
+                        type: "Point",
+                        coordinates: [storedLng, storedLat],
+                        longitude: storedLng,
+                        latitude: storedLat
+                  }
+            }
       });
-      
+
 });
 
 export const toggleRiderAvailability = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
@@ -162,7 +183,18 @@ export const toggleRiderAvailability = TryCatch(async (req: AuthenticatedRequest
             });
       }
 
-      if(typeof isAvailable !== "boolean"){
+      const lat = Number(latitude);
+      const lng = Number(longitude);
+
+      if (isNaN(lat) || isNaN(lng)) {
+            return res.status(400).json({
+                  success: false,
+                  message: "Latitude and longitude must be valid numbers",
+                  error: true
+            });
+      }
+
+      if (typeof isAvailable !== "boolean") {
             return res.status(400).json({
                   success: false,
                   message: "Invalid availability status",
@@ -170,7 +202,7 @@ export const toggleRiderAvailability = TryCatch(async (req: AuthenticatedRequest
             });
       }
 
-      if(isAvailable && !riderProfile.isVerified) {
+      if (isAvailable && !riderProfile.isVerified) {
             return res.status(403).json({
                   success: false,
                   message: "You need to be verified to go online",
@@ -181,7 +213,7 @@ export const toggleRiderAvailability = TryCatch(async (req: AuthenticatedRequest
       riderProfile.isAvailable = isAvailable;
       riderProfile.location = {
             type: "Point",
-            coordinates: [longitude, latitude]
+            coordinates: [lng, lat]
       };
       riderProfile.lastActiveAt = new Date();
 
@@ -193,4 +225,240 @@ export const toggleRiderAvailability = TryCatch(async (req: AuthenticatedRequest
             error: false,
             data: riderProfile
       });
+});
+
+export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const riderUserId = req.user?._id;
+
+      if (!riderUserId) {
+            return res.status(401).json({
+                  success: false,
+                  message: "User not authenticated",
+                  error: true
+            });
+      }
+
+      const { orderId } = req.params;
+
+      const rider = await Rider.findOne({
+            userId: riderUserId.toString(),
+            isAvailable: true,
+            isVerified: true
+      });
+
+      if (!rider) {
+            return res.status(404).json({
+                  success: false,
+                  message: "Rider not found or not available",
+                  error: true
+            });
+      }
+
+      try {
+            const { data } = await axios.put(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/assign`,
+                  {
+                        orderId,
+                        riderId: rider._id.toString(),
+                        riderUserId: rider.userId,
+                        riderName: req.user?.name,
+                        riderPhoneNumber: rider.phoneNumber
+                  },
+                  {
+                        headers: {
+                              "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
+                        },
+                        withCredentials: true
+                  }
+            );
+
+            if (!data.success) {
+                  throw new Error(data.message);
+            }
+
+            const riderDetails = await Rider.findOneAndUpdate(
+                  { userId: riderUserId, isAvailable: true, },
+                  { isAvailable: false },
+                  { returnDocument: "after" }
+            );
+
+            return res.status(200).json({
+                  success: true,
+                  message: "Order accepted successfully",
+                  error: false,
+                  data: riderDetails
+            });
+      } catch (error: any) {
+            return res.status(400).json({
+                  success: false,
+                  message: error instanceof Error ? error.message : "Failed to accept order",
+                  error: true
+            });
+      }
+});
+
+export const fetchCurrentOrder = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const riderUserId = req.user?._id;
+
+      if (!riderUserId) {
+            return res.status(401).json({
+                  success: false,
+                  message: "User not authenticated",
+                  error: true
+            });
+      }
+
+      const rider = await Rider.findOne({
+            userId: riderUserId.toString(),
+            isVerified: true
+      });
+
+      if (!rider) {
+            return res.status(404).json({
+                  success: false,
+                  message: "Rider profile not found",
+                  error: true
+            });
+      }
+
+      try {
+            const { data } = await axios.get(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/current-order?riderId=${rider._id.toString()}`,
+                  {
+                        headers: {
+                              "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
+                        },
+                        withCredentials: true
+                  }
+            );
+            if (data.success) {
+                  return res.status(200).json({
+                        success: true,
+                        message: "Current order fetched successfully",
+                        error: false,
+                        data: data.data
+                  });
+            } else {
+                  return res.status(404).json({
+                        success: false,
+                        message: "No current order found",
+                        error: true,
+                        data: null
+                  });
+            }
+
+      } catch (error: any) {
+            if (error?.response?.status === 404) {
+                  return res.status(404).json({
+                        success: false,
+                        message: "No current order found",
+                        error: true,
+                        data: null
+                  });
+            }
+            const message = error?.response?.data?.message ?? error?.message ?? "Failed to fetch current order";
+            return res.status(500).json({
+                  success: false,
+                  message,
+                  error: true
+            });
+      }
+});
+
+export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const riderUserId = req.user?._id;
+
+      if (!riderUserId) {
+            return res.status(401).json({
+                  success: false,
+                  message: "User not authenticated",
+                  error: true
+            });
+      }
+
+      const rider = await Rider.findOne({
+            userId: riderUserId.toString(),
+            isVerified: true
+      });
+
+      if (!rider) {
+            return res.status(404).json({
+                  success: false,
+                  message: "Rider profile not found",
+                  error: true
+            });
+      }
+
+      const { orderId } = req.body;
+
+      try {
+            const { data } = await axios.put(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/update-status`,
+                  { orderId },
+                  {
+                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
+                        withCredentials: true
+                  }
+            );
+
+            return res.status(200).json({
+                  success: true,
+                  message: "Order status updated successfully",
+                  error: false,
+                  data: data.data
+            });
+      } catch (error: any) {
+            const message = error?.response?.data?.message ?? error?.message ?? "Failed to update order status";
+            return res.status(error?.response?.status ?? 500).json({
+                  success: false,
+                  message,
+                  error: true
+            });
+      }
+});
+
+export const fetchDeliveryHistory = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const riderUserId = req.user?._id;
+
+      if (!riderUserId) {
+            return res.status(401).json({
+                  success: false,
+                  message: "User not authenticated",
+                  error: true
+            });
+      }
+
+      const rider = await Rider.findOne({
+            userId: riderUserId.toString(),
+            isVerified: true
+      });
+
+      if (!rider) {
+            return res.status(404).json({
+                  success: false,
+                  message: "Rider profile not found",
+                  error: true
+            });
+      }
+
+      try {
+            const { data } = await axios.get(
+                  `${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/delivery-history?riderId=${rider._id.toString()}`,
+                  {
+                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
+                        withCredentials: true
+                  }
+            );
+
+            return res.status(200).json({
+                  success: true,
+                  message: "Delivery history fetched successfully",
+                  error: false,
+                  data: data.data
+            });
+      } catch (error: any) {
+            const message = error?.response?.data?.message ?? error?.message ?? "Failed to fetch delivery history";
+            return res.status(error?.response?.status ?? 500).json({
+                  success: false,
+                  message,
+                  error: true
+            });
+      }
 });

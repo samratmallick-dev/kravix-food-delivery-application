@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import type { IOrder } from "../types/types";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
@@ -15,21 +15,16 @@ const ACTIVE_STATUSES = [
       "picked_up"
 ];
 
-
 const CustomerOrder = () => {
-
       const [orders, setOrders] = useState<IOrder[]>([]);
       const [loading, setLoading] = useState(true);
       const navigate = useNavigate();
+      const { socket } = useSocket();
 
-      const { socket } = useSocket()
-
-      const fetchOrders = async () => {
+      const fetchOrders = useCallback(async () => {
             try {
                   const { data } = await axios.get(`${orderBaseUrl}/my-orders`, {
-                        headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
-                        },
+                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                         withCredentials: true
                   });
                   setOrders(data.data.orders || []);
@@ -38,17 +33,19 @@ const CustomerOrder = () => {
             } finally {
                   setLoading(false);
             }
-      };
+      }, []);
 
       useEffect(() => {
             fetchOrders();
-      }, []);
+      }, [fetchOrders]);
 
       useEffect(() => {
             if (!socket) return;
 
-            const handleOrderUpdate = () => {
-                  fetchOrders()
+            const handleOrderUpdate = ({ orderId, status }: { orderId: string; status: IOrder["status"] }) => {
+                  setOrders((prev) =>
+                        prev.map((o) => o._id === orderId ? { ...o, status } : o)
+                  );
             };
 
             socket.on("order:update", handleOrderUpdate);
@@ -110,90 +107,61 @@ const CustomerOrder = () => {
       const activeOrders = orders.filter((odr) => ACTIVE_STATUSES.includes(odr.status));
       const completedOrders = orders.filter((odr) => !ACTIVE_STATUSES.includes(odr.status));
 
-
       return (
-            <div className=' py-6 space-y-4 max-w-4xl mx-auto container'>
+            <div className="py-6 space-y-4 max-w-4xl mx-auto container px-2">
                   <div className="flex flex-col gap-2">
                         <h1 className="text-gray-700 font-semibold text-2xl">My Orders</h1>
                         <span className="text-gray-700 text-sm font-semibold flex items-center">
-                              Total Orders : {orders.length}
+                              Total Orders: {orders.length}
                         </span>
                   </div>
-                  {activeOrders.length !== 0 && (
+                  {activeOrders.length > 0 && (
                         <section className="space-y-3">
                               <h2 className="font-semibold text-gray-700 text-2xl">Active Orders</h2>
-                              {
-                                    (
-                                          activeOrders.map((order) => (
-                                                <OrderRow
-                                                      key={order._id}
-                                                      order={order}
-                                                      onClick={() => navigate(`/orders/${order._id}`)}
-                                                />
-                                          ))
-                                    )
-                              }
+                              {activeOrders.map((order) => (
+                                    <OrderRow
+                                          key={order._id}
+                                          order={order}
+                                          onClick={() => navigate(`/orders/${order._id}`)}
+                                    />
+                              ))}
                         </section>
                   )}
-                  {completedOrders.length !== 0 && (
+                  {completedOrders.length > 0 && (
                         <section className="space-y-3">
                               <h2 className="font-semibold text-gray-700 text-2xl">Completed Orders</h2>
-                              {
-                                    (
-                                          completedOrders.map((order) => (
-                                                <OrderRow
-                                                      key={order._id}
-                                                      order={order}
-                                                      onClick={() => navigate(`/orders/${order._id}`)}
-                                                />
-                                          ))
-                                    )
-                              }
+                              {completedOrders.map((order) => (
+                                    <OrderRow
+                                          key={order._id}
+                                          order={order}
+                                          onClick={() => navigate(`/orders/${order._id}`)}
+                                    />
+                              ))}
                         </section>
                   )}
             </div>
       );
 };
 
-
 const STATUS_CONFIG: Record<IOrder["status"], { label: string; color: string }> = {
-      placed: {
-            label: "Order Placed",
-            color: "bg-yellow-100 text-yellow-800"
-      },
-      accepted: {
-            label: "Accepted",
-            color: "bg-blue-100 text-blue-800"
-      },
-      preparing: {
-            label: "Preparing",
-            color: "bg-orange-100 text-orange-800"
-      },
-      ready_for_rider: {
-            label: "Ready for Rider",
-            color: "bg-purple-100 text-purple-800"
-      },
-      rider_assigned: {
-            label: "Rider Assigned",
-            color: "bg-indigo-100 text-indigo-800"
-      },
-      picked_up: {
-            label: "Picked Up",
-            color: "bg-cyan-100 text-cyan-800"
-      },
-      delivered: {
-            label: "Delivered",
-            color: "bg-green-100 text-green-800"
-      },
-      cancelled: {
-            label: "Cancelled",
-            color: "bg-red-100 text-red-800"
-      },
+      placed: { label: "Order Placed", color: "bg-yellow-100 text-yellow-800" },
+      accepted: { label: "Accepted", color: "bg-blue-100 text-blue-800" },
+      preparing: { label: "Preparing", color: "bg-orange-100 text-orange-800" },
+      ready_for_rider: { label: "Ready for Rider", color: "bg-purple-100 text-purple-800" },
+      rider_assigned: { label: "Rider Assigned", color: "bg-indigo-100 text-indigo-800" },
+      picked_up: { label: "Picked Up", color: "bg-cyan-100 text-cyan-800" },
+      delivered: { label: "Delivered", color: "bg-green-100 text-green-800" },
+      cancelled: { label: "Cancelled", color: "bg-red-100 text-red-800" },
 };
 
 const OrderRow = ({ order, onClick }: { order: IOrder; onClick: () => void }) => {
-      const { label, color } = STATUS_CONFIG[order.status];
-      const date = new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+      const { label, color } = STATUS_CONFIG[order.status] ?? {
+            label: order.status,
+            color: "bg-gray-100 text-gray-700"
+      };
+      const date = new Date(order.createdAt).toLocaleDateString("en-IN", {
+            day: "numeric", month: "short", year: "numeric"
+      });
 
       return (
             <div className="border border-gray-200 rounded-2xl p-4 bg-white hover:shadow-lg transition">
@@ -230,7 +198,7 @@ const OrderRow = ({ order, onClick }: { order: IOrder; onClick: () => void }) =>
                         <button
                               onClick={() => {
                                     onClick();
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
                               }}
                               className="text-sm text-blue-600 font-medium hover:underline"
                         >

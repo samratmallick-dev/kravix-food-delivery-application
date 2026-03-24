@@ -3,6 +3,7 @@ import {
       useContext,
       useEffect,
       useRef,
+      useState,
       type ReactNode
 } from "react";
 
@@ -12,59 +13,62 @@ import { useAppData } from "./AppContext";
 
 interface SocketContextType {
       socket: Socket | null;
-};
+}
 
 const SocketContext = createContext<SocketContextType>({ socket: null });
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
       const { isAuth } = useAppData();
       const socketRef = useRef<Socket | null>(null);
+      const [socket, setSocket] = useState<Socket | null>(null);
 
       useEffect(() => {
             if (!isAuth) {
                   socketRef.current?.disconnect();
                   socketRef.current = null;
+                  setSocket(null);
                   return;
             }
 
             if (socketRef.current) return;
 
             const token = localStorage.getItem("token");
-
             if (!token) {
                   console.log("No token found for socket connection");
                   return;
             }
 
-            const socket = io(realtimeSocketBaseUrl, {
+            const newSocket = io(realtimeSocketBaseUrl, {
                   auth: { token },
                   transports: ["websocket"],
                   withCredentials: true,
             });
 
-            socketRef.current = socket;
+            socketRef.current = newSocket;
 
-            socket.on("connect", () => {
-                  console.log("✅ Socket connected:", socket.id);
+            newSocket.on("connect", () => {
+                  console.log("✅ Socket connected:", newSocket.id);
+                  setSocket(newSocket);
             });
 
-            socket.on("disconnect", (reason) => {
+            newSocket.on("disconnect", (reason) => {
                   console.log("❌ Socket disconnected:", reason);
+                  setSocket(null);
             });
 
-            socket.on("connect_error", (err) => {
+            newSocket.on("connect_error", (err) => {
                   console.log("🚨 Socket connection error:", err.message);
             });
 
             return () => {
-                  socket.disconnect();
+                  newSocket.disconnect();
                   socketRef.current = null;
+                  setSocket(null);
             };
-
       }, [isAuth]);
 
       return (
-            <SocketContext.Provider value={{ socket: socketRef.current }}>
+            <SocketContext.Provider value={{ socket }}>
                   {children}
             </SocketContext.Provider>
       );

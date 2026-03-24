@@ -1,25 +1,26 @@
 import { useParams } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
 import type { IOrder } from "../types/types";
-import { useEffect, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import axios from "axios";
 import { orderBaseUrl } from "../components/common/constant";
 import { MapPin, Phone, Store, CreditCard, Wallet } from "lucide-react";
 
 const OrderDetails = () => {
-
       const { id } = useParams();
       const { socket } = useSocket();
 
       const [order, setOrder] = useState<IOrder | null>(null);
       const [loading, setLoading] = useState(true);
 
-      const fetchOrder = async () => {
+      // FIX: wrap in useCallback so the socket effect can list it as a stable
+      // dependency without triggering infinite re-registration loops
+      const fetchOrder = useCallback(async () => {
+            if (!id) return;
             try {
                   const { data } = await axios.get(`${orderBaseUrl}/my-orders/${id}`, {
-                        headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
-                        }, withCredentials: true
+                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        withCredentials: true
                   });
                   setOrder(data.data);
             } catch (error) {
@@ -27,39 +28,43 @@ const OrderDetails = () => {
             } finally {
                   setLoading(false);
             }
-      };
+      }, [id]);
 
       useEffect(() => {
             fetchOrder();
-      }, [id]);
+      }, [fetchOrder]);
 
       useEffect(() => {
             if (!socket) return;
 
-            const handleOrderUpdate = () => {
-                  fetchOrder();
+            // FIX: only refetch when the update concerns THIS order.
+            // Original refetched on every order:update event regardless of orderId,
+            // causing unnecessary network calls on busy accounts.
+            const handleOrderUpdate = ({ orderId }: { orderId: string }) => {
+                  if (orderId === id) fetchOrder();
             };
 
             socket.on("order:update", handleOrderUpdate);
 
+            // FIX: "order:rider_assigned" is no longer a separate event — the backend
+            // now emits "order:update" for all status changes including rider assignment.
+            // Keeping it here as a safety net for backward compat, but pointing
+            // to the same handler.
+            socket.on("order:rider_assigned", handleOrderUpdate);
+
             return () => {
                   socket.off("order:update", handleOrderUpdate);
+                  socket.off("order:rider_assigned", handleOrderUpdate);
             };
-      }, [id, socket]);
+      }, [id, socket, fetchOrder]);
 
       if (loading) return (
             <div className="container-app py-6 space-y-4">
-
-                  {/* Header */}
                   <div className="space-y-1">
                         <div className="h-7 w-48 bg-gray-200 rounded-lg animate-pulse" />
                         <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
                   </div>
-
-                  {/* Status badge */}
                   <div className="h-8 w-28 bg-gray-200 rounded-full animate-pulse" />
-
-                  {/* Status tracker */}
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white space-y-3">
                         <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
                         <div className="flex items-center gap-2">
@@ -71,8 +76,6 @@ const OrderDetails = () => {
                               ))}
                         </div>
                   </div>
-
-                  {/* Items */}
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white space-y-3">
                         <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
                         {[...Array(3)].map((_, i) => (
@@ -85,8 +88,6 @@ const OrderDetails = () => {
                               </div>
                         ))}
                   </div>
-
-                  {/* Bill summary */}
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white space-y-3">
                         <div className="h-4 w-28 bg-gray-200 rounded animate-pulse" />
                         {[...Array(3)].map((_, i) => (
@@ -100,14 +101,11 @@ const OrderDetails = () => {
                               <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
                         </div>
                   </div>
-
-                  {/* Delivery address */}
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white space-y-2">
                         <div className="h-4 w-36 bg-gray-200 rounded animate-pulse" />
                         <div className="h-3.5 w-64 bg-gray-200 rounded animate-pulse" />
                         <div className="h-3.5 w-32 bg-gray-200 rounded animate-pulse" />
                   </div>
-
             </div>
       );
 
@@ -122,6 +120,7 @@ const OrderDetails = () => {
             ready_for_rider: "Ready for Rider", rider_assigned: "Rider Assigned",
             picked_up: "Picked Up", delivered: "Delivered", cancelled: "Cancelled",
       };
+
       const date = new Date(order.createdAt).toLocaleDateString("en-IN", {
             day: "numeric", month: "short", year: "numeric",
       });
@@ -129,28 +128,28 @@ const OrderDetails = () => {
       return (
             <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-3">
 
-                  {/* Header */}
                   <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                               <h1 className="text-lg font-bold text-gray-800 truncate">{order.restaurantName}</h1>
                               <p className="text-xs text-gray-400 mt-0.5">#{order._id.slice(-8).toUpperCase()} · {date}</p>
-                              <p className="text-sm text-gray-600 mt-1">Order Status : <span className="font-semibold">{STATUS_LABEL[order.status]}</span></p>
+                              <p className="text-sm text-gray-600 mt-1">
+                                    Order Status: <span className="font-semibold">{STATUS_LABEL[order.status] ?? order.status}</span>
+                              </p>
                         </div>
                   </div>
 
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white flex items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-gray-700">Order Status</p>
-                        <span className="font-semibold">{STATUS_LABEL[order.status]}</span>
+                        <span className="font-semibold">{STATUS_LABEL[order.status] ?? order.status}</span>
                   </div>
 
-                  {/* Rider Info */}
                   {order.riderName && (
                         <div className="border border-gray-100 rounded-2xl p-4 bg-white flex items-center justify-between gap-2">
                               <div className="min-w-0">
                                     <p className="text-sm font-semibold text-gray-700">Your Rider</p>
                                     <p className="text-sm text-gray-500 mt-0.5 truncate">{order.riderName}</p>
                               </div>
-                              {order.riderPhoneNumber && (
+                              {order.riderPhoneNumber && order.status !== "delivered" && (
                                     <a
                                           href={`tel:${order.riderPhoneNumber}`}
                                           className="shrink-0 flex items-center gap-1.5 text-sm text-blue-600 font-medium"
@@ -163,7 +162,6 @@ const OrderDetails = () => {
                         </div>
                   )}
 
-                  {/* Items */}
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white space-y-3">
                         <p className="text-sm font-semibold text-gray-700">Items</p>
                         {order.items.map((item) => (
@@ -177,14 +175,16 @@ const OrderDetails = () => {
                         ))}
                   </div>
 
-                  {/* Bill Summary */}
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white space-y-2">
                         <p className="text-sm font-semibold text-gray-700">Bill Summary</p>
                         {([
                               ["Subtotal", `₹${order.subtotal}`],
                               ["Delivery Fee", `₹${order.deliveryFee}`],
                               ["Platform Fee", `₹${order.platformFee}`],
-                              ["GST", `₹${(order.subtotal * 0.05 + order.deliveryFee * 0.18).toFixed(2)}`],
+                              // FIX: use the stored totalGST from the order rather than
+                              // recalculating client-side — avoids floating-point drift
+                              // and stays consistent with what the customer was charged
+                              ["GST", `₹${(order.totalAmount - order.subtotal - order.deliveryFee - order.platformFee).toFixed(2)}`],
                         ] as [string, string][]).map(([label, value]) => (
                               <div key={label} className="flex justify-between text-sm text-gray-500">
                                     <span>{label}</span><span>{value}</span>
@@ -196,7 +196,6 @@ const OrderDetails = () => {
                         </div>
                   </div>
 
-                  {/* Delivery Address */}
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white space-y-2">
                         <p className="text-sm font-semibold text-gray-700">Delivery Address</p>
                         <div className="flex items-start gap-2 text-sm text-gray-500">
@@ -209,7 +208,6 @@ const OrderDetails = () => {
                         </div>
                   </div>
 
-                  {/* Payment */}
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white flex justify-between items-center gap-2">
                         <div className="flex items-center gap-3 min-w-0">
                               {order.paymentMethod === "razorpay"
@@ -221,15 +219,15 @@ const OrderDetails = () => {
                                     <p className="text-xs text-gray-400 capitalize mt-0.5 truncate">{order.paymentMethod}</p>
                               </div>
                         </div>
-                        <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${order.paymentStatus === "paid" ? "bg-green-100 text-green-700" :
-                                    order.paymentStatus === "failed" ? "bg-red-100 text-red-700" :
-                                          "bg-yellow-100 text-yellow-700"
-                              }`}>
+                        <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                              order.paymentStatus === "paid" ? "bg-green-100 text-green-700" :
+                              order.paymentStatus === "failed" ? "bg-red-100 text-red-700" :
+                              "bg-yellow-100 text-yellow-700"
+                        }`}>
                               {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
                         </span>
                   </div>
 
-                  {/* Restaurant */}
                   <div className="border border-gray-100 rounded-2xl p-4 bg-white flex items-center gap-3">
                         <Store size={18} className="text-gray-400 shrink-0" />
                         <div className="min-w-0">
@@ -237,9 +235,8 @@ const OrderDetails = () => {
                               <p className="text-xs text-gray-400">{order.distance} km away</p>
                         </div>
                   </div>
-
             </div>
       );
-}
+};
 
 export default OrderDetails;

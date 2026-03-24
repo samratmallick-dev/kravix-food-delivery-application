@@ -23,6 +23,7 @@ export interface AppContextType {
       setLoading: React.Dispatch<React.SetStateAction<boolean>>;
       setIsAuth: React.Dispatch<React.SetStateAction<boolean>>;
       location: LocationData | null;
+      setLocation: React.Dispatch<React.SetStateAction<LocationData | null>>;
       city: string;
       locationLoading: boolean;
       cart: ICart[] | [];
@@ -110,6 +111,7 @@ export interface IOrder {
       deliveryAddress: {
             formatedAddress: string;
             mobile: number;
+            customerName: string;
             latitude: number;
             longitude: number;
       };
@@ -128,6 +130,7 @@ export interface IOrder {
 
 export interface IRider {
       _id: string;
+      userId: string;
       picture: string;
       phoneNumber: string;
       aadhaarNumber: string;

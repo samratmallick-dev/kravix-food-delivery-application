@@ -1,15 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppData } from "../context/AppContext";
 import { useSocket } from "../context/SocketContext";
-import type { IRider } from "../types/types";
+import type { IOrder, IRider } from "../types/types";
 import axios from "axios";
 import { riderBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
-import { ImagePlus, Loader2, Phone, MapPin, CreditCard, FileText, Bike } from "lucide-react";
+import {
+      ImagePlus,
+      Loader2,
+      Phone,
+      MapPin,
+      CreditCard,
+      FileText,
+      Bike,
+      VolumeX,
+      History,
+      LogOut
+} from "lucide-react";
+import audio from "../assets/rider_order_alert.mp3";
+import { useNavigate } from "react-router-dom";
+import IncomingOrderCard from "../components/rider/IncomingOrderCard";
+import CurrentOrderCard from "../components/rider/CurrentOrderCard";
+import DeliveryHistoryCard from "../components/rider/DeliveryHistoryCard";
+import RiderOrderMap from "../components/rider/riderOrderMap";
 
 const RiderDashboard = () => {
-      const { user, location, locationLoading } = useAppData();
+      const { user, location, locationLoading, setUser, setIsAuth } = useAppData();
       const { socket } = useSocket();
+      const navigate = useNavigate();
 
       const [profile, setProfile] = useState<IRider | null>(null);
       const [loading, setLoading] = useState(true);
@@ -21,16 +39,75 @@ const RiderDashboard = () => {
       const [preview, setPreview] = useState<string | null>(null);
       const [submitting, setSubmitting] = useState(false);
 
+      const [inCommingOrders, setInCommingOrders] = useState<string[]>([]);
+      const [currentOrder, setCurrentOrder] = useState<IOrder | null>(null);
+      const [deliveryHistory, setDeliveryHistory] = useState<IOrder[]>([]);
+
+      const [audioUnlocked, setAudioUnlocked] = useState(false);
+      const audioRef = useRef<HTMLAudioElement | null>(null);
+
+      useEffect(() => {
+            audioRef.current = new Audio(audio);
+            audioRef.current.preload = "auto";
+      }, []);
+
+      const enableAudio = async () => {
+            try {
+                  if (!audioRef.current) return;
+                  await audioRef.current.play();
+                  audioRef.current.pause();
+                  audioRef.current.currentTime = 0;
+                  setAudioUnlocked(true);
+                  toast.success("Sound notifications enabled.");
+            } catch (error) {
+                  toast.error("Failed to enable sound notifications.");
+                  console.log(error);
+            }
+      };
+
+      useEffect(() => {
+            if (!socket) return;
+
+            const onOrderAvailable = ({ orderId }: { orderId: string }) => {
+                  setInCommingOrders((prev) =>
+                        prev.includes(orderId) ? prev : [...prev, orderId]
+                  );
+
+                  if (audioUnlocked && audioRef.current) {
+                        audioRef.current.currentTime = 0;
+                        audioRef.current.play().catch((err) => console.log("Audio play failed:", err));
+                  }
+
+                  setTimeout(() => {
+                        setInCommingOrders((prev) => prev.filter((id) => id !== orderId));
+                  }, 10_000);
+            };
+
+            socket.on("order:available", onOrderAvailable);
+
+            const onOrderUpdate = ({ orderId }: { orderId: string; status: string }) => {
+                  if (currentOrder?._id === orderId) {
+                        fetchCurrentOrder();
+                  }
+            };
+            socket.on("order:update", onOrderUpdate);
+
+            return () => {
+                  socket.off("order:available", onOrderAvailable);
+                  socket.off("order:update", onOrderUpdate);
+            };
+      }, [socket, audioUnlocked, currentOrder]);
+
       const fetchProfile = async () => {
             try {
                   const { data } = await axios.get(`${riderBaseUrl}/fetch-profile`, {
-                        headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
-                        },
+                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                         withCredentials: true
                   });
-
                   setProfile(data.data || null);
+                  if (data.data?.userId && socket) {
+                        socket.emit("join:rider", data.data.userId);
+                  }
             } catch (error) {
                   console.log(error);
                   setProfile(null);
@@ -42,57 +119,112 @@ const RiderDashboard = () => {
       useEffect(() => {
             if (user?.role === "rider") {
                   fetchProfile();
+            } else {
+                  setLoading(false);
             }
       }, [user]);
 
-      const toggleAvailability = () => {
-            if (!navigator.geolocation) {
-                  toast.error("Geolocation is not supported by your browser.");
+      useEffect(() => {
+            if (socket && profile?.userId) {
+                  socket.emit("join:rider", profile.userId);
+            }
+      }, [socket, profile?.userId]);
+
+      const fetchCurrentOrder = async () => {
+            try {
+                  const { data } = await axios.get(`${riderBaseUrl}/order/current`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        withCredentials: true
+                  });
+                  setCurrentOrder(data.data || null);
+            } catch (error: any) {
+                  if (error?.response?.status !== 404) {
+                        console.log(error?.response?.data?.message ?? error.message);
+                  }
+                  setCurrentOrder(null);
+            }
+      };
+
+      const fetchDeliveryHistory = async () => {
+            try {
+                  const { data } = await axios.get(`${riderBaseUrl}/order/delivery-history`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        withCredentials: true
+                  });
+                  setDeliveryHistory(data.data?.orders || []);
+            } catch {
+                  setDeliveryHistory([]);
+            }
+      };
+
+      useEffect(() => {
+            if (user?.role === "rider") {
+                  fetchCurrentOrder();
+                  fetchDeliveryHistory();
+            }
+      }, [user]);
+
+      const handleLogout = () => {
+            localStorage.removeItem("token");
+            setUser(null);
+            setIsAuth(false);
+            navigate("/login");
+      };
+
+      const toggleAvailability = async () => {
+            if (!location) {
+                  toast.error("Location data is not available. Please wait or enable location access.");
                   return;
             }
 
             setToggling(true);
-
-            navigator.geolocation.getCurrentPosition(
-                  async (position) => {
-                        try {
-                              const { data } = await axios.patch(`${riderBaseUrl}/toggle-profile`, {
-                                    isAvailable: !profile?.isAvailable,
-                                    latitude: position.coords.latitude,
-                                    longitude: position.coords.longitude,
-                              }, {
-                                    headers: {
-                                          Authorization: `Bearer ${localStorage.getItem("token")}`
-                                    },
-                                    withCredentials: true
-                              });
-                              toast.success(data.message);
-                              fetchProfile();
-                        } catch (error: any) {
-                              toast.error(error.response?.data?.message || "Failed to update availability.");
-                        } finally {
-                              setToggling(false);
+            try {
+                  const { data } = await axios.patch(
+                        `${riderBaseUrl}/toggle-profile`,
+                        {
+                              isAvailable: !profile?.isAvailable,
+                              latitude: location.latitude,
+                              longitude: location.longitude,
+                        },
+                        {
+                              headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                              withCredentials: true,
                         }
-                  },
-                  () => {
-                        toast.error("Unable to retrieve your location.");
-                        setToggling(false);
-                  }
-            );
+                  );
+                  toast.success(data.message);
+                  setProfile((prev) =>
+                        prev ? { ...prev, isAvailable: !prev.isAvailable } : prev
+                  );
+            } catch (error: any) {
+                  toast.error(error.response?.data?.message || "Failed to update availability.");
+            } finally {
+                  setToggling(false);
+            }
       };
 
       if (user?.role !== "rider") {
-            return <div className="flex items-center justify-center min-h-[60vh] text-gray-700 text-2xl font-bold break-all">You are not authorized to view this page.</div>;
+            return (
+                  <div className="flex items-center justify-center min-h-[60vh] text-gray-700 text-2xl font-bold break-all">
+                        You are not authorized to view this page.
+                  </div>
+            );
       }
 
       if (loading) {
-            return <div className="flex items-center justify-center min-h-[60vh] text-gray-700 text-2xl font-bold">Loading rider details...</div>;
+            return (
+                  <div className="flex items-center justify-center min-h-[60vh] text-gray-700 text-2xl font-bold">
+                        Loading rider details...
+                  </div>
+            );
       }
 
       const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0] ?? null;
             setImage(file);
-            setPreview(file ? URL.createObjectURL(file) : null);
+            setPreview((prev) => {
+                  if (prev) URL.revokeObjectURL(prev);
+                  return file ? URL.createObjectURL(file) : null;
+            });
       };
 
       const handleSubmit = async () => {
@@ -114,9 +246,7 @@ const RiderDashboard = () => {
             try {
                   setSubmitting(true);
                   const { data } = await axios.post(`${riderBaseUrl}/add-profile`, formData, {
-                        headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
-                        },
+                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                         withCredentials: true
                   });
                   if (data.success) {
@@ -133,7 +263,7 @@ const RiderDashboard = () => {
       };
 
       if (!profile) return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
+            <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
                   <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg overflow-hidden">
 
                         <div className="bg-primary px-8 py-6">
@@ -231,11 +361,204 @@ const RiderDashboard = () => {
                         </div>
                   </div>
             </div>
-      )
+      );
 
       return (
-            <div>RiderDashboard</div>
+            <div className="container-app bg-background py-8 space-y-4">
+                  <div className="mx-auto max-w-md bg-white shadow-md rounded-2xl overflow-hidden">
+
+                        <div className="bg-primary px-6 py-8 flex flex-col items-center gap-3 relative">
+                              <button
+                                    onClick={handleLogout}
+                                    className="absolute top-4 right-4 flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition cursor-pointer"
+                              >
+                                    <LogOut size={14} /> Logout
+                              </button>
+                              <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-white">
+                                    <img src={profile.picture} className="w-full h-full object-cover object-top" alt="rider" />
+                              </div>
+                              <div className="text-center">
+                                    <h2 className="text-white text-xl font-bold">{user?.name}</h2>
+                                    <span className={`inline-flex items-center gap-1.5 mt-1 px-3 py-0.5 rounded-full text-xs font-semibold ${profile.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
+                                          }`}>
+                                          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${profile.isAvailable ? "bg-green-500" : "bg-gray-400"
+                                                }`} />
+                                          {profile.isAvailable ? "Available" : "Unavailable"}
+                                    </span>
+                              </div>
+                        </div>
+
+                        <div className="px-6 py-5 space-y-3">
+
+                              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                    <Phone size={18} className="text-primary shrink-0" />
+                                    <div>
+                                          <p className="text-xs text-gray-400">Phone Number</p>
+                                          <p className="text-sm font-medium text-gray-700">{profile.phoneNumber}</p>
+                                    </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                    <CreditCard size={18} className="text-primary shrink-0" />
+                                    <div>
+                                          <p className="text-xs text-gray-400">Aadhaar Number</p>
+                                          <p className="text-sm font-medium text-gray-700">XXXX-XXXX-{profile.aadhaarNumber.slice(-4)}</p>
+                                    </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                    <FileText size={18} className="text-primary shrink-0" />
+                                    <div>
+                                          <p className="text-xs text-gray-400">Driving License</p>
+                                          <p className="text-sm font-medium text-gray-700">{profile.drivingLicesce}</p>
+                                    </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                    <Bike size={18} className="text-primary shrink-0" />
+                                    <div>
+                                          <p className="text-xs text-gray-400">Verification Status</p>
+                                          <p className={`text-sm font-semibold ${profile.isVerified ? "text-green-600" : "text-yellow-600"}`}>
+                                                {profile.isVerified ? "Verified" : "Pending Verification"}
+                                          </p>
+                                    </div>
+                              </div>
+
+                              {import.meta.env.DEV && location && (
+                                    <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+                                          <MapPin size={16} className="text-blue-500 shrink-0 mt-0.5" />
+                                          <div>
+                                                <p className="text-xs text-blue-700 font-semibold">Active Location (dev)</p>
+                                                <p className="text-xs text-blue-600 mt-0.5">{location.formattedAddress}</p>
+                                                <p className="text-[10px] text-blue-400 font-mono mt-0.5">
+                                                      {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
+                                                </p>
+                                          </div>
+                                    </div>
+                              )}
+
+                              <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-300 rounded-xl px-4 py-3">
+                                    <span className="text-yellow-500 text-lg leading-none mt-0.5">⚠️</span>
+                                    <p className="text-xs text-yellow-800 font-medium">
+                                          Please ensure that you are within the delivery radius of a restaurant before going online as a rider to receive orders.
+                                    </p>
+                              </div>
+
+                              {profile.isVerified && (
+                                    <button
+                                          onClick={toggleAvailability}
+                                          disabled={toggling || !location || !!currentOrder}
+                                          className={`w-full py-3 rounded-xl font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${profile.isAvailable ? "bg-gray-500 hover:bg-gray-600" : "bg-primary hover:bg-red-700"
+                                                }`}
+                                    >
+                                          {toggling ? (
+                                                <><Loader2 size={18} className="animate-spin" /> Updating...</>
+                                          ) : profile.isAvailable ? (
+                                                <><Bike size={18} /> Go Offline</>
+                                          ) : (
+                                                <><Bike size={18} /> Go Online</>
+                                          )}
+                                    </button>
+                              )}
+                              {currentOrder && (
+                                    <p className="text-xs text-center text-amber-600 font-medium">
+                                          You cannot change availability while on an active delivery.
+                                    </p>
+                              )}
+
+                        </div>
+                  </div>
+
+                  {!audioUnlocked && (
+                        <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+                              <div className="flex items-center gap-3">
+                                    <VolumeX size={20} className="text-amber-500 shrink-0" />
+                                    <div>
+                                          <p className="text-sm font-semibold text-amber-800">Enable sound notifications</p>
+                                          <p className="text-xs text-amber-600">Get notified when new orders arrive</p>
+                                    </div>
+                              </div>
+                              <button
+                                    onClick={enableAudio}
+                                    className="text-xs font-semibold px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition"
+                              >
+                                    Enable
+                              </button>
+                        </div>
+                  )}
+                  {inCommingOrders.length > 0 && (
+                        <div className="space-y-3">
+                              <h2 className="text-lg font-bold text-gray-700">Incoming Orders</h2>
+                              {inCommingOrders.map((orderId) => (
+                                    <IncomingOrderCard
+                                          key={orderId}
+                                          orderId={orderId}
+                                          onExpire={() => setInCommingOrders((prev) => prev.filter((id) => id !== orderId))}
+                                          onAccept={async () => {
+                                                try {
+                                                      const { data } = await axios.post(
+                                                            `${riderBaseUrl}/accept/${orderId}`,
+                                                            {},
+                                                            {
+                                                                  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                                                                  withCredentials: true,
+                                                            }
+                                                      );
+                                                      toast.success(data.message || "Order accepted!");
+                                                      setInCommingOrders([]);
+                                                      await fetchCurrentOrder();
+                                                      await fetchProfile();
+                                                } catch (err: any) {
+                                                      toast.error(err?.response?.data?.message || "Failed to accept order");
+                                                }
+                                          }}
+                                    />
+                              ))}
+                        </div>
+                  )}
+
+                  {currentOrder && (
+                        <div className="space-y-3">
+                              <h2 className="text-lg font-bold text-gray-700">Current Order</h2>
+                              <CurrentOrderCard
+                                    order={currentOrder}
+                                    onStatusUpdate={async () => {
+                                          try {
+                                                const { data } = await axios.patch(
+                                                      `${riderBaseUrl}/order/update-status`,
+                                                      { orderId: currentOrder._id },
+                                                      {
+                                                            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                                                            withCredentials: true,
+                                                      }
+                                                );
+                                                toast.success(data.message || "Status updated!");
+                                                await fetchCurrentOrder();
+                                                await fetchProfile();
+                                                await fetchDeliveryHistory();
+                                          } catch (err: any) {
+                                                toast.error(err?.response?.data?.message || "Failed to update status");
+                                          }
+                                    }}
+                              />
+                              <RiderOrderMap order={currentOrder} />
+                        </div>
+                  )}
+
+                  {deliveryHistory.length > 0 && (
+                        <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                    <History size={18} className="text-gray-500" />
+                                    <h2 className="text-lg font-bold text-gray-700">Delivery History</h2>
+                                    <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">Total : {deliveryHistory.length}</span>
+                              </div>
+                              {deliveryHistory.map((order) => (
+                                    <DeliveryHistoryCard key={order._id} order={order} />
+                              ))}
+                        </div>
+                  )}
+            </div>
       );
-}
+};
 
 export default RiderDashboard;

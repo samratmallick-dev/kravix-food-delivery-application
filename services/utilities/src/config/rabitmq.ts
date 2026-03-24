@@ -11,17 +11,17 @@ export const connectRabbitMQ = async () => {
                   durable: true,
             });
 
-            console.log("Connected RabitMQ");
+            console.log("Connected RabitMQ in Utilities Service");
             
       } catch (error: unknown) {
             console.log("Error while connecting to RabbitMQ", error);
-            throw new Error(`Error while connecting to RabbitMQ: ${error}`);
+            throw new Error(`Error while connecting to RabbitMQ in Utilities Service: ${error}`);
       }
 };
 
 export const getRabbitMQChannel = () => {
       if (!channel) {
-            throw new Error("RabbitMQ channel is not initialized");
+            throw new Error("RabbitMQ channel is not initialized in Utilities Service");
       }
       return channel;
 };

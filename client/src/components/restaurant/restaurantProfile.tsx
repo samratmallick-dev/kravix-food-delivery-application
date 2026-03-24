@@ -86,14 +86,12 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
 
       return (
             <div className="w-full bg-white rounded-b-2xl shadow-md overflow-hidden">
-                  {/* Banner + Avatar */}
                   <div className="relative">
                         <div className={`h-56 bg-linear-to-r from-primary/20 to-orange-100 overflow-hidden ${!restaurant.isOpen && "grayscale brightness-75 opacity-80"}`}>
                               {restaurant.image && (
                                     <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-fill object-center" />
                               )}
                         </div>
-                        {/* Status badge */}
                         <span className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full shadow ${
                               isOpen ? "bg-green-500 text-white" : "bg-red-500 text-white"
                         }`}>
@@ -102,7 +100,6 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
                   </div>
 
                   <div className="p-5 sm:p-6 space-y-4">
-                        {/* Name row */}
                         <div className="flex items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
                                     {editMode ? (
@@ -131,7 +128,6 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
                               )}
                         </div>
 
-                        {/* Description */}
                         {editMode ? (
                               <textarea
                                     value={description}
@@ -144,7 +140,6 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
                               <p className="text-gray-600 text-sm leading-relaxed">{restaurant.description || "No description added"}</p>
                         )}
 
-                        {/* Footer row */}
                         <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-100">
                               <p className="text-xs text-gray-400">
                                     Since {new Date(restaurant.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { google } from "googleapis";
+import mongoose from "mongoose";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { User } from "../model/User.js";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
@@ -23,6 +24,14 @@ const tokengenerator = (user: TokenPayload): string => {
 };
 
 export const loginController = TryCatch(async (req: Request, res: Response) => {
+
+      if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({
+                  success: false,
+                  message: "Service temporarily unavailable. Please try again.",
+                  error: true
+            });
+      }
 
       const { code } = req.body;
 

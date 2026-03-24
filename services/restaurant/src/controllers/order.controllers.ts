@@ -5,8 +5,9 @@ import { Address } from "../model/Address.js";
 import { Cart } from "../model/Cart.js";
 import { IMenuItem } from "../model/MenuItems.js";
 import { Restaurant } from "../model/Restaurant.js";
-import { Order } from "../model/Order.js";
+import { IOrder, Order } from "../model/Order.js";
 import axios from "axios";
+import { publishEvent } from "../config/orderPublisher.js";
 
 export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
@@ -149,6 +150,7 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
             deliveryAddress: {
                   formatedAddress: address.formatedAddress,
                   mobile: address.mobile,
+                  customerName: user.name,
                   latitude: latitude,
                   longitude: longitude
             },
@@ -313,6 +315,20 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
             withCredentials: true
       });
 
+      if (status === "ready_for_rider") {
+            console.log("Publishing order ready for rider event for order", orderId);
+
+            await publishEvent("ORDER_READY_FOR_RIDER", {
+                  orderId: orderId?.toString(),
+                  restaurantId: restaurant._id.toString(),
+                  location: restaurant.autoLocation
+            });
+
+            console.log("Event publish successfully.")
+      }
+
+
+
       return res.status(200).json({
             success: true,
             error: false,
@@ -367,7 +383,7 @@ export const getSingleOrder = TryCatch(async (req: AuthenticatedRequest, res: Re
             });
       }
 
-      if(order.userId !== user._id.toString()) {
+      if (order.userId !== user._id.toString()) {
             return res.status(403).json({
                   success: false,
                   message: "Access denied. You don't have permission to view this order.",
@@ -379,5 +395,203 @@ export const getSingleOrder = TryCatch(async (req: AuthenticatedRequest, res: Re
             success: true,
             message: "Order fetched successfully",
             data: order
+      });
+});
+
+export const assignRiderToOrder = TryCatch(async (req, res) => {
+      if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({
+                  success: false,
+                  message: "Forbidden: Invalid or missing internal key",
+                  error: true
+            });
+      }
+
+      const { orderId, riderId, riderName, riderPhoneNumber } = req.body;
+
+      const order = await Order.findById(orderId);
+      if (!order) {
+            return res.status(404).json({
+                  success: false,
+                  message: "Order not found",
+                  error: true
+            });
+      }
+
+      if (order.riderId !== null) {
+            return res.status(400).json({
+                  success: false,
+                  message: "Rider already assigned to this order",
+                  error: true
+            });
+      }
+
+      const updateOrderForAssignRider = await Order.findOneAndUpdate(
+            { _id: orderId, riderId: { $eq: null } },
+            {
+                  riderId: riderId,
+                  riderName: riderName,
+                  riderPhoneNumber: riderPhoneNumber,
+                  status: "rider_assigned"
+            },
+            { returnDocument: 'after' }
+      );
+
+      const assignPayload = { orderId: orderId.toString(), status: "rider_assigned" };
+
+      await Promise.all([
+            axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`, {
+                  event: "order:update",
+                  room: `User:${order.userId}`,
+                  payload: assignPayload
+            }, { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }, withCredentials: true }),
+            axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`, {
+                  event: "order:update",
+                  room: `Restaurant:${order.restaurantId}`,
+                  payload: assignPayload
+            }, { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }, withCredentials: true }),
+      ]);
+
+      return res.status(200).json({
+            success: true,
+            error: false,
+            message: "Rider assigned to order successfully",
+            data: updateOrderForAssignRider
+      });
+});
+
+export const getCurrentOrdersForRiders = TryCatch(async (req, res) => {
+      if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({
+                  success: false,
+                  message: "Forbidden: Invalid or missing internal key",
+                  error: true
+            });
+      }
+
+      const { riderId } = req.query;
+      if (!riderId) {
+            return res.status(400).json({
+                  success: false,
+                  message: "Rider Id is required",
+                  error: true
+            })
+      }
+
+      const order = await Order.findOne({
+            riderId: riderId,
+            status: { $ne: "delivered" },
+            paymentStatus: "paid"
+      }).populate("restaurantId");
+
+      if (!order) {
+            return res.status(404).json({
+                  success: false,
+                  message: "No current order found for this rider",
+                  error: true,
+                  data: null
+            });
+      }
+
+      return res.status(200).json({
+            success: true,
+            message: "Current orders for riders fetched successfully",
+            data: order
+      });
+});
+
+export const updateOrderStatusByRider = TryCatch(async (req, res) => {
+      if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({
+                  success: false,
+                  message: "Forbidden: Invalid or missing internal key",
+                  error: true
+            });
+      }
+
+      const { orderId } = req.body;
+      const order = await Order.findById(orderId);
+      if (!order) {
+            return res.status(404).json({
+                  success: false,
+                  message: "Order not found",
+                  error: true
+            });
+      }
+
+      const RIDER_STATUS_TRANSITIONS: Record<string, IOrder["status"]> = {
+            rider_assigned: "picked_up",
+            ready_for_rider: "picked_up",
+            picked_up: "delivered",
+      };
+
+      const nextStatus = RIDER_STATUS_TRANSITIONS[order.status];
+      if (nextStatus) {
+            order.status = nextStatus;
+            await order.save();
+
+            const socketPayload = { orderId: order._id.toString(), status: order.status };
+
+            await Promise.all([
+                  axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`, {
+                        event: "order:update",
+                        room: `Restaurant:${order.restaurantId}`,
+                        payload: socketPayload
+                  }, { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }, withCredentials: true }),
+                  axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`, {
+                        event: "order:update",
+                        room: `User:${order.userId}`,
+                        payload: socketPayload
+                  }, { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }, withCredentials: true }),
+            ]);
+
+            return res.status(200).json({
+                  success: true,
+                  error: false,
+                  message: "Order status updated successfully",
+                  data: order
+            });
+      }
+
+      return res.status(400).json({
+            success: false,
+            error: true,
+            message: `Cannot update order with status: ${order.status}`
+      });
+});
+
+export const getOrderByIdInternal = TryCatch(async (req, res) => {
+      if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({ success: false, message: "Forbidden", error: true });
+      }
+
+      const order = await Order.findById(req.params.orderId).select("status riderId");
+      if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found", error: true });
+      }
+
+      return res.status(200).json({ success: true, error: false, data: order });
+});
+
+export const getDeliveredOrdersByRider = TryCatch(async (req, res) => {
+      if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({ success: false, message: "Forbidden", error: true });
+      }
+
+      const { riderId } = req.query;
+      if (!riderId) {
+            return res.status(400).json({ success: false, message: "Rider Id is required", error: true });
+      }
+
+      const orders = await Order.find({
+            riderId: riderId,
+            status: "delivered",
+            paymentStatus: "paid"
+      }).sort({ createdAt: -1 });
+
+      return res.status(200).json({
+            success: true,
+            message: "Delivery history fetched successfully",
+            data: { count: orders.length, orders }
       });
 });
