@@ -22,7 +22,6 @@ import { useNavigate } from "react-router-dom";
 import IncomingOrderCard from "../components/rider/IncomingOrderCard";
 import CurrentOrderCard from "../components/rider/CurrentOrderCard";
 import DeliveryHistoryCard from "../components/rider/DeliveryHistoryCard";
-import RiderOrderMap from "../components/rider/riderOrderMap";
 
 const RiderDashboard = () => {
       const { user, location, locationLoading, setUser, setIsAuth } = useAppData();
@@ -541,7 +540,6 @@ const RiderDashboard = () => {
                                           }
                                     }}
                               />
-                              <RiderOrderMap order={currentOrder} />
                         </div>
                   )}
 

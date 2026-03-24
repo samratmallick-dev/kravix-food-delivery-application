@@ -40,7 +40,8 @@ export const corsOptions: CorsOptions = {
             "Cache-Control",
             "Expires",
             "Pragma",
-            "X-Requested-With"
+            "X-Requested-With",
+            "x-internal-key"
       ],
       exposedHeaders: ["X-Cache"]
 };
