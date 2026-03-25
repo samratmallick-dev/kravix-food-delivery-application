@@ -18,7 +18,6 @@ import {
       LogOut
 } from "lucide-react";
 import audio from "../assets/rider_order_alert.mp3";
-import { useNavigate } from "react-router-dom";
 import IncomingOrderCard from "../components/rider/IncomingOrderCard";
 import CurrentOrderCard from "../components/rider/CurrentOrderCard";
 import DeliveryHistoryCard from "../components/rider/DeliveryHistoryCard";
@@ -26,7 +25,6 @@ import DeliveryHistoryCard from "../components/rider/DeliveryHistoryCard";
 const RiderDashboard = () => {
       const { user, location, locationLoading, setUser, setIsAuth } = useAppData();
       const { socket } = useSocket();
-      const navigate = useNavigate();
 
       const [profile, setProfile] = useState<IRider | null>(null);
       const [loading, setLoading] = useState(true);
@@ -163,13 +161,6 @@ const RiderDashboard = () => {
             }
       }, [user]);
 
-      const handleLogout = () => {
-            localStorage.removeItem("token");
-            setUser(null);
-            setIsAuth(false);
-            navigate("/login");
-      };
-
       const toggleAvailability = async () => {
             if (!location) {
                   toast.error("Location data is not available. Please wait or enable location access.");
@@ -200,6 +191,41 @@ const RiderDashboard = () => {
                   setToggling(false);
             }
       };
+
+      const handleLogout = async () => {
+            if (!location) {
+                  toast.error("Location data is not available. Please wait or enable location access.");
+                  return;
+            }
+
+            setToggling(true);
+            try {
+                  const { data } = await axios.patch(
+                        `${riderBaseUrl}/toggle-profile`,
+                        {
+                              isAvailable: !profile?.isAvailable,
+                              latitude: location.latitude,
+                              longitude: location.longitude,
+                        },
+                        {
+                              headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                              withCredentials: true,
+                        }
+                  );
+                  toast.success(data.message);
+                  setProfile((prev) =>
+                        prev ? { ...prev, isAvailable: !prev.isAvailable } : prev
+                  );
+            } catch (error: any) {
+                  toast.error(error.response?.data?.message || "Failed to update availability.");
+            } finally {
+                  setToggling(false);
+            }
+            localStorage.removeItem("token");
+            setUser(null);
+            setIsAuth(false);
+      };
+
 
       if (user?.role !== "rider") {
             return (
@@ -447,7 +473,7 @@ const RiderDashboard = () => {
                                     <button
                                           onClick={toggleAvailability}
                                           disabled={toggling || !location || !!currentOrder}
-                                          className={`w-full py-3 rounded-xl font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${profile.isAvailable ? "bg-gray-500 hover:bg-gray-600" : "bg-primary hover:bg-red-700"
+                                          className={`w-full py-3 rounded-xl font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50  ${profile.isAvailable ? "bg-gray-500 hover:bg-gray-600" : "bg-primary hover:bg-red-700"
                                                 }`}
                                     >
                                           {toggling ? (
