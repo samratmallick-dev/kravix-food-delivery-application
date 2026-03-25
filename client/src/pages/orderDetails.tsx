@@ -5,6 +5,7 @@ import { useEffect, useCallback, useState } from "react";
 import axios from "axios";
 import { orderBaseUrl } from "../components/common/constant";
 import { MapPin, Phone, Store, CreditCard, Wallet } from "lucide-react";
+import CustomerTrackingMap from "../components/customer/CustomerTrackingMap";
 
 const OrderDetails = () => {
       const { id } = useParams();
@@ -13,8 +14,6 @@ const OrderDetails = () => {
       const [order, setOrder] = useState<IOrder | null>(null);
       const [loading, setLoading] = useState(true);
 
-      // FIX: wrap in useCallback so the socket effect can list it as a stable
-      // dependency without triggering infinite re-registration loops
       const fetchOrder = useCallback(async () => {
             if (!id) return;
             try {
@@ -37,19 +36,11 @@ const OrderDetails = () => {
       useEffect(() => {
             if (!socket) return;
 
-            // FIX: only refetch when the update concerns THIS order.
-            // Original refetched on every order:update event regardless of orderId,
-            // causing unnecessary network calls on busy accounts.
             const handleOrderUpdate = ({ orderId }: { orderId: string }) => {
                   if (orderId === id) fetchOrder();
             };
 
             socket.on("order:update", handleOrderUpdate);
-
-            // FIX: "order:rider_assigned" is no longer a separate event — the backend
-            // now emits "order:update" for all status changes including rider assignment.
-            // Keeping it here as a safety net for backward compat, but pointing
-            // to the same handler.
             socket.on("order:rider_assigned", handleOrderUpdate);
 
             return () => {
@@ -143,6 +134,8 @@ const OrderDetails = () => {
                         <span className="font-semibold">{STATUS_LABEL[order.status] ?? order.status}</span>
                   </div>
 
+                  <CustomerTrackingMap order={order} />
+
                   {order.riderName && (
                         <div className="border border-gray-100 rounded-2xl p-4 bg-white flex items-center justify-between gap-2">
                               <div className="min-w-0">
@@ -181,9 +174,6 @@ const OrderDetails = () => {
                               ["Subtotal", `₹${order.subtotal}`],
                               ["Delivery Fee", `₹${order.deliveryFee}`],
                               ["Platform Fee", `₹${order.platformFee}`],
-                              // FIX: use the stored totalGST from the order rather than
-                              // recalculating client-side — avoids floating-point drift
-                              // and stays consistent with what the customer was charged
                               ["GST", `₹${(order.totalAmount - order.subtotal - order.deliveryFee - order.platformFee).toFixed(2)}`],
                         ] as [string, string][]).map(([label, value]) => (
                               <div key={label} className="flex justify-between text-sm text-gray-500">

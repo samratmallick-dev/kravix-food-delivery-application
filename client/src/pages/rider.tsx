@@ -18,15 +18,14 @@ import {
       LogOut
 } from "lucide-react";
 import audio from "../assets/rider_order_alert.mp3";
-import { useNavigate } from "react-router-dom";
 import IncomingOrderCard from "../components/rider/IncomingOrderCard";
 import CurrentOrderCard from "../components/rider/CurrentOrderCard";
 import DeliveryHistoryCard from "../components/rider/DeliveryHistoryCard";
+import RiderOrderMap from "../components/rider/riderOrderMap";
 
 const RiderDashboard = () => {
       const { user, location, locationLoading, setUser, setIsAuth } = useAppData();
       const { socket } = useSocket();
-      const navigate = useNavigate();
 
       const [profile, setProfile] = useState<IRider | null>(null);
       const [loading, setLoading] = useState(true);
@@ -163,11 +162,29 @@ const RiderDashboard = () => {
             }
       }, [user]);
 
-      const handleLogout = () => {
+      const handleLogout = async () => {
+            if (profile?.isAvailable) {
+                  try {
+                        await axios.patch(
+                              `${riderBaseUrl}/toggle-profile`,
+                              {
+                                    isAvailable: false,
+                                    latitude: location?.latitude ?? 0,
+                                    longitude: location?.longitude ?? 0,
+                              },
+                              {
+                                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                                    withCredentials: true,
+                              }
+                        );
+                  } catch (error) {
+                        console.log(error);
+                  }
+            }
             localStorage.removeItem("token");
+            toast.success("Logout Successfully");
             setUser(null);
             setIsAuth(false);
-            navigate("/login");
       };
 
       const toggleAvailability = async () => {
@@ -540,6 +557,8 @@ const RiderDashboard = () => {
                                           }
                                     }}
                               />
+
+                              <RiderOrderMap order={currentOrder} />
                         </div>
                   )}
 
