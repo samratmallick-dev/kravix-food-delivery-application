@@ -9,6 +9,7 @@ import { useAppData } from "../context/AppContext";
 import { ShoppingCart } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
+import AppSkeleton from "../components/common/AppSkeleton";
 
 const CustomerRestaurantPage = () => {
       const { id } = useParams();
@@ -78,13 +79,7 @@ const CustomerRestaurantPage = () => {
             };
       }, [socket, id]);
 
-      if (loading) {
-            return (
-                  <div className="flex items-center justify-center h-screen">
-                        <p className="text-xl font-semibold">Loading Restaurant...</p>
-                  </div>
-            );
-      }
+      if (loading) return <AppSkeleton />;
 
       if (!restaurant) {
             return (

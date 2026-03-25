@@ -1,14 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAppData } from "../../context/AppContext"
+import { useAppData } from "../../context/AppContext";
+import AppSkeleton from "./AppSkeleton";
 
 const PublicRoutes = () => {
-      const {isAuth, loading} = useAppData();
+      const { isAuth, loading } = useAppData();
 
-      if (loading) {
-            return <div className="min-h-screen w-full flex items-center justify-center bg-amber-50">
-                  <h1 className="text-lg text-gray-600 font-semibold">Loading...</h1>
-            </div>
-      }
+      if (loading) return <AppSkeleton />;
 
       return (
             isAuth ? <Navigate to={"/"} replace /> : <Outlet />

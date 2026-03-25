@@ -10,6 +10,7 @@ import FeatureBanmner from "../components/home/featureBanner";
 import RestaurantsCard from "../components/restaurant/restaurantsCard";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
+import AppSkeleton from "../components/common/AppSkeleton";
 
 const Home = () => {
 
@@ -79,11 +80,7 @@ const Home = () => {
       }, [socket, retaurants.length]);
 
       if ((loading && !searching) || !location) {
-            return (
-                  <div className="flex items-center justify-center h-screen">
-                        <p className={`font-semibold ${isMobile ? "text-base" : "text-xl"}`}>Finding Restaurant near you...</p>
-                  </div>
-            );
+            return <AppSkeleton />;
       }
 
       return (

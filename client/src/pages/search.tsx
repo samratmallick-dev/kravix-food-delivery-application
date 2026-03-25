@@ -11,6 +11,7 @@ import { BsCartPlus } from "react-icons/bs";
 import { Loader, Minus, Plus } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
+import AppSkeleton from "../components/common/AppSkeleton";
 
 const SearchPage = () => {
       const { location, cart, fetchCart } = useAppData();
@@ -214,9 +215,7 @@ const SearchPage = () => {
                   </div>
 
                   {loading ? (
-                        <p className="text-xl font-semibold text-center py-20">
-                              {searchType === "restaurant" ? "Finding restaurants near you..." : "Searching food items..."}
-                        </p>
+                        <AppSkeleton />
                   ) : searchType === "restaurant" ? (
                         restaurants.length > 0 ? (
                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
