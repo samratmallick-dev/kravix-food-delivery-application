@@ -164,7 +164,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
                                                 {isOpen ? "Close Restaurant" : "Open Restaurant"}
                                           </button>
                                     )}
-                                    {isSeller && (
+                                    {(isSeller)  && (
                                           <button
                                                 onClick={logoutHandler}
                                                 className="px-4 py-1.5 text-sm font-medium rounded-lg transition bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"

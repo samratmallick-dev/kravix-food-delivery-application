@@ -109,7 +109,7 @@ const OrderDetails = () => {
       const STATUS_LABEL: Record<string, string> = {
             placed: "Placed", accepted: "Accepted", preparing: "Preparing",
             ready_for_rider: "Ready for Rider", rider_assigned: "Rider Assigned",
-            picked_up: "Picked Up", delivered: "Delivered", cancelled: "Cancelled",
+            picked_up: "Picked Up — On the way", delivered: "Delivered", cancelled: "Cancelled",
       };
 
       const date = new Date(order.createdAt).toLocaleDateString("en-IN", {
@@ -138,9 +138,13 @@ const OrderDetails = () => {
 
                   {order.riderName && (
                         <div className="border border-gray-100 rounded-2xl p-4 bg-white flex items-center justify-between gap-2">
-                              <div className="min-w-0">
-                                    <p className="text-sm font-semibold text-gray-700">Your Rider</p>
-                                    <p className="text-sm text-gray-500 mt-0.5 truncate">{order.riderName}</p>
+                              <div className="flex items-center gap-2 text-sm text-gray-700">
+                                    <Phone size={14} className="shrink-0 text-gray-400" />
+                                    <div>
+                                          <p className="text-xs text-gray-400">Your Rider</p>
+                                          <p className="font-medium">{order.riderName}</p>
+                                          <p className="text-xs text-gray-500">{order.riderPhoneNumber}</p>
+                                    </div>
                               </div>
                               {order.riderPhoneNumber && order.status !== "delivered" && (
                                     <a
@@ -209,11 +213,10 @@ const OrderDetails = () => {
                                     <p className="text-xs text-gray-400 capitalize mt-0.5 truncate">{order.paymentMethod}</p>
                               </div>
                         </div>
-                        <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                              order.paymentStatus === "paid" ? "bg-green-100 text-green-700" :
-                              order.paymentStatus === "failed" ? "bg-red-100 text-red-700" :
-                              "bg-yellow-100 text-yellow-700"
-                        }`}>
+                        <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${order.paymentStatus === "paid" ? "bg-green-100 text-green-700" :
+                                    order.paymentStatus === "failed" ? "bg-red-100 text-red-700" :
+                                          "bg-yellow-100 text-yellow-700"
+                              }`}>
                               {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
                         </span>
                   </div>

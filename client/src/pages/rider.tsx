@@ -464,7 +464,7 @@ const RiderDashboard = () => {
                                     <button
                                           onClick={toggleAvailability}
                                           disabled={toggling || !location || !!currentOrder}
-                                          className={`w-full py-3 rounded-xl font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${profile.isAvailable ? "bg-gray-500 hover:bg-gray-600" : "bg-primary hover:bg-red-700"
+                                          className={`w-full py-3 rounded-xl font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50  ${profile.isAvailable ? "bg-gray-500 hover:bg-gray-600" : "bg-primary hover:bg-red-700"
                                                 }`}
                                     >
                                           {toggling ? (
