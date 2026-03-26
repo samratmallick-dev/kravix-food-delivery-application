@@ -63,7 +63,7 @@ const AdminUsers = () => {
                   header: "User",
                   render: (u: User) => (
                         <div className="flex items-center gap-3">
-                              <img src={u.image} alt={u.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                              <img src={u.image} alt={u.name} referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover shrink-0" />
                               <div className="min-w-0">
                                     <p className="text-sm font-medium text-gray-700 truncate">{u.name}</p>
                                     <p className="text-xs text-gray-400 truncate">{u.email}</p>
@@ -100,6 +100,9 @@ const AdminUsers = () => {
                   ),
             },
       ];
+
+      console.log(users);
+      
 
       return (
             <div className="p-6 space-y-5">
