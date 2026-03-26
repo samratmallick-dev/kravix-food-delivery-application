@@ -57,6 +57,25 @@ export const startPayment = async () => {
                         }
                   );
 
+                  const adminPayload = JSON.stringify({
+                        type: "ORDER_PLACED",
+                        data: {
+                              orderId: order._id.toString(),
+                              restaurantId: order.restaurantId,
+                              restaurantName: order.restaurantName,
+                              totalAmount: order.totalAmount,
+                              status: order.status,
+                              paymentMethod: order.paymentMethod,
+                              createdAt: order.createdAt,
+                        },
+                  });
+                  channel.sendToQueue(
+                        process.env.ADMIN_EVENT_QUEUE!,
+                        Buffer.from(adminPayload),
+                        { persistent: true }
+                  );
+                  console.log(`📤 Published ORDER_PLACED to admin_event_queue for order ${order._id}`);
+
                   channel.ack(msg);
             } catch (error) {
                   console.error("❌ Error processing payment:", error);

@@ -41,7 +41,10 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             try {
                   const token = localStorage.getItem("token");
                   if (!token) {
-                        throw new Error("Missing token");
+                        setUser(null);
+                        setIsAuth(false);
+                        setLoading(false);
+                        return;
                   }
 
                   const { data } = await axios.get(`${authBaseUrl}/profile`, {
@@ -52,7 +55,10 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                   setUser(data.data);
                   setIsAuth(true);
             } catch (error: any) {
-                  console.log(error);
+                  if (error?.response?.status) {
+                        // real API error — log it
+                        console.error("fetchUser failed:", error.response.data?.message ?? error.message);
+                  }
                   setUser(null);
                   setIsAuth(false);
             } finally {

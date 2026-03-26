@@ -301,19 +301,14 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
       order.status = status;
       await order.save();
 
-      await axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`, {
-            event: "order:update",
-            room: `User:${order.userId}`,
-            payload: {
-                  orderId: order._id,
-                  status: order.status
-            }
-      }, {
-            headers: {
-                  "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
-            },
-            withCredentials: true
-      });
+      const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`;
+      const emitHeaders = { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! };
+      const statusPayload = { orderId: order._id, status: order.status };
+
+      await Promise.all([
+            axios.post(emitUrl, { event: "order:update", room: `User:${order.userId}`, payload: statusPayload }, { headers: emitHeaders }),
+            axios.post(emitUrl, { event: "order:update", room: "Admin", payload: statusPayload }, { headers: emitHeaders }),
+      ]);
 
       if (status === "ready_for_rider") {
             console.log("Publishing order ready for rider event for order", orderId);
@@ -438,13 +433,14 @@ export const assignRiderToOrder = TryCatch(async (req, res) => {
       );
 
       const assignPayload = { orderId: orderId.toString(), status: "rider_assigned" };
-      const emitOpts = { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }, withCredentials: true };
+      const emitOpts = { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } };
       const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`;
 
       await Promise.all([
             axios.post(emitUrl, { event: "order:update", room: `User:${order.userId}`, payload: assignPayload }, emitOpts),
             axios.post(emitUrl, { event: "order:update", room: `Restaurant:${order.restaurantId}`, payload: assignPayload }, emitOpts),
             axios.post(emitUrl, { event: "order:update", room: `Rider:${riderUserId}`, payload: assignPayload }, emitOpts),
+            axios.post(emitUrl, { event: "order:update", room: "Admin", payload: assignPayload }, emitOpts),
       ]);
 
       return res.status(200).json({
@@ -526,18 +522,13 @@ export const updateOrderStatusByRider = TryCatch(async (req, res) => {
             await order.save();
 
             const socketPayload = { orderId: order._id.toString(), status: order.status };
+            const riderEmitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`;
+            const riderEmitHeaders = { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! };
 
             await Promise.all([
-                  axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`, {
-                        event: "order:update",
-                        room: `Restaurant:${order.restaurantId}`,
-                        payload: socketPayload
-                  }, { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }, withCredentials: true }),
-                  axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`, {
-                        event: "order:update",
-                        room: `User:${order.userId}`,
-                        payload: socketPayload
-                  }, { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }, withCredentials: true }),
+                  axios.post(riderEmitUrl, { event: "order:update", room: `Restaurant:${order.restaurantId}`, payload: socketPayload }, { headers: riderEmitHeaders }),
+                  axios.post(riderEmitUrl, { event: "order:update", room: `User:${order.userId}`, payload: socketPayload }, { headers: riderEmitHeaders }),
+                  axios.post(riderEmitUrl, { event: "order:update", room: "Admin", payload: socketPayload }, { headers: riderEmitHeaders }),
             ]);
 
             return res.status(200).json({

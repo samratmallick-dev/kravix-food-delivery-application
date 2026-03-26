@@ -35,7 +35,6 @@ const IncomingOrderCard = ({
 
       return (
             <div className="bg-white rounded-2xl border-2 border-primary shadow-md overflow-hidden">
-                  {/* countdown progress bar */}
                   <div className="h-1 w-full bg-gray-100">
                         <div
                               className="h-1 bg-primary transition-all duration-1000 ease-linear"

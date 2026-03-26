@@ -8,15 +8,21 @@ import { googleClientId } from './components/common/constant.ts';
 import { AppProvider } from './context/AppContext.tsx';
 import "leaflet/dist/leaflet.css";
 import { SocketProvider } from './context/SocketContext.tsx';
+import { AdminAuthProvider } from './admin/context/AdminAuthContext.tsx';
+import { AdminSocketProvider } from './admin/context/AdminSocketContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
       <StrictMode>
             <GoogleOAuthProvider clientId={googleClientId}>
-                  <AppProvider>
-                        <SocketProvider>
-                              <App />
-                        </SocketProvider>
-                  </AppProvider>
+                  <AdminAuthProvider>
+                        <AdminSocketProvider>
+                              <AppProvider>
+                                    <SocketProvider>
+                                          <App />
+                                    </SocketProvider>
+                              </AppProvider>
+                        </AdminSocketProvider>
+                  </AdminAuthProvider>
                   <Toaster />
             </GoogleOAuthProvider>
       </StrictMode>,

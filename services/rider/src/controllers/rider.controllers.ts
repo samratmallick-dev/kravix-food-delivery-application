@@ -219,6 +219,20 @@ export const toggleRiderAvailability = TryCatch(async (req: AuthenticatedRequest
 
       await riderProfile.save();
 
+      axios.post(
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            {
+                  event: "admin:rider:availability",
+                  room: "Admin",
+                  payload: { riderId: riderProfile._id.toString(), isAvailable }
+            },
+            {
+                  headers: {
+                        "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
+                  }
+            }
+      ).catch((err) => console.error("Admin socket emit failed:", err.message));
+
       return res.status(200).json({
             success: true,
             message: `Rider is now ${isAvailable ? "available" : "unavailable"}`,
@@ -393,7 +407,9 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
             const { data } = await axios.put(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/update-status`,
                   { orderId },
                   {
-                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
+                        headers: {
+                              "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
+                        },
                         withCredentials: true
                   }
             );
@@ -442,7 +458,9 @@ export const fetchDeliveryHistory = TryCatch(async (req: AuthenticatedRequest, r
             const { data } = await axios.get(
                   `${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/delivery-history?riderId=${rider._id.toString()}`,
                   {
-                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
+                        headers: {
+                              "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
+                        },
                         withCredentials: true
                   }
             );

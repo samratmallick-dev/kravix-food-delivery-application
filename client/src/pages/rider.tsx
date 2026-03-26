@@ -44,17 +44,13 @@ const RiderDashboard = () => {
       const [audioUnlocked, setAudioUnlocked] = useState(false);
       const audioRef = useRef<HTMLAudioElement | null>(null);
 
-      useEffect(() => {
-            audioRef.current = new Audio(audio);
-            audioRef.current.preload = "auto";
-      }, []);
-
       const enableAudio = async () => {
             try {
-                  if (!audioRef.current) return;
-                  await audioRef.current.play();
-                  audioRef.current.pause();
-                  audioRef.current.currentTime = 0;
+                  const audioEl = new Audio(audio);
+                  await audioEl.play();
+                  audioEl.pause();
+                  audioEl.currentTime = 0;
+                  audioRef.current = audioEl;
                   setAudioUnlocked(true);
                   toast.success("Sound notifications enabled.");
             } catch (error) {

@@ -25,17 +25,19 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
       const { socket } = useSocket();
       const audioRef = useRef<HTMLAudioElement | null>(null);
 
-      const enableAudio = () => {
-            const audioEl = new Audio(audio);
-            audioEl.play()
-                  .then(() => {
-                        audioEl.pause();
-                        audioEl.currentTime = 0;
-                        audioRef.current = audioEl;
-                        setAudioUnlocked(true);
-                        toast.success("Audio notification enabled");
-                  })
-                  .catch((err) => console.log("Audio unlock failed:", err));
+      const enableAudio = async () => {
+            try {
+                  const audioEl = new Audio(audio);
+                  await audioEl.play();
+                  audioEl.pause();
+                  audioEl.currentTime = 0;
+                  audioRef.current = audioEl;
+                  setAudioUnlocked(true);
+                  toast.success("Audio notification enabled");
+            } catch (err) {
+                  toast.error("Failed to enable sound notifications.");
+                  console.log("Audio unlock failed:", err);
+            }
       };
 
       const fetchOrders = useCallback(async () => {

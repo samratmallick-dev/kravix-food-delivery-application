@@ -20,6 +20,13 @@ import OrderDetails from "./pages/orderDetails";
 import RiderDashboard from "./pages/rider";
 import AppSkeleton from "./components/common/AppSkeleton";
 import { useAppData } from "./context/AppContext";
+import AdminLayout from "./admin/components/AdminLayout";
+import AdminLogin from "./admin/pages/AdminLogin";
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import AdminUsers from "./admin/pages/AdminUsers";
+import AdminRestaurants from "./admin/pages/AdminRestaurants";
+import AdminRiders from "./admin/pages/AdminRiders";
+import AdminOrders from "./admin/pages/AdminOrders";
 
 const App = () => {
       const { loading } = useAppData();
@@ -29,6 +36,16 @@ const App = () => {
       return (
             <BrowserRouter>
                   <Routes>
+                        <Route path="/admin/login" element={<AdminLogin />} />
+                        <Route path="/admin" element={<AdminLayout />}>
+                              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                              <Route path="dashboard" element={<AdminDashboard />} />
+                              <Route path="users" element={<AdminUsers />} />
+                              <Route path="restaurants" element={<AdminRestaurants />} />
+                              <Route path="riders" element={<AdminRiders />} />
+                              <Route path="orders" element={<AdminOrders />} />
+                        </Route>
+
                         <Route element={<PublicRoutes />}>
                               <Route path="/login" element={<Login />} />
                         </Route>

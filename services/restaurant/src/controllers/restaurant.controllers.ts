@@ -196,10 +196,26 @@ export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest,
             {
                   event: "restaurant:status",
                   room: `RestaurantStatus:${updateRestaurantStatus._id}`,
-                  payload: { isOpen: updateRestaurantStatus.isOpen, restaurantId: updateRestaurantStatus._id.toString() }
+                  payload: {
+                        isOpen: updateRestaurantStatus.isOpen,
+                        restaurantId: updateRestaurantStatus._id.toString()
+                  }
             },
             { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
       ).catch((err) => console.error("Socket emit failed:", err.message));
+
+      axios.post(
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            {
+                  event: "admin:restaurant:status",
+                  room: "Admin",
+                  payload: {
+                        restaurantId: updateRestaurantStatus._id.toString(),
+                        isOpen: updateRestaurantStatus.isOpen
+                  }
+            },
+            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
+      ).catch((err) => console.error("Admin socket emit failed:", err.message));
 
       return res.status(200).json({
             message: "Restaurant status updated successfully",
@@ -272,7 +288,17 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
 
       if (search && typeof search === "string") {
             const byName = await Restaurant.aggregate([
-                  { ...geoNearStage, $geoNear: { ...geoNearStage.$geoNear, query: { isVerified: true, name: { $regex: search, $options: "i" } } } },
+                  {
+                        ...geoNearStage, $geoNear: {
+                              ...geoNearStage.$geoNear,
+                              query: {
+                                    isVerified: true,
+                                    name: {
+                                          $regex: search, $options: "i"
+                                    }
+                              }
+                        }
+                  },
                   ...sortAndProject
             ]);
             const matchingItems = await MenuItem.find({
@@ -282,7 +308,18 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
 
             const byMenuItems = matchingItems.length > 0
                   ? await Restaurant.aggregate([
-                        { ...geoNearStage, $geoNear: { ...geoNearStage.$geoNear, query: { isVerified: true, _id: { $in: matchingItems.map((id: any) => new mongoose.Types.ObjectId(id.toString())) } } } },
+                        {
+                              ...geoNearStage,
+                              $geoNear: {
+                                    ...geoNearStage.$geoNear,
+                                    query: {
+                                          isVerified: true,
+                                          _id: {
+                                                $in: matchingItems.map((id: any) => new mongoose.Types.ObjectId(id.toString()))
+                                          }
+                                    }
+                              }
+                        },
                         ...sortAndProject
                   ])
                   : [];
@@ -305,7 +342,7 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
       });
 });
 
-export const fetchSingleRestaurant = TryCatch(async(req: AuthenticatedRequest, res: Response) => {
+export const fetchSingleRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const { id } = req.params;
       const restaurant = await Restaurant.findById({
             _id: id,

@@ -71,7 +71,6 @@ const AddMenuItems = (
                   <h2 className="text-xl font-bold text-gray-800 mb-6">Add Menu Item</h2>
 
                   <div className="space-y-5">
-                        {/* Image Upload */}
                          <label className="block cursor-pointer group">
                                     <div className={`relative w-full h-44 rounded-xl border-2 border-dashed transition-colors duration-200 overflow-hidden flex items-center justify-center ${
                                           preview ? "border-primary" : "border-gray-300 hover:border-primary"
@@ -92,8 +91,6 @@ const AddMenuItems = (
                                     </div>
                                     <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                               </label>
-
-                        {/* Name */}
                         <div className="space-y-1.5">
                               <label className="text-sm font-medium text-gray-700">Item Name <span className="text-red-500">*</span></label>
                               <input
@@ -104,8 +101,6 @@ const AddMenuItems = (
                                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm transition"
                               />
                         </div>
-
-                        {/* Description */}
                         <div className="space-y-1.5">
                               <label className="text-sm font-medium text-gray-700">Description</label>
                               <textarea
@@ -116,8 +111,6 @@ const AddMenuItems = (
                                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm transition resize-none"
                               />
                         </div>
-
-                        {/* Price */}
                         <div className="space-y-1.5">
                               <label className="text-sm font-medium text-gray-700">Price (₹) <span className="text-red-500">*</span></label>
                               <div className="relative">
@@ -132,8 +125,6 @@ const AddMenuItems = (
                                     />
                               </div>
                         </div>
-
-                        {/* Submit */}
                         <button
                               onClick={handleSubmit}
                               disabled={loading}

@@ -93,6 +93,13 @@ export const initializeSocket = (server: http.Server) => {
                   }
             });
 
+            socket.on("join:admin", () => {
+                  if (user.role === "admin") {
+                        socket.join("Admin");
+                        console.log(`🛡️ Admin joined Admin room: ${userId}`);
+                  }
+            });
+
             console.log("🟢 User connected:", userId);
             console.log("🌐 Origin:", socket.handshake.headers.origin);
             console.log("📦 Rooms:", [...socket.rooms]);
