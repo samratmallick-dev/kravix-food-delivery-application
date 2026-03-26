@@ -5,13 +5,14 @@ export const TryCatch = (handler: RequestHandler): RequestHandler => {
             try {
                   await handler(req, res, next);
             } catch (error: any) {
-                  return res.status(500).json({
+                  const body: Record<string, unknown> = {
                         success: false,
                         message: error.message || "Something went wrong",
                         error: true,
-                        stack: process.env.NODE_ENV === "development" ? error.stack : {},
                         data: {}
-                  })
+                  };
+                  if (process.env.NODE_ENV === "development") body["stack"] = error.stack;
+                  return res.status(500).json(body);
             }
       }
 };

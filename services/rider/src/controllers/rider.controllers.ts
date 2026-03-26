@@ -219,8 +219,7 @@ export const toggleRiderAvailability = TryCatch(async (req: AuthenticatedRequest
 
       await riderProfile.save();
 
-      axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+      axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
             {
                   event: "admin:rider:availability",
                   room: "Admin",
@@ -335,7 +334,8 @@ export const fetchCurrentOrder = TryCatch(async (req: AuthenticatedRequest, res:
       }
 
       try {
-            const { data } = await axios.get(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/current-order?riderId=${rider._id.toString()}`,
+            const { data } = await axios.get(
+                  `${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/current-order?riderId=${rider._id.toString()}`,
                   {
                         headers: {
                               "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
@@ -401,11 +401,17 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
             });
       }
 
-      const { orderId } = req.body;
+      const { orderId, latitude, longitude } = req.body;
+
+      const [riderLng, riderLat] = rider.location.coordinates;
+
+      // Use live GPS from request if provided, otherwise fall back to last stored location
+      const effectiveLat = latitude !== undefined ? Number(latitude) : riderLat;
+      const effectiveLng = longitude !== undefined ? Number(longitude) : riderLng;
 
       try {
             const { data } = await axios.put(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/update-status`,
-                  { orderId },
+                  { orderId, riderId: rider._id.toString(), riderLat: effectiveLat, riderLng: effectiveLng },
                   {
                         headers: {
                               "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
@@ -413,6 +419,13 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
                         withCredentials: true
                   }
             );
+
+            if (data.data?.status === "delivered") {
+                  await Rider.findOneAndUpdate(
+                        { _id: rider._id },
+                        { isAvailable: false }
+                  );
+            }
 
             return res.status(200).json({
                   success: true,

@@ -3,6 +3,7 @@ import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { Response } from "express";
 import { Restaurant } from "../model/Restaurant.js";
 import { MenuItem } from "../model/MenuItems.js";
+import { Order } from "../model/Order.js";
 import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
@@ -18,18 +19,17 @@ interface TokenPayload {
 }
 
 const tokengenerator = (user: TokenPayload): string => {
-      const secretkey = process.env.JWT_SECRET as string || "default_secret_key";
+      const secretkey = process.env.JWT_SECRET;
+      if (!secretkey) throw new Error("JWT_SECRET environment variable is not set");
 
-      const token = jwt.sign(user, secretkey, { expiresIn: "15d" });
-
-      return token;
+      return jwt.sign(user, secretkey, { expiresIn: "15d" });
 };
 
 export const addRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
 
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -115,7 +115,7 @@ export const addRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Res
 export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -162,7 +162,7 @@ export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res:
 export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -176,6 +176,24 @@ export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest,
                   success: false,
                   error: true
             });
+      }
+
+      if (status === false) {
+            const restaurant = await Restaurant.findOne({ ownerId: user._id });
+            if (restaurant) {
+                  const activeOrder = await Order.findOne({
+                        restaurantId: restaurant._id.toString(),
+                        paymentStatus: "paid",
+                        status: { $nin: ["delivered", "cancelled"] }
+                  });
+                  if (activeOrder) {
+                        return res.status(400).json({
+                              message: "Cannot close restaurant with active orders. Please complete all orders first.",
+                              success: false,
+                              error: true
+                        });
+                  }
+            }
       }
 
       const updateRestaurantStatus = await Restaurant.findOneAndUpdate(
@@ -228,7 +246,7 @@ export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest,
 export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true

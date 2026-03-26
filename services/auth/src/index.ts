@@ -15,3 +15,7 @@ server.on("error", (err) => {
       console.log("Err: ", err);
       process.exit(1);
 });
+
+process.on("unhandledRejection", (reason) => {
+      console.error("[Auth] Unhandled Rejection:", reason);
+});

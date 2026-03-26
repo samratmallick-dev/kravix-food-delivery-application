@@ -7,13 +7,14 @@ export const TryCatch = (handler: RequestHandler): RequestHandler => {
             } catch (error: any) {
                   const statusCode = error.response?.status || 500;
                   const message = error.response?.data?.message || error.message || "Something went wrong";
-                  return res.status(statusCode).json({
+                  const body: Record<string, unknown> = {
                         success: false,
                         message,
                         error: true,
-                        stack: process.env.NODE_ENV === "development" ? error.stack : {},
                         data: {}
-                  })
+                  };
+                  if (process.env.NODE_ENV === "development") body["stack"] = error.stack;
+                  return res.status(statusCode).json(body);
             }
       }
 };

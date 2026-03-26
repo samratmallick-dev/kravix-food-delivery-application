@@ -7,7 +7,7 @@ import { MenuItem } from "../model/MenuItems.js";
 
 export const addToCart = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       if (!req.user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -78,7 +78,7 @@ export const addToCart = TryCatch(async (req: AuthenticatedRequest, res: Respons
 
 export const fetchCart = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       if (!req.user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -113,7 +113,7 @@ export const fetchCart = TryCatch(async (req: AuthenticatedRequest, res: Respons
 
 export const incrementCart = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       if (!req.user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -158,7 +158,7 @@ export const incrementCart = TryCatch(async (req: AuthenticatedRequest, res: Res
 
 export const decrementCart = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       if (!req.user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -210,7 +210,7 @@ export const decrementCart = TryCatch(async (req: AuthenticatedRequest, res: Res
 
 export const clearCart = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       if (!req.user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true

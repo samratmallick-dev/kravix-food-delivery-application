@@ -10,5 +10,8 @@ export const verifyRazorpaySignature = (
             .createHmac("sha256", process.env.RAZORPAY_API_KEY_SECRET!)
             .update(body)
             .digest("hex");
-      return expectedSignature === signature;
+      return crypto.timingSafeEqual(
+            Buffer.from(expectedSignature, "hex"),
+            Buffer.from(signature, "hex")
+      );
 };

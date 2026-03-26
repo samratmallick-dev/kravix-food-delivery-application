@@ -78,9 +78,9 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
                   setIsAuth(false);
                   setUser(null);
                   toast.success("Logout Successfull");
-            } catch (error) {
+            } catch (error: any) {
                   console.log(error);
-                  toast.error(error instanceof Error ? error.message : "Failed to logout");
+                  toast.error(error?.response?.data?.message || (error instanceof Error ? error.message : "Failed to logout"));
             }
       }
 

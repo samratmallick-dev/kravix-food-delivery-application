@@ -500,7 +500,16 @@ export const updateOrderStatusByRider = TryCatch(async (req, res) => {
             });
       }
 
-      const { orderId } = req.body;
+      const { orderId, riderId, riderLat, riderLng } = req.body;
+
+      if (!riderId) {
+            return res.status(400).json({
+                  success: false,
+                  message: "Rider ID is required",
+                  error: true
+            });
+      }
+
       const order = await Order.findById(orderId);
       if (!order) {
             return res.status(404).json({
@@ -510,13 +519,57 @@ export const updateOrderStatusByRider = TryCatch(async (req, res) => {
             });
       }
 
+      if (order.riderId !== riderId) {
+            return res.status(403).json({
+                  success: false,
+                  message: "Access denied. You are not assigned to this order.",
+                  error: true
+            });
+      }
+
+      const DELIVERY_PROXIMITY_METERS = 100;
+
+      const haversineMeters = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+            const toRad = (d: number) => (d * Math.PI) / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+            return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      };
+
       const RIDER_STATUS_TRANSITIONS: Record<string, IOrder["status"]> = {
             rider_assigned: "picked_up",
             ready_for_rider: "picked_up",
-            picked_up: "delivered",
+            picked_up: "out_for_delivery",
+            out_for_delivery: "reached_delivery_location",
+            reached_delivery_location: "delivered",
       };
 
       const nextStatus = RIDER_STATUS_TRANSITIONS[order.status];
+
+      if (order.status === "reached_delivery_location") {
+            if (riderLat === undefined || riderLng === undefined) {
+                  return res.status(400).json({
+                        success: false,
+                        message: "Rider location is required to confirm delivery",
+                        error: true
+                  });
+            }
+
+            const distanceMeters = haversineMeters(
+                  Number(riderLat), Number(riderLng),
+                  order.deliveryAddress.latitude, order.deliveryAddress.longitude
+            );
+
+            if (distanceMeters > DELIVERY_PROXIMITY_METERS) {
+                  return res.status(403).json({
+                        success: false,
+                        message: `You must be within ${DELIVERY_PROXIMITY_METERS}m of the delivery address to confirm delivery. Currently ${Math.round(distanceMeters)}m away.`,
+                        error: true
+                  });
+            }
+      }
+
       if (nextStatus) {
             order.status = nextStatus;
             await order.save();

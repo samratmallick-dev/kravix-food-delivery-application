@@ -536,9 +536,32 @@ const RiderDashboard = () => {
                                     order={currentOrder}
                                     onStatusUpdate={async () => {
                                           try {
+                                                const getFreshLocation = (): Promise<{ latitude: number; longitude: number }> =>
+                                                      new Promise((resolve, reject) =>
+                                                            navigator.geolocation.getCurrentPosition(
+                                                                  (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                                                                  (err) => reject(err),
+                                                                  { enableHighAccuracy: true, timeout: 8000 }
+                                                            )
+                                                      );
+
+                                                let lat = location?.latitude;
+                                                let lng = location?.longitude;
+
+                                                try {
+                                                      const fresh = await getFreshLocation();
+                                                      lat = fresh.latitude;
+                                                      lng = fresh.longitude;
+                                                } catch {
+                                                }
+
                                                 const { data } = await axios.patch(
                                                       `${riderBaseUrl}/order/update-status`,
-                                                      { orderId: currentOrder._id },
+                                                      {
+                                                            orderId: currentOrder._id,
+                                                            latitude: lat,
+                                                            longitude: lng,
+                                                      },
                                                       {
                                                             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                                                             withCredentials: true,

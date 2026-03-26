@@ -46,12 +46,12 @@ export const createRazorpayOrder = async (req: Request, res: Response) => {
             });
       } catch (error) {
             if (axios.isAxiosError(error)) {
-                  const status = error.response?.status;
+                  const status = error.response?.status ?? 502;
                   const msg = error.response?.data?.message || error.message;
-                  return res.status(500).json({
+                  return res.status(status).json({
                         success: false,
                         error: true,
-                        message: `Internal service call failed (HTTP ${status}): ${msg}`
+                        message: msg
                   });
             }
             const errorMessage = error instanceof Error ? error.message : "Internal server error";
@@ -66,6 +66,14 @@ export const createRazorpayOrder = async (req: Request, res: Response) => {
 export const verifyRazorpayPayment = async (req: Request, res: Response) => {
       try {
             const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+
+            if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+                  return res.status(400).json({
+                        success: false,
+                        error: true,
+                        message: "razorpay_order_id, razorpay_payment_id, razorpay_signature and orderId are required"
+                  });
+            }
 
             const isValidSignature = verifyRazorpaySignature(
                   razorpay_order_id,
@@ -161,12 +169,12 @@ export const payWithStripe = async (req: Request, res: Response) => {
 
       } catch (error) {
             if (axios.isAxiosError(error)) {
-                  const status = error.response?.status;
+                  const status = error.response?.status ?? 502;
                   const msg = error.response?.data?.message || error.message;
-                  return res.status(500).json({
+                  return res.status(status).json({
                         success: false,
                         error: true,
-                        message: `Internal service call failed (HTTP ${status}): ${msg}`
+                        message: msg
                   });
             }
             const errorMessage = error instanceof Error ? error.message : "Internal server error";
@@ -180,13 +188,13 @@ export const payWithStripe = async (req: Request, res: Response) => {
 
 export const verifyStripe = async (req: Request, res: Response) => {
       try {
-            const { sessionId } = req.body;
+            const { sessionId, orderId } = req.body;
 
-            if (!sessionId) {
+            if (!sessionId || !orderId) {
                   return res.status(400).json({
                         success: false,
                         error: true,
-                        message: "SessionId are required"
+                        message: "sessionId and orderId are required"
                   });
             }
 
@@ -200,9 +208,9 @@ export const verifyStripe = async (req: Request, res: Response) => {
                   });
             }
 
-            const orderId = session.metadata?.orderId as string;
+            const sessionOrderId = session.metadata?.orderId;
 
-            if (!orderId) {
+            if (!sessionOrderId) {
                   return res.status(400).json({
                         success: false,
                         error: true,
@@ -210,8 +218,16 @@ export const verifyStripe = async (req: Request, res: Response) => {
                   });
             }
 
+            if (sessionOrderId !== orderId) {
+                  return res.status(400).json({
+                        success: false,
+                        error: true,
+                        message: "Session does not match the provided order"
+                  });
+            }
+
             await publishPaymentSuccess({
-                  orderId,
+                  orderId: sessionOrderId,
                   paymentId: sessionId,
                   provider: "stripe"
             });

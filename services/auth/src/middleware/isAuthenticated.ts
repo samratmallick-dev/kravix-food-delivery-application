@@ -66,11 +66,14 @@ export const isAuthenticated = async (
 
             next();
       } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Internal Server error";
-            res.status(500).json({
-                  message: errorMessage,
-                  success: false,
-                  error: true
-            });
+            if (error instanceof jwt.TokenExpiredError) {
+                  res.status(401).json({ message: "Token expired", success: false, error: true });
+                  return;
+            }
+            if (error instanceof jwt.JsonWebTokenError) {
+                  res.status(401).json({ message: "Invalid token", success: false, error: true });
+                  return;
+            }
+            res.status(500).json({ message: "Internal Server error", success: false, error: true });
       }
 };

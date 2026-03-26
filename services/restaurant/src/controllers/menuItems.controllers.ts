@@ -10,7 +10,7 @@ import mongoose from "mongoose";
 export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -81,7 +81,7 @@ export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Resp
 export const getAllMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -109,7 +109,7 @@ export const getAllMenuItems = TryCatch(async (req: AuthenticatedRequest, res: R
 export const deleteMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -140,8 +140,8 @@ export const deleteMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Re
       });
 
       if (!restaurant) {
-            return res.status(404).json({
-                  message: "Restaurant Not Found",
+            return res.status(403).json({
+                  message: "Access denied. You don't own this restaurant.",
                   success: false,
                   error: true
             });  
@@ -228,7 +228,7 @@ export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Resp
 export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequest, res: Response) =>{
       const user = req.user;
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -259,8 +259,8 @@ export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequ
       });
 
       if (!restaurant) {
-            return res.status(404).json({
-                  message: "Restaurant Not Found",
+            return res.status(403).json({
+                  message: "Access denied. You don't own this restaurant.",
                   success: false,
                   error: true
             });  

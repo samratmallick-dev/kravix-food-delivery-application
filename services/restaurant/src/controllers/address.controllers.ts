@@ -7,7 +7,7 @@ export const addAddress = TryCatch(async (req: AuthenticatedRequest, res: Respon
       const user = req.user;
 
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -46,7 +46,7 @@ export const deleteAddress = TryCatch(async (req: AuthenticatedRequest, res: Res
       const user = req.user;
 
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true
@@ -85,7 +85,7 @@ export const getMyAddress = TryCatch(async (req: AuthenticatedRequest, res: Resp
       const user = req.user;
 
       if (!user) {
-            return res.status(403).json({
+            return res.status(401).json({
                   message: "User not authenticated",
                   success: false,
                   error: true

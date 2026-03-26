@@ -5,12 +5,16 @@ import type { IOrder } from "../../types/types";
 const RIDER_STATUS_LABEL: Record<string, string> = {
       rider_assigned: "Rider Assigned — Head to restaurant",
       picked_up: "Picked Up — On the way",
+      out_for_delivery: "Out for Delivery",
+      reached_delivery_location: "Reached Location — Confirm delivery",
       delivered: "Delivered",
 };
 
 const RIDER_NEXT_ACTION: Record<string, string | null> = {
       rider_assigned: "Confirm Pick-Up",
-      picked_up: "Confirm Delivery",
+      picked_up: "Start Delivery",
+      out_for_delivery: "Confirm Reached Location",
+      reached_delivery_location: "Confirm Delivery",
       delivered: null,
 };
 

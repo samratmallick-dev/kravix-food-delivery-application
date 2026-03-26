@@ -16,11 +16,10 @@ interface TokenPayload {
 }
 
 const tokengenerator = (user: TokenPayload): string => {
-      const secretkey = process.env.JWT_SECRET as string || "default_secret_key";
+      const secretkey = process.env.JWT_SECRET;
+      if (!secretkey) throw new Error("JWT_SECRET environment variable is not set");
 
-      const token = jwt.sign(user, secretkey, { expiresIn: "15d" });
-
-      return token;
+      return jwt.sign(user, secretkey, { expiresIn: "15d" });
 };
 
 export const loginController = TryCatch(async (req: Request, res: Response) => {
@@ -49,7 +48,17 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
             "postmessage"
       );
 
-      const googleResponse = await freshClient.getToken(code);
+      let googleResponse;
+      try {
+            googleResponse = await freshClient.getToken(code);
+      } catch (err: any) {
+            const msg = err?.response?.data?.error_description || err?.message || "Google token exchange failed";
+            return res.status(401).json({ success: false, message: msg, error: true });
+      }
+
+      if (!googleResponse.tokens.access_token) {
+            return res.status(401).json({ success: false, message: "Failed to obtain access token from Google", error: true });
+      }
 
       const userResponse = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleResponse.tokens.access_token}`);
 
@@ -106,7 +115,8 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
       if (!allowedRole.includes(role)) {
             return res.status(400).json({
                   success: false,
-                  message: "Invalid role"
+                  message: "Invalid role",
+                  error: true
             });
       }
 
