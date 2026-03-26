@@ -34,7 +34,14 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   );
             });
 
-            return () => { socket.off("menuitem:availability"); };
+            socket.on("menuitem:deleted", ({ itemId }: { itemId: string }) => {
+                  setLocalItems((prev) => prev.filter((i) => i._id !== itemId));
+            });
+
+            return () => {
+                  socket.off("menuitem:availability");
+                  socket.off("menuitem:deleted");
+            };
       }, [socket]);
 
       const handleDeleteItem = async (itemId: string) => {

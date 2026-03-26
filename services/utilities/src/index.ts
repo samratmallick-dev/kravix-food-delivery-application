@@ -23,13 +23,10 @@ import paymentRoutes from "./routes/payment.routes.js";
 app.use("/api/v1/cloudinary", cloudinaryRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 
-connectRabbitMQ()
-      .then(() => {
-            app.listen(Port, () => {
-                  console.log(`[Utilities Service]: Utilities Service is running at http://localhost:${Port}`);
-            });
-      })
-      .catch((err) => {
-            console.error("Failed to connect to RabbitMQ", err);
-            process.exit(1);
-      });
+app.listen(Port, () => {
+      console.log(`[Utilities Service]: Utilities Service is running at http://localhost:${Port}`);
+});
+
+connectRabbitMQ().catch((err) => {
+      console.error("Failed to connect to RabbitMQ", err);
+});

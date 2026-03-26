@@ -67,6 +67,15 @@ const CustomerRestaurantPage = () => {
                   setRestaurant((prev) => prev ? { ...prev, isOpen } : prev);
             });
 
+            socket.on("restaurant:verified", ({ isVerified }: { isVerified: boolean }) => {
+                  setRestaurant((prev) => prev ? { ...prev, isVerified } : prev);
+            });
+
+            socket.on("restaurant:deleted", () => {
+                  toast.error("This restaurant is no longer available.");
+                  navigate("/");
+            });
+
             socket.on("menuitem:availability", ({ itemId, isAvailable }: { itemId: string; isAvailable: boolean }) => {
                   setMenuItem((prev) =>
                         prev.map((m) => m._id === itemId ? { ...m, isAvailable } : m)
@@ -75,6 +84,8 @@ const CustomerRestaurantPage = () => {
 
             return () => {
                   socket.off("restaurant:status");
+                  socket.off("restaurant:verified");
+                  socket.off("restaurant:deleted");
                   socket.off("menuitem:availability");
             };
       }, [socket, id]);

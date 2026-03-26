@@ -1,11 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
-import { Trash2, Eye, X } from "lucide-react";
+import { Trash2, Eye, X, ShieldCheck } from "lucide-react";
 import { useAdminApi } from "../hooks/useAdminApi";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import AdminTable from "../components/AdminTable";
+import VerifyToggle from "../components/VerifyToggle";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 interface User { _id: string; name: string; email: string; image: string; role: string | null; createdAt: string; }
+interface RiderProfile { _id: string; userId: string; isVerified: boolean; }
 
 const ROLES = ["all", "customer", "seller", "rider", "null"];
 
@@ -21,6 +24,32 @@ const AdminUsers = () => {
       const [selected, setSelected] = useState<User | null>(null);
       const [deleting, setDeleting] = useState<string | null>(null);
       const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
+      const [verifyLoading, setVerifyLoading] = useState<string | null>(null);
+      const [riderProfile, setRiderProfile] = useState<RiderProfile | null>(null);
+      const navigate = useNavigate();
+
+      const handleSelectUser = async (u: User) => {
+            setSelected(u);
+            setRiderProfile(null);
+            if (u.role === "rider") {
+                  try {
+                        const { data } = await api.get("/riders", { params: { limit: 100 } });
+                        const found = data.data.riders.find((r: RiderProfile) => r.userId === u._id);
+                        setRiderProfile(found ?? null);
+                  } catch { /* non-critical */ }
+            }
+      };
+
+      const handleVerifyRider = async () => {
+            if (!riderProfile) return;
+            setVerifyLoading(riderProfile._id);
+            try {
+                  await api.patch(`/riders/${riderProfile._id}/verify`, { isVerified: !riderProfile.isVerified });
+                  toast.success(`Rider ${!riderProfile.isVerified ? "verified" : "unverified"}`);
+                  setRiderProfile((prev) => prev ? { ...prev, isVerified: !prev.isVerified } : prev);
+            } catch { toast.error("Failed to update rider verification"); }
+            finally { setVerifyLoading(null); }
+      };
 
       const fetchUsers = useCallback(async () => {
             setLoading(true);
@@ -90,7 +119,7 @@ const AdminUsers = () => {
                   header: "Actions",
                   render: (u: User) => (
                         <div className="flex items-center gap-2">
-                              <button onClick={() => setSelected(u)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition cursor-pointer">
+                              <button onClick={() => handleSelectUser(u)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition cursor-pointer">
                                     <Eye size={15} />
                               </button>
                               <button onClick={() => setConfirmDelete(u)} disabled={deleting === u._id} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition cursor-pointer disabled:opacity-50">
@@ -100,9 +129,6 @@ const AdminUsers = () => {
                   ),
             },
       ];
-
-      console.log(users);
-      
 
       return (
             <div className="p-6 space-y-5">
@@ -140,7 +166,32 @@ const AdminUsers = () => {
                                     <div className="space-y-2 text-sm">
                                           <div className="flex justify-between py-2 border-b border-border"><span className="text-gray-400">Role</span><span className="font-medium">{selected.role ?? "unassigned"}</span></div>
                                           <div className="flex justify-between py-2 border-b border-border"><span className="text-gray-400">ID</span><span className="font-mono text-xs text-gray-600">{selected._id}</span></div>
-                                          <div className="flex justify-between py-2"><span className="text-gray-400">Joined</span><span className="font-medium">{new Date(selected.createdAt).toLocaleDateString("en-IN")}</span></div>
+                                          <div className="flex justify-between py-2 border-b border-border"><span className="text-gray-400">Joined</span><span className="font-medium">{new Date(selected.createdAt).toLocaleDateString("en-IN")}</span></div>
+                                          {selected.role === "rider" && (
+                                                <div className="flex justify-between items-center py-2 border-b border-border">
+                                                      <span className="text-gray-400">Verification</span>
+                                                      {riderProfile ? (
+                                                            <VerifyToggle
+                                                                  isVerified={riderProfile.isVerified}
+                                                                  loading={verifyLoading === riderProfile._id}
+                                                                  onToggle={handleVerifyRider}
+                                                            />
+                                                      ) : (
+                                                            <span className="text-xs text-gray-400">No profile yet</span>
+                                                      )}
+                                                </div>
+                                          )}
+                                          {selected.role === "seller" && (
+                                                <div className="flex justify-between items-center py-2">
+                                                      <span className="text-gray-400">Restaurant</span>
+                                                      <button
+                                                            onClick={() => { setSelected(null); navigate("/admin/restaurants"); }}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 hover:bg-purple-200 transition cursor-pointer"
+                                                      >
+                                                            <ShieldCheck size={12} /> Verify in Restaurants
+                                                      </button>
+                                                </div>
+                                          )}
                                     </div>
                               </div>
                         </div>

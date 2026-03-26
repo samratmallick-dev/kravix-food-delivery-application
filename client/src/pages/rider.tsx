@@ -79,6 +79,11 @@ const RiderDashboard = () => {
 
             socket.on("order:available", onOrderAvailable);
 
+            const onRiderVerified = ({ isVerified }: { isVerified: boolean }) => {
+                  setProfile((prev) => prev ? { ...prev, isVerified } : prev);
+            };
+            socket.on("rider:verified", onRiderVerified);
+
             const onOrderUpdate = ({ orderId }: { orderId: string; status: string }) => {
                   if (currentOrder?._id === orderId) {
                         fetchCurrentOrder();
@@ -88,6 +93,7 @@ const RiderDashboard = () => {
 
             return () => {
                   socket.off("order:available", onOrderAvailable);
+                  socket.off("rider:verified", onRiderVerified);
                   socket.off("order:update", onOrderUpdate);
             };
       }, [socket, audioUnlocked, currentOrder]);
@@ -99,8 +105,8 @@ const RiderDashboard = () => {
                         withCredentials: true
                   });
                   setProfile(data.data || null);
-                  if (data.data?.userId && socket) {
-                        socket.emit("join:rider", data.data.userId);
+                  if (data.data?._id && socket) {
+                        socket.emit("join:rider", data.data._id);
                   }
             } catch (error) {
                   console.log(error);
@@ -119,10 +125,10 @@ const RiderDashboard = () => {
       }, [user]);
 
       useEffect(() => {
-            if (socket && profile?.userId) {
-                  socket.emit("join:rider", profile.userId);
+            if (socket && profile?._id) {
+                  socket.emit("join:rider", profile._id);
             }
-      }, [socket, profile?.userId]);
+      }, [socket, profile?._id]);
 
       const fetchCurrentOrder = async () => {
             try {

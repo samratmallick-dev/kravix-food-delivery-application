@@ -148,6 +148,17 @@ export const deleteMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Re
       }
 
       await menuItem.deleteOne();
+
+      axios.post(
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            {
+                  event: "menuitem:deleted",
+                  room: `RestaurantStatus:${menuItem.restaurantId}`,
+                  payload: { itemId: menuItem._id.toString() }
+            },
+            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
+      ).catch((err) => console.error("Socket emit failed:", err.message));
+
       return res.status(200).json({
             message: "Menu item deleted successfully",
             success: true,

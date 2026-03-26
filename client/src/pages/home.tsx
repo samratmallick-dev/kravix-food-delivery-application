@@ -76,7 +76,23 @@ const Home = () => {
                   );
             });
 
-            return () => { socket.off("restaurant:status"); };
+            socket.on("restaurant:verified", ({ restaurantId, isVerified }: { restaurantId: string; isVerified: boolean }) => {
+                  if (isVerified) {
+                        fetchRestaurant();
+                  } else {
+                        setRestaurants((prev) => prev.filter((r) => r._id !== restaurantId));
+                  }
+            });
+
+            socket.on("restaurant:deleted", ({ restaurantId }: { restaurantId: string }) => {
+                  setRestaurants((prev) => prev.filter((r) => r._id !== restaurantId));
+            });
+
+            return () => {
+                  socket.off("restaurant:status");
+                  socket.off("restaurant:verified");
+                  socket.off("restaurant:deleted");
+            };
       }, [socket, retaurants.length]);
 
       if ((loading && !searching) || !location) {

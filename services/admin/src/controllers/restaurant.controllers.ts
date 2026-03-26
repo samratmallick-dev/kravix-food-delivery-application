@@ -93,6 +93,17 @@ export const verifyRestaurant = TryCatch(async (req: AdminRequest, res: Response
             publishAdminEvent("RESTAURANT_VERIFIED", eventData);
       });
 
+      // Also emit to RestaurantStatus room so customers on home/detail pages receive it
+      axios.post(
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            {
+                  event: "restaurant:verified",
+                  room: `RestaurantStatus:${restaurant._id.toString()}`,
+                  payload: eventData,
+            },
+            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
+      ).catch((err) => console.error("Socket emit to RestaurantStatus failed:", err.message));
+
       publishAdminEvent("RESTAURANT_VERIFIED", eventData);
 
       return res.status(200).json({
@@ -113,10 +124,35 @@ export const deleteRestaurant = TryCatch(async (req: AdminRequest, res: Response
       });
 
       await MenuItem.deleteMany({ restaurantId });
-      publishAdminEvent("RESTAURANT_DELETED", {
+
+      const deletedPayload = {
             restaurantId: restaurant._id.toString(),
             ownerId: restaurant.ownerId,
-      });
+      };
+
+      // Notify seller
+      axios.post(
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            {
+                  event: "restaurant:deleted",
+                  room: `Restaurant:${restaurant._id.toString()}`,
+                  payload: deletedPayload,
+            },
+            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
+      ).catch((err) => console.error("Socket emit (seller) failed:", err.message));
+
+      // Notify customers
+      axios.post(
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            {
+                  event: "restaurant:deleted",
+                  room: `RestaurantStatus:${restaurant._id.toString()}`,
+                  payload: deletedPayload,
+            },
+            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
+      ).catch((err) => console.error("Socket emit (customers) failed:", err.message));
+
+      publishAdminEvent("RESTAURANT_DELETED", deletedPayload);
 
       return res.status(200).json({
             success: true,

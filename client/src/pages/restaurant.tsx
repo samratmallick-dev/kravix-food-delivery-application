@@ -9,12 +9,15 @@ import AddMenuItems from "../components/restaurant/addMenuItems";
 import RestaurantOrders from "../components/restaurant/restaurantOrders";
 import { useMobile } from "../components/common/useMobile";
 import { useAppData } from "../context/AppContext";
+import { useSocket } from "../context/SocketContext";
+import toast from "react-hot-toast";
 
 type SellerTab = "menu" | "add-item" | "sales";
 
 const Restaurant = () => {
 
       const { user } = useAppData();
+      const { socket } = useSocket();
 
       const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
       const [loading, setLoading] = useState(true);
@@ -53,6 +56,23 @@ const Restaurant = () => {
       useEffect(() => {
             fetchMyRestaurant();
       }, [user]);
+
+      useEffect(() => {
+            if (!socket || !restaurant?._id) return;
+            const onVerified = ({ isVerified }: { isVerified: boolean }) => {
+                  setRestaurant((prev) => prev ? { ...prev, isVerified } : prev);
+            };
+            const onDeleted = () => {
+                  toast.error("Your restaurant has been removed by the admin.");
+                  setRestaurant(null);
+            };
+            socket.on("restaurant:verified", onVerified);
+            socket.on("restaurant:deleted", onDeleted);
+            return () => {
+                  socket.off("restaurant:verified", onVerified);
+                  socket.off("restaurant:deleted", onDeleted);
+            };
+      }, [socket, restaurant?._id]);
 
       const [menuItem, setMenuItem] = useState<IMenuItem[]>([]);
 
