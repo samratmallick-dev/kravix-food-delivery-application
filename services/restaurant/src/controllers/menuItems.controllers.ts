@@ -59,6 +59,8 @@ export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Resp
 
       const { data: updateResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`, {
             image: fileBuffer
+      },{
+            headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY }
       });
 
       const menuItems = await MenuItem.create({
