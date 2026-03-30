@@ -8,9 +8,9 @@ import { isAuthenticated } from "../middleware/isAuthenticated.js";
 
 const router = Router();
 
-router.route("/login").post(loginController);
-router.route("/add-role").put(isAuthenticated, addUserRole);
-router.route("/profile").get(isAuthenticated, getUserProfile);
+router.route("/sessions").post(loginController);
+router.route("/me/role").patch(isAuthenticated, addUserRole);
+router.route("/me").get(isAuthenticated, getUserProfile);
 
 
 export default router;

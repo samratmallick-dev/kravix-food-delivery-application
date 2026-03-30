@@ -38,7 +38,7 @@ const AddMenuItems = (
 
             try {
                   setLoading(true);
-                  const response = await axios.post(`${menuBaseUrl}/add-item`, formData, {
+                  const response = await axios.post(`${menuBaseUrl}`, formData, {
                         headers: {
                               "Content-Type": "multipart/form-data",
                               Authorization: `Bearer ${localStorage.getItem("token")}`

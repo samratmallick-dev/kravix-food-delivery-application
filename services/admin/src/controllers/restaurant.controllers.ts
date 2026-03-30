@@ -81,7 +81,7 @@ export const verifyRestaurant = TryCatch(async (req: AdminRequest, res: Response
       };
 
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "restaurant:verified",
                   room: `Restaurant:${restaurant._id.toString()}`,
@@ -93,9 +93,8 @@ export const verifyRestaurant = TryCatch(async (req: AdminRequest, res: Response
             publishAdminEvent("RESTAURANT_VERIFIED", eventData);
       });
 
-      // Also emit to RestaurantStatus room so customers on home/detail pages receive it
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "restaurant:verified",
                   room: `RestaurantStatus:${restaurant._id.toString()}`,
@@ -130,9 +129,8 @@ export const deleteRestaurant = TryCatch(async (req: AdminRequest, res: Response
             ownerId: restaurant.ownerId,
       };
 
-      // Notify seller
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "restaurant:deleted",
                   room: `Restaurant:${restaurant._id.toString()}`,
@@ -141,9 +139,8 @@ export const deleteRestaurant = TryCatch(async (req: AdminRequest, res: Response
             { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
       ).catch((err) => console.error("Socket emit (seller) failed:", err.message));
 
-      // Notify customers
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "restaurant:deleted",
                   room: `RestaurantStatus:${restaurant._id.toString()}`,

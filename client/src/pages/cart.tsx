@@ -60,7 +60,7 @@ const Cart = () => {
       const increaseItem = async (itemId: string) => {
             try {
                   setLoadingItemInc(itemId);
-                  await axios.patch(`${cartBaseUrl}/inc`, { itemId }, {
+                  await axios.patch(`${cartBaseUrl}/increment`, { itemId }, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                         withCredentials: true
                   });
@@ -76,7 +76,7 @@ const Cart = () => {
       const decreaseItem = async (itemId: string) => {
             try {
                   setLoadingItemDec(itemId);
-                  await axios.patch(`${cartBaseUrl}/dec`, { itemId }, {
+                  await axios.patch(`${cartBaseUrl}/decrement`, { itemId }, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                         withCredentials: true
                   });
@@ -93,7 +93,7 @@ const Cart = () => {
 
             try {
                   setClearingCart(true)
-                  await axios.delete(`${cartBaseUrl}/clear`, {
+                  await axios.delete(`${cartBaseUrl}`, {
                         headers: {
                               Authorization: `Bearer ${localStorage.getItem("token")}`
                         }, withCredentials: true

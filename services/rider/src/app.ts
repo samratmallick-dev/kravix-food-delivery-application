@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 import riderRoutes from "./routes/rider.routes.js";
-app.use("/api/v1/rider", riderRoutes);
+app.use("/api/v1/riders", riderRoutes);
 
 app.get('/', (req, res) => {
       res.send('Hello World!');

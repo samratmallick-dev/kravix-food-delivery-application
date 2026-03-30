@@ -13,12 +13,12 @@ import {
 
 const router = Router();
 
-router.route("/add-profile").post(isAuthenticated, upload, addRiderProfile);
-router.route("/fetch-profile").get(isAuthenticated, fetchMyProfile);
-router.route("/toggle-profile").patch(isAuthenticated, toggleRiderAvailability);
-router.route("/accept/:orderId").post(isAuthenticated, acceptOrder);
-router.route("/order/current").get(isAuthenticated, fetchCurrentOrder);
-router.route("/order/update-status").patch(isAuthenticated, updateOrderStatus);
-router.route("/order/delivery-history").get(isAuthenticated, fetchDeliveryHistory);
+router.route("/").post(isAuthenticated, upload, addRiderProfile);
+router.route("/me").get(isAuthenticated, fetchMyProfile);
+router.route("/me/availability").patch(isAuthenticated, toggleRiderAvailability);
+router.route("/orders/current").get(isAuthenticated, fetchCurrentOrder);
+router.route("/orders/status").patch(isAuthenticated, updateOrderStatus);
+router.route("/orders/delivery-history").get(isAuthenticated, fetchDeliveryHistory);
+router.route("/orders/:orderId/accept").post(isAuthenticated, acceptOrder);
 
-export default router; 
+export default router;

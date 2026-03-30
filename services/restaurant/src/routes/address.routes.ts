@@ -4,8 +4,8 @@ import { addAddress, deleteAddress, getMyAddress } from "../controllers/address.
 
 const router = Router();
 
-router.route("/add").post(isAuthenticated, addAddress);
-router.route("/delete/:addressId").delete(isAuthenticated, deleteAddress);
-router.route("/all").get(isAuthenticated, getMyAddress);
+router.route("/").post(isAuthenticated, addAddress);
+router.route("/").get(isAuthenticated, getMyAddress);
+router.route("/:addressId").delete(isAuthenticated, deleteAddress);
 
 export default router;

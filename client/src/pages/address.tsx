@@ -112,7 +112,7 @@ const AddAddressPage = () => {
       const fetchAddresses = async () => {
             try {
                   const { data } = await
-                        axios.get(`${addressBaseUrl}/all`, {
+                        axios.get(`${addressBaseUrl}`, {
                               headers: {
                                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                               },
@@ -171,7 +171,7 @@ const AddAddressPage = () => {
             try {
                   setAdding(true);
                   const { data } = await axios.post(
-                        `${addressBaseUrl}/add`,
+                        `${addressBaseUrl}`,
                         {
                               formattedAddress,
                               mobile,
@@ -202,7 +202,7 @@ const AddAddressPage = () => {
             if (!window.confirm("Delete this address?")) return;
             try {
                   setDeletingId(id);
-                  const { data } = await axios.delete(`${addressBaseUrl}/delete/${id}`, {
+                  const { data } = await axios.delete(`${addressBaseUrl}/${id}`, {
                         headers: {
                               Authorization: `Bearer ${localStorage.getItem("token")}`,
                         },

@@ -64,7 +64,7 @@ export const orderReadyConsumer = async () => {
                   const emitResults = await Promise.allSettled(
                         riders.map((rider) =>
                               axios.post(
-                                    `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+                                    `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
                                     {
                                           event: "order:available",
                                           room: `Rider:${rider.userId}`,
@@ -72,7 +72,6 @@ export const orderReadyConsumer = async () => {
                                     },
                                     {
                                           headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
-                                          withCredentials: true,
                                           timeout: 5000
                                     }
                               ).then(() => {

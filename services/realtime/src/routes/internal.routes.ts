@@ -3,6 +3,6 @@ import { socketEmit } from "../controllers/socket.controllers.js";
 
 const router = Router();
 
-router.route("/emit").post(socketEmit);
+router.route("/events").post(socketEmit);
 
 export default router;

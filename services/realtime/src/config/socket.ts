@@ -83,7 +83,7 @@ export const initializeSocket = (server: http.Server) => {
 
             socket.on("join:restaurant", (restaurantId: string) => {
                   if (restaurantId) {
-                        socket.join(`RestaurantStatus:${restaurantId}`);
+                        socket.join(`Restaurant:${restaurantId}`);
                   }
             });
 

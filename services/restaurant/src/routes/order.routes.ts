@@ -16,18 +16,20 @@ import {
 
 const router = Router();
 
-router.route("/create").post(isAuthenticated, createOrder);
-router.route("/fetch-payment/:id").get(fetchOrderForPayment);
-router.route("/my-orders").get(isAuthenticated, getMyOrders);
-router.route("/my-orders/:orderId").get(isAuthenticated, getSingleOrder);
-router.route("/update-status/:orderId").put(isAuthenticated, isSeller, updateOrderStatus);
-router.route("/rider/assign").put(assignRiderToOrder);
-router.route("/rider/current-order").get(getCurrentOrdersForRiders);
-router.route("/rider/update-status").put(updateOrderStatusByRider);
-router.route("/internal/order/:orderId").get(getOrderByIdInternal);
-router.route("/rider/delivery-history").get(getDeliveredOrdersByRider);
+router.route("/").post(isAuthenticated, createOrder);
+router.route("/me").get(isAuthenticated, getMyOrders);
+router.route("/me/:orderId").get(isAuthenticated, getSingleOrder);
 
-router.route("/:restaurantId").get(isAuthenticated, isSeller, fetchRestaurantOrders);
+router.route("/internal/rider-assignment").patch(assignRiderToOrder);
+router.route("/internal/current").get(getCurrentOrdersForRiders);
+router.route("/internal/status").patch(updateOrderStatusByRider);
+router.route("/internal/delivery-history").get(getDeliveredOrdersByRider);
+router.route("/internal/:orderId").get(getOrderByIdInternal);
+
+router.route("/restaurants/:restaurantId").get(isAuthenticated, isSeller, fetchRestaurantOrders);
+
+router.route("/:orderId/status").patch(isAuthenticated, isSeller, updateOrderStatus);
+router.route("/:id/payment").get(fetchOrderForPayment);
 
 
 export default router;

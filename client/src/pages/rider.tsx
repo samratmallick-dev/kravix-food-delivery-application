@@ -43,6 +43,9 @@ const RiderDashboard = () => {
 
       const [audioUnlocked, setAudioUnlocked] = useState(false);
       const audioRef = useRef<HTMLAudioElement | null>(null);
+      const currentOrderRef = useRef<IOrder | null>(null);
+      currentOrderRef.current = currentOrder;
+      const audioUnlockedRef = useRef(false);
 
       const enableAudio = async () => {
             try {
@@ -51,6 +54,7 @@ const RiderDashboard = () => {
                   audioEl.pause();
                   audioEl.currentTime = 0;
                   audioRef.current = audioEl;
+                  audioUnlockedRef.current = true;
                   setAudioUnlocked(true);
                   toast.success("Sound notifications enabled.");
             } catch (error) {
@@ -59,55 +63,12 @@ const RiderDashboard = () => {
             }
       };
 
-      useEffect(() => {
-            if (!socket) return;
-
-            const onOrderAvailable = ({ orderId }: { orderId: string }) => {
-                  setInCommingOrders((prev) =>
-                        prev.includes(orderId) ? prev : [...prev, orderId]
-                  );
-
-                  if (audioUnlocked && audioRef.current) {
-                        audioRef.current.currentTime = 0;
-                        audioRef.current.play().catch((err) => console.log("Audio play failed:", err));
-                  }
-
-                  setTimeout(() => {
-                        setInCommingOrders((prev) => prev.filter((id) => id !== orderId));
-                  }, 10_000);
-            };
-
-            socket.on("order:available", onOrderAvailable);
-
-            const onRiderVerified = ({ isVerified }: { isVerified: boolean }) => {
-                  setProfile((prev) => prev ? { ...prev, isVerified } : prev);
-            };
-            socket.on("rider:verified", onRiderVerified);
-
-            const onOrderUpdate = ({ orderId }: { orderId: string; status: string }) => {
-                  if (currentOrder?._id === orderId) {
-                        fetchCurrentOrder();
-                  }
-            };
-            socket.on("order:update", onOrderUpdate);
-
-            return () => {
-                  socket.off("order:available", onOrderAvailable);
-                  socket.off("rider:verified", onRiderVerified);
-                  socket.off("order:update", onOrderUpdate);
-            };
-      }, [socket, audioUnlocked, currentOrder]);
-
       const fetchProfile = async () => {
             try {
-                  const { data } = await axios.get(`${riderBaseUrl}/fetch-profile`, {
+                  const { data } = await axios.get(`${riderBaseUrl}/me`, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                        withCredentials: true
                   });
                   setProfile(data.data || null);
-                  if (data.data?._id && socket) {
-                        socket.emit("join:rider", data.data._id);
-                  }
             } catch (error) {
                   console.log(error);
                   setProfile(null);
@@ -125,16 +86,15 @@ const RiderDashboard = () => {
       }, [user]);
 
       useEffect(() => {
-            if (socket && profile?._id) {
-                  socket.emit("join:rider", profile._id);
+            if (socket && user?._id) {
+                  socket.emit("join:rider", user._id);
             }
-      }, [socket, profile?._id]);
+      }, [socket, user?._id]);
 
       const fetchCurrentOrder = async () => {
             try {
-                  const { data } = await axios.get(`${riderBaseUrl}/order/current`, {
+                  const { data } = await axios.get(`${riderBaseUrl}/orders/current`, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                        withCredentials: true
                   });
                   setCurrentOrder(data.data || null);
             } catch (error: any) {
@@ -147,15 +107,51 @@ const RiderDashboard = () => {
 
       const fetchDeliveryHistory = async () => {
             try {
-                  const { data } = await axios.get(`${riderBaseUrl}/order/delivery-history`, {
+                  const { data } = await axios.get(`${riderBaseUrl}/orders/delivery-history`, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                        withCredentials: true
                   });
                   setDeliveryHistory(data.data?.orders || []);
             } catch {
                   setDeliveryHistory([]);
             }
       };
+
+      useEffect(() => {
+            if (!socket) return;
+
+            const onOrderAvailable = ({ orderId }: { orderId: string }) => {
+                  setInCommingOrders((prev) =>
+                        prev.includes(orderId) ? prev : [...prev, orderId]
+                  );
+                  if (audioUnlockedRef.current && audioRef.current) {
+                        audioRef.current.currentTime = 0;
+                        audioRef.current.play().catch((err) => console.log("Audio play failed:", err));
+                  }
+                  setTimeout(() => {
+                        setInCommingOrders((prev) => prev.filter((id) => id !== orderId));
+                  }, 10_000);
+            };
+
+            const onRiderVerified = ({ isVerified }: { isVerified: boolean }) => {
+                  setProfile((prev) => prev ? { ...prev, isVerified } : prev);
+            };
+
+            const onOrderUpdate = ({ orderId }: { orderId: string }) => {
+                  if (currentOrderRef.current?._id === orderId || !currentOrderRef.current) {
+                        fetchCurrentOrder();
+                  }
+            };
+
+            socket.on("order:available", onOrderAvailable);
+            socket.on("rider:verified", onRiderVerified);
+            socket.on("order:update", onOrderUpdate);
+
+            return () => {
+                  socket.off("order:available", onOrderAvailable);
+                  socket.off("rider:verified", onRiderVerified);
+                  socket.off("order:update", onOrderUpdate);
+            };
+      }, [socket]);
 
       useEffect(() => {
             if (user?.role === "rider") {
@@ -168,7 +164,7 @@ const RiderDashboard = () => {
             if (profile?.isAvailable) {
                   try {
                         await axios.patch(
-                              `${riderBaseUrl}/toggle-profile`,
+                              `${riderBaseUrl}/me/availability`,
                               {
                                     isAvailable: false,
                                     latitude: location?.latitude ?? 0,
@@ -176,7 +172,6 @@ const RiderDashboard = () => {
                               },
                               {
                                     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                                    withCredentials: true,
                               }
                         );
                   } catch (error) {
@@ -198,7 +193,7 @@ const RiderDashboard = () => {
             setToggling(true);
             try {
                   const { data } = await axios.patch(
-                        `${riderBaseUrl}/toggle-profile`,
+                        `${riderBaseUrl}/me/availability`,
                         {
                               isAvailable: !profile?.isAvailable,
                               latitude: location.latitude,
@@ -206,7 +201,6 @@ const RiderDashboard = () => {
                         },
                         {
                               headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                              withCredentials: true,
                         }
                   );
                   toast.success(data.message);
@@ -263,7 +257,7 @@ const RiderDashboard = () => {
             formData.append("longitude", String(location.longitude));
             try {
                   setSubmitting(true);
-                  const { data } = await axios.post(`${riderBaseUrl}/add-profile`, formData, {
+                  const { data } = await axios.post(`${riderBaseUrl}`, formData, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                         withCredentials: true
                   });
@@ -515,17 +509,14 @@ const RiderDashboard = () => {
                                           onAccept={async () => {
                                                 try {
                                                       const { data } = await axios.post(
-                                                            `${riderBaseUrl}/accept/${orderId}`,
+                                                            `${riderBaseUrl}/orders/${orderId}/accept`,
                                                             {},
-                                                            {
-                                                                  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                                                                  withCredentials: true,
-                                                            }
+                                                            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
                                                       );
                                                       toast.success(data.message || "Order accepted!");
                                                       setInCommingOrders([]);
+                                                      setProfile((prev) => prev ? { ...prev, isAvailable: false } : prev);
                                                       await fetchCurrentOrder();
-                                                      await fetchProfile();
                                                 } catch (err: any) {
                                                       toast.error(err?.response?.data?.message || "Failed to accept order");
                                                 }
@@ -562,7 +553,7 @@ const RiderDashboard = () => {
                                                 }
 
                                                 const { data } = await axios.patch(
-                                                      `${riderBaseUrl}/order/update-status`,
+                                                      `${riderBaseUrl}/orders/status`,
                                                       {
                                                             orderId: currentOrder._id,
                                                             latitude: lat,
@@ -570,13 +561,14 @@ const RiderDashboard = () => {
                                                       },
                                                       {
                                                             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                                                            withCredentials: true,
                                                       }
                                                 );
                                                 toast.success(data.message || "Status updated!");
                                                 await fetchCurrentOrder();
-                                                await fetchProfile();
-                                                await fetchDeliveryHistory();
+                                                if (data.data?.status === "delivered") {
+                                                      setProfile((prev) => prev ? { ...prev, isAvailable: false } : prev);
+                                                      await fetchDeliveryHistory();
+                                                }
                                           } catch (err: any) {
                                                 toast.error(err?.response?.data?.message || "Failed to update status");
                                           }

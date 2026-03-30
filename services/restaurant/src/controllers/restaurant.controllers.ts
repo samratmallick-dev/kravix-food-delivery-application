@@ -76,7 +76,7 @@ export const addRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Res
             });
       }
 
-      const { data: updateResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/upload-image`, {
+      const { data: updateResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`, {
             image: fileBuffer
       });
 
@@ -199,7 +199,7 @@ export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest,
       const updateRestaurantStatus = await Restaurant.findOneAndUpdate(
             { ownerId: user._id },
             { isOpen: status },
-            { returnDocument: 'after' }
+            { new: true }
       );
 
       if (!updateRestaurantStatus) {
@@ -210,10 +210,10 @@ export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest,
             });
       }
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "restaurant:status",
-                  room: `RestaurantStatus:${updateRestaurantStatus._id}`,
+                  room: `Restaurant:${updateRestaurantStatus._id}`,
                   payload: {
                         isOpen: updateRestaurantStatus.isOpen,
                         restaurantId: updateRestaurantStatus._id.toString()
@@ -223,7 +223,7 @@ export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest,
       ).catch((err) => console.error("Socket emit failed:", err.message));
 
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "admin:restaurant:status",
                   room: "Admin",
@@ -258,7 +258,7 @@ export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
       const updateRestaurant = await Restaurant.findOneAndUpdate(
             { ownerId: user._id },
             { name, description },
-            { returnDocument: 'after' }
+            { new: true }
       );
 
       if (!updateRestaurant) {

@@ -301,7 +301,7 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
       order.status = status;
       await order.save();
 
-      const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`;
+      const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/events`;
       const emitHeaders = { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! };
       const statusPayload = { orderId: order._id, status: order.status };
 
@@ -429,12 +429,12 @@ export const assignRiderToOrder = TryCatch(async (req, res) => {
                   riderPhoneNumber: riderPhoneNumber,
                   status: "rider_assigned"
             },
-            { returnDocument: 'after' }
+            { new: true }
       );
 
       const assignPayload = { orderId: orderId.toString(), status: "rider_assigned" };
       const emitOpts = { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } };
-      const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`;
+      const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/events`;
 
       await Promise.all([
             axios.post(emitUrl, { event: "order:update", room: `User:${order.userId}`, payload: assignPayload }, emitOpts),
@@ -575,7 +575,7 @@ export const updateOrderStatusByRider = TryCatch(async (req, res) => {
             await order.save();
 
             const socketPayload = { orderId: order._id.toString(), status: order.status };
-            const riderEmitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/emit`;
+            const riderEmitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/events`;
             const riderEmitHeaders = { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! };
 
             await Promise.all([

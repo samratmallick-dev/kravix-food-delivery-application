@@ -17,7 +17,7 @@ const OrderDetails = () => {
       const fetchOrder = useCallback(async () => {
             if (!id) return;
             try {
-                  const { data } = await axios.get(`${orderBaseUrl}/my-orders/${id}`, {
+                  const { data } = await axios.get(`${orderBaseUrl}/me/${id}`, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                         withCredentials: true
                   });

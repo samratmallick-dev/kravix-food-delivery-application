@@ -18,9 +18,10 @@ interface TokenPayload {
 const tokengenerator = (user: TokenPayload): string => {
       const secretkey = process.env.JWT_SECRET;
       if (!secretkey) throw new Error("JWT_SECRET environment variable is not set");
-
       return jwt.sign(user, secretkey, { expiresIn: "15d" });
 };
+
+const usedCodes = new Set<string>();
 
 export const loginController = TryCatch(async (req: Request, res: Response) => {
 
@@ -28,7 +29,7 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
             return res.status(503).json({
                   success: false,
                   message: "Service temporarily unavailable. Please try again.",
-                  error: true
+                  error: true,
             });
       }
 
@@ -38,10 +39,22 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
             return res.status(400).json({
                   success: false,
                   message: "Authorization code is required",
-                  error: true
+                  error: true,
             });
       }
-      
+
+      if (usedCodes.has(code)) {
+            return res.status(400).json({
+                  success: false,
+                  message: "Authorization code has already been used. Please try logging in again.",
+                  error: true,
+            });
+      }
+
+      usedCodes.add(code);
+
+      setTimeout(() => usedCodes.delete(code), 5 * 60 * 1000);
+
       const freshClient = new google.auth.OAuth2(
             process.env.GOOGLE_CLIENT_ID,
             process.env.GOOGLE_CLIENT_SECRET,
@@ -52,28 +65,42 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
       try {
             googleResponse = await freshClient.getToken(code);
       } catch (err: any) {
-            const msg = err?.response?.data?.error_description || err?.message || "Google token exchange failed";
+            usedCodes.delete(code);
+            const msg =
+                  err?.response?.data?.error_description ||
+                  err?.message ||
+                  "Google token exchange failed";
             return res.status(401).json({ success: false, message: msg, error: true });
       }
 
       if (!googleResponse.tokens.access_token) {
-            return res.status(401).json({ success: false, message: "Failed to obtain access token from Google", error: true });
+            usedCodes.delete(code);
+            return res.status(401).json({
+                  success: false,
+                  message: "Failed to obtain access token from Google",
+                  error: true,
+            });
       }
 
-      const userResponse = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleResponse.tokens.access_token}`);
+      let userResponse;
+      try {
+            userResponse = await axios.get(
+                  `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleResponse.tokens.access_token}`
+            );
+      } catch (err: any) {
+            const msg =
+                  err?.response?.data?.error_description ||
+                  err?.message ||
+                  "Failed to fetch user info from Google";
+            return res.status(401).json({ success: false, message: msg, error: true });
+      }
 
       const { email, name, picture } = userResponse.data;
 
-      let user = await User.findOne(
-            { email }
-      );
+      let user = await User.findOne({ email });
 
       if (!user) {
-            user = await User.create({
-                  email,
-                  name,
-                  image: picture
-            })
+            user = await User.create({ email, name, image: picture });
       }
 
       const token = tokengenerator({
@@ -81,7 +108,7 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
             name: user.name,
             email: user.email,
             image: user.image,
-            role: user.role ?? null
+            role: user.role ?? null,
       });
 
       return res.status(200).json({
@@ -89,24 +116,21 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
             message: "Login successful",
             error: false,
             token,
-            data: user
+            data: user,
       });
-
 });
 
 const allowedRole = ["customer", "rider", "seller"] as const;
-
-type AllowedRoleType = typeof allowedRole[number];
+type AllowedRoleType = (typeof allowedRole)[number];
 
 export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
-
       const user = req.user;
 
       if (!user) {
             return res.status(401).json({
                   success: false,
                   message: "Unauthorized user",
-                  error: true
+                  error: true,
             });
       }
 
@@ -116,21 +140,21 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
             return res.status(400).json({
                   success: false,
                   message: "Invalid role",
-                  error: true
+                  error: true,
             });
       }
 
       const updateUser = await User.findByIdAndUpdate(
             user._id,
             { role },
-            { returnDocument: 'after' }
+            { returnDocument: "after" }
       );
 
       if (!updateUser) {
             return res.status(404).json({
                   success: false,
                   message: "User not found",
-                  error: true
+                  error: true,
             });
       }
 
@@ -139,33 +163,35 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
             name: updateUser.name,
             email: updateUser.email,
             image: updateUser.image,
-            role: updateUser.role ?? null
+            role: updateUser.role ?? null,
       });
 
       return res.status(200).json({
             success: true,
             message: "Role Updated Successfully",
             token,
-            data: updateUser
+            data: updateUser,
       });
-
 });
 
 export const getUserProfile = TryCatch(async (req: AuthenticatedRequest, res) => {
       const user = req.user;
+
       if (!user) {
             return res.status(401).json({
                   success: false,
                   message: "Unauthorized user",
                   error: true,
-                  user: null
+                  user: null,
             });
       }
+
       const freshUser = await User.findById(user._id).lean();
+
       return res.status(200).json({
             success: true,
             message: "User profile retrieved successfully",
             error: false,
-            data: { ...freshUser, restaurantId: (user as any).restaurantId ?? null }
+            data: { ...freshUser, restaurantId: (user as any).restaurantId ?? null },
       });
 });

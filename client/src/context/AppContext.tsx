@@ -47,7 +47,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                         return;
                   }
 
-                  const { data } = await axios.get(`${authBaseUrl}/profile`, {
+                  const { data } = await axios.get(`${authBaseUrl}/me`, {
                         headers: {
                               Authorization: `Bearer ${token}`
                         }
@@ -56,7 +56,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                   setIsAuth(true);
             } catch (error: any) {
                   if (error?.response?.status) {
-                        // real API error — log it
                         console.error("fetchUser failed:", error.response.data?.message ?? error.message);
                   }
                   setUser(null);
@@ -75,7 +74,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                   return;
             }
             try {
-                  const { data } = await axios.get(`${cartBaseUrl}/all`, {
+                  const { data } = await axios.get(`${cartBaseUrl}`, {
                         headers: { Authorization: `Bearer ${token}` }
                   });
 

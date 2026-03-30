@@ -3,18 +3,20 @@ import { Loader2, MapPin, Phone } from "lucide-react";
 import type { IOrder } from "../../types/types";
 
 const RIDER_STATUS_LABEL: Record<string, string> = {
-      rider_assigned: "Rider Assigned — Head to restaurant",
-      picked_up: "Picked Up — On the way",
-      out_for_delivery: "Out for Delivery",
-      reached_delivery_location: "Reached Location — Confirm delivery",
-      delivered: "Delivered",
+      ready_for_rider: "Order is ready — Go to restaurant",
+      rider_assigned: "New order assigned — Head to restaurant",
+      picked_up: "Picked up — Start delivery",
+      out_for_delivery: "On the way to customer",
+      reached_delivery_location: "Reached customer location",
+      delivered: "Delivered successfully",
 };
 
 const RIDER_NEXT_ACTION: Record<string, string | null> = {
-      rider_assigned: "Confirm Pick-Up",
-      picked_up: "Start Delivery",
-      out_for_delivery: "Confirm Reached Location",
-      reached_delivery_location: "Confirm Delivery",
+      ready_for_rider: "Pick up order",
+      rider_assigned: "Pick up order",
+      picked_up: "Start delivery",
+      out_for_delivery: "Mark as arrived",
+      reached_delivery_location: "Complete delivery",
       delivered: null,
 };
 
@@ -36,10 +38,9 @@ const CurrentOrderCard = ({
                               <p className="font-bold text-gray-800">{order.restaurantName}</p>
                               <p className="text-xs text-gray-400 font-mono mt-0.5">#{order._id.slice(-8).toUpperCase()}</p>
                         </div>
-                        <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ring-1 text-center max-w-35 sm:max-w-none ${
-                                    order.status === "rider_assigned"
-                                          ? "bg-amber-50 text-amber-700 ring-amber-200"
-                                          : "bg-indigo-50 text-indigo-700 ring-indigo-200"
+                        <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ring-1 text-center max-w-35 sm:max-w-none ${order.status === "rider_assigned"
+                              ? "bg-amber-50 text-amber-700 ring-amber-200"
+                              : "bg-indigo-50 text-indigo-700 ring-indigo-200"
                               }`}>
                               {label}
                         </span>

@@ -35,7 +35,7 @@ const Restaurant = () => {
       const fetchMyRestaurant = async () => {
             try {
                   const token = localStorage.getItem("token");
-                  const { data } = await axios.get(`${restaurantBaseUrl}/my-restaurant`, {
+                  const { data } = await axios.get(`${restaurantBaseUrl}/me`, {
                         headers: {
                               Authorization: `Bearer ${token}`
                         },
@@ -66,11 +66,17 @@ const Restaurant = () => {
                   toast.error("Your restaurant has been removed by the admin.");
                   setRestaurant(null);
             };
+            const onStatus = ({ isOpen }: { isOpen: boolean }) => {
+                  setRestaurant((prev) => prev ? { ...prev, isOpen } : prev);
+            };
+            socket.emit("join:restaurant", restaurant._id);
             socket.on("restaurant:verified", onVerified);
             socket.on("restaurant:deleted", onDeleted);
+            socket.on("restaurant:status", onStatus);
             return () => {
                   socket.off("restaurant:verified", onVerified);
                   socket.off("restaurant:deleted", onDeleted);
+                  socket.off("restaurant:status", onStatus);
             };
       }, [socket, restaurant?._id]);
 
@@ -78,7 +84,7 @@ const Restaurant = () => {
 
       const fetchMenuItem = async (restaurantId: string) => {
             try {
-                  const { data } = await axios.get(`${menuBaseUrl}/all/${restaurantId}`, {
+                  const { data } = await axios.get(`${menuBaseUrl}/${restaurantId}`, {
                         headers: {
                               Authorization: `Bearer ${localStorage.getItem("token")}`
                         }, withCredentials: true

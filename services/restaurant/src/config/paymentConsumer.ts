@@ -31,7 +31,7 @@ export const startPayment = async () => {
                                     expiresAt: 1
                               }
                         },
-                        { returnDocument: "after" }
+                        { new: true }
                   );
 
                   if (!order) {
@@ -39,23 +39,18 @@ export const startPayment = async () => {
                         return;
                   }
                   console.log("✅ Order Placed: ", order._id);
-                  
-                  await axios.post(
-                        `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+
+                  channel.ack(msg);
+
+                  axios.post(
+                        `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
                         {
                               event: "order:new",
                               room: `Restaurant:${order.restaurantId}`,
-                              payload: {
-                                    orderId: order._id,
-                              }
+                              payload: { orderId: order._id }
                         },
-                        {
-                              headers: {
-                                    "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
-                              },
-                              withCredentials: true
-                        }
-                  );
+                        { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
+                  ).catch((err) => console.error("❌ Realtime socket emit failed:", err.message));
 
                   const adminPayload = JSON.stringify({
                         type: "ORDER_PLACED",
@@ -75,8 +70,6 @@ export const startPayment = async () => {
                         { persistent: true }
                   );
                   console.log(`📤 Published ORDER_PLACED to admin_event_queue for order ${order._id}`);
-
-                  channel.ack(msg);
             } catch (error) {
                   console.error("❌ Error processing payment:", error);
                   channel.ack(msg);

@@ -12,7 +12,9 @@ const ACTIVE_STATUSES = [
       "preparing",
       "ready_for_rider",
       "rider_assigned",
-      "picked_up"
+      "picked_up",
+      "out_for_delivery",
+      "reached_delivery_location"
 ];
 
 const CustomerOrder = () => {
@@ -23,7 +25,7 @@ const CustomerOrder = () => {
 
       const fetchOrders = useCallback(async () => {
             try {
-                  const { data } = await axios.get(`${orderBaseUrl}/my-orders`, {
+                  const { data } = await axios.get(`${orderBaseUrl}/me`, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                         withCredentials: true
                   });
@@ -150,6 +152,8 @@ const STATUS_CONFIG: Record<IOrder["status"], { label: string; color: string }> 
       ready_for_rider: { label: "Ready for Rider", color: "bg-purple-100 text-purple-800" },
       rider_assigned: { label: "Rider Assigned", color: "bg-indigo-100 text-indigo-800" },
       picked_up: { label: "Picked Up", color: "bg-cyan-100 text-cyan-800" },
+      out_for_delivery: { label: "Out for Delivery", color: "bg-teal-100 text-teal-800" },
+      reached_delivery_location: { label: "Reached Location", color: "bg-lime-100 text-lime-800" },
       delivered: { label: "Delivered", color: "bg-green-100 text-green-800" },
       cancelled: { label: "Cancelled", color: "bg-red-100 text-red-800" },
 };

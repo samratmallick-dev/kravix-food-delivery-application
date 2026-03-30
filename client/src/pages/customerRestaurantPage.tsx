@@ -10,6 +10,7 @@ import { ShoppingCart } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
+import toast from "react-hot-toast";
 
 const CustomerRestaurantPage = () => {
       const { id } = useParams();
@@ -39,7 +40,7 @@ const CustomerRestaurantPage = () => {
 
       const fetchMenuItem = async () => {
             try {
-                  const { data } = await axios.get(`${menuBaseUrl}/all/${id}`, {
+                  const { data } = await axios.get(`${menuBaseUrl}/${id}`, {
                         headers: {
                               Authorization: `Bearer ${localStorage.getItem("token")}`
                         }, withCredentials: true
@@ -63,30 +64,32 @@ const CustomerRestaurantPage = () => {
 
             socket.emit("join:restaurant", id);
 
-            socket.on("restaurant:status", ({ isOpen }: { isOpen: boolean }) => {
+            const onStatus = ({ isOpen }: { isOpen: boolean }) => {
                   setRestaurant((prev) => prev ? { ...prev, isOpen } : prev);
-            });
-
-            socket.on("restaurant:verified", ({ isVerified }: { isVerified: boolean }) => {
+            };
+            const onVerified = ({ isVerified }: { isVerified: boolean }) => {
                   setRestaurant((prev) => prev ? { ...prev, isVerified } : prev);
-            });
-
-            socket.on("restaurant:deleted", () => {
+            };
+            const onDeleted = () => {
                   toast.error("This restaurant is no longer available.");
                   navigate("/");
-            });
-
-            socket.on("menuitem:availability", ({ itemId, isAvailable }: { itemId: string; isAvailable: boolean }) => {
+            };
+            const onAvailability = ({ itemId, isAvailable }: { itemId: string; isAvailable: boolean }) => {
                   setMenuItem((prev) =>
                         prev.map((m) => m._id === itemId ? { ...m, isAvailable } : m)
                   );
-            });
+            };
+
+            socket.on("restaurant:status", onStatus);
+            socket.on("restaurant:verified", onVerified);
+            socket.on("restaurant:deleted", onDeleted);
+            socket.on("menuitem:availability", onAvailability);
 
             return () => {
-                  socket.off("restaurant:status");
-                  socket.off("restaurant:verified");
-                  socket.off("restaurant:deleted");
-                  socket.off("menuitem:availability");
+                  socket.off("restaurant:status", onStatus);
+                  socket.off("restaurant:verified", onVerified);
+                  socket.off("restaurant:deleted", onDeleted);
+                  socket.off("menuitem:availability", onAvailability);
             };
       }, [socket, id]);
 

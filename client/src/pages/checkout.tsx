@@ -61,7 +61,7 @@ const Checkout = () => {
             setCreatingOrder(true);
             try {
                   const { data } = await axios.post(
-                        `${orderBaseUrl}/create`,
+                        `${orderBaseUrl}`,
                         { paymentMethod, addressId: selectedAddressId },
                         { headers: { Authorization: `Bearer ${token}` } }
                   );
@@ -81,7 +81,7 @@ const Checkout = () => {
                   if (!order) return;
 
                   const { orderId, totalAmount } = order;
-                  const { data } = await axios.post(`${paymentBaseUrl}/create`, { orderId });
+                  const { data } = await axios.post(`${paymentBaseUrl}/razorpay`, { orderId });
                   const { razorpayOrderId, key_id } = data.data;
 
                   const options = {
@@ -93,7 +93,7 @@ const Checkout = () => {
                         order_id: razorpayOrderId,
                         handler: async (response: any) => {
                               try {
-                                    await axios.post(`${paymentBaseUrl}/verify`, {
+                                    await axios.post(`${paymentBaseUrl}/razorpay/verify`, {
                                           razorpay_order_id: response.razorpay_order_id,
                                           razorpay_payment_id: response.razorpay_payment_id,
                                           razorpay_signature: response.razorpay_signature,
@@ -130,7 +130,7 @@ const Checkout = () => {
                         const stripe = await stripePromise;
                         if (!stripe) throw new Error("Stripe failed to load");
 
-                        const { data } = await axios.post(`${paymentBaseUrl}/stripe/create`, {
+                        const { data } = await axios.post(`${paymentBaseUrl}/stripe`, {
                               orderId
                         });
 
@@ -157,7 +157,7 @@ const Checkout = () => {
                         return;
                   }
                   try {
-                        const { data } = await axios.get(`${addressBaseUrl}/all`, {
+                        const { data } = await axios.get(`${addressBaseUrl}`, {
                               headers: { Authorization: `Bearer ${token}` },
                         });
                         setAddresses(data.data || []);

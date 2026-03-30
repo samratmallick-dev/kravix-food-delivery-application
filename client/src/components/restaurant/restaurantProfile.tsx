@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { IRestaurant } from "../../types/types";
 import axios from "axios";
 import { restaurantBaseUrl } from "../common/constant";
@@ -22,9 +22,13 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
       const [isOpen, setIsOpen] = useState(restaurant.isOpen);
       const [loading, setLoading] = useState(false);
 
+      useEffect(() => {
+            setIsOpen(restaurant.isOpen);
+      }, [restaurant.isOpen]);
+
       const toggleOpenStatus = async () => {
             try {
-                  const { data } = await axios.put(`${restaurantBaseUrl}/status`, { status: !isOpen },
+                  const { data } = await axios.patch(`${restaurantBaseUrl}/me/status`, { status: !isOpen },
                         {
                               headers: {
                                     Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -44,7 +48,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
       const saveChanges = async () => {
             try {
                   setLoading(true);
-                  const { data } = await axios.put(`${restaurantBaseUrl}/update`, { name, description }, {
+                  const { data } = await axios.patch(`${restaurantBaseUrl}/me`, { name, description }, {
                         headers: {
                               Authorization: `Bearer ${localStorage.getItem("token")}`
                         },
@@ -66,7 +70,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
 
       const logoutHandler = async () => {
             try {
-                  await axios.put(`${restaurantBaseUrl}/status`, { status: false },
+                  await axios.patch(`${restaurantBaseUrl}/me/status`, { status: false },
                         {
                               headers: {
                                     Authorization: `Bearer ${localStorage.getItem("token")}`

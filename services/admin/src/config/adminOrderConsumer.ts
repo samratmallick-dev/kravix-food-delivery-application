@@ -19,7 +19,7 @@ const sanitize = (value: unknown): string =>
 
 const emitToAdmin = (event: string, payload: Record<string, unknown>) => {
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             { event, room: "Admin", payload },
             { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
       ).catch((err) => console.error("Admin socket emit failed [%s]:", sanitize(event), err.message));

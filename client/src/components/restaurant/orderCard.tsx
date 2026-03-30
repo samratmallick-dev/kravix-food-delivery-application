@@ -88,8 +88,8 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
                   setLoading(true);
                   setRetryVisible(false);
                   if (timerRef.current) clearTimeout(timerRef.current);
-                  const { data } = await axios.put(
-                        `${orderBaseUrl}/update-status/${order._id}`,
+                  const { data } = await axios.patch(
+                        `${orderBaseUrl}/${order._id}/status`,
                         { status },
                         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }, withCredentials: true }
                   );

@@ -4,10 +4,11 @@ export const ORDER_ACTION: Record<string, string[]> = {
       preparing: ["ready_for_rider"]
 };
 
-export const RIDER_ORDER_TRANSITIONS: Record<string, string> = {
+export const RIDER_ORDER_TRANSITIONS: Record<string, string | null> = {
       rider_assigned: "picked_up",
       ready_for_rider: "picked_up",
       picked_up: "out_for_delivery",
       out_for_delivery: "reached_delivery_location",
       reached_delivery_location: "delivered",
+      delivered: null,
 };

@@ -42,8 +42,10 @@ export const addRiderProfile = TryCatch(async (req: AuthenticatedRequest, res: R
             });
       }
 
-      const { data: uploadResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/upload-image`, {
+      const { data: uploadResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`, {
             image: fileBuffer
+      }, {
+            headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }
       });
 
       const { phoneNumber, aadhaarNumber, drivingLicesce, latitude, longitude } = req.body;
@@ -219,7 +221,7 @@ export const toggleRiderAvailability = TryCatch(async (req: AuthenticatedRequest
 
       await riderProfile.save();
 
-      axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+      axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "admin:rider:availability",
                   room: "Admin",
@@ -268,7 +270,7 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
       }
 
       try {
-            const { data } = await axios.put(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/assign`,
+            const { data } = await axios.patch(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/rider-assignment`,
                   {
                         orderId,
                         riderId: rider._id.toString(),
@@ -277,10 +279,7 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
                         riderPhoneNumber: rider.phoneNumber
                   },
                   {
-                        headers: {
-                              "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
-                        },
-                        withCredentials: true
+                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }
                   }
             );
 
@@ -291,7 +290,7 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
             const riderDetails = await Rider.findOneAndUpdate(
                   { userId: riderUserId, isAvailable: true, },
                   { isAvailable: false },
-                  { returnDocument: "after" }
+                  { new: true }
             );
 
             return res.status(200).json({
@@ -335,12 +334,9 @@ export const fetchCurrentOrder = TryCatch(async (req: AuthenticatedRequest, res:
 
       try {
             const { data } = await axios.get(
-                  `${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/current-order?riderId=${rider._id.toString()}`,
+                  `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/current?riderId=${rider._id.toString()}`,
                   {
-                        headers: {
-                              "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
-                        },
-                        withCredentials: true
+                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }
                   }
             );
             if (data.success) {
@@ -405,18 +401,14 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
 
       const [riderLng, riderLat] = rider.location.coordinates;
 
-      // Use live GPS from request if provided, otherwise fall back to last stored location
       const effectiveLat = latitude !== undefined ? Number(latitude) : riderLat;
       const effectiveLng = longitude !== undefined ? Number(longitude) : riderLng;
 
       try {
-            const { data } = await axios.put(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/update-status`,
+            const { data } = await axios.patch(`${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/status`,
                   { orderId, riderId: rider._id.toString(), riderLat: effectiveLat, riderLng: effectiveLng },
                   {
-                        headers: {
-                              "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
-                        },
-                        withCredentials: true
+                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }
                   }
             );
 
@@ -469,12 +461,9 @@ export const fetchDeliveryHistory = TryCatch(async (req: AuthenticatedRequest, r
 
       try {
             const { data } = await axios.get(
-                  `${process.env.RESTAURANT_SERVICE_URI}/api/v1/order/rider/delivery-history?riderId=${rider._id.toString()}`,
+                  `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/delivery-history?riderId=${rider._id.toString()}`,
                   {
-                        headers: {
-                              "x-internal-key": process.env.INTERNAL_SERVICE_KEY!
-                        },
-                        withCredentials: true
+                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }
                   }
             );
 

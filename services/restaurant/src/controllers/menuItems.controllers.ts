@@ -57,7 +57,7 @@ export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Resp
             });
       }
 
-      const { data: updateResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/upload-image`, {
+      const { data: updateResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`, {
             image: fileBuffer
       });
 
@@ -150,10 +150,10 @@ export const deleteMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Re
       await menuItem.deleteOne();
 
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "menuitem:deleted",
-                  room: `RestaurantStatus:${menuItem.restaurantId}`,
+                  room: `Restaurant:${menuItem.restaurantId}`,
                   payload: { itemId: menuItem._id.toString() }
             },
             { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
@@ -298,10 +298,10 @@ export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequ
       }
 
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "menuitem:availability",
-                  room: `RestaurantStatus:${menuItem.restaurantId}`,
+                  room: `Restaurant:${menuItem.restaurantId}`,
                   payload
             },
             { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }

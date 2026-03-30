@@ -22,7 +22,7 @@ app.use('/api/v1/restaurants', restaurantRouter);
 app.use('/api/v1/menu', menuItemRouter);
 app.use('/api/v1/cart', cartRouter);
 app.use('/api/v1/address', addressRouter);
-app.use('/api/v1/order', orderRouter);
+app.use('/api/v1/orders', orderRouter);
 app.get('/', (req, res) => {
       res.send('Hello World!');
 });

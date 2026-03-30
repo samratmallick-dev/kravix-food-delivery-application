@@ -11,11 +11,11 @@ import { upload } from "../middleware/multer.js";
 
 const router = Router();
 
-router.route("/add-item").post(isAuthenticated, isSeller, upload, addMenuItems);
-router.route("/all/:restaurantId").get(isAuthenticated, getAllMenuItems);
-router.route("/delete/:itemId").delete(isAuthenticated, isSeller, deleteMenuItem);
-router.route("/availability/:itemId").patch(isAuthenticated, isSeller, toggleMenuItemAvailability);
-router.route("/search/food").get(isAuthenticated, searchByFood);
+router.route("/").post(isAuthenticated, isSeller, upload, addMenuItems);
+router.route("/search").get(isAuthenticated, searchByFood);
+router.route("/:restaurantId").get(isAuthenticated, getAllMenuItems);
+router.route("/:itemId").delete(isAuthenticated, isSeller, deleteMenuItem);
+router.route("/:itemId/availability").patch(isAuthenticated, isSeller, toggleMenuItemAvailability);
 
 
 export default router;

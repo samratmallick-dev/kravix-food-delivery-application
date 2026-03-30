@@ -21,7 +21,7 @@ export const createRazorpayOrder = async (req: Request, res: Response) => {
                   throw new Error("RESTAURANT_BASE_URL is not defined in environment variables");
             }
 
-            const orderUrl = `${process.env.RESTAURANT_BASE_URL}/api/v1/order/fetch-payment/${orderId}`;
+            const orderUrl = `${process.env.RESTAURANT_BASE_URL}/api/v1/orders/${orderId}/payment`;
 
             const { data } = await axios.get(orderUrl, {
                   headers: {
@@ -129,7 +129,7 @@ export const payWithStripe = async (req: Request, res: Response) => {
                   throw new Error("RESTAURANT_BASE_URL is not defined in environment variables");
             }
 
-            const orderUrl = `${process.env.RESTAURANT_BASE_URL}/api/v1/order/fetch-payment/${orderId}`;
+            const orderUrl = `${process.env.RESTAURANT_BASE_URL}/api/v1/orders/${orderId}/payment`;
 
             const { data } = await axios.get(orderUrl, {
                   headers: {
@@ -188,13 +188,13 @@ export const payWithStripe = async (req: Request, res: Response) => {
 
 export const verifyStripe = async (req: Request, res: Response) => {
       try {
-            const { sessionId, orderId } = req.body;
+            const { sessionId } = req.body;
 
-            if (!sessionId || !orderId) {
+            if (!sessionId) {
                   return res.status(400).json({
                         success: false,
                         error: true,
-                        message: "sessionId and orderId are required"
+                        message: "sessionId is required"
                   });
             }
 
@@ -215,14 +215,6 @@ export const verifyStripe = async (req: Request, res: Response) => {
                         success: false,
                         error: true,
                         message: "Order id not found in session metadata"
-                  });
-            }
-
-            if (sessionOrderId !== orderId) {
-                  return res.status(400).json({
-                        success: false,
-                        error: true,
-                        message: "Session does not match the provided order"
                   });
             }
 

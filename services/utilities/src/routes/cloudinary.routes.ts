@@ -3,9 +3,18 @@ import cloudinary from "../config/cloudinary.js";
 
 const router = Router();
 
-router.route("/upload-image").post(
+router.route("/images").post(
       async (req: Request, res: Response) => {
             try {
+                  if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+                        return res.status(403).json({
+                              success: false,
+                              message: "Forbidden: Invalid or missing internal key",
+                              error: true,
+                              data: {}
+                        });
+                  }
+
                   const { image } = req.body;
 
                   if (!image) {

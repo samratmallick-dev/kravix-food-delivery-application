@@ -28,19 +28,21 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
       useEffect(() => {
             if (!socket) return;
 
-            socket.on("menuitem:availability", ({ itemId, isAvailable }: { itemId: string; isAvailable: boolean }) => {
+            const onAvailability = ({ itemId, isAvailable }: { itemId: string; isAvailable: boolean }) => {
                   setLocalItems((prev) =>
                         prev.map((i) => i._id === itemId ? { ...i, isAvailable } : i)
                   );
-            });
-
-            socket.on("menuitem:deleted", ({ itemId }: { itemId: string }) => {
+            };
+            const onDeleted = ({ itemId }: { itemId: string }) => {
                   setLocalItems((prev) => prev.filter((i) => i._id !== itemId));
-            });
+            };
+
+            socket.on("menuitem:availability", onAvailability);
+            socket.on("menuitem:deleted", onDeleted);
 
             return () => {
-                  socket.off("menuitem:availability");
-                  socket.off("menuitem:deleted");
+                  socket.off("menuitem:availability", onAvailability);
+                  socket.off("menuitem:deleted", onDeleted);
             };
       }, [socket]);
 
@@ -49,7 +51,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             if (!conform) return;
 
             try {
-                  const response = await axios.delete(`${menuBaseUrl}/delete/${itemId}`, {
+                  const response = await axios.delete(`${menuBaseUrl}/${itemId}`, {
                         headers: {
                               Authorization: `Bearer ${localStorage.getItem("token")}`
                         }, withCredentials: true
@@ -67,7 +69,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   prev.map(i => i._id === itemId ? { ...i, isAvailable: !i.isAvailable } : i)
             );
             try {
-                  const response = await axios.patch(`${menuBaseUrl}/availability/${itemId}`, {}, {
+                  const response = await axios.patch(`${menuBaseUrl}/${itemId}/availability`, {}, {
                         headers: {
                               Authorization: `Bearer ${localStorage.getItem("token")}`
                         }, withCredentials: true
@@ -85,7 +87,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("add");
-                  const { data } = await axios.post(`${cartBaseUrl}/add`, {
+                  const { data } = await axios.post(`${cartBaseUrl}`, {
                         restaurantId, itemId
                   }, {
                         headers: {
@@ -108,7 +110,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("inc");
-                  await axios.patch(`${cartBaseUrl}/inc`, { itemId }, {
+                  await axios.patch(`${cartBaseUrl}/increment`, { itemId }, {
                         headers: {
                               Authorization: `Bearer ${localStorage.getItem("token")}`
                         }, withCredentials: true
@@ -127,7 +129,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("dec");
-                  await axios.patch(`${cartBaseUrl}/dec`, { itemId }, {
+                  await axios.patch(`${cartBaseUrl}/decrement`, { itemId }, {
                         headers: {
                               Authorization: `Bearer ${localStorage.getItem("token")}`
                         }, withCredentials: true

@@ -77,7 +77,7 @@ export const verifyRider = TryCatch(async (req: AdminRequest, res: Response) => 
       };
 
       axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`,
+            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             {
                   event: "rider:verified",
                   room: `Rider:${rider._id.toString()}`,

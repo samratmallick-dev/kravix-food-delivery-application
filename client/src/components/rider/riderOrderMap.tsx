@@ -94,7 +94,7 @@ const RiderOrderMap = ({ order }: Props) => {
                               setRiderLocation([latitude, longitude]);
 
                               axios.post(
-                                    `${realtimeSocketBaseUrl}/api/v1/socket/emit`,
+                                    `${realtimeSocketBaseUrl}/api/v1/socket/events`,
                                     {
                                           event: "rider:location",
                                           room: `User:${order.userId}`,

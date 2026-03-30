@@ -8,9 +8,9 @@ import {
 
 const router = Router();
 
-router.route("/create").post(createRazorpayOrder);
-router.route("/verify").post(verifyRazorpayPayment);
-router.route("/stripe/create").post(payWithStripe);
+router.route("/razorpay").post(createRazorpayOrder);
+router.route("/razorpay/verify").post(verifyRazorpayPayment);
+router.route("/stripe").post(payWithStripe);
 router.route("/stripe/verify").post(verifyStripe);
 
 

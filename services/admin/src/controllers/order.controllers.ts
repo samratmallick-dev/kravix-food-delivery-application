@@ -70,7 +70,7 @@ export const cancelOrder = TryCatch(async (req: AdminRequest, res: Response) => 
 
             });
       }
-      const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/emit`;
+      const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`;
       const emitHeaders = { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! };
       const payload = { orderId: order._id.toString(), status: "cancelled" };
 

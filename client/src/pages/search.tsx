@@ -53,7 +53,7 @@ const SearchPage = () => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("add");
-                  const { data } = await axios.post(`${cartBaseUrl}/add`, { restaurantId, itemId }, {
+                  const { data } = await axios.post(`${cartBaseUrl}`, { restaurantId, itemId }, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                   });
                   toast.success(data.message);
@@ -70,7 +70,7 @@ const SearchPage = () => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("inc");
-                  await axios.patch(`${cartBaseUrl}/inc`, { itemId }, {
+                  await axios.patch(`${cartBaseUrl}/increment`, { itemId }, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                   });
                   await fetchCart();
@@ -86,7 +86,7 @@ const SearchPage = () => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("dec");
-                  await axios.patch(`${cartBaseUrl}/dec`, { itemId }, {
+                  await axios.patch(`${cartBaseUrl}/decrement`, { itemId }, {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                   });
                   await fetchCart();
@@ -105,7 +105,7 @@ const SearchPage = () => {
             const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
 
             if (searchType === "restaurant") {
-                  axios.get(`${restaurantBaseUrl}/all`, {
+                  axios.get(`${restaurantBaseUrl}`, {
                         params: { latitude: location.latitude, longitude: location.longitude, search },
                         headers
                   }).then(({ data }) => {
@@ -114,7 +114,7 @@ const SearchPage = () => {
                         toast.error(error.response?.data?.message || "Failed to fetch restaurants");
                   }).finally(() => setLoading(false));
             } else {
-                  axios.get(`${menuBaseUrl}/search/food`, {
+                  axios.get(`${menuBaseUrl}/search`, {
                         params: { latitude: location.latitude, longitude: location.longitude, search },
                         headers
                   }).then(({ data }) => {
@@ -152,7 +152,7 @@ const SearchPage = () => {
             if (!socket || !location?.latitude || !location.longitude || searchType !== "food") return;
 
             const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
-            axios.get(`${restaurantBaseUrl}/all`, {
+            axios.get(`${restaurantBaseUrl}`, {
                   params: { latitude: location.latitude, longitude: location.longitude },
                   headers
             }).then(({ data }) => {

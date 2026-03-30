@@ -42,7 +42,7 @@ const Home = () => {
             try {
                   if (search) setSearching(true);
                   else setLoading(true);
-                  const { data } = await axios.get(`${restaurantBaseUrl}/all`, {
+                  const { data } = await axios.get(`${restaurantBaseUrl}`, {
                         params: {
                               latitude: location.latitude,
                               longitude: location.longitude,
