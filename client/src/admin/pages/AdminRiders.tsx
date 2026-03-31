@@ -90,7 +90,7 @@ const AdminRiders = () => {
                               <img src={r.picture || "https://ui-avatars.com/api/?name=Rider"} alt="rider" className="w-9 h-9 rounded-full object-cover shrink-0" />
                               <div>
                                     <p className="text-sm font-medium text-gray-700">{r.phoneNumber}</p>
-                                    <p className="text-xs text-gray-400 font-mono">{r.userId.slice(-8)}</p>
+                                    <p className="text-xs text-gray-400 font-mono">{r.userId.slice(-8).toUpperCase()}</p>
                               </div>
                         </div>
                   ),
