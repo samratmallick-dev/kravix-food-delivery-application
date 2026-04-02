@@ -143,11 +143,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
                               const data = await response.json();
                               const resolvedCity =
-                                    data.address.city_district ||
-                                    data.address.suburb ||
+                                    data.address.city ||
                                     data.address.town ||
                                     data.address.village ||
-                                    data.address.city ||
+                                    data.address.suburb ||
+                                    data.address.city_district ||
                                     data.address.county ||
                                     "Your Location";
                               const formattedAddress = data.display_name || "current location";
