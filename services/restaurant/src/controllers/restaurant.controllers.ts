@@ -4,6 +4,7 @@ import { Response } from "express";
 import { Restaurant } from "../model/Restaurant.js";
 import { MenuItem } from "../model/MenuItems.js";
 import { Order } from "../model/Order.js";
+import { User } from "../model/User.js";
 import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
@@ -289,13 +290,20 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
             });
       }
 
+      const now = new Date();
+      const blockedOwners = await User.find({
+            isBlocked: true,
+            blockedUntil: { $gt: now }
+      }).distinct("_id");
+      const blockedOwnerIds = blockedOwners.map((id: any) => id.toString());
+
       const geoNearStage = {
             $geoNear: {
                   near: { type: "Point" as const, coordinates: [Number(longitude), Number(latitude)] as [number, number] },
                   distanceField: "distance",
                   maxDistance: Number(radius),
                   spherical: true,
-                  query: { isVerified: true }
+                  query: { isVerified: true, ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}) }
             }
       };
 

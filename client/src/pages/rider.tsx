@@ -26,6 +26,7 @@ import RiderOrderMap from "../components/rider/riderOrderMap";
 const RiderDashboard = () => {
       const { user, location, locationLoading, setUser, setIsAuth } = useAppData();
       const { socket } = useSocket();
+      const isBlocked = !!(user?.isBlocked && user.blockedUntil && new Date(user.blockedUntil) > new Date());
 
       const [profile, setProfile] = useState<IRider | null>(null);
       const [loading, setLoading] = useState(true);
@@ -377,6 +378,15 @@ const RiderDashboard = () => {
 
       return (
             <div className="container-app bg-background py-8 space-y-4">
+                  {isBlocked && (
+                        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                              <span className="text-red-500 text-xl">🚫</span>
+                              <div>
+                                    <p className="text-sm font-semibold text-red-700">Your account is temporarily blocked</p>
+                                    <p className="text-xs text-red-500">You cannot go online or accept orders until {new Date(user!.blockedUntil!).toLocaleDateString("en-IN")}.</p>
+                              </div>
+                        </div>
+                  )}
                   <div className="mx-auto max-w-md bg-white shadow-md rounded-2xl overflow-hidden">
 
                         <div className="bg-primary px-6 py-8 flex flex-col items-center gap-3 relative">
@@ -459,7 +469,7 @@ const RiderDashboard = () => {
                               {profile.isVerified && (
                                     <button
                                           onClick={toggleAvailability}
-                                          disabled={toggling || !location || !!currentOrder}
+                                          disabled={isBlocked || toggling || !location || !!currentOrder}
                                           className={`w-full py-3 rounded-xl font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50  ${profile.isAvailable ? "bg-gray-500 hover:bg-gray-600" : "bg-primary hover:bg-red-700"
                                                 }`}
                                     >
@@ -506,7 +516,7 @@ const RiderDashboard = () => {
                                           key={orderId}
                                           orderId={orderId}
                                           onExpire={() => setInCommingOrders((prev) => prev.filter((id) => id !== orderId))}
-                                          onAccept={async () => {
+                                          onAccept={isBlocked ? undefined : async () => {
                                                 try {
                                                       const { data } = await axios.post(
                                                             `${riderBaseUrl}/orders/${orderId}/accept`,

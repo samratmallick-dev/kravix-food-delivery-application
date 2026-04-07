@@ -18,6 +18,7 @@ const Restaurant = () => {
 
       const { user } = useAppData();
       const { socket } = useSocket();
+      const isBlocked = !!(user?.isBlocked && user.blockedUntil && new Date(user.blockedUntil) > new Date());
 
       const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
       const [loading, setLoading] = useState(true);
@@ -116,6 +117,15 @@ const Restaurant = () => {
       }
       return (
             <div className="min-h-screen bg-background">
+                  {isBlocked && (
+                        <div className="flex items-center gap-3 bg-red-50 border-b border-red-200 px-6 py-3">
+                              <span className="text-red-500 text-xl">🚫</span>
+                              <div>
+                                    <p className="text-sm font-semibold text-red-700">Your account is temporarily blocked</p>
+                                    <p className="text-xs text-red-500">Your restaurant is hidden from customers and you cannot manage orders until {new Date(user!.blockedUntil!).toLocaleDateString("en-IN")}.</p>
+                              </div>
+                        </div>
+                  )}
                   <RestaurantProfile restaurant={restaurant} onUpdate={setRestaurant} isSeller={true} fetchMyRestaurant={fetchMyRestaurant} />
                   <RestaurantOrders restaurantId={restaurant._id} />
                   <div className="w-full container-app sm:px-6 py-8 space-y-6">

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isAuthenticated } from "../middleware/isAuthenticated.js";
+import { isAuthenticated, checkBlocked } from "../middleware/isAuthenticated.js";
 import { upload } from "../middleware/multer.js";
 import {
       acceptOrder,
@@ -15,10 +15,10 @@ const router = Router();
 
 router.route("/").post(isAuthenticated, upload, addRiderProfile);
 router.route("/me").get(isAuthenticated, fetchMyProfile);
-router.route("/me/availability").patch(isAuthenticated, toggleRiderAvailability);
+router.route("/me/availability").patch(isAuthenticated, checkBlocked, toggleRiderAvailability);
 router.route("/orders/current").get(isAuthenticated, fetchCurrentOrder);
 router.route("/orders/status").patch(isAuthenticated, updateOrderStatus);
 router.route("/orders/delivery-history").get(isAuthenticated, fetchDeliveryHistory);
-router.route("/orders/:orderId/accept").post(isAuthenticated, acceptOrder);
+router.route("/orders/:orderId/accept").post(isAuthenticated, checkBlocked, acceptOrder);
 
 export default router;

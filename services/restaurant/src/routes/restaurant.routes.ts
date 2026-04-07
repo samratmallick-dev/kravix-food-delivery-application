@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isAuthenticated, isSeller } from "../middleware/isAuthenticated.js";
+import { isAuthenticated, isSeller, checkBlocked } from "../middleware/isAuthenticated.js";
 import {
       addRestaurant,
       fetchMyRestaurant,
@@ -12,10 +12,10 @@ import { upload } from "../middleware/multer.js";
 
 const router = Router();
 
-router.route("/").post(isAuthenticated, isSeller, upload, addRestaurant);
+router.route("/").post(isAuthenticated, isSeller, checkBlocked, upload, addRestaurant);
 router.route("/me").get(isAuthenticated, isSeller, fetchMyRestaurant);
-router.route("/me/status").patch(isAuthenticated, isSeller, updateRestaurantStatus);
-router.route("/me").patch(isAuthenticated, isSeller, updateRestaurant);
+router.route("/me/status").patch(isAuthenticated, isSeller, checkBlocked, updateRestaurantStatus);
+router.route("/me").patch(isAuthenticated, isSeller, checkBlocked, updateRestaurant);
 router.route("/").get(isAuthenticated, getNearestRestaurant);
 router.route("/:id").get(isAuthenticated, fetchSingleRestaurant);
 

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { isAdminAuthenticated } from "../middleware/isAdminAuthenticated.js";
 
 import { adminLogin } from "../controllers/admin.controllers.js";
-import { getAllUsers, getUserById, deleteUser } from "../controllers/user.controllers.js";
+import { getAllUsers, getUserById, blockUser } from "../controllers/user.controllers.js";
 import { getAllRestaurants, getRestaurantById, verifyRestaurant, deleteRestaurant } from "../controllers/restaurant.controllers.js";
 import { getAllRiders, getRiderById, verifyRider, deleteRider } from "../controllers/rider.controllers.js";
 import { getAllOrders, getOrderById, cancelOrder } from "../controllers/order.controllers.js";
@@ -15,7 +15,7 @@ router.use(isAdminAuthenticated);
 router.get("/dashboard", getDashboard);
 router.get("/users", getAllUsers);
 router.get("/users/:userId", getUserById);
-router.delete("/users/:userId", deleteUser);
+router.patch("/users/:userId/block", blockUser);
 router.get("/restaurants", getAllRestaurants);
 router.get("/restaurants/:restaurantId", getRestaurantById);
 router.patch("/restaurants/:restaurantId/verify", verifyRestaurant);

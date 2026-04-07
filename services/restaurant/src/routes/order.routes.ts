@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isAuthenticated, isSeller } from "../middleware/isAuthenticated.js";
+import { isAuthenticated, isSeller, checkBlocked } from "../middleware/isAuthenticated.js";
 import {
       assignRiderToOrder,
       createOrder,
@@ -16,7 +16,7 @@ import {
 
 const router = Router();
 
-router.route("/").post(isAuthenticated, createOrder);
+router.route("/").post(isAuthenticated, checkBlocked, createOrder);
 router.route("/me").get(isAuthenticated, getMyOrders);
 router.route("/me/:orderId").get(isAuthenticated, getSingleOrder);
 
@@ -26,9 +26,9 @@ router.route("/internal/status").patch(updateOrderStatusByRider);
 router.route("/internal/delivery-history").get(getDeliveredOrdersByRider);
 router.route("/internal/:orderId").get(getOrderByIdInternal);
 
-router.route("/restaurants/:restaurantId").get(isAuthenticated, isSeller, fetchRestaurantOrders);
+router.route("/restaurants/:restaurantId").get(isAuthenticated, isSeller, checkBlocked, fetchRestaurantOrders);
 
-router.route("/:orderId/status").patch(isAuthenticated, isSeller, updateOrderStatus);
+router.route("/:orderId/status").patch(isAuthenticated, isSeller, checkBlocked, updateOrderStatus);
 router.route("/:id/payment").get(fetchOrderForPayment);
 
 

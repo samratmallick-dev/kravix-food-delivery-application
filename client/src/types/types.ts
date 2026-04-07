@@ -7,6 +7,8 @@ export interface User {
       image: string;
       role: string | null;
       restaurantId?: string | null;
+      isBlocked?: boolean;
+      blockedUntil?: string | null;
 };
 
 export interface LocationData {

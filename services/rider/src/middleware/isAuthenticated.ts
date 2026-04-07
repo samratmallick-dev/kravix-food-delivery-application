@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import { User } from "../model/User.js";
 
 export interface IUser {
       _id: string;
@@ -7,7 +8,7 @@ export interface IUser {
       email: string;
       image: string;
       role: string;
-      restaurantId:string;
+      restaurantId?: string;
 };
 
 export interface AuthenticatedRequest extends Request {
@@ -102,5 +103,33 @@ export const isSeller = async (
             });
             return;
       }
+      next();
+};
+
+export const checkBlocked = async (
+      req: AuthenticatedRequest,
+      res: Response,
+      next: NextFunction
+): Promise<void> => {
+      const userId = req.user?._id;
+      if (!userId) { next(); return; }
+
+      const dbUser = await User.findById(userId).select("isBlocked blockedUntil").lean();
+      if (!dbUser) { next(); return; }
+
+      if (dbUser.isBlocked && dbUser.blockedUntil && new Date(dbUser.blockedUntil) > new Date()) {
+            res.status(403).json({
+                  message: "Your account has been blocked. Access restricted.",
+                  success: false,
+                  error: true
+            });
+            return;
+      }
+
+      // Auto-unblock if block period has expired
+      if (dbUser.isBlocked && dbUser.blockedUntil && new Date(dbUser.blockedUntil) <= new Date()) {
+            await User.findByIdAndUpdate(userId, { isBlocked: false, blockedUntil: null });
+      }
+
       next();
 };
