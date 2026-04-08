@@ -18,9 +18,6 @@ npm-debug.log*
 # TypeScript
 *.tsbuildinfo
 
-# Docker
-Dockerfile
-.dockerignore
 
 google/
 */google.ts
