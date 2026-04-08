@@ -14,6 +14,8 @@
   <img src="https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white" />
   <img src="https://img.shields.io/badge/Socket.IO-010101?logo=socketdotio&logoColor=white" />
   <img src="https://img.shields.io/badge/RabbitMQ-FF6600?logo=rabbitmq&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?logo=githubactions&logoColor=white" />
   <img src="https://img.shields.io/badge/Stripe-635BFF?logo=stripe&logoColor=white" />
   <img src="https://img.shields.io/badge/Razorpay-0C2451?logo=razorpay&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg" />
@@ -28,18 +30,20 @@
 3.  [Folder & File Structure](#-folder--file-structure)
 4.  [Environment Variables](#-environment-variables)
 5.  [Installation & Setup Guide](#-installation--setup-guide)
-6.  [API Documentation](#-api-documentation)
-7.  [Authentication Flow](#-authentication-flow)
-8.  [Database Models](#%EF%B8%8F-database-models)
-9.  [Error Handling System](#-error-handling-system)
-10. [Middleware Explanation](#-middleware-explanation)
-11. [Business Logic](#-business-logic)
-12. [Role-Based Access Control](#-role-based-access-control)
-13. [API Response Format Standard](#-api-response-format-standard)
-14. [Deployment Guide](#-deployment-guide)
-15. [Future Improvements](#-future-improvements)
-16. [Contribution Guide](#-contribution-guide)
-17. [License](#-license)
+6.  [Docker Setup](#-docker-setup)
+7.  [CI/CD Pipeline](#-cicd-pipeline)
+8.  [API Documentation](#-api-documentation)
+9.  [Authentication Flow](#-authentication-flow)
+10. [Database Models](#%EF%B8%8F-database-models)
+11. [Error Handling System](#-error-handling-system)
+12. [Middleware Explanation](#-middleware-explanation)
+13. [Business Logic](#-business-logic)
+14. [Role-Based Access Control](#-role-based-access-control)
+15. [API Response Format Standard](#-api-response-format-standard)
+16. [Deployment Guide](#-deployment-guide)
+17. [Future Improvements](#-future-improvements)
+18. [Contribution Guide](#-contribution-guide)
+19. [License](#-license)
 
 ---
 
@@ -47,7 +51,7 @@
 
 ### What is আবার খাবো?
 
-**আবার খাবো (Abar Khabo)** — meaning _"Let's Eat Again"_ in Bengali — is a full-featured, microservices-based online food delivery platform. It connects **customers**, **restaurant sellers**, and **delivery riders** through a seamless, real-time experience.
+**আবার খাবো (Abar Khabo)** —  _"Let's Eat Again"_  — is a full-featured, microservices-based online food delivery platform. It connects **customers**, **restaurant sellers**, and **delivery riders** through a seamless, real-time experience.
 
 ### Problem It Solves
 
@@ -61,19 +65,19 @@ Traditional food ordering systems are monolithic and difficult to scale. আব�
 
 ### Key Features
 
-| Feature | Description |
-|---|---|
-| 🔐 Google OAuth Login | One-click sign-in with Google accounts |
-| 🧑‍🍳 Multi-Role System | Customer, Seller, Rider, and Admin roles |
-| 📍 Geospatial Search | Find nearest restaurants using MongoDB `2dsphere` indexes |
-| 🛒 Smart Cart System | Single-restaurant cart enforcement with quantity management |
-| 💳 Dual Payments | Razorpay & Stripe payment integration |
-| 📦 Real-Time Tracking | Live order status updates via Socket.IO |
-| 🗺️ Map Integration | Leaflet maps for address selection & delivery tracking |
-| 🚴 Rider Management | Geolocation-based rider assignment via RabbitMQ queues |
-| 🛡️ Admin Dashboard | Full control: verify restaurants/riders, block users, cancel orders |
-| 🌐 Multilingual Ready | Locale infrastructure for Bengali, Hindi, English |
-| 📱 Responsive Design | Mobile-first Tailwind CSS design |
+| Feature              | Description                                                         |
+| -------------------- | ------------------------------------------------------------------- |
+| 🔐 Google OAuth Login | One-click sign-in with Google accounts                              |
+| 🧑‍🍳 Multi-Role System  | Customer, Seller, Rider, and Admin roles                            |
+| 📍 Geospatial Search  | Find nearest restaurants using MongoDB `2dsphere` indexes           |
+| 🛒 Smart Cart System  | Single-restaurant cart enforcement with quantity management         |
+| 💳 Dual Payments      | Razorpay & Stripe payment integration                               |
+| 📦 Real-Time Tracking | Live order status updates via Socket.IO                             |
+| 🗺️ Map Integration    | Leaflet maps for address selection & delivery tracking              |
+| 🚴 Rider Management   | Geolocation-based rider assignment via RabbitMQ queues              |
+| 🛡️ Admin Dashboard    | Full control: verify restaurants/riders, block users, cancel orders |
+| 🌐 Multilingual Ready | Locale infrastructure for Bengali, Hindi, English                   |
+| 📱 Responsive Design  | Mobile-first Tailwind CSS design                                    |
 
 ### Target Users
 
@@ -88,249 +92,275 @@ Traditional food ordering systems are monolithic and difficult to scale. আব�
 
 ### Frontend
 
-| Technology | Purpose |
-|---|---|
-| **React 19** | UI library for building the SPA |
-| **TypeScript** | Type-safe JavaScript |
-| **Vite 7** | Lightning-fast dev server & build tool |
-| **Tailwind CSS 4** | Utility-first CSS framework |
-| **React Router v7** | Client-side routing with nested layouts |
-| **Axios** | HTTP client for API calls |
-| **Socket.IO Client** | WebSocket connection for real-time updates |
-| **Leaflet + React-Leaflet** | Interactive maps & routing |
-| **Leaflet Routing Machine** | Turn-by-turn route visualization |
-| **@react-oauth/google** | Google OAuth2 login popup |
-| **@stripe/stripe-js** | Stripe Checkout frontend SDK |
-| **Lucide React & React Icons** | Icon libraries |
-| **React Hot Toast** | Notification toasts |
+| Technology                     | Purpose                                    |
+| ------------------------------ | ------------------------------------------ |
+| **React 19**                   | UI library for building the SPA            |
+| **TypeScript**                 | Type-safe JavaScript                       |
+| **Vite 7**                     | Lightning-fast dev server & build tool     |
+| **Tailwind CSS 4**             | Utility-first CSS framework                |
+| **React Router v7**            | Client-side routing with nested layouts    |
+| **Axios**                      | HTTP client for API calls                  |
+| **Socket.IO Client**           | WebSocket connection for real-time updates |
+| **Leaflet + React-Leaflet**    | Interactive maps & routing                 |
+| **Leaflet Routing Machine**    | Turn-by-turn route visualization           |
+| **@react-oauth/google**        | Google OAuth2 login popup                  |
+| **@stripe/stripe-js**          | Stripe Checkout frontend SDK               |
+| **Lucide React & React Icons** | Icon libraries                             |
+| **React Hot Toast**            | Notification toasts                        |
 
 ### Backend (Microservices)
 
-| Technology | Purpose |
-|---|---|
-| **Node.js** | JavaScript runtime |
-| **Express 5** | Web framework for REST APIs |
-| **TypeScript** | Type-safe server code |
-| **MongoDB + Mongoose** | NoSQL database with ODM |
-| **JWT (jsonwebtoken)** | Stateless authentication tokens |
-| **Google APIs (googleapis)** | Server-side OAuth2 token exchange |
-| **Socket.IO** | WebSocket server for real-time events |
-| **RabbitMQ (amqplib)** | Message broker for async event processing |
-| **Cloudinary** | Cloud-based image storage |
-| **Multer** | Multipart file upload handling |
-| **Razorpay SDK** | Indian payment gateway |
-| **Stripe SDK** | International payment gateway |
-| **Axios** | Inter-service HTTP communication |
-| **bcryptjs** | Password hashing (admin login) |
-| **DataURI** | Convert file buffers to data URIs |
+| Technology                   | Purpose                                   |
+| ---------------------------- | ----------------------------------------- |
+| **Node.js**                  | JavaScript runtime                        |
+| **Express 5**                | Web framework for REST APIs               |
+| **TypeScript**               | Type-safe server code                     |
+| **MongoDB + Mongoose**       | NoSQL database with ODM                   |
+| **JWT (jsonwebtoken)**       | Stateless authentication tokens           |
+| **Google APIs (googleapis)** | Server-side OAuth2 token exchange         |
+| **Socket.IO**                | WebSocket server for real-time events     |
+| **RabbitMQ (amqplib)**       | Message broker for async event processing |
+| **Cloudinary**               | Cloud-based image storage                 |
+| **Multer**                   | Multipart file upload handling            |
+| **Razorpay SDK**             | Indian payment gateway                    |
+| **Stripe SDK**               | International payment gateway             |
+| **Axios**                    | Inter-service HTTP communication          |
+| **bcryptjs**                 | Password hashing (admin login)            |
+| **DataURI**                  | Convert file buffers to data URIs         |
 
-### Infrastructure
+### Infrastructure & DevOps
 
-| Technology | Purpose |
-|---|---|
-| **MongoDB Atlas** | Managed cloud database (replica set) |
-| **RabbitMQ** | Message queue for payment events, rider dispatch, admin events |
-| **Cloudinary** | CDN for restaurant/menu/rider images |
+| Technology           | Purpose                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| **MongoDB Atlas**    | Managed cloud database (replica set)                           |
+| **RabbitMQ**         | Message queue for payment events, rider dispatch, admin events |
+| **Cloudinary**       | CDN for restaurant/menu/rider images                           |
+| **Docker**           | Containerization with multi-stage builds for all services      |
+| **GitHub Actions**   | CI/CD pipeline for automated Docker image builds & pushes      |
+| **Docker Hub**       | Container registry for published service images                |
 
 ---
 
 ## 📁 Folder & File Structure
 
+### High-Level Overview
+
 ```
 abar-khabo-online-food-delivery-application/
-├── .gitignore                    # Root gitignore (IDE folders)
-├── LICENSE                       # MIT License
-├── README.md                     # This file
 │
-├── client/                       # 🖥️ React Frontend (Vite + TypeScript)
-│   ├── .env                      # Frontend environment variables
-│   ├── .gitignore                # Client-specific gitignore
-│   ├── index.html                # HTML entry point with SEO meta tags
-│   ├── package.json              # Frontend dependencies
-│   ├── tsconfig.json             # TypeScript root config
-│   ├── tsconfig.app.json         # App-level TS config
-│   ├── tsconfig.node.json        # Node-level TS config
-│   ├── vite.config.ts            # Vite configuration
-│   ├── eslint.config.js          # ESLint configuration
-│   ├── public/                   # Static assets (favicons, manifest)
-│   └── src/
-│       ├── main.tsx              # Application entry — providers wrapping <App />
-│       ├── App.tsx               # Route definitions (BrowserRouter)
-│       ├── index.css             # Global Tailwind styles
-│       ├── context/              # React Context providers
-│       │   ├── AppContext.tsx     # Auth state, location, cart data
-│       │   └── SocketContext.tsx  # Socket.IO connection management
-│       ├── pages/                # Page-level components (15 pages)
-│       │   ├── login.tsx         # Google OAuth login page
-│       │   ├── select-role.tsx   # Role selection (customer/seller/rider)
-│       │   ├── home.tsx          # Restaurant listing with geo-search
-│       │   ├── search.tsx        # Food & restaurant search
-│       │   ├── customerRestaurantPage.tsx  # Single restaurant menu view
-│       │   ├── cart.tsx          # Shopping cart
-│       │   ├── address.tsx       # Address management with Leaflet map
-│       │   ├── checkout.tsx      # Checkout & payment gateway selection
-│       │   ├── paymentSuccess.tsx # Razorpay payment callback
-│       │   ├── orderSuccess.tsx  # Stripe payment callback
-│       │   ├── customerOrder.tsx # Order history list
-│       │   ├── orderDetails.tsx  # Single order real-time tracking
-│       │   ├── restaurant.tsx    # Seller dashboard (manage restaurant)
-│       │   ├── rider.tsx         # Rider dashboard (accept/track orders)
-│       │   └── account.tsx       # User profile page
-│       ├── components/           # Reusable UI components
-│       │   ├── common/           # Shared: ProtectedRoutes, PublicRoutes, AppSkeleton, constants
-│       │   ├── navbar/           # Navigation bar
-│       │   ├── home/             # Home page components + Footer
-│       │   ├── customer/         # Customer-specific components
-│       │   ├── restaurant/       # Seller-specific components
-│       │   └── rider/            # Rider-specific components
-│       ├── admin/                # 🛡️ Admin Panel Module
-│       │   ├── components/       # AdminLayout, sidebar, etc.
-│       │   ├── context/          # AdminAuthContext, AdminSocketContext
-│       │   ├── hooks/            # Custom hooks for admin
-│       │   └── pages/            # Admin pages (dashboard, users, restaurants, riders, orders)
-│       ├── types/                # TypeScript type definitions
-│       │   └── types.ts          # Shared interfaces (User, Restaurant, Order, etc.)
-│       ├── utils/                # Utility functions
-│       │   └── orderFlow.ts      # Order status transition maps
-│       ├── locales/              # i18n locale files (multilingual support)
-│       └── assets/               # Static assets (images, logos)
-│
-└── services/                     # 🔧 Backend Microservices
-    │
-    ├── auth/                     # 🔐 Authentication Service (Port 8000)
-    │   ├── .env                  # Auth environment variables
-    │   ├── package.json          # Dependencies
-    │   ├── tsconfig.json         # TypeScript config
-    │   └── src/
-    │       ├── index.ts          # Server entry point
-    │       ├── app.ts            # Express app setup + route mounting
-    │       ├── config/
-    │       │   ├── cors/cors.ts  # CORS configuration
-    │       │   └── db/db.ts      # MongoDB connection
-    │       ├── controllers/
-    │       │   └── auth.controllers.ts  # Login (Google OAuth), Role update, Profile
-    │       ├── middleware/
-    │       │   ├── isAuthenticated.ts   # JWT token validation
-    │       │   └── TryCatchHandler.ts   # Global async error wrapper
-    │       ├── model/
-    │       │   └── User.ts              # User schema (name, email, role, blocked status)
-    │       └── routes/
-    │           └── auth.routes.ts       # POST /sessions, PATCH /me/role, GET /me
-    │
-    ├── restaurant/               # 🍽️ Restaurant Service (Port 9000)
-    │   ├── .env                  # Restaurant environment variables
-    │   ├── package.json          # Dependencies
-    │   ├── tsconfig.json         # TypeScript config
-    │   └── src/
-    │       ├── index.ts          # Entry: connects DB + RabbitMQ, starts payment consumer
-    │       ├── app.ts            # Express app with 5 route groups
-    │       ├── config/
-    │       │   ├── cors/cors.ts  # CORS configuration
-    │       │   ├── db/db.ts      # MongoDB connection
-    │       │   ├── datauri.ts    # File-to-DataURI conversion
-    │       │   ├── rabbitmq.ts   # RabbitMQ connection & channel setup
-    │       │   ├── paymentConsumer.ts  # Listens for payment success events
-    │       │   └── orderPublisher.ts  # Publishes "order ready" events for rider dispatch
-    │       ├── controllers/
-    │       │   ├── restaurant.controllers.ts  # CRUD + geo-search + status toggle
-    │       │   ├── menuItems.controllers.ts   # Menu CRUD + search + availability toggle
-    │       │   ├── cart.controllers.ts         # Cart add/increment/decrement/clear
-    │       │   ├── order.controllers.ts        # Order lifecycle (create → deliver)
-    │       │   └── address.controllers.ts      # Address CRUD with geolocation
-    │       ├── middleware/
-    │       │   ├── isAuthenticated.ts   # JWT + isSeller + checkBlocked
-    │       │   ├── TryCatchHandler.ts   # Global async error wrapper
-    │       │   └── multer.ts            # File upload config
-    │       ├── model/
-    │       │   ├── Restaurant.ts        # Restaurant schema with 2dsphere index
-    │       │   ├── MenuItems.ts         # Menu item schema
-    │       │   ├── Cart.ts              # Cart schema with compound unique index
-    │       │   ├── Order.ts             # Order schema with TTL index
-    │       │   ├── Address.ts           # Address schema with geolocation
-    │       │   └── User.ts              # User ref schema (blocked status)
-    │       ├── routes/
-    │       │   ├── restaurant.routes.ts  # /api/v1/restaurants
-    │       │   ├── menuItem.routes.ts    # /api/v1/menu
-    │       │   ├── cart.routes.ts         # /api/v1/cart
-    │       │   ├── address.routes.ts      # /api/v1/address
-    │       │   └── order.routes.ts        # /api/v1/orders
-    │       └── utils/                     # Utility helpers
-    │
-    ├── rider/                    # 🚴 Rider Service (Port 7000)
-    │   ├── .env                  # Rider environment variables
-    │   ├── package.json          # Dependencies
-    │   ├── tsconfig.json         # TypeScript config
-    │   └── src/
-    │       ├── index.ts          # Entry: DB + RabbitMQ, listens for rider dispatch events
-    │       ├── app.ts            # Express app
-    │       ├── config/           # DB, CORS, RabbitMQ, DataURI configs
-    │       ├── controllers/
-    │       │   └── rider.controllers.ts  # Profile, availability, order acceptance, status updates
-    │       ├── middleware/        # Auth + TryCatch + Multer
-    │       ├── model/
-    │       │   ├── Rider.ts      # Rider schema with 2dsphere location
-    │       │   └── User.ts       # User ref schema
-    │       └── routes/
-    │           └── rider.routes.ts  # /api/v1/riders
-    │
-    ├── admin/                    # 🛡️ Admin Service (Port 6001)
-    │   ├── .env                  # Admin environment variables
-    │   ├── package.json          # Dependencies
-    │   ├── tsconfig.json         # TypeScript config
-    │   └── src/
-    │       ├── index.ts          # Entry: DB + RabbitMQ connection
-    │       ├── app.ts            # Express app
-    │       ├── config/           # DB, CORS, RabbitMQ configs
-    │       ├── controllers/
-    │       │   ├── admin.controllers.ts      # Admin login (email/password)
-    │       │   ├── dashboard.controllers.ts  # Aggregate dashboard stats
-    │       │   ├── user.controllers.ts       # List, view, block/unblock users
-    │       │   ├── restaurant.controllers.ts # List, verify, delete restaurants
-    │       │   ├── rider.controllers.ts      # List, verify, delete riders
-    │       │   └── order.controllers.ts      # List, view, cancel orders
-    │       ├── middleware/
-    │       │   ├── isAdminAuthenticated.ts   # Admin JWT validation
-    │       │   └── TryCatchHandler.ts        # Error wrapper
-    │       ├── models/            # Shared DB schemas (User, Restaurant, Rider, Order, MenuItem)
-    │       └── routes/
-    │           └── admin.routes.ts  # /api/v1/admin
-    │
-    ├── utilities/                # 🔧 Utilities Service (Port 8888)
-    │   ├── .env                  # Utilities environment variables
-    │   ├── package.json          # Dependencies
-    │   ├── tsconfig.json         # TypeScript config
-    │   └── src/
-    │       ├── index.ts          # Entry: Express + RabbitMQ
-    │       ├── config/
-    │       │   ├── cors.ts       # CORS
-    │       │   ├── cloudinary.ts # Cloudinary SDK setup
-    │       │   ├── razorpay.ts   # Razorpay SDK instance
-    │       │   ├── verifyRazorpay.ts  # Signature verification
-    │       │   ├── rabitmq.ts    # RabbitMQ connection
-    │       │   └── paymentProducer.ts # Publishes payment success events
-    │       ├── controllers/
-    │       │   └── payment.controllers.ts  # Razorpay & Stripe create/verify
-    │       └── routes/
-    │           ├── cloudinary.routes.ts  # /api/v1/cloudinary (internal image upload)
-    │           └── payment.routes.ts     # /api/v1/payment
-    │
-    └── realtime/                 # 📡 Realtime Socket Service (Port 9999)
-        ├── .env                  # Realtime environment variables
-        ├── package.json          # Dependencies
-        ├── tsconfig.json         # TypeScript config
-        └── src/
-            ├── index.ts          # HTTP server + Socket.IO initialization
-            ├── app.ts            # Express app
-            ├── config/
-            │   ├── cors.ts       # CORS
-            │   └── socket.ts     # Socket.IO setup with JWT auth + room management
-            ├── controllers/
-            │   └── socket.controllers.ts  # HTTP→Socket event bridge
-            └── routes/
-                └── internal.routes.ts     # POST /api/v1/socket/events (internal)
+├── .github/workflows/         → CI/CD (GitHub Actions)
+├── client/                    → Frontend (React + Vite + TypeScript)
+└── services/
+    ├── admin/                 → Admin Dashboard Service      (Port 6001)
+    ├── auth/                  → Authentication Service       (Port 8000)
+    ├── restaurant/            → Restaurant + Orders Service  (Port 9000)
+    ├── rider/                 → Rider Service                (Port 7000)
+    ├── utilities/             → Payments + Cloudinary        (Port 8888)
+    └── realtime/              → Socket.IO Realtime Service   (Port 9999)
 ```
 
 ---
+
+### 🖥️ Client — `client/`
+
+Frontend SPA built with React 19, Vite 7, and TypeScript.
+
+| Path | Description |
+| ---- | ----------- |
+| `.env` | Frontend environment variables |
+| `index.html` | HTML entry point with SEO meta tags |
+| `package.json` | Frontend dependencies |
+| `vite.config.ts` | Vite configuration |
+| `tsconfig.json` | TypeScript root config |
+| `eslint.config.js` | ESLint configuration |
+| `public/` | Static assets (favicons, manifest) |
+
+**`src/` — Source Code:**
+
+| Path | Description |
+| ---- | ----------- |
+| `main.tsx` | Application entry — providers wrapping `<App />` |
+| `App.tsx` | Route definitions (BrowserRouter) |
+| `index.css` | Global Tailwind styles |
+| **`context/`** | **React Context Providers** |
+| `context/AppContext.tsx` | Auth state, location, cart data |
+| `context/SocketContext.tsx` | Socket.IO connection management |
+| **`pages/`** | **Page-Level Components (15 pages)** |
+| `pages/login.tsx` | Google OAuth login page |
+| `pages/select-role.tsx` | Role selection (customer/seller/rider) |
+| `pages/home.tsx` | Restaurant listing with geo-search |
+| `pages/search.tsx` | Food & restaurant search |
+| `pages/customerRestaurantPage.tsx` | Single restaurant menu view |
+| `pages/cart.tsx` | Shopping cart |
+| `pages/address.tsx` | Address management with Leaflet map |
+| `pages/checkout.tsx` | Checkout & payment gateway selection |
+| `pages/paymentSuccess.tsx` | Razorpay payment callback |
+| `pages/orderSuccess.tsx` | Stripe payment callback |
+| `pages/customerOrder.tsx` | Order history list |
+| `pages/orderDetails.tsx` | Single order real-time tracking |
+| `pages/restaurant.tsx` | Seller dashboard (manage restaurant) |
+| `pages/rider.tsx` | Rider dashboard (accept/track orders) |
+| `pages/account.tsx` | User profile page |
+| **`components/`** | **Reusable UI Components** |
+| `components/common/` | Shared: ProtectedRoutes, PublicRoutes, AppSkeleton, constants |
+| `components/navbar/` | Navigation bar |
+| `components/home/` | Home page components + Footer |
+| `components/customer/` | Customer-specific components |
+| `components/restaurant/` | Seller-specific components |
+| `components/rider/` | Rider-specific components |
+| **`admin/`** | **🛡️ Admin Panel Module** |
+| `admin/components/` | AdminLayout, sidebar, etc. |
+| `admin/context/` | AdminAuthContext, AdminSocketContext |
+| `admin/hooks/` | Custom hooks for admin |
+| `admin/pages/` | Admin pages (dashboard, users, restaurants, riders, orders) |
+| **`types/`** | **TypeScript Type Definitions** |
+| `types/types.ts` | Shared interfaces (User, Restaurant, Order, etc.) |
+| **`utils/`** | **Utility Functions** |
+| `utils/orderFlow.ts` | Order status transition maps |
+| `locales/` | i18n locale files (multilingual support) |
+| `assets/` | Static assets (images, logos) |
+
+---
+
+### 🔐 Auth Service — `services/auth/` (Port 8000)
+
+| Path | Description |
+| ---- | ----------- |
+| `Dockerfile` | Multi-stage Docker build |
+| `.dockerignore` | Docker build exclusions |
+| `src/index.ts` | Server entry point |
+| `src/app.ts` | Express app setup + route mounting |
+| `src/config/cors/cors.ts` | CORS configuration |
+| `src/config/db/db.ts` | MongoDB connection |
+| `src/controllers/auth.controllers.ts` | Login (Google OAuth), Role update, Profile |
+| `src/middleware/isAuthenticated.ts` | JWT token validation |
+| `src/middleware/TryCatchHandler.ts` | Global async error wrapper |
+| `src/model/User.ts` | User schema (name, email, role, blocked status) |
+| `src/routes/auth.routes.ts` | `POST /sessions`, `PATCH /me/role`, `GET /me` |
+
+---
+
+### 🍽️ Restaurant Service — `services/restaurant/` (Port 9000)
+
+| Path | Description |
+| ---- | ----------- |
+| `Dockerfile` | Multi-stage Docker build |
+| `.dockerignore` | Docker build exclusions |
+| `src/index.ts` | Entry: connects DB + RabbitMQ, starts payment consumer |
+| `src/app.ts` | Express app with 5 route groups |
+| **Config** | |
+| `src/config/cors/cors.ts` | CORS configuration |
+| `src/config/db/db.ts` | MongoDB connection |
+| `src/config/datauri.ts` | File-to-DataURI conversion |
+| `src/config/rabbitmq.ts` | RabbitMQ connection & channel setup |
+| `src/config/paymentConsumer.ts` | Listens for payment success events |
+| `src/config/orderPublisher.ts` | Publishes "order ready" events for rider dispatch |
+| **Controllers** | |
+| `src/controllers/restaurant.controllers.ts` | CRUD + geo-search + status toggle |
+| `src/controllers/menuItems.controllers.ts` | Menu CRUD + search + availability toggle |
+| `src/controllers/cart.controllers.ts` | Cart add/increment/decrement/clear |
+| `src/controllers/order.controllers.ts` | Order lifecycle (create → deliver) |
+| `src/controllers/address.controllers.ts` | Address CRUD with geolocation |
+| **Middleware** | |
+| `src/middleware/isAuthenticated.ts` | JWT + isSeller + checkBlocked |
+| `src/middleware/TryCatchHandler.ts` | Global async error wrapper |
+| `src/middleware/multer.ts` | File upload config |
+| **Models** | |
+| `src/model/Restaurant.ts` | Restaurant schema with `2dsphere` index |
+| `src/model/MenuItems.ts` | Menu item schema |
+| `src/model/Cart.ts` | Cart schema with compound unique index |
+| `src/model/Order.ts` | Order schema with TTL index |
+| `src/model/Address.ts` | Address schema with geolocation |
+| `src/model/User.ts` | User ref schema (blocked status) |
+| **Routes** | |
+| `src/routes/restaurant.routes.ts` | `/api/v1/restaurants` |
+| `src/routes/menuItem.routes.ts` | `/api/v1/menu` |
+| `src/routes/cart.routes.ts` | `/api/v1/cart` |
+| `src/routes/address.routes.ts` | `/api/v1/address` |
+| `src/routes/order.routes.ts` | `/api/v1/orders` |
+
+---
+
+### 🚴 Rider Service — `services/rider/` (Port 7000)
+
+| Path | Description |
+| ---- | ----------- |
+| `Dockerfile` | Multi-stage Docker build |
+| `.dockerignore` | Docker build exclusions |
+| `src/index.ts` | Entry: DB + RabbitMQ, listens for rider dispatch events |
+| `src/app.ts` | Express app |
+| `src/config/` | DB, CORS, RabbitMQ, DataURI configs |
+| `src/controllers/rider.controllers.ts` | Profile, availability, order acceptance, status updates |
+| `src/middleware/` | Auth + TryCatch + Multer |
+| `src/model/Rider.ts` | Rider schema with `2dsphere` location |
+| `src/model/User.ts` | User ref schema |
+| `src/routes/rider.routes.ts` | `/api/v1/riders` |
+
+---
+
+### 🛡️ Admin Service — `services/admin/` (Port 6001)
+
+| Path | Description |
+| ---- | ----------- |
+| `Dockerfile` | Multi-stage Docker build |
+| `.dockerignore` | Docker build exclusions |
+| `src/index.ts` | Entry: DB + RabbitMQ connection |
+| `src/app.ts` | Express app |
+| `src/config/` | DB, CORS, RabbitMQ configs |
+| **Controllers** | |
+| `src/controllers/admin.controllers.ts` | Admin login (email/password) |
+| `src/controllers/dashboard.controllers.ts` | Aggregate dashboard stats |
+| `src/controllers/user.controllers.ts` | List, view, block/unblock users |
+| `src/controllers/restaurant.controllers.ts` | List, verify, delete restaurants |
+| `src/controllers/rider.controllers.ts` | List, verify, delete riders |
+| `src/controllers/order.controllers.ts` | List, view, cancel orders |
+| **Middleware** | |
+| `src/middleware/isAdminAuthenticated.ts` | Admin JWT validation |
+| `src/middleware/TryCatchHandler.ts` | Error wrapper |
+| `src/models/` | Shared DB schemas (User, Restaurant, Rider, Order, MenuItem) |
+| `src/routes/admin.routes.ts` | `/api/v1/admin` |
+
+---
+
+### 🔧 Utilities Service — `services/utilities/` (Port 8888)
+
+| Path | Description |
+| ---- | ----------- |
+| `Dockerfile` | Multi-stage Docker build |
+| `.dockerignore` | Docker build exclusions |
+| `src/index.ts` | Entry: Express + RabbitMQ |
+| `src/config/cors.ts` | CORS |
+| `src/config/cloudinary.ts` | Cloudinary SDK setup |
+| `src/config/razorpay.ts` | Razorpay SDK instance |
+| `src/config/verifyRazorpay.ts` | Signature verification |
+| `src/config/rabitmq.ts` | RabbitMQ connection |
+| `src/config/paymentProducer.ts` | Publishes payment success events |
+| `src/controllers/payment.controllers.ts` | Razorpay & Stripe create/verify |
+| `src/routes/cloudinary.routes.ts` | `/api/v1/cloudinary` (internal image upload) |
+| `src/routes/payment.routes.ts` | `/api/v1/payment` |
+
+---
+
+### 📡 Realtime Service — `services/realtime/` (Port 9999)
+
+| Path | Description |
+| ---- | ----------- |
+| `Dockerfile` | Multi-stage Docker build |
+| `.dockerignore` | Docker build exclusions |
+| `src/index.ts` | HTTP server + Socket.IO initialization |
+| `src/app.ts` | Express app |
+| `src/config/cors.ts` | CORS |
+| `src/config/socket.ts` | Socket.IO setup with JWT auth + room management |
+| `src/controllers/socket.controllers.ts` | HTTP → Socket event bridge |
+| `src/routes/internal.routes.ts` | `POST /api/v1/socket/events` (internal) |
+
+---
+
+### 🚀 CI/CD — `.github/workflows/`
+
+| Path | Description |
+| ---- | ----------- |
+| `docker-build-push.yml` | Auto-build & push Docker images on push/PR to `main` |
 
 ## 🔐 Environment Variables
 
@@ -338,113 +368,113 @@ abar-khabo-online-food-delivery-application/
 
 ### Client (`client/.env`)
 
-| Variable | Purpose | Example |
-|---|---|---|
-| `VITE_API_URL_AUTH` | Auth service base URL | `http://localhost:8000/api/v1/auth` |
-| `VITE_API_URL_RESTAURANT` | Restaurant API URL | `http://localhost:9000/api/v1/restaurants` |
-| `VITE_API_URL_MENU` | Menu items API URL | `http://localhost:9000/api/v1/menu` |
-| `VITE_API_URL_CART` | Cart API URL | `http://localhost:9000/api/v1/cart` |
-| `VITE_API_URL_ADDRESS` | Address API URL | `http://localhost:9000/api/v1/address` |
-| `VITE_API_URL_ORDER` | Orders API URL | `http://localhost:9000/api/v1/orders` |
-| `VITE_API_URL_PAYMENT` | Payment API URL | `http://localhost:8888/api/v1/payment` |
-| `VITE_API_URL_REALTIME_SOCKET` | Socket.IO server URL | `http://localhost:9999` |
-| `VITE_API_URL_RIDER` | Rider API URL | `http://localhost:7000/api/v1/riders` |
-| `VITE_API_URL_ADMIN` | Admin API URL | `http://localhost:6001/api/v1/admin` |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (frontend) | `pk_test_xxx...` |
-| `VITE_GOOGLE_CLIENT_ID` | Google OAuth Client ID | `861656642222-xxx.apps.googleusercontent.com` |
-| `VITE_INTERNAL_KEY` | Internal service key (for frontend validation) | `d39db01ff86ca...` |
+| Variable                       | Purpose                                        | Example                                       |
+| ------------------------------ | ---------------------------------------------- | --------------------------------------------- |
+| `VITE_API_URL_AUTH`            | Auth service base URL                          | `http://localhost:8000/api/v1/auth`           |
+| `VITE_API_URL_RESTAURANT`      | Restaurant API URL                             | `http://localhost:9000/api/v1/restaurants`    |
+| `VITE_API_URL_MENU`            | Menu items API URL                             | `http://localhost:9000/api/v1/menu`           |
+| `VITE_API_URL_CART`            | Cart API URL                                   | `http://localhost:9000/api/v1/cart`           |
+| `VITE_API_URL_ADDRESS`         | Address API URL                                | `http://localhost:9000/api/v1/address`        |
+| `VITE_API_URL_ORDER`           | Orders API URL                                 | `http://localhost:9000/api/v1/orders`         |
+| `VITE_API_URL_PAYMENT`         | Payment API URL                                | `http://localhost:8888/api/v1/payment`        |
+| `VITE_API_URL_REALTIME_SOCKET` | Socket.IO server URL                           | `http://localhost:9999`                       |
+| `VITE_API_URL_RIDER`           | Rider API URL                                  | `http://localhost:7000/api/v1/riders`         |
+| `VITE_API_URL_ADMIN`           | Admin API URL                                  | `http://localhost:6001/api/v1/admin`          |
+| `VITE_STRIPE_PUBLISHABLE_KEY`  | Stripe publishable key (frontend)              | `pk_test_xxx...`                              |
+| `VITE_GOOGLE_CLIENT_ID`        | Google OAuth Client ID                         | `861656642222-xxx.apps.googleusercontent.com` |
+| `VITE_INTERNAL_KEY`            | Internal service key (for frontend validation) | `d39db01ff86ca...`                            |
 
 ### Auth Service (`services/auth/.env`)
 
-| Variable | Purpose | Example |
-|---|---|---|
-| `PORT` | Server port | `8000` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:5173` |
-| `MONGO_URI` | MongoDB Atlas connection string | `mongodb://user:pass@host:27017/...` |
-| `DB_NAME` | Database name | `abarkhabo_db` |
-| `JWT_SECRET` | JWT signing secret (shared across services) | `d39db01ff86ca45c...` |
-| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | `861656642222-xxx...` |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | `GOCSPX-xxx...` |
+| Variable               | Purpose                                     | Example                              |
+| ---------------------- | ------------------------------------------- | ------------------------------------ |
+| `PORT`                 | Server port                                 | `8000`                               |
+| `ALLOWED_ORIGINS`      | CORS allowed origins                        | `http://localhost:5173`              |
+| `MONGO_URI`            | MongoDB Atlas connection string             | `mongodb://user:pass@host:27017/...` |
+| `DB_NAME`              | Database name                               | `abarkhabo_db`                       |
+| `JWT_SECRET`           | JWT signing secret (shared across services) | `d39db01ff86ca45c...`                |
+| `GOOGLE_CLIENT_ID`     | Google OAuth Client ID                      | `861656642222-xxx...`                |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret                  | `GOCSPX-xxx...`                      |
 
 ### Restaurant Service (`services/restaurant/.env`)
 
-| Variable | Purpose | Example |
-|---|---|---|
-| `PORT` | Server port | `9000` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:5173` |
-| `MONGO_URI` | MongoDB connection string | `mongodb://...` |
-| `DB_NAME` | Database name | `abarkhabo_db` |
-| `JWT_SECRET` | JWT signing secret | `d39db01ff86ca45c...` |
-| `INTERNAL_SERVICE_KEY` | Key for inter-service auth | `d39db01ff86ca...` |
-| `RABITMQ_URL` | RabbitMQ connection URL | `amqp://user:pass@localhost:5672` |
-| `PAYMENT_QUEUE` | Payment event queue name | `payment_event` |
-| `ORDER_READY_QUEUE` | Queue for rider dispatch triggers | `order_ready_queue` |
-| `RIDER_QUEUE` | Queue for rider notifications | `rider_oueue` |
-| `ADMIN_EVENT_QUEUE` | Queue for admin notification events | `admin_event_queue` |
-| `UTILS_SERVICE_URI` | Utilities service base URL | `http://localhost:8888` |
-| `REALTIME_SOCKET_SERVICE_URI` | Socket service URL | `http://localhost:9999` |
+| Variable                      | Purpose                             | Example                           |
+| ----------------------------- | ----------------------------------- | --------------------------------- |
+| `PORT`                        | Server port                         | `9000`                            |
+| `ALLOWED_ORIGINS`             | CORS allowed origins                | `http://localhost:5173`           |
+| `MONGO_URI`                   | MongoDB connection string           | `mongodb://...`                   |
+| `DB_NAME`                     | Database name                       | `abarkhabo_db`                    |
+| `JWT_SECRET`                  | JWT signing secret                  | `d39db01ff86ca45c...`             |
+| `INTERNAL_SERVICE_KEY`        | Key for inter-service auth          | `d39db01ff86ca...`                |
+| `RABITMQ_URL`                 | RabbitMQ connection URL             | `amqp://user:pass@localhost:5672` |
+| `PAYMENT_QUEUE`               | Payment event queue name            | `payment_event`                   |
+| `ORDER_READY_QUEUE`           | Queue for rider dispatch triggers   | `order_ready_queue`               |
+| `RIDER_QUEUE`                 | Queue for rider notifications       | `rider_oueue`                     |
+| `ADMIN_EVENT_QUEUE`           | Queue for admin notification events | `admin_event_queue`               |
+| `UTILS_SERVICE_URI`           | Utilities service base URL          | `http://localhost:8888`           |
+| `REALTIME_SOCKET_SERVICE_URI` | Socket service URL                  | `http://localhost:9999`           |
 
 ### Rider Service (`services/rider/.env`)
 
-| Variable | Purpose | Example |
-|---|---|---|
-| `PORT` | Server port | `7000` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:5173` |
-| `MONGO_URI` | MongoDB connection string | `mongodb://...` |
-| `DB_NAME` | Database name | `abarkhabo_db` |
-| `JWT_SECRET` | JWT signing secret | `d39db01ff86ca45c...` |
-| `INTERNAL_SERVICE_KEY` | Inter-service auth key | `d39db01ff86ca...` |
-| `RABITMQ_URL` | RabbitMQ connection URL | `amqp://user:pass@localhost:5672` |
-| `ORDER_READY_QUEUE` | Queue name for ready orders | `order_ready_queue` |
-| `RIDER_QUEUE` | Queue name for rider events | `rider_oueue` |
-| `RIDER_SEARCH_RADIUS_METERS` | Geo-search radius for nearby riders | `500` |
-| `RESTAURANT_SERVICE_URI` | Restaurant service URL (for internal API calls) | `http://localhost:9000` |
-| `UTILS_SERVICE_URI` | Utilities service URL | `http://localhost:8888` |
-| `REALTIME_SOCKET_SERVICE_URI` | Socket service URL | `http://localhost:9999` |
+| Variable                      | Purpose                                         | Example                           |
+| ----------------------------- | ----------------------------------------------- | --------------------------------- |
+| `PORT`                        | Server port                                     | `7000`                            |
+| `ALLOWED_ORIGINS`             | CORS allowed origins                            | `http://localhost:5173`           |
+| `MONGO_URI`                   | MongoDB connection string                       | `mongodb://...`                   |
+| `DB_NAME`                     | Database name                                   | `abarkhabo_db`                    |
+| `JWT_SECRET`                  | JWT signing secret                              | `d39db01ff86ca45c...`             |
+| `INTERNAL_SERVICE_KEY`        | Inter-service auth key                          | `d39db01ff86ca...`                |
+| `RABITMQ_URL`                 | RabbitMQ connection URL                         | `amqp://user:pass@localhost:5672` |
+| `ORDER_READY_QUEUE`           | Queue name for ready orders                     | `order_ready_queue`               |
+| `RIDER_QUEUE`                 | Queue name for rider events                     | `rider_oueue`                     |
+| `RIDER_SEARCH_RADIUS_METERS`  | Geo-search radius for nearby riders             | `500`                             |
+| `RESTAURANT_SERVICE_URI`      | Restaurant service URL (for internal API calls) | `http://localhost:9000`           |
+| `UTILS_SERVICE_URI`           | Utilities service URL                           | `http://localhost:8888`           |
+| `REALTIME_SOCKET_SERVICE_URI` | Socket service URL                              | `http://localhost:9999`           |
 
 ### Admin Service (`services/admin/.env`)
 
-| Variable | Purpose | Example |
-|---|---|---|
-| `PORT` | Server port | `6001` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:5173` |
-| `MONGO_URI` | MongoDB connection string | `mongodb://...` |
-| `DB_NAME` | Database name | `abarkhabo_db` |
-| `JWT_SECRET` | JWT signing secret | `d39db01ff86ca45c...` |
-| `INTERNAL_SERVICE_KEY` | Inter-service auth key | `d39db01ff86ca...` |
-| `ADMIN_EMAIL` | Admin login email | `admin@admin.dev` |
-| `ADMIN_PASSWORD` | Admin login password | `Admin@123` |
-| `REALTIME_SOCKET_SERVICE_URI` | Socket service URL | `http://localhost:9999` |
-| `RABITMQ_URL` | RabbitMQ connection URL | `amqp://user:pass@localhost:5672` |
-| `PAYMENT_QUEUE` | Payment queue name | `payment_event` |
-| `ADMIN_EVENT_QUEUE` | Admin event queue name | `admin_event_queue` |
+| Variable                      | Purpose                   | Example                           |
+| ----------------------------- | ------------------------- | --------------------------------- |
+| `PORT`                        | Server port               | `6001`                            |
+| `ALLOWED_ORIGINS`             | CORS allowed origins      | `http://localhost:5173`           |
+| `MONGO_URI`                   | MongoDB connection string | `mongodb://...`                   |
+| `DB_NAME`                     | Database name             | `abarkhabo_db`                    |
+| `JWT_SECRET`                  | JWT signing secret        | `d39db01ff86ca45c...`             |
+| `INTERNAL_SERVICE_KEY`        | Inter-service auth key    | `d39db01ff86ca...`                |
+| `ADMIN_EMAIL`                 | Admin login email         | `admin@admin.dev`                 |
+| `ADMIN_PASSWORD`              | Admin login password      | `Admin@123`                       |
+| `REALTIME_SOCKET_SERVICE_URI` | Socket service URL        | `http://localhost:9999`           |
+| `RABITMQ_URL`                 | RabbitMQ connection URL   | `amqp://user:pass@localhost:5672` |
+| `PAYMENT_QUEUE`               | Payment queue name        | `payment_event`                   |
+| `ADMIN_EVENT_QUEUE`           | Admin event queue name    | `admin_event_queue`               |
 
 ### Realtime Socket Service (`services/realtime/.env`)
 
-| Variable | Purpose | Example |
-|---|---|---|
-| `PORT` | Server port | `9999` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:5173` |
-| `JWT_SECRET` | JWT secret (for Socket.IO auth) | `d39db01ff86ca45c...` |
-| `INTERNAL_SERVICE_KEY` | Inter-service auth key | `d39db01ff86ca...` |
+| Variable               | Purpose                         | Example                 |
+| ---------------------- | ------------------------------- | ----------------------- |
+| `PORT`                 | Server port                     | `9999`                  |
+| `ALLOWED_ORIGINS`      | CORS allowed origins            | `http://localhost:5173` |
+| `JWT_SECRET`           | JWT secret (for Socket.IO auth) | `d39db01ff86ca45c...`   |
+| `INTERNAL_SERVICE_KEY` | Inter-service auth key          | `d39db01ff86ca...`      |
 
 ### Utilities Service (`services/utilities/.env`)
 
-| Variable | Purpose | Example |
-|---|---|---|
-| `PORT` | Server port | `8888` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:5173` |
-| `CLOUD_NAME` | Cloudinary cloud name | `your_cloud_name` |
-| `CLOUD_API_KEY` | Cloudinary API key | `977838324119192` |
-| `CLOUD_API_SECRET` | Cloudinary API secret | `xxx...` |
-| `INTERNAL_SERVICE_KEY` | Inter-service auth key | `d39db01ff86ca...` |
-| `RAZORPAY_API_KEY` | Razorpay API key | `rzp_test_xxx` |
-| `RAZORPAY_API_KEY_SECRET` | Razorpay secret key | `xxx...` |
-| `STRIPE_SECRET_KEY` | Stripe secret key | `sk_test_xxx...` |
-| `RABITMQ_URL` | RabbitMQ connection URL | `amqp://user:pass@localhost:5672` |
-| `PAYMENT_QUEUE` | Payment event queue name | `payment_event` |
-| `RESTAURANT_BASE_URL` | Restaurant service URL | `http://localhost:9000` |
-| `CLIENT_URL` | Frontend URL (for Stripe redirect) | `http://localhost:5173` |
+| Variable                  | Purpose                            | Example                           |
+| ------------------------- | ---------------------------------- | --------------------------------- |
+| `PORT`                    | Server port                        | `8888`                            |
+| `ALLOWED_ORIGINS`         | CORS allowed origins               | `http://localhost:5173`           |
+| `CLOUD_NAME`              | Cloudinary cloud name              | `your_cloud_name`                 |
+| `CLOUD_API_KEY`           | Cloudinary API key                 | `977838324119192`                 |
+| `CLOUD_API_SECRET`        | Cloudinary API secret              | `xxx...`                          |
+| `INTERNAL_SERVICE_KEY`    | Inter-service auth key             | `d39db01ff86ca...`                |
+| `RAZORPAY_API_KEY`        | Razorpay API key                   | `rzp_test_xxx`                    |
+| `RAZORPAY_API_KEY_SECRET` | Razorpay secret key                | `xxx...`                          |
+| `STRIPE_SECRET_KEY`       | Stripe secret key                  | `sk_test_xxx...`                  |
+| `RABITMQ_URL`             | RabbitMQ connection URL            | `amqp://user:pass@localhost:5672` |
+| `PAYMENT_QUEUE`           | Payment event queue name           | `payment_event`                   |
+| `RESTAURANT_BASE_URL`     | Restaurant service URL             | `http://localhost:9000`           |
+| `CLIENT_URL`              | Frontend URL (for Stripe redirect) | `http://localhost:5173`           |
 
 ---
 
@@ -563,23 +593,153 @@ npm run preview
 
 ---
 
+## 🐳 Docker Setup
+
+All backend microservices are fully containerized with **multi-stage Docker builds** for optimized production images.
+
+### Docker Architecture
+
+Each service includes:
+- **`Dockerfile`** — Multi-stage build (build stage with full dev dependencies → production stage with minimal footprint)
+- **`.dockerignore`** — Excludes `node_modules`, `.env`, source files, and other non-essential files from the build context
+
+### Multi-Stage Build Process
+
+```dockerfile
+# Stage 1: Build — Compile TypeScript
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
+
+# Stage 2: Production — Minimal runtime image
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --only=production
+COPY --from=builder /app/dist ./dist
+CMD [ "node", "dist/index.js" ]
+```
+
+### Building & Running Containers Manually
+
+```bash
+# Build a single service
+docker build -t abarkhabo-restaurant ./services/restaurant
+
+# Run a service (pass env vars at runtime)
+docker run -d \
+  --name abarkhabo-restaurant \
+  -p 9000:9000 \
+  --env-file ./services/restaurant/.env \
+  abarkhabo-restaurant
+```
+
+### Build All Services
+
+```bash
+# Build all 6 services
+for service in admin auth realtime restaurant rider utilities; do
+  echo "Building $service..."
+  docker build -t abarkhabo-$service ./services/$service
+done
+```
+
+### Docker Hub Images
+
+Pre-built images are automatically published to Docker Hub via CI/CD:
+
+| Service    | Docker Hub Image                               |
+| ---------- | ---------------------------------------------- |
+| Admin      | `samratmallick/abarakhabo-admin:latest`        |
+| Auth       | `samratmallick/abarakhabo-auth:latest`         |
+| Realtime   | `samratmallick/abarakhabo-realtime:latest`     |
+| Restaurant | `samratmallick/abarakhabo-restaurant:latest`   |
+| Rider      | `samratmallick/abarakhabo-rider:latest`        |
+| Utilities  | `samratmallick/abarakhabo-utilities:latest`    |
+
+```bash
+# Pull and run a published image
+docker pull samratmallick/abarakhabo-restaurant:latest
+docker run -d -p 9000:9000 --env-file .env samratmallick/abarakhabo-restaurant:latest
+```
+
+---
+
+## 🔄 CI/CD Pipeline
+
+The project uses **GitHub Actions** for automated Docker image builds and pushes.
+
+### Workflow: `docker-build-push.yml`
+
+**Location:** `.github/workflows/docker-build-push.yml`
+
+### Trigger Conditions
+
+| Trigger              | Condition                                         |
+| -------------------- | ------------------------------------------------- |
+| `push` to `main`     | Only when files in `services/` are changed        |
+| `pull_request` to `main` | Only when files in `services/` are changed    |
+| `workflow_dispatch`  | Manual trigger — builds **all** services          |
+
+### How It Works
+
+```mermaid
+flowchart LR
+    A[Push / PR to main] --> B{Detect Changed Services}
+    B --> C[Build only changed services]
+    C --> D[docker build + tag]
+    D --> E[Push to Docker Hub]
+    F[Manual Dispatch] --> G[Build ALL services]
+    G --> D
+```
+
+1. **Change Detection** — Uses `dorny/paths-filter` to detect which services have file changes
+2. **Selective Builds** — Only changed services are rebuilt (saves CI minutes)
+3. **Docker Hub Push** — Images are tagged as `latest` and pushed to the `samratmallick` Docker Hub account
+4. **Manual Override** — `workflow_dispatch` rebuilds all 6 services regardless of changes
+
+### Required Repository Secrets
+
+| Secret             | Description                                  |
+| ------------------ | -------------------------------------------- |
+| `DOCKERHUB_TOKEN`  | Docker Hub access token for authentication   |
+
+> 💡 Generate a Docker Hub access token at [hub.docker.com/settings/security](https://hub.docker.com/settings/security).
+
+### Pipeline Jobs
+
+| Job                | Service    | Condition                                        |
+| ------------------ | ---------- | ------------------------------------------------ |
+| `build-admin`      | Admin      | `services/admin/**` changed or manual dispatch   |
+| `build-auth`       | Auth       | `services/auth/**` changed or manual dispatch    |
+| `build-realtime`   | Realtime   | `services/realtime/**` changed or manual dispatch|
+| `build-restaurant` | Restaurant | `services/restaurant/**` changed or manual dispatch|
+| `build-rider`      | Rider      | `services/rider/**` changed or manual dispatch   |
+| `build-utilities`  | Utilities  | `services/utilities/**` changed or manual dispatch|
+
+---
+
 ## 🌐 API Documentation
 
 ### Base URLs
 
-| Service | Base URL |
-|---|---|
-| Auth | `http://localhost:8000/api/v1/auth` |
-| Restaurant | `http://localhost:9000/api/v1/restaurants` |
-| Menu | `http://localhost:9000/api/v1/menu` |
-| Cart | `http://localhost:9000/api/v1/cart` |
-| Address | `http://localhost:9000/api/v1/address` |
-| Orders | `http://localhost:9000/api/v1/orders` |
-| Payment | `http://localhost:8888/api/v1/payment` |
-| Rider | `http://localhost:7000/api/v1/riders` |
-| Admin | `http://localhost:6001/api/v1/admin` |
-| Socket Events | `http://localhost:9999/api/v1/socket` |
-| Cloudinary | `http://localhost:8888/api/v1/cloudinary` |
+| Service       | Base URL                                   |
+| ------------- | ------------------------------------------ |
+| Auth          | `http://localhost:8000/api/v1/auth`        |
+| Restaurant    | `http://localhost:9000/api/v1/restaurants` |
+| Menu          | `http://localhost:9000/api/v1/menu`        |
+| Cart          | `http://localhost:9000/api/v1/cart`        |
+| Address       | `http://localhost:9000/api/v1/address`     |
+| Orders        | `http://localhost:9000/api/v1/orders`      |
+| Payment       | `http://localhost:8888/api/v1/payment`     |
+| Rider         | `http://localhost:7000/api/v1/riders`      |
+| Admin         | `http://localhost:6001/api/v1/admin`       |
+| Socket Events | `http://localhost:9999/api/v1/socket`      |
+| Cloudinary    | `http://localhost:8888/api/v1/cloudinary`  |
 
 ---
 
@@ -589,12 +749,12 @@ npm run preview
 
 Exchange a Google authorization code for a JWT token.
 
-| Field | Value |
-|---|---|
-| **URL** | `/api/v1/auth/sessions` |
-| **Method** | `POST` |
-| **Auth** | None |
-| **Content-Type** | `application/json` |
+| Field            | Value                   |
+| ---------------- | ----------------------- |
+| **URL**          | `/api/v1/auth/sessions` |
+| **Method**       | `POST`                  |
+| **Auth**         | None                    |
+| **Content-Type** | `application/json`      |
 
 **Request Body:**
 ```json
@@ -623,23 +783,23 @@ Exchange a Google authorization code for a JWT token.
 ```
 
 **Error Responses:**
-| Status | Message |
-|---|---|
-| 400 | `Authorization code is required` |
-| 400 | `Authorization code has already been used` |
-| 401 | `Google token exchange failed` |
-| 401 | `Failed to obtain access token from Google` |
-| 503 | `Service temporarily unavailable` |
+| Status | Message                                     |
+| ------ | ------------------------------------------- |
+| 400    | `Authorization code is required`            |
+| 400    | `Authorization code has already been used`  |
+| 401    | `Google token exchange failed`              |
+| 401    | `Failed to obtain access token from Google` |
+| 503    | `Service temporarily unavailable`           |
 
 ---
 
 #### `PATCH /me/role` — Update User Role
 
-| Field | Value |
-|---|---|
-| **URL** | `/api/v1/auth/me/role` |
-| **Method** | `PATCH` |
-| **Auth** | `Bearer <token>` |
+| Field      | Value                  |
+| ---------- | ---------------------- |
+| **URL**    | `/api/v1/auth/me/role` |
+| **Method** | `PATCH`                |
+| **Auth**   | `Bearer <token>`       |
 
 **Request Body:**
 ```json
@@ -659,21 +819,21 @@ Exchange a Google authorization code for a JWT token.
 ```
 
 **Error Responses:**
-| Status | Message |
-|---|---|
-| 400 | `Invalid role` |
-| 401 | `Unauthorized user` |
-| 404 | `User not found` |
+| Status | Message             |
+| ------ | ------------------- |
+| 400    | `Invalid role`      |
+| 401    | `Unauthorized user` |
+| 404    | `User not found`    |
 
 ---
 
 #### `GET /me` — Get User Profile
 
-| Field | Value |
-|---|---|
-| **URL** | `/api/v1/auth/me` |
-| **Method** | `GET` |
-| **Auth** | `Bearer <token>` |
+| Field      | Value             |
+| ---------- | ----------------- |
+| **URL**    | `/api/v1/auth/me` |
+| **Method** | `GET`             |
+| **Auth**   | `Bearer <token>`  |
 
 **Success Response (200):**
 ```json
@@ -700,12 +860,12 @@ Exchange a Google authorization code for a JWT token.
 
 #### `POST /` — Create Restaurant (Seller Only)
 
-| Field | Value |
-|---|---|
-| **URL** | `/api/v1/restaurants/` |
-| **Method** | `POST` |
-| **Auth** | `Bearer <token>` (Seller role + block check) |
-| **Content-Type** | `multipart/form-data` |
+| Field            | Value                                        |
+| ---------------- | -------------------------------------------- |
+| **URL**          | `/api/v1/restaurants/`                       |
+| **Method**       | `POST`                                       |
+| **Auth**         | `Bearer <token>` (Seller role + block check) |
+| **Content-Type** | `multipart/form-data`                        |
 
 **Form Fields:** `name`, `description`, `latitude`, `longitude`, `formattedAddress`, `phone`, `file` (image)
 
@@ -715,19 +875,19 @@ Exchange a Google authorization code for a JWT token.
 
 #### `GET /` — Get Nearest Restaurants (Geospatial)
 
-| Field | Value |
-|---|---|
-| **URL** | `/api/v1/restaurants/?latitude=22.57&longitude=88.43&radius=5000&search=biryani` |
-| **Method** | `GET` |
-| **Auth** | `Bearer <token>` |
+| Field      | Value                                                                            |
+| ---------- | -------------------------------------------------------------------------------- |
+| **URL**    | `/api/v1/restaurants/?latitude=22.57&longitude=88.43&radius=5000&search=biryani` |
+| **Method** | `GET`                                                                            |
+| **Auth**   | `Bearer <token>`                                                                 |
 
 **Query Parameters:**
-| Param | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `latitude` | number | ✅ | - | User's latitude |
-| `longitude` | number | ✅ | - | User's longitude |
-| `radius` | number | ❌ | `5000` | Search radius in meters |
-| `search` | string | ❌ | `""` | Search by restaurant/food name |
+| Param       | Type   | Required | Default | Description                    |
+| ----------- | ------ | -------- | ------- | ------------------------------ |
+| `latitude`  | number | ✅        | -       | User's latitude                |
+| `longitude` | number | ✅        | -       | User's longitude               |
+| `radius`    | number | ❌        | `5000`  | Search radius in meters        |
+| `search`    | string | ❌        | `""`    | Search by restaurant/food name |
 
 **Success Response (200):**
 ```json
@@ -757,7 +917,7 @@ Exchange a Google authorization code for a JWT token.
 #### `GET /me` — Get My Restaurant (Seller)
 
 | **Auth** | `Bearer <token>` (Seller) |
-|---|---|
+| -------- | ------------------------- |
 
 #### `PATCH /me/status` — Toggle Open/Close (Seller)
 
@@ -887,14 +1047,14 @@ When set to `ready_for_rider`, publishes event to RabbitMQ for rider dispatch.
 
 #### Internal Endpoints (Internal Service Key Required)
 
-| Route | Method | Description |
-|---|---|---|
-| `/internal/rider-assignment` | PATCH | Assign rider to order |
-| `/internal/current?riderId=...` | GET | Get rider's current order |
-| `/internal/status` | PATCH | Update order status by rider |
-| `/internal/delivery-history?riderId=...` | GET | Rider's delivery history |
-| `/internal/:orderId` | GET | Get order by ID |
-| `/:id/payment` | GET | Get order payment info |
+| Route                                    | Method | Description                  |
+| ---------------------------------------- | ------ | ---------------------------- |
+| `/internal/rider-assignment`             | PATCH  | Assign rider to order        |
+| `/internal/current?riderId=...`          | GET    | Get rider's current order    |
+| `/internal/status`                       | PATCH  | Update order status by rider |
+| `/internal/delivery-history?riderId=...` | GET    | Rider's delivery history     |
+| `/internal/:orderId`                     | GET    | Get order by ID              |
+| `/:id/payment`                           | GET    | Get order payment info       |
 
 ---
 
@@ -986,39 +1146,39 @@ Fields: `phoneNumber`, `aadhaarNumber`, `drivingLicesce`, `latitude`, `longitude
 **All routes below require admin JWT token.**
 
 #### Dashboard
-| Route | Method | Description |
-|---|---|---|
-| `GET /dashboard` | GET | Aggregated stats (users by role, restaurant/rider counts, order stats, revenue) |
+| Route            | Method | Description                                                                     |
+| ---------------- | ------ | ------------------------------------------------------------------------------- |
+| `GET /dashboard` | GET    | Aggregated stats (users by role, restaurant/rider counts, order stats, revenue) |
 
 #### User Management
-| Route | Method | Description |
-|---|---|---|
-| `GET /users?page=1&limit=20&role=customer` | GET | List users with pagination & role filter |
-| `GET /users/:userId` | GET | Get single user |
-| `PATCH /users/:userId/block` | PATCH | Toggle block/unblock (7-day block duration) |
+| Route                                      | Method | Description                                 |
+| ------------------------------------------ | ------ | ------------------------------------------- |
+| `GET /users?page=1&limit=20&role=customer` | GET    | List users with pagination & role filter    |
+| `GET /users/:userId`                       | GET    | Get single user                             |
+| `PATCH /users/:userId/block`               | PATCH  | Toggle block/unblock (7-day block duration) |
 
 #### Restaurant Management
-| Route | Method | Description |
-|---|---|---|
-| `GET /restaurants?page=1&limit=20&isVerified=true` | GET | List restaurants |
-| `GET /restaurants/:restaurantId` | GET | Get restaurant + menu items |
-| `PATCH /restaurants/:restaurantId/verify` | PATCH | Verify/unverify restaurant |
-| `DELETE /restaurants/:restaurantId` | DELETE | Delete restaurant + all menu items |
+| Route                                              | Method | Description                        |
+| -------------------------------------------------- | ------ | ---------------------------------- |
+| `GET /restaurants?page=1&limit=20&isVerified=true` | GET    | List restaurants                   |
+| `GET /restaurants/:restaurantId`                   | GET    | Get restaurant + menu items        |
+| `PATCH /restaurants/:restaurantId/verify`          | PATCH  | Verify/unverify restaurant         |
+| `DELETE /restaurants/:restaurantId`                | DELETE | Delete restaurant + all menu items |
 
 #### Rider Management
-| Route | Method | Description |
-|---|---|---|
-| `GET /riders?page=1&limit=20&isVerified=true` | GET | List riders |
-| `GET /riders/:riderId` | GET | Get single rider |
-| `PATCH /riders/:riderId/verify` | PATCH | Verify/unverify rider |
-| `DELETE /riders/:riderId` | DELETE | Delete rider |
+| Route                                         | Method | Description           |
+| --------------------------------------------- | ------ | --------------------- |
+| `GET /riders?page=1&limit=20&isVerified=true` | GET    | List riders           |
+| `GET /riders/:riderId`                        | GET    | Get single rider      |
+| `PATCH /riders/:riderId/verify`               | PATCH  | Verify/unverify rider |
+| `DELETE /riders/:riderId`                     | DELETE | Delete rider          |
 
 #### Order Management
-| Route | Method | Description |
-|---|---|---|
-| `GET /orders?page=1&limit=20&status=placed&paymentStatus=paid` | GET | List orders with filters |
-| `GET /orders/:orderId` | GET | Get single order |
-| `PATCH /orders/:orderId/cancel` | PATCH | Cancel order |
+| Route                                                          | Method | Description              |
+| -------------------------------------------------------------- | ------ | ------------------------ |
+| `GET /orders?page=1&limit=20&status=placed&paymentStatus=paid` | GET    | List orders with filters |
+| `GET /orders/:orderId`                                         | GET    | Get single order         |
+| `PATCH /orders/:orderId/cancel`                                | PATCH  | Cancel order             |
 
 ---
 
@@ -1115,16 +1275,16 @@ All services share a **single MongoDB database** (`abarkhabo_db`) but each servi
 
 ### User Model (`users` collection)
 
-| Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `name` | String | ✅ | - | User's display name (from Google) |
-| `email` | String | ✅ | - | Unique, lowercase email |
-| `image` | String | ✅ | - | Google profile picture URL |
-| `role` | String | ❌ | `null` | `"customer"`, `"seller"`, `"rider"`, or `null` |
-| `isBlocked` | Boolean | ❌ | `false` | Whether user is blocked by admin |
-| `blockedUntil` | Date | ❌ | `null` | Block expiry timestamp |
-| `createdAt` | Date | auto | - | Mongoose timestamp |
-| `updatedAt` | Date | auto | - | Mongoose timestamp |
+| Field          | Type    | Required | Default | Description                                    |
+| -------------- | ------- | -------- | ------- | ---------------------------------------------- |
+| `name`         | String  | ✅        | -       | User's display name (from Google)              |
+| `email`        | String  | ✅        | -       | Unique, lowercase email                        |
+| `image`        | String  | ✅        | -       | Google profile picture URL                     |
+| `role`         | String  | ❌        | `null`  | `"customer"`, `"seller"`, `"rider"`, or `null` |
+| `isBlocked`    | Boolean | ❌        | `false` | Whether user is blocked by admin               |
+| `blockedUntil` | Date    | ❌        | `null`  | Block expiry timestamp                         |
+| `createdAt`    | Date    | auto     | -       | Mongoose timestamp                             |
+| `updatedAt`    | Date    | auto     | -       | Mongoose timestamp                             |
 
 **Example Document:**
 ```json
@@ -1145,18 +1305,18 @@ All services share a **single MongoDB database** (`abarkhabo_db`) but each servi
 
 ### Restaurant Model (`restaurants` collection)
 
-| Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `name` | String | ✅ | - | Restaurant name (trimmed) |
-| `description` | String | ❌ | - | Restaurant description |
-| `image` | String | ✅ | - | Cloudinary image URL |
-| `ownerId` | String | ✅ | - | User ID of the seller |
-| `phone` | Number | ✅ | - | Contact number |
-| `isVerified` | Boolean | ✅ | `false` | Admin verification status |
-| `autoLocation.type` | String | ✅ | - | Always `"Point"` |
-| `autoLocation.coordinates` | [Number] | ✅ | - | `[longitude, latitude]` |
-| `autoLocation.formattedAddress` | String | ❌ | - | Human-readable address |
-| `isOpen` | Boolean | ❌ | `false` | Whether restaurant is accepting orders |
+| Field                           | Type     | Required | Default | Description                            |
+| ------------------------------- | -------- | -------- | ------- | -------------------------------------- |
+| `name`                          | String   | ✅        | -       | Restaurant name (trimmed)              |
+| `description`                   | String   | ❌        | -       | Restaurant description                 |
+| `image`                         | String   | ✅        | -       | Cloudinary image URL                   |
+| `ownerId`                       | String   | ✅        | -       | User ID of the seller                  |
+| `phone`                         | Number   | ✅        | -       | Contact number                         |
+| `isVerified`                    | Boolean  | ✅        | `false` | Admin verification status              |
+| `autoLocation.type`             | String   | ✅        | -       | Always `"Point"`                       |
+| `autoLocation.coordinates`      | [Number] | ✅        | -       | `[longitude, latitude]`                |
+| `autoLocation.formattedAddress` | String   | ❌        | -       | Human-readable address                 |
+| `isOpen`                        | Boolean  | ❌        | `false` | Whether restaurant is accepting orders |
 
 **Indexes:** `autoLocation: "2dsphere"` for geospatial queries.
 
@@ -1185,14 +1345,14 @@ All services share a **single MongoDB database** (`abarkhabo_db`) but each servi
 
 ### MenuItem Model (`menuitems` collection)
 
-| Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `restaurantId` | ObjectId (ref Restaurant) | ✅ | - | Parent restaurant |
-| `name` | String | ✅ | - | Dish name (trimmed) |
-| `description` | String | ❌ | - | Dish description |
-| `price` | Number | ✅ | - | Price in INR |
-| `imageUrl` | String | ❌ | - | Cloudinary image URL |
-| `isAvailable` | Boolean | ✅ | `true` | Availability toggle |
+| Field          | Type                      | Required | Default | Description          |
+| -------------- | ------------------------- | -------- | ------- | -------------------- |
+| `restaurantId` | ObjectId (ref Restaurant) | ✅        | -       | Parent restaurant    |
+| `name`         | String                    | ✅        | -       | Dish name (trimmed)  |
+| `description`  | String                    | ❌        | -       | Dish description     |
+| `price`        | Number                    | ✅        | -       | Price in INR         |
+| `imageUrl`     | String                    | ❌        | -       | Cloudinary image URL |
+| `isAvailable`  | Boolean                   | ✅        | `true`  | Availability toggle  |
 
 **Indexes:** `restaurantId: 1` (indexed).
 
@@ -1200,12 +1360,12 @@ All services share a **single MongoDB database** (`abarkhabo_db`) but each servi
 
 ### Cart Model (`carts` collection)
 
-| Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `userId` | ObjectId (ref User) | ✅ | - | Cart owner |
-| `restaurantId` | ObjectId (ref Restaurant) | ✅ | - | Restaurant of this cart item |
-| `itemId` | ObjectId (ref MenuItem) | ✅ | - | Menu item |
-| `quantity` | Number | ❌ | `1` | Quantity (min: 1) |
+| Field          | Type                      | Required | Default | Description                  |
+| -------------- | ------------------------- | -------- | ------- | ---------------------------- |
+| `userId`       | ObjectId (ref User)       | ✅        | -       | Cart owner                   |
+| `restaurantId` | ObjectId (ref Restaurant) | ✅        | -       | Restaurant of this cart item |
+| `itemId`       | ObjectId (ref MenuItem)   | ✅        | -       | Menu item                    |
+| `quantity`     | Number                    | ❌        | `1`     | Quantity (min: 1)            |
 
 **Indexes:** Compound unique index on `{ userId, restaurantId, itemId }`.
 
@@ -1213,13 +1373,13 @@ All services share a **single MongoDB database** (`abarkhabo_db`) but each servi
 
 ### Address Model (`addresses` collection)
 
-| Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `userId` | String | ✅ | - | Address owner |
-| `mobile` | Number | ✅ | - | Contact phone |
-| `formatedAddress` | String | ✅ | - | Human-readable address |
-| `location.type` | String | ✅ | `"Point"` | GeoJSON type |
-| `location.coordinates` | [Number] | ✅ | - | `[longitude, latitude]` |
+| Field                  | Type     | Required | Default   | Description             |
+| ---------------------- | -------- | -------- | --------- | ----------------------- |
+| `userId`               | String   | ✅        | -         | Address owner           |
+| `mobile`               | Number   | ✅        | -         | Contact phone           |
+| `formatedAddress`      | String   | ✅        | -         | Human-readable address  |
+| `location.type`        | String   | ✅        | `"Point"` | GeoJSON type            |
+| `location.coordinates` | [Number] | ✅        | -         | `[longitude, latitude]` |
 
 **Indexes:** `location: "2dsphere"`.
 
@@ -1227,27 +1387,27 @@ All services share a **single MongoDB database** (`abarkhabo_db`) but each servi
 
 ### Order Model (`orders` collection)
 
-| Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `userId` | String | ✅ | - | Customer ID |
-| `restaurantId` | String | ✅ | - | Restaurant ID |
-| `restaurantName` | String | ✅ | - | Denormalized restaurant name |
-| `riderId` | String | ❌ | `null` | Assigned rider ID |
-| `riderPhoneNumber` | Number | ❌ | `null` | Rider's phone |
-| `riderName` | String | ❌ | `null` | Rider's name |
-| `distance` | Number | ✅ | - | Distance in km (restaurant → customer) |
-| `riderAmount` | Number | ✅ | - | Rider's earning for this delivery |
-| `items[]` | Array | ✅ | - | Array of `{ itemId, name, price, quantity }` |
-| `subtotal` | Number | - | - | Sum of (price × quantity) |
-| `deliveryFee` | Number | - | - | Calculated delivery charge |
-| `platformFee` | Number | - | - | Fixed ₹7 |
-| `totalAmount` | Number | - | - | Final total including GST |
-| `addressId` | String | ✅ | - | Delivery address ID |
-| `deliveryAddress` | Object | ✅ | - | Snapshot: `{ formatedAddress, mobile, customerName, latitude, longitude }` |
-| `status` | String | - | `"placed"` | Order lifecycle status |
-| `paymentMethod` | String | ✅ | - | `"razorpay"` or `"stripe"` |
-| `paymentStatus` | String | - | `"pending"` | `"pending"`, `"paid"`, or `"failed"` |
-| `expiresAt` | Date | - | - | TTL: auto-deletes unpaid orders after 15 minutes |
+| Field              | Type   | Required | Default     | Description                                                                |
+| ------------------ | ------ | -------- | ----------- | -------------------------------------------------------------------------- |
+| `userId`           | String | ✅        | -           | Customer ID                                                                |
+| `restaurantId`     | String | ✅        | -           | Restaurant ID                                                              |
+| `restaurantName`   | String | ✅        | -           | Denormalized restaurant name                                               |
+| `riderId`          | String | ❌        | `null`      | Assigned rider ID                                                          |
+| `riderPhoneNumber` | Number | ❌        | `null`      | Rider's phone                                                              |
+| `riderName`        | String | ❌        | `null`      | Rider's name                                                               |
+| `distance`         | Number | ✅        | -           | Distance in km (restaurant → customer)                                     |
+| `riderAmount`      | Number | ✅        | -           | Rider's earning for this delivery                                          |
+| `items[]`          | Array  | ✅        | -           | Array of `{ itemId, name, price, quantity }`                               |
+| `subtotal`         | Number | -        | -           | Sum of (price × quantity)                                                  |
+| `deliveryFee`      | Number | -        | -           | Calculated delivery charge                                                 |
+| `platformFee`      | Number | -        | -           | Fixed ₹7                                                                   |
+| `totalAmount`      | Number | -        | -           | Final total including GST                                                  |
+| `addressId`        | String | ✅        | -           | Delivery address ID                                                        |
+| `deliveryAddress`  | Object | ✅        | -           | Snapshot: `{ formatedAddress, mobile, customerName, latitude, longitude }` |
+| `status`           | String | -        | `"placed"`  | Order lifecycle status                                                     |
+| `paymentMethod`    | String | ✅        | -           | `"razorpay"` or `"stripe"`                                                 |
+| `paymentStatus`    | String | -        | `"pending"` | `"pending"`, `"paid"`, or `"failed"`                                       |
+| `expiresAt`        | Date   | -        | -           | TTL: auto-deletes unpaid orders after 15 minutes                           |
 
 **Status Values:** `placed` → `accepted` → `preparing` → `ready_for_rider` → `rider_assigned` → `picked_up` → `out_for_delivery` → `reached_delivery_location` → `delivered` | `cancelled`
 
@@ -1255,18 +1415,18 @@ All services share a **single MongoDB database** (`abarkhabo_db`) but each servi
 
 ### Rider Model (`riders` collection)
 
-| Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `userId` | String | ✅ (unique) | - | User ID |
-| `picture` | String | ❌ | - | Cloudinary photo URL |
-| `phoneNumber` | String | ✅ | - | Contact phone |
-| `aadhaarNumber` | String | ✅ | - | Government ID (Aadhaar) |
-| `drivingLicesce` | String | ✅ | - | Driving license number |
-| `isVerified` | Boolean | ✅ | `false` | Admin verification |
-| `location.type` | String | ✅ | `"Point"` | GeoJSON type |
-| `location.coordinates` | [Number] | ✅ | - | `[longitude, latitude]` |
-| `isAvailable` | Boolean | ✅ | `false` | Online/offline toggle |
-| `lastActiveAt` | Date | ✅ | `Date.now()` | Last activity timestamp |
+| Field                  | Type     | Required   | Default      | Description             |
+| ---------------------- | -------- | ---------- | ------------ | ----------------------- |
+| `userId`               | String   | ✅ (unique) | -            | User ID                 |
+| `picture`              | String   | ❌          | -            | Cloudinary photo URL    |
+| `phoneNumber`          | String   | ✅          | -            | Contact phone           |
+| `aadhaarNumber`        | String   | ✅          | -            | Government ID (Aadhaar) |
+| `drivingLicesce`       | String   | ✅          | -            | Driving license number  |
+| `isVerified`           | Boolean  | ✅          | `false`      | Admin verification      |
+| `location.type`        | String   | ✅          | `"Point"`    | GeoJSON type            |
+| `location.coordinates` | [Number] | ✅          | -            | `[longitude, latitude]` |
+| `isAvailable`          | Boolean  | ✅          | `false`      | Online/offline toggle   |
+| `lastActiveAt`         | Date     | ✅          | `Date.now()` | Last activity timestamp |
 
 **Indexes:** `location: "2dsphere"`.
 
@@ -1305,15 +1465,15 @@ export const TryCatch = (handler: RequestHandler): RequestHandler => {
 
 ### Error Response Categories
 
-| Category | Status | Example Message |
-|---|---|---|
-| Validation | 400 | `"Name and price are required fields"` |
-| Authentication | 401 | `"Unauthorized - No Auth Token in Headers"` |
-| Authorization | 403 | `"Forbidden - Seller access only"` |
-| Not Found | 404 | `"Restaurant not found"` |
-| Conflict | 409 | `"Rider profile already exists"` |
-| Service Unavailable | 503 | `"Service temporarily unavailable"` |
-| Internal Error | 500 | `"Something went wrong"` |
+| Category            | Status | Example Message                             |
+| ------------------- | ------ | ------------------------------------------- |
+| Validation          | 400    | `"Name and price are required fields"`      |
+| Authentication      | 401    | `"Unauthorized - No Auth Token in Headers"` |
+| Authorization       | 403    | `"Forbidden - Seller access only"`          |
+| Not Found           | 404    | `"Restaurant not found"`                    |
+| Conflict            | 409    | `"Rider profile already exists"`            |
+| Service Unavailable | 503    | `"Service temporarily unavailable"`         |
+| Internal Error      | 500    | `"Something went wrong"`                    |
 
 ### JWT-Specific Errors
 
@@ -1410,6 +1570,24 @@ if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
 
 ## 🧠 Business Logic
 
+### Architecture Overview
+
+```
+User → Frontend (React) → API Call (Axios) → Backend (Express) → Database (MongoDB)
+                                                     ↓
+                                              Cloudinary (Images)
+                                                     ↓
+                                              RabbitMQ (Events)
+                                                     ↓
+                                              Socket.IO (Realtime)
+```
+
+### Backend Layers
+
+```
+Routes → Middleware (Auth + Role + Block Check) → Controllers → Models → Database
+```
+
 ### Cart System
 
 1. **Single-Restaurant Enforcement:** A user's cart can only contain items from **one restaurant** at a time. Adding an item from a different restaurant returns a `400` error.
@@ -1434,80 +1612,114 @@ if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
 
 #### Order Status Flow
 
-```mermaid
-stateDiagram-v2
-    [*] --> placed: Order Created
-    placed --> accepted: Seller accepts
-    accepted --> preparing: Seller starts cooking
-    preparing --> ready_for_rider: Food ready (publishes RabbitMQ event)
-    ready_for_rider --> rider_assigned: Rider accepts order
-    rider_assigned --> picked_up: Rider picks up food
-    picked_up --> out_for_delivery: Rider en route
-    out_for_delivery --> reached_delivery_location: Rider arrives
-    reached_delivery_location --> delivered: Rider confirms (proximity check ≤ 100m)
-    placed --> cancelled: Admin cancels
-    accepted --> cancelled: Admin cancels
+```
+                                    ┌──────────────────────────────────────────────────────────────────────────────────────────┐
+                                    │                              ORDER LIFECYCLE                                           │
+                                    └──────────────────────────────────────────────────────────────────────────────────────────┘
+
+[Order Created] → placed → accepted → preparing → ready_for_rider → rider_assigned → picked_up → out_for_delivery → reached_delivery_location → delivered ✅
+                    │         │                        ↓
+                    │         │              Publishes RabbitMQ event
+                    │         │              (ORDER_READY_FOR_RIDER)
+                    ↓         ↓
+                 cancelled (Admin)
+```
+
+**Who controls each transition:**
+
+```
+Seller:  placed → accepted → preparing → ready_for_rider
+Rider:   rider_assigned → picked_up → out_for_delivery → reached_delivery_location → delivered
+Admin:   placed → cancelled | accepted → cancelled
+System:  ready_for_rider → rider_assigned (via RabbitMQ + auto-dispatch)
 ```
 
 ### Payment Flow
 
-```mermaid
-sequenceDiagram
-    participant Customer
-    participant Frontend
-    participant OrderService
-    participant UtilsService
-    participant PaymentGateway
-    participant RabbitMQ
-    participant RestaurantService
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         PAYMENT FLOW                                     │
+└──────────────────────────────────────────────────────────────────────────┘
 
-    Customer->>Frontend: Select payment method & submit
-    Frontend->>OrderService: POST /orders { paymentMethod, addressId }
-    OrderService-->>Frontend: { orderId, totalAmount }
-
-    alt Razorpay
-        Frontend->>UtilsService: POST /payment/razorpay { orderId }
-        UtilsService->>OrderService: GET /orders/:id/payment (internal)
-        UtilsService->>PaymentGateway: razorpay.orders.create()
-        PaymentGateway-->>UtilsService: { razorpayOrderId }
-        UtilsService-->>Frontend: { razorpayOrderId, key_id }
-        Frontend->>PaymentGateway: Open Razorpay Checkout
-        PaymentGateway-->>Frontend: { razorpay_order_id, payment_id, signature }
-        Frontend->>UtilsService: POST /payment/razorpay/verify
-        UtilsService->>UtilsService: Verify HMAC signature
-        UtilsService->>RabbitMQ: publishPaymentSuccess()
-    else Stripe
-        Frontend->>UtilsService: POST /payment/stripe { orderId }
-        UtilsService->>PaymentGateway: stripe.checkout.sessions.create()
-        PaymentGateway-->>Frontend: Redirect to Stripe Checkout
-        PaymentGateway-->>Frontend: Redirect to /ordersuccess?session_id=...
-        Frontend->>UtilsService: POST /payment/stripe/verify { sessionId }
-        UtilsService->>PaymentGateway: stripe.checkout.sessions.retrieve()
-        UtilsService->>RabbitMQ: publishPaymentSuccess()
-    end
-
-    RabbitMQ->>RestaurantService: Payment success event
-    RestaurantService->>RestaurantService: Update order: paymentStatus="paid", remove expiresAt
-    RestaurantService->>SocketService: Emit "order:update" to relevant rooms
+Customer → Frontend → POST /orders { paymentMethod, addressId }
+                          ↓
+                    OrderService creates order (15-min TTL)
+                          ↓
+              ┌───────────┴───────────┐
+              ↓                       ↓
+         [Razorpay]              [Stripe]
+              ↓                       ↓
+    POST /payment/razorpay    POST /payment/stripe
+              ↓                       ↓
+    UtilsService → Razorpay   UtilsService → Stripe
+    creates payment order     creates checkout session
+              ↓                       ↓
+    Frontend opens popup      Redirect to Stripe page
+              ↓                       ↓
+    User completes payment    User completes payment
+              ↓                       ↓
+    POST /razorpay/verify     POST /stripe/verify
+    (HMAC signature check)    (session status check)
+              ↓                       ↓
+              └───────────┬───────────┘
+                          ↓
+              RabbitMQ: publishPaymentSuccess()
+                          ↓
+              RestaurantService consumes event
+                          ↓
+              Update order: paymentStatus = "paid"
+              Remove expiresAt (cancel TTL)
+                          ↓
+              Socket.IO → Emit "order:update" to user & seller rooms
 ```
 
 ### Rider Dispatch System
 
-1. Seller marks order as `ready_for_rider`
-2. Restaurant service publishes `ORDER_READY_FOR_RIDER` event to RabbitMQ
-3. Rider service consumes the event
-4. Finds available, verified riders within `RIDER_SEARCH_RADIUS_METERS` (default: 500m) of the restaurant
-5. Sends push notification via Socket.IO to eligible riders
-6. First rider to accept gets the order via `POST /orders/:orderId/accept`
-7. Rider's availability is set to `false` during delivery
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      RIDER DISPATCH FLOW                                 │
+└──────────────────────────────────────────────────────────────────────────┘
+
+Seller marks order "ready_for_rider"
+         ↓
+RestaurantService → RabbitMQ (ORDER_READY_QUEUE)
+         ↓
+RiderService consumes event
+         ↓
+MongoDB 2dsphere query: find riders within 500m of restaurant
+         ↓
+    ┌────┴────┐
+    ↓         ↓
+ Rider A   Rider B   ← Socket.IO push notification
+    ↓
+First rider to accept → POST /orders/:orderId/accept
+    ↓
+Order updated: status = "rider_assigned", riderId assigned
+    ↓
+Rider availability set to false (busy)
+```
 
 ### Delivery Proximity Verification
 
-When rider attempts to mark order as "delivered", the system calculates Haversine distance between:
-- Rider's GPS coordinates
-- Customer's delivery address coordinates
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                   DELIVERY CONFIRMATION                                  │
+└──────────────────────────────────────────────────────────────────────────┘
 
-If distance > 100 meters, delivery confirmation is **rejected**.
+Rider taps "Mark Delivered"
+         ↓
+System calculates Haversine distance:
+   Rider GPS (lat, lng) ←→ Customer Address (lat, lng)
+         ↓
+    ┌────┴──────────────┐
+    ↓                   ↓
+ ≤ 100m              > 100m
+    ↓                   ↓
+ ✅ Delivered         ❌ Rejected
+ Status updated      "You are too far
+ Rider freed          from delivery
+                      location"
+```
 
 ---
 
@@ -1515,14 +1727,14 @@ If distance > 100 meters, delivery confirmation is **rejected**.
 
 ### Role Hierarchy
 
-| Role | Capabilities |
-|---|---|
-| **Unauthenticated** | Login page only |
-| **Unassigned (no role)** | Select role page only |
-| **Customer** | Browse restaurants, search food, manage cart, place orders, track delivery, manage addresses |
-| **Seller** | Create/manage restaurant, add/edit/delete menu items, process orders (accept → preparing → ready), toggle restaurant open/close |
-| **Rider** | Create rider profile, toggle availability, accept orders, update delivery status, view delivery history |
-| **Admin** | Dashboard stats, manage all users (view, block/unblock), manage restaurants (verify, delete), manage riders (verify, delete), manage orders (view, cancel) |
+| Role                     | Capabilities                                                                                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unauthenticated**      | Login page only                                                                                                                                            |
+| **Unassigned (no role)** | Select role page only                                                                                                                                      |
+| **Customer**             | Browse restaurants, search food, manage cart, place orders, track delivery, manage addresses                                                               |
+| **Seller**               | Create/manage restaurant, add/edit/delete menu items, process orders (accept → preparing → ready), toggle restaurant open/close                            |
+| **Rider**                | Create rider profile, toggle availability, accept orders, update delivery status, view delivery history                                                    |
+| **Admin**                | Dashboard stats, manage all users (view, block/unblock), manage restaurants (verify, delete), manage riders (verify, delete), manage orders (view, cancel) |
 
 ### Blocking/Unblocking Logic
 
@@ -1539,15 +1751,15 @@ If distance > 100 meters, delivery confirmation is **rejected**.
 
 ### Access Restrictions by Middleware Chain
 
-| Route Pattern | Middleware Chain |
-|---|---|
-| `POST /restaurants` | `isAuthenticated → isSeller → checkBlocked` |
-| `PATCH /orders/:id/status` | `isAuthenticated → isSeller → checkBlocked` |
-| `POST /orders` | `isAuthenticated → checkBlocked` |
-| `POST /riders` | `isAuthenticated` (role checked in controller) |
-| `PATCH /riders/me/availability` | `isAuthenticated → checkBlocked` |
-| Admin routes | `isAdminAuthenticated` |
-| Internal routes | `x-internal-key` header check |
+| Route Pattern                   | Middleware Chain                               |
+| ------------------------------- | ---------------------------------------------- |
+| `POST /restaurants`             | `isAuthenticated → isSeller → checkBlocked`    |
+| `PATCH /orders/:id/status`      | `isAuthenticated → isSeller → checkBlocked`    |
+| `POST /orders`                  | `isAuthenticated → checkBlocked`               |
+| `POST /riders`                  | `isAuthenticated` (role checked in controller) |
+| `PATCH /riders/me/availability` | `isAuthenticated → checkBlocked`               |
+| Admin routes                    | `isAdminAuthenticated`                         |
+| Internal routes                 | `x-internal-key` header check                  |
 
 ---
 
@@ -1607,17 +1819,17 @@ All API responses follow a **consistent JSON structure**:
 
 ### HTTP Status Code Usage
 
-| Code | Usage |
-|---|---|
-| `200` | Successful operation |
-| `201` | Resource created |
-| `400` | Bad request / Validation error |
-| `401` | Unauthorized (missing/invalid token) |
+| Code  | Usage                                                   |
+| ----- | ------------------------------------------------------- |
+| `200` | Successful operation                                    |
+| `201` | Resource created                                        |
+| `400` | Bad request / Validation error                          |
+| `401` | Unauthorized (missing/invalid token)                    |
 | `403` | Forbidden (wrong role / blocked / invalid internal key) |
-| `404` | Resource not found |
-| `409` | Conflict (duplicate resource) |
-| `500` | Internal server error |
-| `503` | Service unavailable (DB not connected) |
+| `404` | Resource not found                                      |
+| `409` | Conflict (duplicate resource)                           |
+| `500` | Internal server error                                   |
+| `503` | Service unavailable (DB not connected)                  |
 
 ---
 
@@ -1627,13 +1839,45 @@ All API responses follow a **consistent JSON structure**:
 
 Each service is a standalone Node.js application. Recommended deployment targets:
 
-| Platform | Best For |
-|---|---|
-| **Railway / Render** | Quick deployment with free tiers |
-| **AWS EC2 / DigitalOcean** | Full control with Docker |
-| **Heroku** | Easy deployment with Git Push |
+| Platform                   | Best For                                    |
+| -------------------------- | ------------------------------------------- |
+| **Docker + VPS**           | Production-grade with containerization ✅     |
+| **Railway / Render**       | Quick deployment with free tiers            |
+| **AWS EC2 / DigitalOcean** | Full control with Docker                    |
+| **Heroku**                 | Easy deployment with Git Push               |
 
-#### Steps:
+#### Option 1: Deploy with Docker (Recommended)
+
+```bash
+# Pull pre-built images from Docker Hub
+docker pull samratmallick/abarakhabo-admin:latest
+docker pull samratmallick/abarakhabo-auth:latest
+docker pull samratmallick/abarakhabo-realtime:latest
+docker pull samratmallick/abarakhabo-restaurant:latest
+docker pull samratmallick/abarakhabo-rider:latest
+docker pull samratmallick/abarakhabo-utilities:latest
+
+# Run each service with its env file
+docker run -d --name auth -p 8000:8000 --env-file ./services/auth/.env \
+  samratmallick/abarakhabo-auth:latest
+
+docker run -d --name restaurant -p 9000:9000 --env-file ./services/restaurant/.env \
+  samratmallick/abarakhabo-restaurant:latest
+
+docker run -d --name rider -p 7000:7000 --env-file ./services/rider/.env \
+  samratmallick/abarakhabo-rider:latest
+
+docker run -d --name admin -p 6001:6001 --env-file ./services/admin/.env \
+  samratmallick/abarakhabo-admin:latest
+
+docker run -d --name utilities -p 8888:8888 --env-file ./services/utilities/.env \
+  samratmallick/abarakhabo-utilities:latest
+
+docker run -d --name realtime -p 9999:9999 --env-file ./services/realtime/.env \
+  samratmallick/abarakhabo-realtime:latest
+```
+
+#### Option 2: Deploy Without Docker
 
 1. **Build TypeScript:**
    ```bash
@@ -1655,6 +1899,7 @@ Each service is a standalone Node.js application. Recommended deployment targets
 - [ ] Use TLS/HTTPS for all services
 - [ ] Update `CLIENT_URL` in Utilities service for Stripe redirects
 - [ ] Update all `VITE_API_URL_*` variables in the frontend `.env`
+- [ ] Set up `DOCKERHUB_TOKEN` secret in GitHub repo for CI/CD
 
 ### Frontend Deployment
 
@@ -1665,12 +1910,12 @@ npm run build
 
 This generates a `dist/` directory. Deploy it to:
 
-| Platform | Command / Method |
-|---|---|
-| **Vercel** | `vercel --prod` (auto-detects Vite) |
-| **Netlify** | Drag & drop `dist/` or Git integration |
-| **AWS S3 + CloudFront** | Upload `dist/` to S3 bucket |
-| **GitHub Pages** | Use `gh-pages` package |
+| Platform                | Command / Method                       |
+| ----------------------- | -------------------------------------- |
+| **Vercel**              | `vercel --prod` (auto-detects Vite)    |
+| **Netlify**             | Drag & drop `dist/` or Git integration |
+| **AWS S3 + CloudFront** | Upload `dist/` to S3 bucket            |
+| **GitHub Pages**        | Use `gh-pages` package                 |
 
 > ⚠️ For SPA routing, configure your hosting to redirect all routes to `index.html`.
 
@@ -1686,40 +1931,41 @@ Use a managed service:
 
 ### Feature Enhancements
 
-| Feature | Description |
-|---|---|
-| 📱 Push Notifications | Firebase Cloud Messaging for order updates |
-| 💬 In-App Chat | Customer ↔ Rider real-time messaging |
-| ⭐ Ratings & Reviews | Post-delivery restaurant/rider ratings |
-| 🏷️ Promo Codes / Coupons | Discount system with validation |
-| 🔍 Advanced Search | Filter by cuisine, price range, rating, dietary preferences |
-| 📊 Seller Analytics | Revenue charts, popular items, order trends |
-| 🌐 Full i18n | Complete multilingual support (Bengali, Hindi, English) |
-| 📋 Order History Export | PDF/CSV export for customers and sellers |
-| 🔔 Email Notifications | Transactional emails for order confirmations |
-| 🛒 Multi-Restaurant Cart | Allow items from multiple restaurants in one order |
+| Feature                 | Description                                                 |
+| ----------------------- | ----------------------------------------------------------- |
+| 📱 Push Notifications    | Firebase Cloud Messaging for order updates                  |
+| 💬 In-App Chat           | Customer ↔ Rider real-time messaging                        |
+| ⭐ Ratings & Reviews     | Post-delivery restaurant/rider ratings                      |
+| 🏷️ Promo Codes / Coupons | Discount system with validation                             |
+| 🔍 Advanced Search       | Filter by cuisine, price range, rating, dietary preferences |
+| 📊 Seller Analytics      | Revenue charts, popular items, order trends                 |
+| 🌐 Full i18n             | Complete multilingual support (Bengali, Hindi, English)     |
+| 📋 Order History Export  | PDF/CSV export for customers and sellers                    |
+| 🔔 Email Notifications   | Transactional emails for order confirmations                |
+| 🛒 Multi-Restaurant Cart | Allow items from multiple restaurants in one order          |
 
 ### Performance Improvements
 
-| Area | Improvement |
-|---|---|
-| 🗄️ Caching | Redis layer for frequently accessed data (restaurant lists, menus) |
-| 📖 Connection Pooling | Optimize MongoDB connections per service |
-| 📸 Image Optimization | WebP conversion + CDN caching for Cloudinary images |
-| 🔄 Database Indexing | Additional compound indexes for complex queries |
-| 📦 API Response Compression | gzip/Brotli compression middleware |
+| Area                       | Improvement                                                        |
+| -------------------------- | ------------------------------------------------------------------ |
+| 🗄️ Caching                  | Redis layer for frequently accessed data (restaurant lists, menus) |
+| 📖 Connection Pooling       | Optimize MongoDB connections per service                           |
+| 📸 Image Optimization       | WebP conversion + CDN caching for Cloudinary images                |
+| 🔄 Database Indexing        | Additional compound indexes for complex queries                    |
+| 📦 API Response Compression | gzip/Brotli compression middleware                                 |
 
 ### Scalability Ideas
 
-| Area | Improvement |
-|---|---|
-| 🐳 Docker Compose | Containerize all services for easy deployment |
-| ☸️ Kubernetes | Orchestrate microservices at scale |
-| 🔀 API Gateway | Nginx/Kong as a single entry point with rate limiting |
-| 📊 Monitoring | Prometheus + Grafana for service health monitoring |
-| 📝 Centralized Logging | ELK stack or Datadog for log aggregation |
-| 🧪 Testing | Unit tests (Jest), integration tests, E2E tests (Playwright) |
-| 📤 CI/CD | GitHub Actions for automated testing and deployment |
+| Area                  | Status | Improvement                                                  |
+| --------------------- | ------ | ------------------------------------------------------------ |
+| 🐳 Docker              | ✅ Done | All services containerized with multi-stage builds           |
+| 📤 CI/CD               | ✅ Done | GitHub Actions for automated Docker builds & pushes          |
+| 🐳 Docker Compose      | 🔜     | Unified multi-service orchestration with a single command    |
+| ☸️ Kubernetes          | 🔜     | Orchestrate microservices at scale                           |
+| 🔀 API Gateway         | 🔜     | Nginx/Kong as a single entry point with rate limiting        |
+| 📊 Monitoring          | 🔜     | Prometheus + Grafana for service health monitoring           |
+| 📝 Centralized Logging | 🔜     | ELK stack or Datadog for log aggregation                     |
+| 🧪 Testing             | 🔜     | Unit tests (Jest), integration tests, E2E tests (Playwright) |
 
 ---
 
@@ -1745,13 +1991,13 @@ We welcome contributions! Here's how to get started:
 
 ### Branch Naming Conventions
 
-| Type | Pattern | Example |
-|---|---|---|
-| Feature | `feature/<description>` | `feature/push-notifications` |
-| Bug Fix | `fix/<description>` | `fix/cart-quantity-bug` |
-| Hotfix | `hotfix/<description>` | `hotfix/payment-crash` |
-| Documentation | `docs/<description>` | `docs/api-documentation` |
-| Refactor | `refactor/<description>` | `refactor/order-controller` |
+| Type          | Pattern                  | Example                      |
+| ------------- | ------------------------ | ---------------------------- |
+| Feature       | `feature/<description>`  | `feature/push-notifications` |
+| Bug Fix       | `fix/<description>`      | `fix/cart-quantity-bug`      |
+| Hotfix        | `hotfix/<description>`   | `hotfix/payment-crash`       |
+| Documentation | `docs/<description>`     | `docs/api-documentation`     |
+| Refactor      | `refactor/<description>` | `refactor/order-controller`  |
 
 ### Commit Message Format
 
