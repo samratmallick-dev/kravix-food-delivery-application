@@ -11,13 +11,5 @@ dist/
 .vscode/
 .idea/
 
-# Logs
-*.log
-npm-debug.log*
-
-# TypeScript
-*.tsbuildinfo
-
-
 google/
 */google.ts
