@@ -27,13 +27,14 @@ jobs:
       restaurant: ${{ steps.changes.outputs.restaurant }}
       rider: ${{ steps.changes.outputs.rider }}
       utilities: ${{ steps.changes.outputs.utilities }}
+      workflow: ${{ steps.changes.outputs.workflow }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Detect changes per service
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@v3
         id: changes
         with:
           filters: |
@@ -49,13 +50,15 @@ jobs:
               - 'services/rider/**'
             utilities:
               - 'services/utilities/**'
+            workflow:
+              - '.github/workflows/**'
 
 
   # ─── Admin Service ───────────────────────────────────────────────
   build-admin:
     name: Build & Push — Admin
     needs: detect-changes
-    if: needs.detect-changes.outputs.admin == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.detect-changes.outputs.admin == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -80,7 +83,7 @@ jobs:
   build-auth:
     name: Build & Push — Auth
     needs: detect-changes
-    if: needs.detect-changes.outputs.auth == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.detect-changes.outputs.auth == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -105,7 +108,7 @@ jobs:
   build-realtime:
     name: Build & Push — Realtime
     needs: detect-changes
-    if: needs.detect-changes.outputs.realtime == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.detect-changes.outputs.realtime == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -130,7 +133,7 @@ jobs:
   build-restaurant:
     name: Build & Push — Restaurant
     needs: detect-changes
-    if: needs.detect-changes.outputs.restaurant == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.detect-changes.outputs.restaurant == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -155,7 +158,7 @@ jobs:
   build-rider:
     name: Build & Push — Rider
     needs: detect-changes
-    if: needs.detect-changes.outputs.rider == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.detect-changes.outputs.rider == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -180,7 +183,7 @@ jobs:
   build-utilities:
     name: Build & Push — Utilities
     needs: detect-changes
-    if: needs.detect-changes.outputs.utilities == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.detect-changes.outputs.utilities == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
