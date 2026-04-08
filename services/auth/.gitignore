@@ -6,10 +6,27 @@ dist/
 
 # Environment variables
 .env
+.env.local
+.env.*.local
 
 # Editor
 .vscode/
 .idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Docker
+Dockerfile
+.dockerignore
 
 google/
 */google.ts
