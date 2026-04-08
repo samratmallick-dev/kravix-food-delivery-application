@@ -2060,5 +2060,5 @@ SOFTWARE.
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/samratmallick-dev">Samrat Mallick</a>
+  Made with ❤️ by <a href="https://github.com/samratmallick-dev">Abar Khabo Team - (Samrat Mallick)</a>
 </p>
