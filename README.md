@@ -2036,7 +2036,7 @@ This project is licensed under the **MIT License**.
 ```
 MIT License
 
-Copyright (c) 2026 Samrat Mallick
+Copyright (c) 2026 Abar Khabo Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -2060,5 +2060,5 @@ SOFTWARE.
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/samratmallick-dev">Abar Khabo Team - (Samrat Mallick)</a>
+  Made with ❤️ by <a href="https://github.com/samratmallick-dev">Abar Khabo Team</a>
 </p>
