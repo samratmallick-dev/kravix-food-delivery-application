@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
   detect-changes:
@@ -69,10 +69,10 @@ jobs:
         run: docker build -t abarkhabo-admin ./services/admin
 
       - name: Tag image
-        run: docker tag abarkhabo-admin ${{ env.DOCKER_USERNAME }}/abarkhabo-admin:latest
+        run: docker tag abarkhabo-admin ${{ env.DOCKER_USERNAME }}/abarakhabo-admin:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKER_USERNAME }}/abarkhabo-admin:latest
+        run: docker push ${{ env.DOCKER_USERNAME }}/abarakhabo-admin:latest
 
   # ─── Auth Service ────────────────────────────────────────────────
   build-auth:
@@ -94,10 +94,10 @@ jobs:
         run: docker build -t abarkhabo-auth ./services/auth
 
       - name: Tag image
-        run: docker tag abarkhabo-auth ${{ env.DOCKER_USERNAME }}/abarkhabo-auth:latest
+        run: docker tag abarkhabo-auth ${{ env.DOCKER_USERNAME }}/abarakhabo-auth:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKER_USERNAME }}/abarkhabo-auth:latest
+        run: docker push ${{ env.DOCKER_USERNAME }}/abarakhabo-auth:latest
 
   # ─── Realtime Service ───────────────────────────────────────────
   build-realtime:
@@ -119,10 +119,10 @@ jobs:
         run: docker build -t abarkhabo-realtime ./services/realtime
 
       - name: Tag image
-        run: docker tag abarkhabo-realtime ${{ env.DOCKER_USERNAME }}/abarkhabo-realtime:latest
+        run: docker tag abarkhabo-realtime ${{ env.DOCKER_USERNAME }}/abarakhabo-realtime:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKER_USERNAME }}/abarkhabo-realtime:latest
+        run: docker push ${{ env.DOCKER_USERNAME }}/abarakhabo-realtime:latest
 
   # ─── Restaurant Service ─────────────────────────────────────────
   build-restaurant:
@@ -144,10 +144,10 @@ jobs:
         run: docker build -t abarkhabo-restaurant ./services/restaurant
 
       - name: Tag image
-        run: docker tag abarkhabo-restaurant ${{ env.DOCKER_USERNAME }}/abarkhabo-restaurant:latest
+        run: docker tag abarkhabo-restaurant ${{ env.DOCKER_USERNAME }}/abarakhabo-restaurant:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKER_USERNAME }}/abarkhabo-restaurant:latest
+        run: docker push ${{ env.DOCKER_USERNAME }}/abarakhabo-restaurant:latest
 
   # ─── Rider Service ──────────────────────────────────────────────
   build-rider:
@@ -169,10 +169,10 @@ jobs:
         run: docker build -t abarkhabo-rider ./services/rider
 
       - name: Tag image
-        run: docker tag abarkhabo-rider ${{ env.DOCKER_USERNAME }}/abarkhabo-rider:latest
+        run: docker tag abarkhabo-rider ${{ env.DOCKER_USERNAME }}/abarakhabo-rider:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKER_USERNAME }}/abarkhabo-rider:latest
+        run: docker push ${{ env.DOCKER_USERNAME }}/abarakhabo-rider:latest
 
   # ─── Utilities Service ──────────────────────────────────────────
   build-utilities:
@@ -194,8 +194,8 @@ jobs:
         run: docker build -t abarkhabo-utilities ./services/utilities
 
       - name: Tag image
-        run: docker tag abarkhabo-utilities ${{ env.DOCKER_USERNAME }}/abarkhabo-utilities:latest
+        run: docker tag abarkhabo-utilities ${{ env.DOCKER_USERNAME }}/abarakhabo-utilities:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKER_USERNAME }}/abarkhabo-utilities:latest
+        run: docker push ${{ env.DOCKER_USERNAME }}/abarakhabo-utilities:latest
 
