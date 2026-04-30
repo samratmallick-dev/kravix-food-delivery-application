@@ -9,6 +9,7 @@ import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { normalizeSearchQuery } from "../utils/searchNormalizer.js";
 
 interface TokenPayload {
       _id: string;
@@ -315,6 +316,7 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
       let restaurants: any[] = [];
 
       if (search && typeof search === "string") {
+            const normalizedSearch = await normalizeSearchQuery(search);
             const byName = await Restaurant.aggregate([
                   {
                         ...geoNearStage, $geoNear: {
@@ -322,7 +324,7 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
                               query: {
                                     isVerified: true,
                                     name: {
-                                          $regex: search, $options: "i"
+                                          $regex: normalizedSearch, $options: "i"
                                     }
                               }
                         }
@@ -330,7 +332,7 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
                   ...sortAndProject
             ]);
             const matchingItems = await MenuItem.find({
-                  name: { $regex: search, $options: "i" },
+                  name: { $regex: normalizedSearch, $options: "i" },
                   isAvailable: true
             }).distinct("restaurantId");
 
