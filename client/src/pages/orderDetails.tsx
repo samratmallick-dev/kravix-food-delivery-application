@@ -134,7 +134,7 @@ const OrderDetails = () => {
                         <span className="font-semibold">{STATUS_LABEL[order.status] ?? order.status}</span>
                   </div>
 
-                  <CustomerTrackingMap order={order} />
+                  {order.status !== "delivered" && <CustomerTrackingMap order={order} />}
 
                   {order.riderName && (
                         <div className="border border-gray-100 rounded-2xl p-4 bg-white flex items-center justify-between gap-2">
