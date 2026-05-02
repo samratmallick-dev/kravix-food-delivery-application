@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { Trash2, Eye, X } from "lucide-react";
+import { Trash2, Eye, X, Pencil } from "lucide-react";
 import { useAdminApi } from "../hooks/useAdminApi";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import AdminTable from "../components/AdminTable";
 import VerifyToggle from "../components/VerifyToggle";
+import EditModal, { type FieldConfig } from "../components/EditModal";
 import toast from "react-hot-toast";
 
 interface Restaurant { _id: string; name: string; ownerId: string; phone: number; isVerified: boolean; isOpen: boolean; image: string; description: string; createdAt: string; }
@@ -22,6 +23,8 @@ const AdminRestaurants = () => {
       const [selected, setSelected] = useState<{ restaurant: Restaurant; menuItems: MenuItem[] } | null>(null);
       const [confirmDelete, setConfirmDelete] = useState<Restaurant | null>(null);
       const [deleting, setDeleting] = useState<string | null>(null);
+      const [editRestaurant, setEditRestaurant] = useState<Restaurant | null>(null);
+      const [editMenuItem, setEditMenuItem] = useState<MenuItem | null>(null);
 
       const fetchRestaurants = useCallback(async () => {
             setLoading(true);
@@ -88,6 +91,48 @@ const AdminRestaurants = () => {
             } catch { toast.error("Failed to load restaurant details"); }
       };
 
+      const RESTAURANT_EDIT_FIELDS: FieldConfig[] = [
+            { key: "name", label: "Name" },
+            { key: "description", label: "Description", type: "textarea" },
+            { key: "phone", label: "Phone", type: "number", min: 0 },
+      ];
+
+      const MENU_ITEM_EDIT_FIELDS: FieldConfig[] = [
+            { key: "name", label: "Name" },
+            { key: "description", label: "Description", type: "textarea" },
+            { key: "price", label: "Price (₹)", type: "number", min: 0 },
+            { key: "isAvailable", label: "Available", type: "toggle" },
+      ];
+
+      const handleEditRestaurant = async (values: Record<string, unknown>) => {
+            if (!editRestaurant) return;
+            try {
+                  const { data } = await api.patch(`/restaurants/${editRestaurant._id}`, values);
+                  const updated: Restaurant = { ...editRestaurant, ...data.data };
+                  setRestaurants((prev) => prev.map((r) => r._id === editRestaurant._id ? updated : r));
+                  setSelected((prev) => prev ? { ...prev, restaurant: updated } : prev);
+                  toast.success("Restaurant updated successfully");
+                  setEditRestaurant(null);
+            } catch (err: any) {
+                  toast.error(err?.response?.data?.message ?? "Failed to update restaurant");
+                  throw err;
+            }
+      };
+
+      const handleEditMenuItem = async (values: Record<string, unknown>) => {
+            if (!editMenuItem) return;
+            try {
+                  const { data } = await api.patch(`/menu-items/${editMenuItem._id}`, values);
+                  const updated: MenuItem = { ...editMenuItem, ...data.data };
+                  setSelected((prev) => prev ? { ...prev, menuItems: prev.menuItems.map((m) => m._id === editMenuItem._id ? updated : m) } : prev);
+                  toast.success("Menu item updated successfully");
+                  setEditMenuItem(null);
+            } catch (err: any) {
+                  toast.error(err?.response?.data?.message ?? "Failed to update menu item");
+                  throw err;
+            }
+      };
+
       const columns = [
             {
                   header: "Restaurant",
@@ -119,6 +164,7 @@ const AdminRestaurants = () => {
                   render: (r: Restaurant) => (
                         <div className="flex items-center gap-2">
                               <button onClick={() => handleView(r)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition cursor-pointer"><Eye size={15} /></button>
+                              <button onClick={() => setEditRestaurant(r)} className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition cursor-pointer"><Pencil size={15} /></button>
                               <button onClick={() => setConfirmDelete(r)} disabled={deleting === r._id} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition cursor-pointer disabled:opacity-50"><Trash2 size={15} /></button>
                         </div>
                   ),
@@ -169,9 +215,12 @@ const AdminRestaurants = () => {
                                                                         <p className="text-sm font-medium text-gray-700">{item.name}</p>
                                                                         <p className="text-xs text-gray-400">{item.description}</p>
                                                                   </div>
-                                                                  <div className="text-right shrink-0 ml-4">
-                                                                        <p className="text-sm font-semibold text-gray-700">₹{item.price}</p>
-                                                                        <p className={`text-xs ${item.isAvailable ? "text-green-500" : "text-red-400"}`}>{item.isAvailable ? "Available" : "Unavailable"}</p>
+                                                                  <div className="flex items-center gap-2 shrink-0 ml-4">
+                                                                        <div className="text-right">
+                                                                              <p className="text-sm font-semibold text-gray-700">₹{item.price}</p>
+                                                                              <p className={`text-xs ${item.isAvailable ? "text-green-500" : "text-red-400"}`}>{item.isAvailable ? "Available" : "Unavailable"}</p>
+                                                                        </div>
+                                                                        <button onClick={() => setEditMenuItem(item)} className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition cursor-pointer"><Pencil size={13} /></button>
                                                                   </div>
                                                             </div>
                                                       ))}
@@ -193,6 +242,26 @@ const AdminRestaurants = () => {
                                     </div>
                               </div>
                         </div>
+                  )}
+
+                  {editRestaurant && (
+                        <EditModal
+                              title={`Edit Restaurant — ${editRestaurant.name}`}
+                              fields={RESTAURANT_EDIT_FIELDS}
+                              initialValues={editRestaurant as unknown as Record<string, unknown>}
+                              onSave={handleEditRestaurant}
+                              onClose={() => setEditRestaurant(null)}
+                        />
+                  )}
+
+                  {editMenuItem && (
+                        <EditModal
+                              title={`Edit Item — ${editMenuItem.name}`}
+                              fields={MENU_ITEM_EDIT_FIELDS}
+                              initialValues={editMenuItem as unknown as Record<string, unknown>}
+                              onSave={handleEditMenuItem}
+                              onClose={() => setEditMenuItem(null)}
+                        />
                   )}
             </div>
       );

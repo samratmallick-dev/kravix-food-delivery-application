@@ -4,6 +4,7 @@ import {
       addMenuItems,
       getAllMenuItems,
       deleteMenuItem,
+      updateMenuItem,
       toggleMenuItemAvailability,
       searchByFood
 } from "../controllers/menuItems.controllers.js";
@@ -15,6 +16,7 @@ router.route("/").post(isAuthenticated, isSeller, upload, addMenuItems);
 router.route("/search").get(isAuthenticated, searchByFood);
 router.route("/:restaurantId").get(isAuthenticated, getAllMenuItems);
 router.route("/:itemId").delete(isAuthenticated, isSeller, deleteMenuItem);
+router.route("/:itemId").patch(isAuthenticated, isSeller, updateMenuItem);
 router.route("/:itemId/availability").patch(isAuthenticated, isSeller, toggleMenuItemAvailability);
 
 

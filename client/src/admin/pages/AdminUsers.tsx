@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { Ban, Eye, X, ShieldCheck } from "lucide-react";
+import { Ban, Eye, X, ShieldCheck, Pencil } from "lucide-react";
 import { useAdminApi } from "../hooks/useAdminApi";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import AdminTable from "../components/AdminTable";
 import VerifyToggle from "../components/VerifyToggle";
+import EditModal, { type FieldConfig } from "../components/EditModal";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -26,6 +27,7 @@ const AdminUsers = () => {
       const [confirmBlock, setConfirmBlock] = useState<User | null>(null);
       const [verifyLoading, setVerifyLoading] = useState<string | null>(null);
       const [riderProfile, setRiderProfile] = useState<RiderProfile | null>(null);
+      const [editTarget, setEditTarget] = useState<User | null>(null);
       const navigate = useNavigate();
 
       const handleSelectUser = async (u: User) => {
@@ -49,6 +51,27 @@ const AdminUsers = () => {
                   setRiderProfile((prev) => prev ? { ...prev, isVerified: !prev.isVerified } : prev);
             } catch { toast.error("Failed to update rider verification"); }
             finally { setVerifyLoading(null); }
+      };
+
+      const USER_EDIT_FIELDS: FieldConfig[] = [
+            { key: "name", label: "Name" },
+            { key: "email", label: "Email", type: "email" },
+            { key: "role", label: "Role", type: "select", options: ["customer", "seller", "rider"] },
+      ];
+
+      const handleEditUser = async (values: Record<string, unknown>) => {
+            if (!editTarget) return;
+            try {
+                  const { data } = await api.patch(`/users/${editTarget._id}`, values);
+                  const updated: User = { ...editTarget, ...data.data };
+                  setUsers((prev) => prev.map((u) => u._id === editTarget._id ? updated : u));
+                  setSelected((prev) => prev?._id === editTarget._id ? updated : prev);
+                  toast.success("User updated successfully");
+                  setEditTarget(null);
+            } catch (err: any) {
+                  toast.error(err?.response?.data?.message ?? "Failed to update user");
+                  throw err;
+            }
       };
 
       const fetchUsers = useCallback(async () => {
@@ -125,6 +148,9 @@ const AdminUsers = () => {
                         <div className="flex items-center gap-2">
                               <button onClick={() => handleSelectUser(u)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition cursor-pointer">
                                     <Eye size={15} />
+                              </button>
+                              <button onClick={() => setEditTarget(u)} className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition cursor-pointer">
+                                    <Pencil size={15} />
                               </button>
                               <button onClick={() => setConfirmBlock(u)} disabled={blocking === u._id} className={`p-1.5 rounded-lg transition cursor-pointer disabled:opacity-50 ${
                                     u.isBlocked ? "hover:bg-green-50 text-orange-400 hover:text-green-600" : "hover:bg-orange-50 text-gray-400 hover:text-orange-600"
@@ -241,6 +267,16 @@ const AdminUsers = () => {
                                     </div>
                               </div>
                         </div>
+                  )}
+
+                  {editTarget && (
+                        <EditModal
+                              title={`Edit User — ${editTarget.name}`}
+                              fields={USER_EDIT_FIELDS}
+                              initialValues={editTarget as unknown as Record<string, unknown>}
+                              onSave={handleEditUser}
+                              onClose={() => setEditTarget(null)}
+                        />
                   )}
             </div>
       );
