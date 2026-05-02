@@ -111,7 +111,7 @@ export default function SalesAnalytics({ restaurantId }: { restaurantId: string 
                                           <XAxis dataKey="date" tickFormatter={formatDate} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                                           <YAxis tickFormatter={(v) => `₹${v}`} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={55} />
                                           <Tooltip
-                                                formatter={(v: number) => [formatCurrency(v), "Revenue"]}
+                                                formatter={(v) => [formatCurrency(v as number), "Revenue"]}
                                                 labelFormatter={(l) => formatDate(l)}
                                                 contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
                                           />
@@ -133,7 +133,7 @@ export default function SalesAnalytics({ restaurantId }: { restaurantId: string 
                                           <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                                           <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={100} />
                                           <Tooltip
-                                                formatter={(v: number) => [v, "Qty Sold"]}
+                                                formatter={(v) => [v as number, "Qty Sold"]}
                                                 contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
                                           />
                                           <Bar dataKey="totalQuantity" radius={[0, 6, 6, 0]}>

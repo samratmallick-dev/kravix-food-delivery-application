@@ -43,7 +43,7 @@ const OrdersBarChart = ({
           width={120}
         />
         <Tooltip
-          formatter={(v: number) => [valueFormatter(v), valueLabel]}
+          formatter={(v) => [valueFormatter(v as number), valueLabel]}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e7eb" }}
         />
         <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={20}>
