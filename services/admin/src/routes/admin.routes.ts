@@ -7,12 +7,17 @@ import { getAllRestaurants, getRestaurantById, verifyRestaurant, deleteRestauran
 import { getAllRiders, getRiderById, verifyRider, deleteRider } from "../controllers/rider.controllers.js";
 import { getAllOrders, getOrderById, cancelOrder } from "../controllers/order.controllers.js";
 import { getDashboard } from "../controllers/dashboard.controllers.js";
+import { getAnalytics } from "../controllers/analytics.controllers.js";
+import { getFinances, exportFinancesCSV } from "../controllers/finances.controllers.js";
 
 const router = Router();
 
 router.post("/login", adminLogin);
 router.use(isAdminAuthenticated);
 router.get("/dashboard", getDashboard);
+router.get("/analytics", getAnalytics);
+router.get("/finances", getFinances);
+router.post("/finances/export", exportFinancesCSV);
 router.get("/users", getAllUsers);
 router.get("/users/:userId", getUserById);
 router.patch("/users/:userId/block", blockUser);

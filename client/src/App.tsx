@@ -22,11 +22,14 @@ import AppSkeleton from "./components/common/AppSkeleton";
 import { useAppData } from "./context/AppContext";
 import AdminLayout from "./admin/components/AdminLayout";
 import AdminLogin from "./admin/pages/AdminLogin";
-import AdminDashboard from "./admin/pages/AdminDashboard";
+import AdminOverview from "./admin/pages/AdminOverview";
+import AdminOrders from "./admin/pages/AdminOrders";
 import AdminUsers from "./admin/pages/AdminUsers";
 import AdminRestaurants from "./admin/pages/AdminRestaurants";
 import AdminRiders from "./admin/pages/AdminRiders";
-import AdminOrders from "./admin/pages/AdminOrders";
+import AdminFinances from "./admin/pages/AdminFinances";
+import AdminAnalytics from "./admin/pages/AdminAnalytics";
+import AdminSettings from "./admin/pages/AdminSettings";
 
 const App = () => {
       const { loading } = useAppData();
@@ -39,11 +42,14 @@ const App = () => {
                         <Route path="/admin/login" element={<AdminLogin />} />
                         <Route path="/admin" element={<AdminLayout />}>
                               <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                              <Route path="dashboard" element={<AdminDashboard />} />
+                              <Route path="dashboard" element={<AdminOverview />} />
+                              <Route path="orders" element={<AdminOrders />} />
                               <Route path="users" element={<AdminUsers />} />
                               <Route path="restaurants" element={<AdminRestaurants />} />
                               <Route path="riders" element={<AdminRiders />} />
-                              <Route path="orders" element={<AdminOrders />} />
+                              <Route path="finances" element={<AdminFinances />} />
+                              <Route path="analytics" element={<AdminAnalytics />} />
+                              <Route path="settings" element={<AdminSettings />} />
                         </Route>
 
                         <Route element={<PublicRoutes />}>

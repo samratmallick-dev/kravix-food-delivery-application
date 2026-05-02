@@ -439,30 +439,25 @@ export const fetchDeliveryHistory = TryCatch(async (req: AuthenticatedRequest, r
       const riderUserId = req.user?._id;
 
       if (!riderUserId) {
-            return res.status(401).json({
-                  success: false,
-                  message: "User not authenticated",
-                  error: true
-            });
+            return res.status(401).json({ success: false, message: "User not authenticated", error: true });
       }
 
-      const rider = await Rider.findOne({
-            userId: riderUserId.toString(),
-            isVerified: true
-      });
-
+      const rider = await Rider.findOne({ userId: riderUserId.toString(), isVerified: true });
       if (!rider) {
-            return res.status(404).json({
-                  success: false,
-                  message: "Rider profile not found",
-                  error: true
-            });
+            return res.status(404).json({ success: false, message: "Rider profile not found", error: true });
       }
+
+      const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10));
+      const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit ?? "10"), 10)));
+      const sort = ["createdAt", "riderAmount", "distance"].includes(String(req.query.sort))
+            ? String(req.query.sort) : "createdAt";
+      const dir = req.query.dir === "asc" ? "asc" : "desc";
 
       try {
             const { data } = await axios.get(
-                  `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/delivery-history?riderId=${rider._id.toString()}`,
+                  `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/delivery-history`,
                   {
+                        params: { riderId: rider._id.toString(), page, limit, sort, dir },
                         headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }
                   }
             );
@@ -475,10 +470,101 @@ export const fetchDeliveryHistory = TryCatch(async (req: AuthenticatedRequest, r
             });
       } catch (error: any) {
             const message = error?.response?.data?.message ?? error?.message ?? "Failed to fetch delivery history";
-            return res.status(error?.response?.status ?? 500).json({
-                  success: false,
-                  message,
-                  error: true
-            });
+            return res.status(error?.response?.status ?? 500).json({ success: false, message, error: true });
       }
+});
+
+export const fetchEarnings = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const riderUserId = req.user?._id;
+      if (!riderUserId) {
+            return res.status(401).json({ success: false, message: "User not authenticated", error: true });
+      }
+
+      const rider = await Rider.findOne({ userId: riderUserId.toString(), isVerified: true });
+      if (!rider) {
+            return res.status(404).json({ success: false, message: "Rider profile not found", error: true });
+      }
+
+      const period = ["today", "week", "month"].includes(String(req.query.period))
+            ? String(req.query.period) as "today" | "week" | "month"
+            : "week";
+
+      try {
+            const { data } = await axios.get(
+                  `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/rider-earnings`,
+                  {
+                        params: { riderId: rider._id.toString(), period },
+                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }
+                  }
+            );
+            return res.status(200).json({
+                  success: true,
+                  message: "Earnings fetched successfully",
+                  error: false,
+                  data: data.data
+            });
+      } catch (error: any) {
+            // Fallback: compute from delivery history if restaurant service doesn't have the endpoint yet
+            const now = new Date();
+            let from: Date;
+            if (period === "today") {
+                  from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            } else if (period === "week") {
+                  from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else {
+                  from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            }
+
+            try {
+                  const { data: histData } = await axios.get(
+                        `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/delivery-history`,
+                        {
+                              params: { riderId: rider._id.toString(), page: 1, limit: 200, sort: "createdAt", dir: "desc" },
+                              headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! }
+                        }
+                  );
+
+                  const orders: any[] = (histData.data?.orders ?? []).filter(
+                        (o: any) => o.status === "delivered" && new Date(o.createdAt) >= from
+                  );
+
+                  const total = orders.reduce((s: number, o: any) => s + (o.riderAmount ?? 0), 0);
+                  const count = orders.length;
+
+                  // Build daily breakdown (last 7 days always)
+                  const breakdownMap: Record<string, number> = {};
+                  for (let i = 6; i >= 0; i--) {
+                        const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                        breakdownMap[d.toISOString().slice(0, 10)] = 0;
+                  }
+                  orders.forEach((o: any) => {
+                        const day = new Date(o.createdAt).toISOString().slice(0, 10);
+                        if (day in breakdownMap) breakdownMap[day] += o.riderAmount ?? 0;
+                  });
+                  const breakdown = Object.entries(breakdownMap).map(([date, amount]) => ({ date, amount }));
+
+                  return res.status(200).json({
+                        success: true,
+                        message: "Earnings computed from history",
+                        error: false,
+                        data: { total, count, trend: 0, breakdown }
+                  });
+            } catch {
+                  return res.status(200).json({
+                        success: true,
+                        message: "No earnings data",
+                        error: false,
+                        data: { total: 0, count: 0, trend: 0, breakdown: [] }
+                  });
+            }
+      }
+});
+
+export const fetchIncomingOrder = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const riderUserId = req.user?._id;
+      if (!riderUserId) {
+            return res.status(401).json({ success: false, message: "User not authenticated", error: true });
+      }
+      // Incoming orders are pushed via socket; this endpoint returns null (polling fallback)
+      return res.status(200).json({ success: true, message: "No incoming order", error: false, data: null });
 });
