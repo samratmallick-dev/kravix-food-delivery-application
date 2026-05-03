@@ -1,13 +1,15 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
 import type { IOrder } from "../types/types";
 import { useEffect, useCallback, useState, useRef } from "react";
 import axios from "axios";
 import { orderBaseUrl } from "../components/common/constant";
+import { useAppData } from "../context/AppContext";
+import toast from "react-hot-toast";
 import {
       MapPin, Phone, Store, CreditCard, Wallet,
       CheckCircle2, ChefHat, UtensilsCrossed, Bike, PackageCheck,
-      Clock, ClipboardList, KeyRound, Star
+      Clock, ClipboardList, KeyRound, Star, RotateCcw
 } from "lucide-react";
 import CustomerTrackingMap from "../components/customer/CustomerTrackingMap";
 import confetti from "canvas-confetti";
@@ -167,10 +169,13 @@ const OtpBanner = ({ otp }: { otp: string }) => (
 const OrderDetails = () => {
       const { id } = useParams();
       const { socket } = useSocket();
+      const { fetchCart } = useAppData();
+      const navigate = useNavigate();
 
       const [order, setOrder] = useState<IOrder | null>(null);
       const [loading, setLoading] = useState(true);
       const [deliveryOtp, setDeliveryOtp] = useState<string | null>(null);
+      const [isReordering, setIsReordering] = useState(false);
 
       const prevStatusRef = useRef<string | null>(null);
       const confettiFiredRef = useRef(false);
@@ -195,6 +200,25 @@ const OrderDetails = () => {
       }, [id]);
 
       useEffect(() => { fetchOrder(); }, [fetchOrder]);
+
+      const handleReorder = async () => {
+            if (!order) return;
+            setIsReordering(true);
+            try {
+                  const { data } = await axios.post(
+                        `${orderBaseUrl}/reorder/${order._id}`,
+                        {},
+                        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+                  );
+                  await fetchCart();
+                  toast.success(data.message);
+                  navigate("/cart");
+            } catch (err: any) {
+                  toast.error(err?.response?.data?.message ?? "Failed to reorder. Please try again.");
+            } finally {
+                  setIsReordering(false);
+            }
+      };
 
       useEffect(() => {
             if (!order) return;
@@ -372,6 +396,20 @@ const OrderDetails = () => {
                               </div>
                         </div>
                   </div>
+
+                  {order.status === "delivered" && (
+                        <button
+                              onClick={handleReorder}
+                              disabled={isReordering}
+                              className="group w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-semibold text-white bg-gradient-to-r from-primary to-red-600 shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+                        >
+                              {isReordering
+                                    ? <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                    : <RotateCcw size={18} className="group-hover:rotate-[-45deg] transition-transform duration-300" />
+                              }
+                              {isReordering ? "Adding to Cart..." : "Reorder"}
+                        </button>
+                  )}
 
             </div>
       );

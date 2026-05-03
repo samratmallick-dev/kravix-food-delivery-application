@@ -11,6 +11,7 @@ import {
       getOrderByIdInternal,
       getRestaurantSalesStats,
       getSingleOrder,
+      reorderItems,
       setOrderOtp,
       updateOrderStatus,
       updateOrderStatusByRider
@@ -21,6 +22,7 @@ const router = Router();
 router.route("/").post(isAuthenticated, checkBlocked, createOrder);
 router.route("/me").get(isAuthenticated, getMyOrders);
 router.route("/me/:orderId").get(isAuthenticated, getSingleOrder);
+router.route("/reorder/:orderId").post(isAuthenticated, checkBlocked, reorderItems);
 
 router.route("/internal/rider-assignment").patch(assignRiderToOrder);
 router.route("/internal/current").get(getCurrentOrdersForRiders);

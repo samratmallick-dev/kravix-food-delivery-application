@@ -3,7 +3,7 @@ import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { Address } from "../model/Address.js";
 import { Cart } from "../model/Cart.js";
-import { IMenuItem } from "../model/MenuItems.js";
+import { IMenuItem, MenuItem } from "../model/MenuItems.js";
 import { Restaurant } from "../model/Restaurant.js";
 import { IOrder, Order } from "../model/Order.js";
 import axios from "axios";
@@ -696,5 +696,70 @@ export const getDeliveredOrdersByRider = TryCatch(async (req, res) => {
             success: true,
             message: "Delivery history fetched successfully",
             data: { count: orders.length, orders }
+      });
+});
+
+export const reorderItems = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const user = req.user;
+      if (!user) {
+            return res.status(401).json({ success: false, message: "Unauthorized User", error: true });
+      }
+
+      const { orderId } = req.params;
+
+      const order = await Order.findById(orderId);
+      if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found", error: true });
+      }
+
+      if (order.userId !== user._id.toString()) {
+            return res.status(403).json({ success: false, message: "Access denied", error: true });
+      }
+
+      if (order.status !== "delivered") {
+            return res.status(400).json({ success: false, message: "Only delivered orders can be reordered", error: true });
+      }
+
+      const restaurant = await Restaurant.findById(order.restaurantId);
+      if (!restaurant) {
+            return res.status(404).json({ success: false, message: "Restaurant not found", error: true });
+      }
+
+      if (!restaurant.isOpen) {
+            return res.status(400).json({ success: false, message: "This restaurant is currently closed. Please try again later.", error: true });
+      }
+
+      const itemIds = order.items.map((i) => i.itemId);
+      const menuItems = await MenuItem.find({ _id: { $in: itemIds }, restaurantId: order.restaurantId, isAvailable: true });
+      const availableItemMap = new Map(menuItems.map((m) => [m._id.toString(), m]));
+
+      const unavailableNames = order.items
+            .filter((i) => !availableItemMap.has(i.itemId))
+            .map((i) => i.name);
+
+      const availableItems = order.items.filter((i) => availableItemMap.has(i.itemId));
+
+      if (availableItems.length === 0) {
+            return res.status(400).json({ success: false, message: "None of the items from this order are currently available.", error: true });
+      }
+
+      await Cart.deleteMany({ userId: user._id });
+
+      const cartDocs = availableItems.map((item) => ({
+            userId: user._id,
+            restaurantId: order.restaurantId,
+            itemId: item.itemId,
+            quantity: item.quantity,
+      }));
+
+      await Cart.insertMany(cartDocs);
+
+      return res.status(200).json({
+            success: true,
+            error: false,
+            message: unavailableNames.length > 0
+                  ? `Cart updated. Some items are no longer available: ${unavailableNames.join(", ")}.`
+                  : "Cart updated with your previous order items.",
+            data: { cartCount: availableItems.reduce((sum, i) => sum + i.quantity, 0), unavailableItems: unavailableNames }
       });
 });
