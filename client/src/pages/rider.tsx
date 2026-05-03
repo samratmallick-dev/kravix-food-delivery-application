@@ -9,6 +9,7 @@ import {
       ImagePlus, Loader2, Phone, MapPin, CreditCard, FileText,
       Bike, VolumeX, History, LogOut, TrendingUp
 } from "lucide-react";
+import { RIDER_ORDER_TRANSITIONS } from "../utils/orderFlow";
 import audio from "../assets/rider_order_alert.mp3";
 import IncomingOrderCard from "../components/rider/IncomingOrderCard";
 import CurrentOrderCard from "../components/rider/CurrentOrderCard";
@@ -184,7 +185,7 @@ const RiderDashboard = () => {
                   let lng = location?.longitude;
                   try {
                         const fresh = await new Promise<GeolocationPosition>((resolve, reject) =>
-                              navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000 })
+                              navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000 })
                         );
                         lat = fresh.coords.latitude;
                         lng = fresh.coords.longitude;
@@ -195,10 +196,16 @@ const RiderDashboard = () => {
                         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
                   );
                   toast.success(data.message || "Status updated!");
-                  await fetchCurrentOrder();
-                  if (data.data?.status === "delivered") {
+
+                  const nextStatus = RIDER_ORDER_TRANSITIONS[currentOrder.status];
+                  if (nextStatus === "delivered") {
+                        setCurrentOrder(null);
                         setProfile((prev) => prev ? { ...prev, isAvailable: false } : prev);
-                        await fetchDeliveryHistory();
+                        fetchDeliveryHistory();
+                  } else if (nextStatus) {
+                        setCurrentOrder((prev) => prev ? { ...prev, status: nextStatus as IOrder["status"] } : prev);
+                  } else {
+                        fetchCurrentOrder();
                   }
             } catch (err: any) {
                   toast.error(err?.response?.data?.message || "Failed to update status");
