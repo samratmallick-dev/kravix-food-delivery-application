@@ -28,7 +28,8 @@
             "react-router-dom": "^7.13.1",
             "recharts": "^3.8.1",
             "socket.io-client": "^4.8.3",
-            "tailwindcss": "^4.2.1"
+            "tailwindcss": "^4.2.1",
+            "vite-plugin-compression2": "^2.5.3"
       },
       "devDependencies": {
             "@eslint/js": "^9.39.4",

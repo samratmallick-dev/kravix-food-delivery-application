@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 
 export const useMobile = (breakpoint = 768) => {
-      const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
+      const query = `(max-width: ${breakpoint}px)`;
+      const [isMobile, setIsMobile] = useState(() => window.matchMedia(query).matches);
 
       useEffect(() => {
-            const handleResize = () => {
-                  setIsMobile(window.innerWidth <= breakpoint);
-            };
-            window.addEventListener("resize", handleResize);
-            return () => window.removeEventListener("resize", handleResize);
-      }, [breakpoint]);
+            const mql = window.matchMedia(query);
+            const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+            mql.addEventListener("change", handler);
+            return () => mql.removeEventListener("change", handler);
+      }, [query]);
 
       return isMobile;
 };

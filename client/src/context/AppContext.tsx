@@ -26,8 +26,8 @@ const isCacheStillValid = (
 export const AppProvider = ({ children }: AppProviderProps) => {
 
       const [user, setUser] = useState<User | null>(null);
-      const [isAuth, setIsAuth] = useState(false);
-      const [loading, setLoading] = useState(true);
+      const [isAuth, setIsAuth] = useState(() => !!localStorage.getItem("token"));
+      const [loading, setLoading] = useState(false);
 
       const [location, setLocation] = useState<LocationData | null>(null);
       const [locationLoading, setLocationLoading] = useState(false);

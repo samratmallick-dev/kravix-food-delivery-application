@@ -1,10 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { compression } from 'vite-plugin-compression2';
 
 // https://vite.dev/config/
 export default defineConfig({
-      plugins: [react(), tailwindcss()],
+      plugins: [
+            react(),
+            tailwindcss(),
+            compression({ algorithms: ['gzip'] }),
+            compression({ algorithms: ['brotliCompress'], filename: '[path][base].br' }),
+      ],
       server: {
             headers: {
                   "Cross-Origin-Opener-Policy": "unsafe-none",
@@ -13,12 +19,15 @@ export default defineConfig({
             },
       },
       build: {
+            assetsInlineLimit: 4096,
+            cssCodeSplit: true,
             rollupOptions: {
                   output: {
                         manualChunks: {
                               vendor: ['react', 'react-dom', 'react-router-dom'],
                               icons: ['lucide-react', 'react-icons'],
-                              maps: ['leaflet', 'react-leaflet'],
+                              maps: ['leaflet', 'react-leaflet', 'leaflet-routing-machine'],
+                              socket: ['socket.io-client'],
                               payment: ['@stripe/stripe-js'],
                         },
                   },
