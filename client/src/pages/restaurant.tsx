@@ -7,6 +7,7 @@ import RestaurantProfile from "../components/restaurant/restaurantProfile";
 import Menuitems from "../components/restaurant/menuitems";
 import AddMenuItems from "../components/restaurant/addMenuItems";
 import RestaurantOrders from "../components/restaurant/restaurantOrders";
+import SalesAnalytics from "../components/restaurant/SalesAnalytics";
 import { useMobile } from "../components/common/useMobile";
 import { useAppData } from "../context/AppContext";
 import { useSocket } from "../context/SocketContext";
@@ -16,7 +17,7 @@ type SellerTab = "menu" | "add-item" | "sales";
 
 const Restaurant = () => {
 
-      const { user } = useAppData();
+      const { user, setUser } = useAppData();
       const { socket } = useSocket();
       const isBlocked = !!(user?.isBlocked && user.blockedUntil && new Date(user.blockedUntil) > new Date());
 
@@ -45,6 +46,7 @@ const Restaurant = () => {
 
                   if (data.token) {
                         localStorage.setItem("token", data.token);
+                        setUser((prev) => prev ? { ...prev, restaurantId: data.data?._id } : prev);
                   }
                   setRestaurant(data.data || null);
             } catch (error: any) {
@@ -56,7 +58,7 @@ const Restaurant = () => {
 
       useEffect(() => {
             fetchMyRestaurant();
-      }, [user]);
+      }, []);
 
       useEffect(() => {
             if (!socket || !restaurant?._id) return;
@@ -162,10 +164,7 @@ const Restaurant = () => {
                                           <AddMenuItems onItemAdded={() => fetchMenuItem(restaurant._id)} />
                                     )}
                                     {tab === "sales" && (
-                                          <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-2">
-                                                <span className="text-4xl">📊</span>
-                                                <p className="text-sm font-medium">Sales Analytics Coming Soon</p>
-                                          </div>
+                                          <SalesAnalytics restaurantId={restaurant._id} />
                                     )}
                               </div>
                         </div>

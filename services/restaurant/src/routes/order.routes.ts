@@ -9,6 +9,7 @@ import {
       getDeliveredOrdersByRider,
       getMyOrders,
       getOrderByIdInternal,
+      getRestaurantSalesStats,
       getSingleOrder,
       updateOrderStatus,
       updateOrderStatusByRider
@@ -27,6 +28,7 @@ router.route("/internal/delivery-history").get(getDeliveredOrdersByRider);
 router.route("/internal/:orderId").get(getOrderByIdInternal);
 
 router.route("/restaurants/:restaurantId").get(isAuthenticated, isSeller, checkBlocked, fetchRestaurantOrders);
+router.route("/restaurants/:restaurantId/sales-stats").get(isAuthenticated, isSeller, checkBlocked, getRestaurantSalesStats);
 
 router.route("/:orderId/status").patch(isAuthenticated, isSeller, checkBlocked, updateOrderStatus);
 router.route("/:id/payment").get(fetchOrderForPayment);
