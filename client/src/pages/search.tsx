@@ -256,6 +256,7 @@ const SearchPage = () => {
                                                                   src={item.imageUrl || "https://placehold.co/400x160?text=Food"}
                                                                   alt={item.name}
                                                                   className="w-full h-40 object-cover"
+                                                                  loading="lazy"
                                                             />
                                                       </div>
                                                       <div className="p-3 flex flex-col flex-1 gap-1">

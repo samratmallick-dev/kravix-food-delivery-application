@@ -37,47 +37,44 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       const [subTotal, setSubTotal] = useState(0);
       const [quantity, setQuantity] = useState(0);
 
-      async function fetchUser() {
-            try {
-                  const token = localStorage.getItem("token");
-                  if (!token) {
-                        setUser(null);
-                        setIsAuth(false);
-                        setLoading(false);
-                        return;
-                  }
-
-                  const { data } = await axios.get(`${authBaseUrl}/me`, {
-                        headers: {
-                              Authorization: `Bearer ${token}`
-                        }
-                  });
-                  setUser(data.data);
-                  setIsAuth(true);
-            } catch (error: any) {
-                  if (error?.response?.status) {
-                        console.error("fetchUser failed:", error.response.data?.message ?? error.message);
-                  }
+      useEffect(() => {
+            const token = localStorage.getItem("token");
+            if (!token) {
                   setUser(null);
                   setIsAuth(false);
-            } finally {
                   setLoading(false);
+                  return;
             }
-      };
+            const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
+                  Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
+
+            Promise.allSettled([
+                  withTimeout(axios.get(`${authBaseUrl}/me`, { headers: { Authorization: `Bearer ${token}` } }), 5000),
+                  withTimeout(axios.get(`${cartBaseUrl}`, { headers: { Authorization: `Bearer ${token}` } }), 5000),
+            ]).then(([userResult, cartResult]) => {
+                  if (userResult.status === "fulfilled") {
+                        setUser(userResult.value.data.data);
+                        setIsAuth(true);
+                  } else {
+                        console.error("auth fetch failed:", userResult.reason?.message);
+                        setUser(null);
+                        setIsAuth(false);
+                  }
+                  if (cartResult.status === "fulfilled") {
+                        setCart(cartResult.value.data.data.cart || []);
+                        setSubTotal(cartResult.value.data.data.subTotal || 0);
+                        setQuantity(cartResult.value.data.data.cartLength || 0);
+                  }
+            }).finally(() => setLoading(false));
+      }, []);
 
       const fetchCart = useCallback(async () => {
             const token = localStorage.getItem("token");
-            if (!token) {
-                  setCart([]);
-                  setSubTotal(0);
-                  setQuantity(0);
-                  return;
-            }
+            if (!token) { setCart([]); setSubTotal(0); setQuantity(0); return; }
             try {
                   const { data } = await axios.get(`${cartBaseUrl}`, {
                         headers: { Authorization: `Bearer ${token}` }
                   });
-
                   setCart(data.data.cart || []);
                   setSubTotal(data.data.subTotal || 0);
                   setQuantity(data.data.cartLength || 0);
@@ -85,14 +82,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                   console.log(error);
             }
       }, []);
-
-      useEffect(() => {
-            fetchUser();
-      }, []);
-
-      useEffect(() => {
-            fetchCart();
-      }, [fetchCart]);
 
       useEffect(() => {
             if (!navigator.geolocation) {

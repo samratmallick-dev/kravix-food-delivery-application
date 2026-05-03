@@ -1,32 +1,34 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
-import Login from "./pages/login";
-import Home from "./pages/home";
-import SelectRole from "./pages/select-role";
 import ProtectedRoutes from "./components/common/protectedRoutes";
 import PublicRoutes from "./components/common/publicRoutes";
 import Navbar from "./components/navbar/navbar";
-import Account from "./pages/account";
-import Restaurant from "./pages/restaurant";
-import CustomerRestaurantPage from "./pages/customerRestaurantPage";
-import Footer from "./components/home/footer";
-import Cart from "./pages/cart";
-import AddAddressPage from "./pages/address";
-import SearchPage from "./pages/search";
-import Checkout from "./pages/checkout";
-import PaymentSuccess from "./pages/paymentSuccess";
-import OrderSuccess from "./pages/orderSuccess";
-import CustomerOrder from "./pages/customerOrder";
-import OrderDetails from "./pages/orderDetails";
-import RiderDashboard from "./pages/rider";
 import AppSkeleton from "./components/common/AppSkeleton";
 import { useAppData } from "./context/AppContext";
-import AdminLayout from "./admin/components/AdminLayout";
-import AdminLogin from "./admin/pages/AdminLogin";
-import AdminDashboard from "./admin/pages/AdminDashboard";
-import AdminUsers from "./admin/pages/AdminUsers";
-import AdminRestaurants from "./admin/pages/AdminRestaurants";
-import AdminRiders from "./admin/pages/AdminRiders";
-import AdminOrders from "./admin/pages/AdminOrders";
+import Footer from "./components/home/footer";
+
+const Login = lazy(() => import("./pages/login"));
+const Home = lazy(() => import("./pages/home"));
+const SelectRole = lazy(() => import("./pages/select-role"));
+const Account = lazy(() => import("./pages/account"));
+const Restaurant = lazy(() => import("./pages/restaurant"));
+const CustomerRestaurantPage = lazy(() => import("./pages/customerRestaurantPage"));
+const Cart = lazy(() => import("./pages/cart"));
+const AddAddressPage = lazy(() => import("./pages/address"));
+const SearchPage = lazy(() => import("./pages/search"));
+const Checkout = lazy(() => import("./pages/checkout"));
+const PaymentSuccess = lazy(() => import("./pages/paymentSuccess"));
+const OrderSuccess = lazy(() => import("./pages/orderSuccess"));
+const CustomerOrder = lazy(() => import("./pages/customerOrder"));
+const OrderDetails = lazy(() => import("./pages/orderDetails"));
+const RiderDashboard = lazy(() => import("./pages/rider"));
+const AdminLayout = lazy(() => import("./admin/components/AdminLayout"));
+const AdminLogin = lazy(() => import("./admin/pages/AdminLogin"));
+const AdminDashboard = lazy(() => import("./admin/pages/AdminDashboard"));
+const AdminUsers = lazy(() => import("./admin/pages/AdminUsers"));
+const AdminRestaurants = lazy(() => import("./admin/pages/AdminRestaurants"));
+const AdminRiders = lazy(() => import("./admin/pages/AdminRiders"));
+const AdminOrders = lazy(() => import("./admin/pages/AdminOrders"));
 
 const App = () => {
       const { loading } = useAppData();
@@ -35,40 +37,42 @@ const App = () => {
 
       return (
             <BrowserRouter>
-                  <Routes>
-                        <Route path="/admin/login" element={<AdminLogin />} />
-                        <Route path="/admin" element={<AdminLayout />}>
-                              <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                              <Route path="dashboard" element={<AdminDashboard />} />
-                              <Route path="users" element={<AdminUsers />} />
-                              <Route path="restaurants" element={<AdminRestaurants />} />
-                              <Route path="riders" element={<AdminRiders />} />
-                              <Route path="orders" element={<AdminOrders />} />
-                        </Route>
-
-                        <Route element={<PublicRoutes />}>
-                              <Route path="/login" element={<Login />} />
-                        </Route>
-                        <Route element={<ProtectedRoutes />}>
-                              <Route path="/seller" element={<Restaurant />} />
-                              <Route path="/rider" element={<RiderDashboard />} />
-                              <Route element={<><Navbar /><Outlet /><Footer /></>}>
-                                    <Route path="/" element={<Home />} />
-                                    <Route path="/search" element={<SearchPage />} />
-                                    <Route path="/restaurant/:id" element={<CustomerRestaurantPage />} />
-                                    <Route path="/address" element={<AddAddressPage />} />
-                                    <Route path="/cart" element={<Cart />} />
-                                    <Route path="/checkout" element={<Checkout />} />
-                                    <Route path="/payment-success/:paymentId" element={<PaymentSuccess />} />
-                                    <Route path="/ordersuccess" element={<OrderSuccess />} />
-                                    <Route path="/orders" element={<CustomerOrder />} />
-                                    <Route path="/orders/:id" element={<OrderDetails />} />
-                                    <Route path="/select-role" element={<SelectRole />} />
-                                    <Route path="/account" element={<Account />} />
-                                    <Route path="*" element={<Navigate to="/" replace />} />
+                  <Suspense fallback={<AppSkeleton />}>
+                        <Routes>
+                              <Route path="/admin/login" element={<AdminLogin />} />
+                              <Route path="/admin" element={<AdminLayout />}>
+                                    <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                                    <Route path="dashboard" element={<AdminDashboard />} />
+                                    <Route path="users" element={<AdminUsers />} />
+                                    <Route path="restaurants" element={<AdminRestaurants />} />
+                                    <Route path="riders" element={<AdminRiders />} />
+                                    <Route path="orders" element={<AdminOrders />} />
                               </Route>
-                        </Route>
-                  </Routes>
+
+                              <Route element={<PublicRoutes />}>
+                                    <Route path="/login" element={<Login />} />
+                              </Route>
+                              <Route element={<ProtectedRoutes />}>
+                                    <Route path="/seller" element={<Restaurant />} />
+                                    <Route path="/rider" element={<RiderDashboard />} />
+                                    <Route element={<><Navbar /><Outlet /><Footer /></>}>
+                                          <Route path="/" element={<Home />} />
+                                          <Route path="/search" element={<SearchPage />} />
+                                          <Route path="/restaurant/:id" element={<CustomerRestaurantPage />} />
+                                          <Route path="/address" element={<AddAddressPage />} />
+                                          <Route path="/cart" element={<Cart />} />
+                                          <Route path="/checkout" element={<Checkout />} />
+                                          <Route path="/payment-success/:paymentId" element={<PaymentSuccess />} />
+                                          <Route path="/ordersuccess" element={<OrderSuccess />} />
+                                          <Route path="/orders" element={<CustomerOrder />} />
+                                          <Route path="/orders/:id" element={<OrderDetails />} />
+                                          <Route path="/select-role" element={<SelectRole />} />
+                                          <Route path="/account" element={<Account />} />
+                                          <Route path="*" element={<Navigate to="/" replace />} />
+                                    </Route>
+                              </Route>
+                        </Routes>
+                  </Suspense>
             </BrowserRouter>
       );
 };

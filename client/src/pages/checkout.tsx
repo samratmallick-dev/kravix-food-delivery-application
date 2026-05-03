@@ -85,6 +85,15 @@ const Checkout = () => {
                   const { data } = await axios.post(`${paymentBaseUrl}/razorpay`, { orderId });
                   const { razorpayOrderId, key_id } = data.data;
 
+                  await new Promise<void>((resolve, reject) => {
+                        if ((window as any).Razorpay) return resolve();
+                        const script = document.createElement("script");
+                        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+                        script.onload = () => resolve();
+                        script.onerror = () => reject(new Error("Razorpay SDK failed to load"));
+                        document.head.appendChild(script);
+                  });
+
                   const options = {
                         key: key_id,
                         amount: Math.round(totalAmount * 100),
@@ -119,7 +128,7 @@ const Checkout = () => {
             }
       };
 
-      const stripePromise = loadStripe(stripPublishableKey);
+      const stripePromise = useMemo(() => loadStripe(stripPublishableKey), []);
 
       const payWithStripe = async () => {
             try {

@@ -12,4 +12,16 @@ export default defineConfig({
                   "Permissions-Policy": "otp-credentials=*",
             },
       },
+      build: {
+            rollupOptions: {
+                  output: {
+                        manualChunks: {
+                              vendor: ['react', 'react-dom', 'react-router-dom'],
+                              icons: ['lucide-react', 'react-icons'],
+                              maps: ['leaflet', 'react-leaflet'],
+                              payment: ['@stripe/stripe-js'],
+                        },
+                  },
+            },
+      },
 });
