@@ -6,12 +6,10 @@ import AddRestaurant from "../components/restaurant/addRestaurant";
 import RestaurantProfile from "../components/restaurant/restaurantProfile";
 import Menuitems from "../components/restaurant/menuitems";
 import AddMenuItems from "../components/restaurant/addMenuItems";
-import SalesAnalytics from "../components/restaurant/SalesAnalytics";
 import RestaurantOrders from "../components/restaurant/restaurantOrders";
 import { useMobile } from "../components/common/useMobile";
 import { useAppData } from "../context/AppContext";
 import { useSocket } from "../context/SocketContext";
-
 import toast from "react-hot-toast";
 
 type SellerTab = "menu" | "add-item" | "sales";
@@ -164,7 +162,10 @@ const Restaurant = () => {
                                           <AddMenuItems onItemAdded={() => fetchMenuItem(restaurant._id)} />
                                     )}
                                     {tab === "sales" && (
-                                          <SalesAnalytics restaurantId={restaurant._id} />
+                                          <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-2">
+                                                <span className="text-4xl">📊</span>
+                                                <p className="text-sm font-medium">Sales Analytics Coming Soon</p>
+                                          </div>
                                     )}
                               </div>
                         </div>

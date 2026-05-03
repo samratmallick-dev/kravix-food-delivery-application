@@ -241,42 +241,6 @@ export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Resp
       });
 });
 
-export const updateMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
-      if (!user) return res.status(401).json({ message: "User not authenticated", success: false, error: true });
-
-      const { itemId } = req.params;
-      const { name, description, price } = req.body as { name?: string; description?: string; price?: string | number };
-
-      if (price !== undefined && (isNaN(Number(price)) || Number(price) < 0)) {
-            return res.status(400).json({ message: "Price must be a non-negative number", success: false, error: true });
-      }
-
-      const menuItem = await MenuItem.findById(itemId);
-      if (!menuItem) return res.status(404).json({ message: "Menu item not found", success: false, error: true });
-
-      const restaurant = await Restaurant.findOne({ _id: menuItem.restaurantId, ownerId: user._id });
-      if (!restaurant) return res.status(403).json({ message: "Access denied. You don't own this restaurant.", success: false, error: true });
-
-      if (name !== undefined) menuItem.name = name.trim();
-      if (description !== undefined) menuItem.description = description.trim();
-      if (price !== undefined) menuItem.price = Number(price);
-
-      await menuItem.save();
-
-      axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
-            {
-                  event: "menuitem:updated",
-                  room: `Restaurant:${menuItem.restaurantId}`,
-                  payload: { itemId: menuItem._id.toString(), name: menuItem.name, description: menuItem.description, price: menuItem.price }
-            },
-            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
-      ).catch((err) => console.error("Socket emit failed:", err.message));
-
-      return res.status(200).json({ message: "Menu item updated successfully", success: true, error: false, data: menuItem });
-});
-
 export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequest, res: Response) =>{
       const user = req.user;
       if (!user) {

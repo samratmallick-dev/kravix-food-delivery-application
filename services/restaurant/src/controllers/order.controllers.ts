@@ -612,68 +612,6 @@ export const getOrderByIdInternal = TryCatch(async (req, res) => {
       return res.status(200).json({ success: true, error: false, data: order });
 });
 
-export const getRestaurantSalesStats = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
-      if (!user) {
-            return res.status(401).json({ success: false, message: "Unauthorized User", error: true });
-      }
-
-      const { restaurantId } = req.params;
-
-      const restaurant = await Restaurant.findById(restaurantId);
-      if (!restaurant || restaurant.ownerId !== user._id.toString()) {
-            return res.status(403).json({ success: false, message: "Access denied", error: true });
-      }
-
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const baseMatch = { restaurantId, status: "delivered", paymentStatus: "paid" };
-
-      const [summary, salesTrend, topItems, orderDistribution] = await Promise.all([
-            Order.aggregate([
-                  { $match: baseMatch },
-                  { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" }, totalOrders: { $sum: 1 }, avgOrderValue: { $avg: "$totalAmount" } } }
-            ]),
-            Order.aggregate([
-                  { $match: { ...baseMatch, createdAt: { $gte: thirtyDaysAgo } } },
-                  { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, revenue: { $sum: "$totalAmount" }, orders: { $sum: 1 } } },
-                  { $sort: { _id: 1 } },
-                  { $project: { _id: 0, date: "$_id", revenue: 1, orders: 1 } }
-            ]),
-            Order.aggregate([
-                  { $match: baseMatch },
-                  { $unwind: "$items" },
-                  { $group: { _id: "$items.name", totalQuantity: { $sum: "$items.quantity" }, totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } } } },
-                  { $sort: { totalQuantity: -1 } },
-                  { $limit: 5 },
-                  { $project: { _id: 0, name: "$_id", totalQuantity: 1, totalRevenue: 1 } }
-            ]),
-            Order.aggregate([
-                  { $match: { restaurantId, paymentStatus: "paid" } },
-                  { $group: { _id: "$status", count: { $sum: 1 } } },
-                  { $project: { _id: 0, status: "$_id", count: 1 } }
-            ])
-      ]);
-
-      const summaryData = summary[0] ?? { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 };
-
-      return res.status(200).json({
-            success: true,
-            message: "Sales stats fetched successfully",
-            data: {
-                  summary: {
-                        totalRevenue: +summaryData.totalRevenue.toFixed(2),
-                        totalOrders: summaryData.totalOrders,
-                        avgOrderValue: +summaryData.avgOrderValue.toFixed(2)
-                  },
-                  salesTrend,
-                  topItems,
-                  orderDistribution
-            }
-      });
-});
-
 export const getDeliveredOrdersByRider = TryCatch(async (req, res) => {
       if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
             return res.status(403).json({ success: false, message: "Forbidden", error: true });
