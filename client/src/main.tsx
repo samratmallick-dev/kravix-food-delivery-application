@@ -10,20 +10,27 @@ import "leaflet/dist/leaflet.css";
 import { SocketProvider } from './context/SocketContext.tsx';
 import { AdminAuthProvider } from './admin/context/AdminAuthContext.tsx';
 import { AdminSocketProvider } from './admin/context/AdminSocketContext.tsx';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
+});
 
 createRoot(document.getElementById('root')!).render(
       <StrictMode>
-            <GoogleOAuthProvider clientId={googleClientId}>
-                  <AdminAuthProvider>
-                        <AdminSocketProvider>
-                              <AppProvider>
-                                    <SocketProvider>
-                                          <App />
-                                    </SocketProvider>
-                              </AppProvider>
-                        </AdminSocketProvider>
-                  </AdminAuthProvider>
-                  <Toaster />
-            </GoogleOAuthProvider>
+            <QueryClientProvider client={queryClient}>
+                  <GoogleOAuthProvider clientId={googleClientId}>
+                        <AdminAuthProvider>
+                              <AdminSocketProvider>
+                                    <AppProvider>
+                                          <SocketProvider>
+                                                <App />
+                                          </SocketProvider>
+                                    </AppProvider>
+                              </AdminSocketProvider>
+                        </AdminAuthProvider>
+                        <Toaster />
+                  </GoogleOAuthProvider>
+            </QueryClientProvider>
       </StrictMode>,
 );

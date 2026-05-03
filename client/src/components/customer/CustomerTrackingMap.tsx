@@ -29,7 +29,7 @@ const homeIcon = new L.Icon({
       popupAnchor: [0, -45],
 });
 
-const ACTIVE_TRACKING_STATUSES = ["rider_assigned", "picked_up"];
+const ACTIVE_TRACKING_STATUSES = ["rider_assigned", "picked_up", "out_for_delivery", "reached_delivery_location"];
 
 const Routing = ({ from, to }: { from: [number, number]; to: [number, number] }) => {
       const map = useMap();

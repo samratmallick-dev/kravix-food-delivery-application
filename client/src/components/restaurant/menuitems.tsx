@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { IMenuItem } from "../../types/types";
-import { Eye, Loader, Minus, Plus, Trash2 } from "lucide-react";
+import { Eye, Loader, Minus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { BsCartPlus, BsEyeSlash } from "react-icons/bs";
 import axios from "axios";
 import { cartBaseUrl, menuBaseUrl } from "../common/constant";
@@ -20,6 +20,9 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
       const [loadingAction, setLoadingAction] = useState<"inc" | "dec" | "add" | null>(null);
       const { fetchCart, cart } = useAppData();
       const { socket } = useSocket();
+      const [editItem, setEditItem] = useState<IMenuItem | null>(null);
+      const [editForm, setEditForm] = useState({ name: "", description: "", price: "" });
+      const [saving, setSaving] = useState(false);
 
       useEffect(() => {
             setLocalItems(items);
@@ -36,15 +39,45 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             const onDeleted = ({ itemId }: { itemId: string }) => {
                   setLocalItems((prev) => prev.filter((i) => i._id !== itemId));
             };
+            const onUpdated = ({ itemId, name, description, price }: { itemId: string; name: string; description: string; price: number }) => {
+                  setLocalItems((prev) => prev.map((i) => i._id === itemId ? { ...i, name, description, price } : i));
+            };
 
             socket.on("menuitem:availability", onAvailability);
             socket.on("menuitem:deleted", onDeleted);
+            socket.on("menuitem:updated", onUpdated);
 
             return () => {
                   socket.off("menuitem:availability", onAvailability);
                   socket.off("menuitem:deleted", onDeleted);
+                  socket.off("menuitem:updated", onUpdated);
             };
       }, [socket]);
+
+      const openEdit = (item: IMenuItem) => {
+            setEditItem(item);
+            setEditForm({ name: item.name, description: item.description ?? "", price: String(item.price) });
+      };
+
+      const handleEditSave = async () => {
+            if (!editItem) return;
+            if (!editForm.name.trim()) return toast.error("Name is required");
+            if (isNaN(Number(editForm.price)) || Number(editForm.price) < 0) return toast.error("Enter a valid price");
+            setSaving(true);
+            try {
+                  const { data } = await axios.patch(`${menuBaseUrl}/${editItem._id}`,
+                        { name: editForm.name.trim(), description: editForm.description.trim(), price: Number(editForm.price) },
+                        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }, withCredentials: true }
+                  );
+                  setLocalItems((prev) => prev.map((i) => i._id === editItem._id ? { ...i, ...data.data } : i));
+                  toast.success("Menu item updated");
+                  setEditItem(null);
+            } catch (err: any) {
+                  toast.error(err.response?.data?.message || "Failed to update item");
+            } finally {
+                  setSaving(false);
+            }
+      };
 
       const handleDeleteItem = async (itemId: string) => {
             const conform = window.confirm("Are you sure you want to delete this item?");
@@ -146,6 +179,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
 
 
       return (
+            <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {
                         localItems && localItems.map((item) => {
@@ -178,6 +212,12 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                                       <span className="text-sm font-bold text-primary">₹{item.price.toFixed(2)}</span>
                                                       {isSeller ? (
                                                             <div className="flex items-center gap-1">
+                                                                  <button
+                                                                        onClick={() => openEdit(item)}
+                                                                        className="p-1 rounded text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition"
+                                                                  >
+                                                                        <Pencil size={15} />
+                                                                  </button>
                                                                   <button
                                                                         onClick={() => toggleMenuItemAvailability(item._id)}
                                                                         className="p-1 rounded text-gray-500 hover:bg-gray-100 hover:text-primary transition"
@@ -229,6 +269,54 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                         })
                   }
             </div>
+
+            {editItem && (
+                  <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditItem(null)}>
+                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                                    <h2 className="text-sm font-bold text-gray-800">Edit Menu Item</h2>
+                                    <button onClick={() => setEditItem(null)} className="p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"><X size={15} /></button>
+                              </div>
+                              <div className="p-5 space-y-3">
+                                    <div>
+                                          <label className="block text-xs font-semibold text-gray-500 mb-1">Name</label>
+                                          <input
+                                                value={editForm.name}
+                                                onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                          />
+                                    </div>
+                                    <div>
+                                          <label className="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+                                          <textarea
+                                                value={editForm.description}
+                                                onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                                                rows={2}
+                                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                                          />
+                                    </div>
+                                    <div>
+                                          <label className="block text-xs font-semibold text-gray-500 mb-1">Price (₹)</label>
+                                          <input
+                                                type="number"
+                                                min={0}
+                                                value={editForm.price}
+                                                onChange={(e) => setEditForm((f) => ({ ...f, price: e.target.value }))}
+                                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                          />
+                                    </div>
+                                    <div className="flex gap-3 pt-1">
+                                          <button onClick={() => setEditItem(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition cursor-pointer">Cancel</button>
+                                          <button onClick={handleEditSave} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold transition disabled:opacity-60 cursor-pointer hover:opacity-90 flex items-center justify-center gap-2">
+                                                {saving && <Loader size={13} className="animate-spin" />}
+                                                {saving ? "Saving..." : "Save"}
+                                          </button>
+                                    </div>
+                              </div>
+                        </div>
+                  </div>
+            )}
+      </>
       );
 };
 
