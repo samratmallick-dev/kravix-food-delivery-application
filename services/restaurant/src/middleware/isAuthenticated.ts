@@ -126,7 +126,6 @@ export const checkBlocked = async (
             return;
       }
 
-      // Auto-unblock if block period has expired
       if (dbUser.isBlocked && dbUser.blockedUntil && new Date(dbUser.blockedUntil) <= new Date()) {
             await User.findByIdAndUpdate(userId, { isBlocked: false, blockedUntil: null });
       }

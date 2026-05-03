@@ -95,7 +95,6 @@ export const toggleRiderAvailability = TryCatch(async (req: AuthenticatedRequest
       return res.status(200).json({ success: true, message: `Rider is now ${isAvailable ? "available" : "unavailable"}`, error: false, data: riderProfile });
 });
 
-// Atomic accept — fixes race condition: only one rider can claim an order
 export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const riderUserId = req.user?._id;
       if (!riderUserId) return res.status(401).json({ success: false, message: "User not authenticated", error: true });
@@ -192,7 +191,6 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
                               $inc: { totalDeliveries: 1, totalEarnings: data.data?.riderAmount ?? 0 }
                         }
                   );
-                  // Clear OTP from Order document
                   await axios.patch(
                         `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/set-otp`,
                         { orderId, otp: null },
@@ -230,20 +228,18 @@ export const generateDeliveryOtp = TryCatch(async (req: AuthenticatedRequest, re
       }
 
       const otp = String(Math.floor(100000 + Math.random() * 900000));
-      const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+      const expiry = new Date(Date.now() + 10 * 60 * 1000);
 
       rider.deliveryOtp = otp;
       rider.deliveryOtpExpiry = expiry;
       await rider.save();
 
-      // Also persist OTP on the Order so fetchOrder returns it on page load
       await axios.patch(
             `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/set-otp`,
             { orderId, otp },
             { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
       );
 
-      // Push OTP to customer via socket
       axios.post(`${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
             { event: "delivery:otp", room: `User:${orderData.data.userId}`, payload: { orderId, otp } },
             { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
@@ -306,7 +302,6 @@ export const fetchEarnings = TryCatch(async (req: AuthenticatedRequest, res: Res
                   .filter((o) => new Date(o.createdAt) >= weekAgo)
                   .reduce((sum, o) => sum + (o.riderAmount ?? 0), 0);
 
-            // Build daily breakdown for last 7 days
             const dailyMap: Record<string, number> = {};
             for (let i = 6; i >= 0; i--) {
                   const d = new Date(today);

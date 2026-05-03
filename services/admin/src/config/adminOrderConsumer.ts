@@ -36,7 +36,7 @@ export const startAdminOrderConsumer = async () => {
             try {
                   parsed = JSON.parse(msg.content.toString());
             } catch {
-                  console.error("Admin consumer: failed to parse message — discarding"); 
+                  console.error("Admin consumer: failed to parse message — discarding");
                   channel.nack(msg, false, false);
                   return;
             }
@@ -80,7 +80,6 @@ export const startAdminOrderConsumer = async () => {
                         case "USER_BLOCK_STATUS_CHANGED":
                               console.log("🚫 Admin event — user block status changed:", sanitize(parsed.data.userId));
                               emitToAdmin("admin:user:blockStatusChanged", parsed.data);
-                              // Emit directly to the affected user's socket room for real-time enforcement
                               axios.post(
                                     `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
                                     {
@@ -93,7 +92,6 @@ export const startAdminOrderConsumer = async () => {
                                     },
                                     { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
                               ).catch((err) => console.error("User block socket emit failed:", err.message));
-                              // If seller blocked/unblocked, broadcast restaurant visibility change to its room
                               if (parsed.data.role === "seller" && parsed.data.restaurantId) {
                                     axios.post(
                                           `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,

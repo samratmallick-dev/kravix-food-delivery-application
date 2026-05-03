@@ -7,7 +7,7 @@ export const publishEvent = async (type: string, data: any): Promise<void> => {
       const sent = channel.sendToQueue(
             process.env.ORDER_READY_QUEUE!,
             Buffer.from(message),
-            { persistent: true }   
+            { persistent: true }
       );
 
       if (!sent) {
@@ -15,6 +15,4 @@ export const publishEvent = async (type: string, data: any): Promise<void> => {
                   `RabbitMQ channel buffer full — failed to publish event "${type}" for data: ${message}`
             );
       }
-
-      console.log(`📤 Published event "${type}" to queue "${process.env.ORDER_READY_QUEUE}"`);
 };

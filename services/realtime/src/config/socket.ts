@@ -33,7 +33,6 @@ export const initializeSocket = (server: http.Server) => {
                               return callback(null, true);
                         }
 
-                        console.log("❌ Socket CORS blocked:", origin);
                         return callback(new Error("CORS not allowed"));
                   },
                   credentials: true,
@@ -62,7 +61,6 @@ export const initializeSocket = (server: http.Server) => {
 
                   next();
             } catch (error) {
-                  console.log("JWT Error:", error);
                   return next(new Error("Socket auth failed"));
             }
       });
@@ -96,16 +94,10 @@ export const initializeSocket = (server: http.Server) => {
             socket.on("join:admin", () => {
                   if (user.role === "admin") {
                         socket.join("Admin");
-                        console.log(`🛡️ Admin joined Admin room: ${userId}`);
                   }
             });
 
-            console.log("🟢 User connected:", userId);
-            console.log("🌐 Origin:", socket.handshake.headers.origin);
-            console.log("📦 Rooms:", [...socket.rooms]);
-
-            socket.on("disconnect", (reason) => {
-                  console.log("🔴 User disconnected:", userId, "|", reason);
+            socket.on("disconnect", (_reason) => {
             });
       });
 

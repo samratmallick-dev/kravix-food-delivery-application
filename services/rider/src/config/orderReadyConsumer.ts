@@ -19,10 +19,7 @@ export const orderReadyConsumer = async () => {
             }
 
             try {
-                  console.log(`📨 Order Ready event received in Rider Service:`, parsed);
-
                   if (parsed.type !== "ORDER_READY_FOR_RIDER") {
-                        console.log(`Skipping event type: ${parsed.type}`);
                         channel.ack(msg);
                         return;
                   }
@@ -35,7 +32,6 @@ export const orderReadyConsumer = async () => {
                         return;
                   }
 
-                  console.log(`🔍 Finding riders near restaurant ${restaurantId} for order ${orderId}`);
                   const geoPoint = {
                         type: "Point" as const,
                         coordinates: location.coordinates as [number, number]
@@ -53,10 +49,7 @@ export const orderReadyConsumer = async () => {
                         }
                   });
 
-                  console.log(`Found ${riders.length} available rider(s) within ${maxDistance}m`);
-
                   if (riders.length === 0) {
-                        console.log(`No riders found for order ${orderId} — acking and moving on`);
                         channel.ack(msg);
                         return;
                   }
@@ -74,27 +67,23 @@ export const orderReadyConsumer = async () => {
                                           headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
                                           timeout: 5000
                                     }
-                              ).then(() => {
-                                    console.log(`✅ Notified rider ${rider.userId} about order ${orderId}`);
-                              })
+                              )
                         )
                   );
 
                   const failed = emitResults.filter((r) => r.status === "rejected");
                   if (failed.length > 0) {
-                        console.warn(`⚠️ Failed to notify ${failed.length}/${riders.length} rider(s):`,
+                        console.warn(`Failed to notify ${failed.length}/${riders.length} rider(s):`,
                               failed.map((r) => (r as PromiseRejectedResult).reason?.message)
                         );
                   }
 
-                  console.log(`✅ Order ${orderId} broadcast complete`);
                   channel.ack(msg);
 
             } catch (error) {
                   console.error("Unhandled error in orderReadyConsumer:", error);
 
                   if (msg.fields.redelivered) {
-                        console.error("Message already redelivered once — discarding to avoid loop");
                         channel.nack(msg, false, false);
                   } else {
                         channel.nack(msg, false, true);
