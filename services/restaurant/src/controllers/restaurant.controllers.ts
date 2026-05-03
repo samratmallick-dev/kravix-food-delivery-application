@@ -310,7 +310,8 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
 
       const sortAndProject = [
             { $sort: { distance: 1 as const, isOpen: -1 as const } },
-            { $addFields: { distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] } } }
+            { $addFields: { distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] } } },
+            { $limit: 25 }
       ];
 
       let restaurants: any[] = [];

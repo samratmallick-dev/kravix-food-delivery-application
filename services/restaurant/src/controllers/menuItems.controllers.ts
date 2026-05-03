@@ -187,7 +187,7 @@ export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Resp
       const matchingItems = await MenuItem.find({
             name: { $regex: normalizedSearch, $options: "i" },
             isAvailable: true
-      }).select("restaurantId name price imageUrl description isAvailable");
+      }).select("restaurantId name price imageUrl description isAvailable").limit(50);
 
       if (!matchingItems.length) {
             return res.status(200).json({
@@ -221,6 +221,7 @@ export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Resp
 
       const results = matchingItems
             .filter((item) => restaurantMap.has(item.restaurantId.toString()))
+            .slice(0, 25)
             .map((item) => ({
                   item: {
                         _id: item._id,

@@ -95,10 +95,24 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
             return () => document.removeEventListener("mousedown", handleClickOutside);
       }, []);
 
+      const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
       const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            setValue(e.target.value);
+            const val = e.target.value;
+            setValue(val);
             setShowDropdown(true);
-            onSearch?.(e.target.value);
+
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+
+            if (!val) {
+                  onSearch?.("");
+                  return;
+            }
+            if (val.length < 2) return;
+
+            debounceRef.current = setTimeout(() => {
+                  onSearch?.(val);
+            }, 400);
       };
 
       const handleClear = () => {

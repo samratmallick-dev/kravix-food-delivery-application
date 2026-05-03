@@ -102,6 +102,8 @@ const SearchPage = () => {
 
       useEffect(() => {
             if (!location?.latitude || !location.longitude) return;
+            setRestaurants([]);
+            setFoodResults([]);
             setLoading(true);
             joinedRooms.current.clear();
             const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
