@@ -9,7 +9,7 @@ const IncomingOrderCard = ({
       onExpire,
 }: {
       orderId: string;
-      onAccept: () => Promise<void>;
+      onAccept?: () => Promise<void>;
       onExpire: () => void;
 }) => {
       const [accepting, setAccepting] = useState(false);
@@ -54,8 +54,9 @@ const IncomingOrderCard = ({
                                     {countdown}s
                               </span>
                               <button
-                                    disabled={accepting}
+                                    disabled={accepting || !onAccept}
                                     onClick={async () => {
+                                          if (!onAccept) return;
                                           setAccepting(true);
                                           try {
                                                 await onAccept();

@@ -599,12 +599,21 @@ export const updateOrderStatusByRider = TryCatch(async (req, res) => {
       });
 });
 
+export const setOrderOtp = TryCatch(async (req, res) => {
+      if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({ success: false, message: "Forbidden", error: true });
+      }
+      const { orderId, otp } = req.body;
+      await Order.findByIdAndUpdate(orderId, { deliveryOtp: otp ?? null });
+      return res.status(200).json({ success: true, error: false });
+});
+
 export const getOrderByIdInternal = TryCatch(async (req, res) => {
       if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
             return res.status(403).json({ success: false, message: "Forbidden", error: true });
       }
 
-      const order = await Order.findById(req.params.orderId).select("status riderId");
+      const order = await Order.findById(req.params.orderId).select("status riderId userId");
       if (!order) {
             return res.status(404).json({ success: false, message: "Order not found", error: true });
       }

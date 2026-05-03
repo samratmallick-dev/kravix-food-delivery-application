@@ -11,6 +11,7 @@ import {
       getOrderByIdInternal,
       getRestaurantSalesStats,
       getSingleOrder,
+      setOrderOtp,
       updateOrderStatus,
       updateOrderStatusByRider
 } from "../controllers/order.controllers.js";
@@ -25,6 +26,7 @@ router.route("/internal/rider-assignment").patch(assignRiderToOrder);
 router.route("/internal/current").get(getCurrentOrdersForRiders);
 router.route("/internal/status").patch(updateOrderStatusByRider);
 router.route("/internal/delivery-history").get(getDeliveredOrdersByRider);
+router.route("/internal/set-otp").patch(setOrderOtp);
 router.route("/internal/:orderId").get(getOrderByIdInternal);
 
 router.route("/restaurants/:restaurantId").get(isAuthenticated, isSeller, checkBlocked, fetchRestaurantOrders);
