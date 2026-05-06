@@ -535,7 +535,7 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 ```
 MIT License
 
-Copyright (c) 2025 Samrat Mallick
+Copyright (c) 2026 Samrat Mallick
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
