@@ -158,7 +158,8 @@ services/<service-name>/
 │   ├── routes/             # Express route definitions
 │   └── utils/              # Shared helpers
 ├── Dockerfile              # Multi-stage Docker build (Node 22 Alpine)
-├── .env                    # Environment variables
+├── .env.example            # Environment variable template (no secrets)
+├── .env                    # Environment variables (git-ignored)
 ├── tsconfig.json
 └── package.json
 ```
@@ -177,50 +178,239 @@ services/<service-name>/
 | RabbitMQ | ≥ 3.x | Message broker for event-driven flows |
 | MongoDB | Atlas or local | Database (Atlas recommended) |
 
-### 1. Clone the Repository
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/samratmallick-dev/abar-khabo-online-food-dellivery-application.git
 cd abar-khabo-online-food-dellivery-application
 ```
 
-### 2. Install Dependencies
+### Step 2: Install Dependencies
+
+Each service has its own `package.json`. Install dependencies for each:
 
 ```bash
 # Frontend
-cd client
-npm install
+cd client && npm install && cd ..
 
-# Each backend service (repeat for auth, restaurant, rider, admin, realtime, utilities)
-cd ../services/auth
-npm install
+# Backend services
+cd services/auth && npm install && cd ../..
+cd services/restaurant && npm install && cd ../..
+cd services/rider && npm install && cd ../..
+cd services/admin && npm install && cd ../..
+cd services/utilities && npm install && cd ../..
+cd services/realtime && npm install && cd ../..
 ```
 
-### 3. Configure Environment Variables
+### Step 2.5: Compile TypeScript (Initial Build)
 
-Copy each `.env.example` (or create `.env` files) in every service directory and the client. See the [Environment Variables](#-environment-variables) section for the full reference.
-
-### 4. Start in Development Mode
-
-Open separate terminals for each service:
+Before running the services for the first time, compile TypeScript to generate the `dist/` output:
 
 ```bash
-# Terminal 1 — Frontend (http://localhost:5173)
-cd client && npm run dev
+# Compile each backend service
+cd services/auth && npx tsc && cd ../..
+cd services/restaurant && npx tsc && cd ../..
+cd services/rider && npx tsc && cd ../..
+cd services/admin && npx tsc && cd ../..
+cd services/utilities && npx tsc && cd ../..
+cd services/realtime && npx tsc && cd ../..
+```
 
-# Terminal 2 — Auth Service (port 8000)
+> **Note:** This step is only needed for the initial setup. In development, `npm run dev` automatically watches and recompiles TypeScript via `tsc --watch`.
+
+### Step 3: Configure Environment Variables
+
+Each service and the client includes a `.env.example` file. Copy them to create your `.env` files:
+
+```bash
+# Client
+cp client/.env.example client/.env
+
+# Backend services
+cp services/auth/.env.example services/auth/.env
+cp services/restaurant/.env.example services/restaurant/.env
+cp services/rider/.env.example services/rider/.env
+cp services/admin/.env.example services/admin/.env
+cp services/utilities/.env.example services/utilities/.env
+cp services/realtime/.env.example services/realtime/.env
+```
+
+Then fill in the required secret values in each `.env` file. Refer to the [Environment Variables](#-environment-variables) section for details.
+
+> **Critical**: All backend services must share the **same** `JWT_SECRET` and `INTERNAL_SERVICE_KEY`. All services must point to the **same** MongoDB database (`DB_NAME`).
+
+### Step 4: Start RabbitMQ
+
+```bash
+# Using Docker (recommended)
+docker run -d --name rabbitmq \
+  -p 5672:5672 -p 15672:15672 \
+  -e RABBITMQ_DEFAULT_USER=admin \
+  -e RABBITMQ_DEFAULT_PASS=admin123 \
+  rabbitmq:3-management
+```
+
+Management UI will be available at `http://localhost:15672`.
+
+### Step 5: Start All Backend Services (Development)
+
+Open **6 separate terminals** and run:
+
+```bash
+# Terminal 1 — Auth Service (port 8000)
 cd services/auth && npm run dev
 
-# Terminal 3 — Restaurant Service (port 9000)
+# Terminal 2 — Restaurant Service (port 9000)
 cd services/restaurant && npm run dev
 
-# Terminal 4 — Rider Service (port 7000)
+# Terminal 3 — Rider Service (port 7000)
 cd services/rider && npm run dev
 
-# Terminal 5 — Admin Service (port 6001)
+# Terminal 4 — Admin Service (port 6001)
 cd services/admin && npm run dev
 
-# Terminal 6 — Realtime Service (port 9999)
+# Terminal 5 — Utilities Service (port 8888)
+cd services/utilities && npm run dev
+
+# Terminal 6 — Realtime Socket Service (port 9999)
+cd services/realtime && npm run dev
+```
+
+Each `npm run dev` runs `concurrently "tsc --watch" "node --watch dist/index.js"` — compiling TypeScript and auto-restarting on changes.
+
+### Step 6: Start the Frontend
+
+```bash
+cd client
+npm run dev
+```
+
+The application will be running at `http://localhost:5173`.
+
+### Step 7: Build for Production
+
+```bash
+# Build each backend service
+cd services/auth && npm run build && npm start
+cd services/restaurant && npm run build && npm start
+# ... repeat for each service
+
+# Build frontend
+cd client && npm run build
+# Serve the dist/ folder with any static file server
+npm run preview
+```
+
+---
+
+## 🐳 Docker Setup
+
+All backend microservices are fully containerized with **multi-stage Docker builds** for optimized production images.
+
+### Docker Architecture
+
+Each service includes:
+- **`Dockerfile`** — Multi-stage build (build stage with full dev dependencies → production stage with minimal footprint)
+- **`.dockerignore`** — Excludes `node_modules`, `.env`, source files, and other non-essential files from the build context
+
+### Multi-Stage Build Process
+
+```dockerfile
+# Stage 1: Build — Compile TypeScript
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
+
+# Stage 2: Production — Minimal runtime image
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --only=production
+COPY --from=builder /app/dist ./dist
+CMD [ "node", "dist/index.js" ]
+```
+
+### Building & Running Containers Manually
+
+```bash
+# Build a single service
+docker build -t abarkhabo-restaurant ./services/restaurant
+
+# Run a service (pass env vars at runtime)
+docker run -d \
+  --name abarkhabo-restaurant \
+  -p 9000:9000 \
+  --env-file ./services/restaurant/.env \
+  abarkhabo-restaurant
+```
+
+### Build All Services
+
+```bash
+# Build all 6 services
+for service in admin auth realtime restaurant rider utilities; do
+  echo "Building $service..."
+  docker build -t abarkhabo-$service ./services/$service
+done
+```
+
+### Docker Hub Images
+
+Pre-built images are automatically published to Docker Hub via CI/CD:
+
+| Service    | Docker Hub Image                               |
+| ---------- | ---------------------------------------------- |
+| Admin      | `samratmallick/abarakhabo-admin:latest`        |
+| Auth       | `samratmallick/abarakhabo-auth:latest`         |
+| Realtime   | `samratmallick/abarakhabo-realtime:latest`     |
+| Restaurant | `samratmallick/abarakhabo-restaurant:latest`   |
+| Rider      | `samratmallick/abarakhabo-rider:latest`        |
+| Utilities  | `samratmallick/abarakhabo-utilities:latest`    |
+
+```bash
+# Pull and run a published image
+docker pull samratmallick/abarakhabo-restaurant:latest
+docker run -d -p 9000:9000 --env-file .env samratmallick/abarakhabo-restaurant:latest
+```
+
+---
+
+## 🔄 CI/CD Pipeline
+
+The project uses **GitHub Actions** for automated Docker image builds and pushes.
+
+### Workflow: `docker-build-push.yml`
+
+**Location:** `.github/workflows/docker-build-push.yml`
+
+### Trigger Conditions
+
+| Trigger              | Condition                                         |
+| -------------------- | ------------------------------------------------- |
+| `push` to `main`     | Only when files in `services/` are changed        |
+| `pull_request` to `main` | Only when files in `services/` are changed    |
+| `workflow_dispatch`  | Manual trigger — builds **all** services          |
+
+### How It Works
+
+```mermaid
+flowchart LR
+    A[Push / PR to main] --> B{Detect Changed Services}
+    B --> C[Build only changed services]
+    C --> D[docker build + tag]
+    D --> E[Push to Docker Hub]
+    F[Manual Dispatch] --> G[Build ALL services]
+    G --> D
+```
+
+1. **Change Detection** — Uses `dorny/paths-filter` to detect which services have file changes
+2. **Selective Builds** — Only changed services are rebuilt (saves CI minutes)
+3. **Docker Hub Push** — Images are tagged as `latest` and pushed to the `samratmallick` Docker Hub account
+4. **Manual Override** — `workflow_dispatch` rebuilds all 6 services regardless of changes 6 — Realtime Service (port 9999)
 cd services/realtime && npm run dev
 
 # Terminal 7 — Utilities Service (port 8888)
