@@ -191,15 +191,15 @@ Each service has its own `package.json`. Install dependencies for each:
 
 ```bash
 # Frontend
-cd client && npm install && cd ..
+cd client && npm install
 
 # Backend services
-cd services/auth && npm install && cd ../..
-cd services/restaurant && npm install && cd ../..
-cd services/rider && npm install && cd ../..
-cd services/admin && npm install && cd ../..
-cd services/utilities && npm install && cd ../..
-cd services/realtime && npm install && cd ../..
+cd services/auth && npm install
+cd services/restaurant && npm install
+cd services/rider && npm install
+cd services/admin && npm install
+cd services/utilities && npm install
+cd services/realtime && npm install
 ```
 
 ### Step 2.5: Compile TypeScript (Initial Build)
@@ -208,12 +208,12 @@ Before running the services for the first time, compile TypeScript to generate t
 
 ```bash
 # Compile each backend service
-cd services/auth && npx tsc && cd ../..
-cd services/restaurant && npx tsc && cd ../..
-cd services/rider && npx tsc && cd ../..
-cd services/admin && npx tsc && cd ../..
-cd services/utilities && npx tsc && cd ../..
-cd services/realtime && npx tsc && cd ../..
+cd services/auth && npx tsc
+cd services/restaurant && npx tsc
+cd services/rider && npx tsc
+cd services/admin && npx tsc
+cd services/utilities && npx tsc
+cd services/realtime && npx tsc
 ```
 
 > **Note:** This step is only needed for the initial setup. In development, `npm run dev` automatically watches and recompiles TypeScript via `tsc --watch`.
@@ -224,15 +224,15 @@ Each service and the client includes a `.env.example` file. Copy them to create 
 
 ```bash
 # Client
-cp client/.env.example client/.env
+cd client/.env.example client/.env
 
 # Backend services
-cp services/auth/.env.example services/auth/.env
-cp services/restaurant/.env.example services/restaurant/.env
-cp services/rider/.env.example services/rider/.env
-cp services/admin/.env.example services/admin/.env
-cp services/utilities/.env.example services/utilities/.env
-cp services/realtime/.env.example services/realtime/.env
+cd services/auth/.env.example services/auth/.env
+cd services/restaurant/.env.example services/restaurant/.env
+cd services/rider/.env.example services/rider/.env
+cd services/admin/.env.example services/admin/.env
+cd services/utilities/.env.example services/utilities/.env
+cd services/realtime/.env.example services/realtime/.env
 ```
 
 Then fill in the required secret values in each `.env` file. Refer to the [Environment Variables](#-environment-variables) section for details.
