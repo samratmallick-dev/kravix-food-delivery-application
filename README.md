@@ -707,19 +707,6 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 
 ---
 
-## 🗺️ Roadmap
-
-- [ ] 📍 Real-time delivery tracking with animated map markers
-- [ ] ⭐ Ratings & reviews for restaurants and riders
-- [ ] 🔔 Push notifications (Firebase Cloud Messaging)
-- [ ] 🌐 Multi-language support (English, Bengali, Hindi)
-- [ ] 💬 In-app chat between customers and riders
-- [ ] 📱 Progressive Web App (PWA) support
-- [ ] 🧪 End-to-end testing with Playwright
-- [ ] 🐳 Docker Compose for one-command local development
-
----
-
 ## 📄 License
 
 ```
