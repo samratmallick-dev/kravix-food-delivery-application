@@ -51,6 +51,9 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
                         withCredentials: true
                   });
                   if (response.data.success) {
+                        if (response.data.token) {
+                              localStorage.setItem("token", response.data.token);
+                        }
                         toast.success(response.data.message || "Restaurant added successfully.");
                         fetchMyRestaurant();
                   } else {

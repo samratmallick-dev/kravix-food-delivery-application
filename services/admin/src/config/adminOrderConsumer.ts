@@ -36,7 +36,7 @@ export const startAdminOrderConsumer = async () => {
             try {
                   parsed = JSON.parse(msg.content.toString());
             } catch {
-                  console.error("Admin consumer: failed to parse message — discarding"); 
+                  console.error("Admin consumer: failed to parse message — discarding");
                   channel.nack(msg, false, false);
                   return;
             }
@@ -75,6 +75,37 @@ export const startAdminOrderConsumer = async () => {
                         case "RIDER_DELETED":
                               console.log("🗑️ Admin event — rider deleted:", sanitize(parsed.data.riderId));
                               emitToAdmin("admin:rider:deleted", parsed.data);
+                              break;
+
+                        case "USER_BLOCK_STATUS_CHANGED":
+                              console.log("🚫 Admin event — user block status changed:", sanitize(parsed.data.userId));
+                              emitToAdmin("admin:user:blockStatusChanged", parsed.data);
+                              axios.post(
+                                    `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
+                                    {
+                                          event: "user:blockStatusChanged",
+                                          room: `User:${parsed.data.userId}`,
+                                          payload: {
+                                                isBlocked: parsed.data.isBlocked,
+                                                blockedUntil: parsed.data.blockedUntil ?? null,
+                                          }
+                                    },
+                                    { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
+                              ).catch((err) => console.error("User block socket emit failed:", err.message));
+                              if (parsed.data.role === "seller" && parsed.data.restaurantId) {
+                                    axios.post(
+                                          `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
+                                          {
+                                                event: "restaurant:ownerBlocked",
+                                                room: `Restaurant:${parsed.data.restaurantId}`,
+                                                payload: {
+                                                      restaurantId: parsed.data.restaurantId,
+                                                      isBlocked: parsed.data.isBlocked,
+                                                }
+                                          },
+                                          { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
+                                    ).catch((err) => console.error("Restaurant block socket emit failed:", err.message));
+                              }
                               break;
 
                         case "USER_DELETED":

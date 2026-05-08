@@ -37,6 +37,8 @@ export interface IOrder extends Document {
 
       paymentStatus: "pending" | "paid" | "failed";
 
+      deliveryOtp?: string | null;
+
       expiresAt: Date;
 
       createdAt: Date;
@@ -151,6 +153,10 @@ const orderSchema: Schema = new Schema<IOrder>({
             type: String,
             enum: ["pending", "paid", "failed"],
             default: "pending"
+      },
+      deliveryOtp: {
+            type: String,
+            default: null
       },
       expiresAt: {
             type: Date,

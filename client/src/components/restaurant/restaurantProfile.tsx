@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { BiMapPin } from "react-icons/bi";
 import { Edit, SaveAll } from "lucide-react";
 import { useAppData } from "../../context/AppContext";
+import { useNavigate } from "react-router-dom";
 
 interface props {
       restaurant: IRestaurant;
@@ -66,26 +67,20 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
             }
       };
 
-      const {setIsAuth, setUser} = useAppData()
+      const { setIsAuth, setUser } = useAppData();
+      const navigate = useNavigate();
 
-      const logoutHandler = async () => {
-            try {
-                  await axios.patch(`${restaurantBaseUrl}/me/status`, { status: false },
-                        {
-                              headers: {
-                                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                              },
-                              withCredentials: true
-                        }
-                  );
-                  localStorage.removeItem("token");
-                  setIsAuth(false);
-                  setUser(null);
-                  toast.success("Logout Successfull");
-            } catch (error: any) {
-                  console.log(error);
-                  toast.error(error?.response?.data?.message || (error instanceof Error ? error.message : "Failed to logout"));
-            }
+      const logoutHandler = () => {
+            const token = localStorage.getItem("token");
+            axios.patch(`${restaurantBaseUrl}/me/status`, { status: false }, {
+                  headers: { Authorization: `Bearer ${token}` },
+                  withCredentials: true
+            }).catch(() => {});
+            localStorage.removeItem("token");
+            setIsAuth(false);
+            setUser(null);
+            navigate("/login");
+            toast.success("Logout Successfull");
       }
 
       return (

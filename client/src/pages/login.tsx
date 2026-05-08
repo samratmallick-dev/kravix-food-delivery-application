@@ -15,11 +15,7 @@ const Login = () => {
       const isProcessing = useRef(false); 
 
       const responseGoogle = async (authResult: any) => {
-            if (isProcessing.current) return;
-            if (!authResult?.code) {
-                  toast.error(authResult?.error_description || "Google login failed");
-                  return;
-            }
+            if (isProcessing.current || !authResult?.code) return;
 
             isProcessing.current = true;
             setLoading(true);
@@ -31,15 +27,11 @@ const Login = () => {
                         { withCredentials: true }
                   );
 
-                  if (result.status === 200) {
-                        localStorage.setItem("token", result.data.token);
-                        setUser(result.data.data);
-                        setIsAuth(true);
-                        toast.success(result.data.message || "Login Successful");
-                        navigate("/");
-                  } else {
-                        toast.error(result.data.message || "Login failed");
-                  }
+                  localStorage.setItem("token", result.data.token);
+                  setUser(result.data.data);
+                  setIsAuth(true);
+                  toast.success(result.data.message || "Login Successful");
+                  navigate("/");
             } catch (error: any) {
                   console.error("Login error:", error);
                   toast.error(error.response?.data?.message || "Problem while login");
@@ -51,7 +43,7 @@ const Login = () => {
 
       const googleLogin = useGoogleLogin({
             onSuccess: responseGoogle,
-            onError: responseGoogle,
+            onError: (err) => console.error("Google OAuth error:", err),
             flow: "auth-code",
       });
 
@@ -70,7 +62,6 @@ const Login = () => {
                         <button
                               onClick={() => {
                                     if (loading) return;
-                                    isProcessing.current = false; 
                                     googleLogin();
                               }}
                               disabled={loading}

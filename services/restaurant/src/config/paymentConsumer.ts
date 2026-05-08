@@ -38,7 +38,6 @@ export const startPayment = async () => {
                         channel.ack(msg);
                         return;
                   }
-                  console.log("✅ Order Placed: ", order._id);
 
                   channel.ack(msg);
 
@@ -69,7 +68,6 @@ export const startPayment = async () => {
                         Buffer.from(adminPayload),
                         { persistent: true }
                   );
-                  console.log(`📤 Published ORDER_PLACED to admin_event_queue for order ${order._id}`);
             } catch (error) {
                   console.error("❌ Error processing payment:", error);
                   channel.ack(msg);

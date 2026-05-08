@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import axios from "axios";
 import { restaurantBaseUrl, menuBaseUrl } from "../common/constant";
 import { useAppData } from "../../context/AppContext";
+import { detectSearchType } from "../../utils/searchIntent";
 
 interface Suggestion {
       id: string;
@@ -50,8 +51,8 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
                         const params = { latitude: location.latitude, longitude: location.longitude, search: value, radius: 10000 };
 
                         const [resRes, foodRes] = await Promise.allSettled([
-                              axios.get(`${restaurantBaseUrl}/all`, { params, headers }),
-                              axios.get(`${menuBaseUrl}/search/food`, { params, headers })
+                              axios.get(`${restaurantBaseUrl}`, { params, headers }),
+                              axios.get(`${menuBaseUrl}/search`, { params, headers })
                         ]);
 
                         const resSuggestions: Suggestion[] =
@@ -94,10 +95,24 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
             return () => document.removeEventListener("mousedown", handleClickOutside);
       }, []);
 
+      const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
       const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            setValue(e.target.value);
+            const val = e.target.value;
+            setValue(val);
             setShowDropdown(true);
-            onSearch?.(e.target.value);
+
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+
+            if (!val) {
+                  onSearch?.("");
+                  return;
+            }
+            if (val.length < 2) return;
+
+            debounceRef.current = setTimeout(() => {
+                  onSearch?.(val);
+            }, 400);
       };
 
       const handleClear = () => {
@@ -128,7 +143,8 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
       const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter" && value.trim()) {
                   setShowDropdown(false);
-                  navigate(`/search?search=${encodeURIComponent(value)}&type=restaurant`);
+                  const type = detectSearchType(value);
+                  navigate(`/search?search=${encodeURIComponent(value)}&type=${type}`);
                   onSearch?.(value);
             }
       };

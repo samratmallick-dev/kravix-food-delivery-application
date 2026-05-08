@@ -7,6 +7,8 @@ export interface User {
       image: string;
       role: string | null;
       restaurantId?: string | null;
+      isBlocked?: boolean;
+      blockedUntil?: string | null;
 };
 
 export interface LocationData {
@@ -122,6 +124,8 @@ export interface IOrder {
 
       paymentStatus: "pending" | "paid" | "failed";
 
+      deliveryOtp?: string | null;
+
       expiresAt: Date;
 
       createdAt: Date;
@@ -137,4 +141,17 @@ export interface IRider {
       drivingLicesce: string;
       isVerified: boolean;
       isAvailable: boolean;
+      totalEarnings: number;
+      totalDeliveries: number;
+      rating: number | null;
+      ratingCount: number;
+};
+
+export interface IRiderEarnings {
+      totalEarnings: number;
+      totalDeliveries: number;
+      rating: number | null;
+      todayEarnings: number;
+      weekEarnings: number;
+      weeklyBreakdown: { date: string; amount: number }[];
 };

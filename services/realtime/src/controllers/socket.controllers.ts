@@ -23,8 +23,6 @@ export const socketEmit = async (req: Request, res: Response) => {
 
             const io = getIO();
 
-            console.log(`📶 Emitting event - ${event} to room - ${room}`);
-
             io.to(room).emit(event, payload ?? {});
 
             return res.status(200).json({

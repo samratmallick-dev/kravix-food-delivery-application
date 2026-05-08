@@ -1,0 +1,206 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/**"
+      - ".github/workflows/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+env:
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      admin: ${{ steps.changes.outputs.admin }}
+      auth: ${{ steps.changes.outputs.auth }}
+      realtime: ${{ steps.changes.outputs.realtime }}
+      restaurant: ${{ steps.changes.outputs.restaurant }}
+      rider: ${{ steps.changes.outputs.rider }}
+      utilities: ${{ steps.changes.outputs.utilities }}
+      workflow: ${{ steps.changes.outputs.workflow }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect changes per service
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            admin:
+              - 'services/admin/**'
+            auth:
+              - 'services/auth/**'
+            realtime:
+              - 'services/realtime/**'
+            restaurant:
+              - 'services/restaurant/**'
+            rider:
+              - 'services/rider/**'
+            utilities:
+              - 'services/utilities/**'
+            workflow:
+              - '.github/workflows/**'
+
+
+  # ─── Admin Service ───────────────────────────────────────────────
+  build-admin:
+    name: Build & Push — Admin
+    needs: detect-changes
+    if: needs.detect-changes.outputs.admin == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t abarkhabo-admin ./services/admin
+
+      - name: Tag image
+        run: docker tag abarkhabo-admin ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-admin:latest
+
+      - name: Push image
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-admin:latest
+
+  # ─── Auth Service ────────────────────────────────────────────────
+  build-auth:
+    name: Build & Push — Auth
+    needs: detect-changes
+    if: needs.detect-changes.outputs.auth == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t abarkhabo-auth ./services/auth
+
+      - name: Tag image
+        run: docker tag abarkhabo-auth ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-auth:latest
+
+      - name: Push image
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-auth:latest
+
+  # ─── Realtime Service ───────────────────────────────────────────
+  build-realtime:
+    name: Build & Push — Realtime
+    needs: detect-changes
+    if: needs.detect-changes.outputs.realtime == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t abarkhabo-realtime ./services/realtime
+
+      - name: Tag image
+        run: docker tag abarkhabo-realtime ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-realtime:latest
+
+      - name: Push image
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-realtime:latest
+
+  # ─── Restaurant Service ─────────────────────────────────────────
+  build-restaurant:
+    name: Build & Push — Restaurant
+    needs: detect-changes
+    if: needs.detect-changes.outputs.restaurant == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t abarkhabo-restaurant ./services/restaurant
+
+      - name: Tag image
+        run: docker tag abarkhabo-restaurant ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-restaurant:latest
+
+      - name: Push image
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-restaurant:latest
+
+  # ─── Rider Service ──────────────────────────────────────────────
+  build-rider:
+    name: Build & Push — Rider
+    needs: detect-changes
+    if: needs.detect-changes.outputs.rider == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t abarkhabo-rider ./services/rider
+
+      - name: Tag image
+        run: docker tag abarkhabo-rider ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-rider:latest
+
+      - name: Push image
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-rider:latest
+
+  # ─── Utilities Service ──────────────────────────────────────────
+  build-utilities:
+    name: Build & Push — Utilities
+    needs: detect-changes
+    if: needs.detect-changes.outputs.utilities == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t abarkhabo-utilities ./services/utilities
+
+      - name: Tag image
+        run: docker tag abarkhabo-utilities ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-utilities:latest
+
+      - name: Push image
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-utilities:latest
+

@@ -15,85 +15,85 @@ declare module "leaflet" {
       }
 }
 
-const riderIcon = new L.Icon({
-      iconUrl: deliveryIconImage,
-      iconSize: [50, 50],
-      iconAnchor: [25, 50],
-      popupAnchor: [0, -45],
-});
+const riderIcon = new L.Icon({ iconUrl: deliveryIconImage, iconSize: [50, 50], iconAnchor: [25, 50], popupAnchor: [0, -45] });
+const homeIcon = new L.Icon({ iconUrl: homeIconImage, iconSize: [50, 50], iconAnchor: [25, 50], popupAnchor: [0, -45] });
 
-const homeIcon = new L.Icon({
-      iconUrl: homeIconImage,
-      iconSize: [50, 50],
-      iconAnchor: [25, 50],
-      popupAnchor: [0, -45],
-});
-
-const ACTIVE_TRACKING_STATUSES = ["rider_assigned", "picked_up"];
+const ACTIVE_TRACKING_STATUSES = ["rider_assigned", "picked_up", "out_for_delivery", "reached_delivery_location"];
+const INTERPOLATION_DURATION = 2000; 
 
 const Routing = ({ from, to }: { from: [number, number]; to: [number, number] }) => {
       const map = useMap();
       useEffect(() => {
             const control = L.Routing.control({
                   waypoints: [L.latLng(from), L.latLng(to)],
-                  lineOptions: { style: [{ color: "#E27444", weight: 5 }] },
+                  lineOptions: { style: [{ color: "#C22630", weight: 4, opacity: 0.8 }] },
                   addWaypoints: false,
                   draggableWaypoints: false,
                   show: false,
                   createMarker: () => null,
-                  router: L.Routing.osrmv1({
-                        serviceUrl: "https://router.project-osrm.org/route/v1",
-                        useHints: false,
-                        timeout: 10000,
-                  }),
+                  router: L.Routing.osrmv1({ serviceUrl: "https://router.project-osrm.org/route/v1", useHints: false, timeout: 10000 }),
             }).addTo(map);
-
             return () => {
-                  try {
-                        control.getPlan().setWaypoints([]);
-                        map.removeControl(control);
-                  } catch (_) {}
+                  try { control.getPlan().setWaypoints([]); map.removeControl(control); } catch (_) { }
             };
       }, [from, to, map]);
-
       return null;
 };
 
-const MovingRiderMarker = ({ position }: { position: [number, number] }) => {
+const SmoothRiderMarker = ({ target }: { target: [number, number] }) => {
       const map = useMap();
       const markerRef = useRef<L.Marker | null>(null);
+      const currentPosRef = useRef<[number, number]>(target);
+      const rafRef = useRef<number | null>(null);
 
       useEffect(() => {
             if (!markerRef.current) {
-                  markerRef.current = L.marker(position, { icon: riderIcon })
+                  markerRef.current = L.marker(target, { icon: riderIcon })
                         .addTo(map)
-                        .bindPopup('<span class="font-medium">Rider Location</span>');
-            } else {
-                  markerRef.current.setLatLng(position);
+                        .bindPopup('<span style="font-weight:600">Your Rider</span>');
+                  currentPosRef.current = target;
+                  return;
             }
-      }, [position, map]);
 
-      useEffect(() => {
-            return () => {
-                  markerRef.current?.remove();
-                  markerRef.current = null;
+            const from = currentPosRef.current;
+            const to = target;
+            const startTime = performance.now();
+
+            if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+
+            const animate = (now: number) => {
+                  const elapsed = now - startTime;
+                  const t = Math.min(elapsed / INTERPOLATION_DURATION, 1);
+                  
+                  const ease = 1 - Math.pow(1 - t, 3);
+                  const lat = from[0] + (to[0] - from[0]) * ease;
+                  const lng = from[1] + (to[1] - from[1]) * ease;
+                  markerRef.current?.setLatLng([lat, lng]);
+                  if (t < 1) {
+                        rafRef.current = requestAnimationFrame(animate);
+                  } else {
+                        currentPosRef.current = to;
+                        rafRef.current = null;
+                  }
             };
+            rafRef.current = requestAnimationFrame(animate);
+      }, [target, map]);
+
+      useEffect(() => () => {
+            if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+            markerRef.current?.remove();
+            markerRef.current = null;
       }, []);
 
       return null;
 };
 
-const MapCenterUpdater = ({ center }: { center: [number, number] }) => {
+const AutoFitBounds = ({ rider, delivery }: { rider: [number, number]; delivery: [number, number] }) => {
       const map = useMap();
-      const hasRecentered = useRef(false);
-
       useEffect(() => {
-            if (!hasRecentered.current) {
-                  map.setView(center, map.getZoom());
-                  hasRecentered.current = true;
-            }
-      }, [center, map]);
-
+            const bounds = L.latLngBounds([rider, delivery]);
+            map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16, animate: true });
+      }, [rider, delivery, map]);
       return null;
 };
 
@@ -102,62 +102,48 @@ const CustomerTrackingMap = ({ order }: { order: IOrder }) => {
       const [riderLocation, setRiderLocation] = useState<[number, number] | null>(null);
 
       const isActive = ACTIVE_TRACKING_STATUSES.includes(order.status);
-      const hasDeliveryCoords =
-            order.deliveryAddress.latitude != null && order.deliveryAddress.longitude != null;
+      const hasDeliveryCoords = order.deliveryAddress.latitude != null && order.deliveryAddress.longitude != null;
 
-      useEffect(() => {
-            setRiderLocation(null);
-      }, [order._id]);
+      useEffect(() => { setRiderLocation(null); }, [order._id]);
 
       useEffect(() => {
             if (!socket || !isActive) return;
-
             const handleLocation = ({ latitude, longitude }: { latitude: number; longitude: number }) => {
                   setRiderLocation([latitude, longitude]);
             };
-
             socket.on("rider:location", handleLocation);
-            return () => {
-                  socket.off("rider:location", handleLocation);
-            };
+            return () => { socket.off("rider:location", handleLocation); };
       }, [socket, isActive]);
 
       if (!isActive || !hasDeliveryCoords) return null;
 
-      const deliveryLocation: [number, number] = [
-            order.deliveryAddress.latitude!,
-            order.deliveryAddress.longitude!,
-      ];
-
+      const deliveryLocation: [number, number] = [order.deliveryAddress.latitude!, order.deliveryAddress.longitude!];
       const mapCenter = riderLocation ?? deliveryLocation;
 
       return (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-3">
-                  <div className="flex items-center justify-between mb-2">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 shadow-md p-3">
+                  <div className="flex items-center justify-between mb-2 px-1">
                         <p className="text-sm font-semibold text-gray-700">Live Rider Tracking</p>
-                        {!riderLocation && (
-                              <span className="text-xs text-gray-400 animate-pulse">
-                                    Waiting for rider location…
-                              </span>
-                        )}
+                        <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${riderLocation ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${riderLocation ? "bg-green-500 animate-pulse" : "bg-amber-400 animate-pulse"}`} />
+                              {riderLocation ? "Rider nearby" : "Waiting for rider…"}
+                        </span>
                   </div>
-                  <MapContainer center={mapCenter} zoom={14} className="w-full h-87.5 rounded-lg">
+                  <MapContainer center={mapCenter} zoom={14} className="w-full h-72 rounded-xl">
                         <TileLayer
-                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
+                        <Marker position={deliveryLocation} icon={homeIcon}>
+                              <Popup><span style={{ fontWeight: 600 }}>Your Location</span></Popup>
+                        </Marker>
                         {riderLocation && (
                               <>
-                                    <MovingRiderMarker position={riderLocation} />
-                                    <MapCenterUpdater center={riderLocation} />
+                                    <SmoothRiderMarker target={riderLocation} />
+                                    <AutoFitBounds rider={riderLocation} delivery={deliveryLocation} />
                                     <Routing from={riderLocation} to={deliveryLocation} />
                               </>
                         )}
-                        <Marker position={deliveryLocation} icon={homeIcon}>
-                              <Popup>
-                                    <span className="font-medium">Your Delivery Location</span>
-                              </Popup>
-                        </Marker>
                   </MapContainer>
             </div>
       );

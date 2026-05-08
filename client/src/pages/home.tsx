@@ -88,10 +88,19 @@ const Home = () => {
                   setRestaurants((prev) => prev.filter((r) => r._id !== restaurantId));
             });
 
+            socket.on("restaurant:ownerBlocked", ({ restaurantId, isBlocked }: { restaurantId: string; isBlocked: boolean }) => {
+                  if (isBlocked) {
+                        setRestaurants((prev) => prev.filter((r) => r._id !== restaurantId));
+                  } else {
+                        fetchRestaurant();
+                  }
+            });
+
             return () => {
                   socket.off("restaurant:status");
                   socket.off("restaurant:verified");
                   socket.off("restaurant:deleted");
+                  socket.off("restaurant:ownerBlocked");
             };
       }, [socket, retaurants.length]);
 

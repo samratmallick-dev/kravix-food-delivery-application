@@ -11,10 +11,19 @@ export interface IRider extends Document {
       location: {
             type: "Point";
             coordinates: [number, number];
-      },
+      };
 
       isAvailable: boolean;
       lastActiveAt: Date;
+
+      totalEarnings: number;
+      totalDeliveries: number;
+      rating: number;
+      ratingCount: number;
+
+      deliveryOtp?: string | null;
+      deliveryOtpExpiry?: Date | null;
+
       createdAt: Date;
       updatedAt: Date;
 };
@@ -69,6 +78,30 @@ const riderSchema: Schema = new Schema<IRider>({
             type: Date,
             required: true,
             default: Date.now()
+      },
+      totalEarnings: {
+            type: Number,
+            default: 0
+      },
+      totalDeliveries: {
+            type: Number,
+            default: 0
+      },
+      rating: {
+            type: Number,
+            default: 0
+      },
+      ratingCount: {
+            type: Number,
+            default: 0
+      },
+      deliveryOtp: {
+            type: String,
+            default: null
+      },
+      deliveryOtpExpiry: {
+            type: Date,
+            default: null
       }
 }, { timestamps: true });
 

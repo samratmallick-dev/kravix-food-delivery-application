@@ -3,7 +3,7 @@ import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { Address } from "../model/Address.js";
 import { Cart } from "../model/Cart.js";
-import { IMenuItem } from "../model/MenuItems.js";
+import { IMenuItem, MenuItem } from "../model/MenuItems.js";
 import { Restaurant } from "../model/Restaurant.js";
 import { IOrder, Order } from "../model/Order.js";
 import axios from "axios";
@@ -311,15 +311,12 @@ export const updateOrderStatus = TryCatch(async (req: AuthenticatedRequest, res:
       ]);
 
       if (status === "ready_for_rider") {
-            console.log("Publishing order ready for rider event for order", orderId);
-
             await publishEvent("ORDER_READY_FOR_RIDER", {
                   orderId: orderId?.toString(),
                   restaurantId: restaurant._id.toString(),
                   location: restaurant.autoLocation
             });
 
-            console.log("Event publish successfully.")
       }
 
 
@@ -599,17 +596,84 @@ export const updateOrderStatusByRider = TryCatch(async (req, res) => {
       });
 });
 
+export const setOrderOtp = TryCatch(async (req, res) => {
+      if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({ success: false, message: "Forbidden", error: true });
+      }
+      const { orderId, otp } = req.body;
+      await Order.findByIdAndUpdate(orderId, { deliveryOtp: otp ?? null });
+      return res.status(200).json({ success: true, error: false });
+});
+
 export const getOrderByIdInternal = TryCatch(async (req, res) => {
       if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
             return res.status(403).json({ success: false, message: "Forbidden", error: true });
       }
 
-      const order = await Order.findById(req.params.orderId).select("status riderId");
+      const order = await Order.findById(req.params.orderId).select("status riderId userId");
       if (!order) {
             return res.status(404).json({ success: false, message: "Order not found", error: true });
       }
 
       return res.status(200).json({ success: true, error: false, data: order });
+});
+
+export const getRestaurantSalesStats = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const user = req.user;
+      if (!user) {
+            return res.status(401).json({ success: false, message: "Unauthorized User", error: true });
+      }
+
+      const { restaurantId } = req.params;
+
+      const restaurant = await Restaurant.findById(restaurantId);
+      if (!restaurant || restaurant.ownerId !== user._id.toString()) {
+            return res.status(403).json({ success: false, message: "Access denied", error: true });
+      }
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const baseMatch = { restaurantId, status: "delivered", paymentStatus: "paid" };
+
+      const [summary, salesTrend, topItems, orderDistribution] = await Promise.all([
+            Order.aggregate([
+                  { $match: baseMatch },
+                  { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" }, totalOrders: { $sum: 1 }, avgOrderValue: { $avg: "$totalAmount" } } }
+            ]),
+            Order.aggregate([
+                  { $match: { ...baseMatch, createdAt: { $gte: thirtyDaysAgo } } },
+                  { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, revenue: { $sum: "$totalAmount" }, orders: { $sum: 1 } } },
+                  { $sort: { _id: 1 } },
+                  { $project: { _id: 0, date: "$_id", revenue: 1, orders: 1 } }
+            ]),
+            Order.aggregate([
+                  { $match: baseMatch },
+                  { $unwind: "$items" },
+                  { $group: { _id: "$items.name", totalQuantity: { $sum: "$items.quantity" }, totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } } } },
+                  { $sort: { totalQuantity: -1 } },
+                  { $limit: 5 },
+                  { $project: { _id: 0, name: "$_id", totalQuantity: 1, totalRevenue: 1 } }
+            ]),
+            Order.aggregate([
+                  { $match: { restaurantId, paymentStatus: "paid" } },
+                  { $group: { _id: "$status", count: { $sum: 1 } } },
+                  { $project: { _id: 0, status: "$_id", count: 1 } }
+            ])
+      ]);
+
+      const s = summary[0] ?? { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 };
+
+      return res.status(200).json({
+            success: true,
+            message: "Sales stats fetched successfully",
+            data: {
+                  summary: { totalRevenue: s.totalRevenue, totalOrders: s.totalOrders, avgOrderValue: +s.avgOrderValue.toFixed(2) },
+                  salesTrend,
+                  topItems,
+                  orderDistribution
+            }
+      });
 });
 
 export const getDeliveredOrdersByRider = TryCatch(async (req, res) => {
@@ -632,5 +696,70 @@ export const getDeliveredOrdersByRider = TryCatch(async (req, res) => {
             success: true,
             message: "Delivery history fetched successfully",
             data: { count: orders.length, orders }
+      });
+});
+
+export const reorderItems = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const user = req.user;
+      if (!user) {
+            return res.status(401).json({ success: false, message: "Unauthorized User", error: true });
+      }
+
+      const { orderId } = req.params;
+
+      const order = await Order.findById(orderId);
+      if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found", error: true });
+      }
+
+      if (order.userId !== user._id.toString()) {
+            return res.status(403).json({ success: false, message: "Access denied", error: true });
+      }
+
+      if (order.status !== "delivered") {
+            return res.status(400).json({ success: false, message: "Only delivered orders can be reordered", error: true });
+      }
+
+      const restaurant = await Restaurant.findById(order.restaurantId);
+      if (!restaurant) {
+            return res.status(404).json({ success: false, message: "Restaurant not found", error: true });
+      }
+
+      if (!restaurant.isOpen) {
+            return res.status(400).json({ success: false, message: "This restaurant is currently closed. Please try again later.", error: true });
+      }
+
+      const itemIds = order.items.map((i) => i.itemId);
+      const menuItems = await MenuItem.find({ _id: { $in: itemIds }, restaurantId: order.restaurantId, isAvailable: true });
+      const availableItemMap = new Map(menuItems.map((m) => [m._id.toString(), m]));
+
+      const unavailableNames = order.items
+            .filter((i) => !availableItemMap.has(i.itemId))
+            .map((i) => i.name);
+
+      const availableItems = order.items.filter((i) => availableItemMap.has(i.itemId));
+
+      if (availableItems.length === 0) {
+            return res.status(400).json({ success: false, message: "None of the items from this order are currently available.", error: true });
+      }
+
+      await Cart.deleteMany({ userId: user._id });
+
+      const cartDocs = availableItems.map((item) => ({
+            userId: user._id,
+            restaurantId: order.restaurantId,
+            itemId: item.itemId,
+            quantity: item.quantity,
+      }));
+
+      await Cart.insertMany(cartDocs);
+
+      return res.status(200).json({
+            success: true,
+            error: false,
+            message: unavailableNames.length > 0
+                  ? `Cart updated. Some items are no longer available: ${unavailableNames.join(", ")}.`
+                  : "Cart updated with your previous order items.",
+            data: { cartCount: availableItems.reduce((sum, i) => sum + i.quantity, 0), unavailableItems: unavailableNames }
       });
 });

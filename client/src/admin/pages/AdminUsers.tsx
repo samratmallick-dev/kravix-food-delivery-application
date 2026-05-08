@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Trash2, Eye, X, ShieldCheck } from "lucide-react";
+import { Ban, Eye, X, ShieldCheck } from "lucide-react";
 import { useAdminApi } from "../hooks/useAdminApi";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import AdminTable from "../components/AdminTable";
@@ -7,7 +7,7 @@ import VerifyToggle from "../components/VerifyToggle";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
-interface User { _id: string; name: string; email: string; image: string; role: string | null; createdAt: string; }
+interface User { _id: string; name: string; email: string; image: string; role: string | null; createdAt: string; isBlocked: boolean; blockedUntil: string | null; }
 interface RiderProfile { _id: string; userId: string; isVerified: boolean; }
 
 const ROLES = ["all", "customer", "seller", "rider", "null"];
@@ -22,8 +22,8 @@ const AdminUsers = () => {
       const [total, setTotal] = useState(0);
       const [roleFilter, setRoleFilter] = useState("all");
       const [selected, setSelected] = useState<User | null>(null);
-      const [deleting, setDeleting] = useState<string | null>(null);
-      const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
+      const [blocking, setBlocking] = useState<string | null>(null);
+      const [confirmBlock, setConfirmBlock] = useState<User | null>(null);
       const [verifyLoading, setVerifyLoading] = useState<string | null>(null);
       const [riderProfile, setRiderProfile] = useState<RiderProfile | null>(null);
       const navigate = useNavigate();
@@ -68,23 +68,24 @@ const AdminUsers = () => {
 
       useEffect(() => {
             if (!socket) return;
-            const handler = ({ userId }: { userId: string }) => {
-                  setUsers((prev) => prev.filter((u) => u._id !== userId));
-                  setTotal((t) => t - 1);
+            const handler = ({ userId, isBlocked, blockedUntil }: { userId: string; isBlocked: boolean; blockedUntil: string | null }) => {
+                  setUsers((prev) => prev.map((u) => u._id === userId ? { ...u, isBlocked, blockedUntil } : u));
+                  setSelected((prev) => prev?._id === userId ? { ...prev, isBlocked, blockedUntil } : prev);
             };
-            socket.on("admin:user:deleted", handler);
-            return () => { socket.off("admin:user:deleted", handler); };
+            socket.on("admin:user:blockStatusChanged", handler);
+            return () => { socket.off("admin:user:blockStatusChanged", handler); };
       }, [socket]);
 
-      const handleDelete = async (user: User) => {
-            setDeleting(user._id);
+      const handleBlock = async (user: User) => {
+            setBlocking(user._id);
             try {
-                  await api.delete(`/users/${user._id}`);
-                  setUsers((prev) => prev.filter((u) => u._id !== user._id));
-                  setTotal((t) => t - 1);
-                  toast.success("User deleted");
-            } catch { toast.error("Failed to delete user"); }
-            finally { setDeleting(null); setConfirmDelete(null); }
+                  const { data } = await api.patch(`/users/${user._id}/block`);
+                  const updated = { ...user, isBlocked: data.data.isBlocked, blockedUntil: data.data.blockedUntil };
+                  setUsers((prev) => prev.map((u) => u._id === user._id ? updated : u));
+                  setSelected((prev) => prev?._id === user._id ? updated : prev);
+                  toast.success(data.message);
+            } catch { toast.error("Failed to update block status"); }
+            finally { setBlocking(null); setConfirmBlock(null); }
       };
 
       const columns = [
@@ -103,12 +104,15 @@ const AdminUsers = () => {
             {
                   header: "Role",
                   render: (u: User) => (
-                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                              u.role === "customer" ? "bg-blue-100 text-blue-700"
-                              : u.role === "seller" ? "bg-purple-100 text-purple-700"
-                              : u.role === "rider" ? "bg-orange-100 text-orange-700"
-                              : "bg-gray-100 text-gray-500"
-                        }`}>{u.role ?? "unassigned"}</span>
+                        <div className="flex items-center gap-1.5">
+                              <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                    u.role === "customer" ? "bg-blue-100 text-blue-700"
+                                    : u.role === "seller" ? "bg-purple-100 text-purple-700"
+                                    : u.role === "rider" ? "bg-orange-100 text-orange-700"
+                                    : "bg-gray-100 text-gray-500"
+                              }`}>{u.role ?? "unassigned"}</span>
+                              {u.isBlocked && <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600">Blocked</span>}
+                        </div>
                   ),
             },
             {
@@ -122,8 +126,10 @@ const AdminUsers = () => {
                               <button onClick={() => handleSelectUser(u)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition cursor-pointer">
                                     <Eye size={15} />
                               </button>
-                              <button onClick={() => setConfirmDelete(u)} disabled={deleting === u._id} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition cursor-pointer disabled:opacity-50">
-                                    <Trash2 size={15} />
+                              <button onClick={() => setConfirmBlock(u)} disabled={blocking === u._id} className={`p-1.5 rounded-lg transition cursor-pointer disabled:opacity-50 ${
+                                    u.isBlocked ? "hover:bg-green-50 text-orange-400 hover:text-green-600" : "hover:bg-orange-50 text-gray-400 hover:text-orange-600"
+                              }`}>
+                                    <Ban size={15} />
                               </button>
                         </div>
                   ),
@@ -165,6 +171,26 @@ const AdminUsers = () => {
                                     </div>
                                     <div className="space-y-2 text-sm">
                                           <div className="flex justify-between py-2 border-b border-border"><span className="text-gray-400">Role</span><span className="font-medium">{selected.role ?? "unassigned"}</span></div>
+                                          <div className="flex justify-between py-2 border-b border-border"><span className="text-gray-400">Status</span>
+                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                                      selected.isBlocked ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+                                                }`}>{selected.isBlocked ? `Blocked until ${new Date(selected.blockedUntil!).toLocaleDateString("en-IN")}` : "Active"}</span>
+                                          </div>
+                                          <div className="flex justify-between items-center py-2 border-b border-border">
+                                                <span className="text-gray-400">Block Control</span>
+                                                <button
+                                                      onClick={() => { setConfirmBlock(selected); }}
+                                                      disabled={blocking === selected._id}
+                                                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer disabled:opacity-50 ${
+                                                            selected.isBlocked
+                                                                  ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                                                  : "bg-red-100 text-red-600 hover:bg-red-200"
+                                                      }`}
+                                                >
+                                                      <Ban size={11} />
+                                                      {blocking === selected._id ? "Updating..." : selected.isBlocked ? "Unblock User" : "Block User"}
+                                                </button>
+                                          </div>
                                           <div className="flex justify-between py-2 border-b border-border"><span className="text-gray-400">ID</span><span className="font-mono text-xs text-gray-600">{selected._id}</span></div>
                                           <div className="flex justify-between py-2 border-b border-border"><span className="text-gray-400">Joined</span><span className="font-medium">{new Date(selected.createdAt).toLocaleDateString("en-IN")}</span></div>
                                           {selected.role === "rider" && (
@@ -197,14 +223,21 @@ const AdminUsers = () => {
                         </div>
                   )}
 
-                  {confirmDelete && (
-                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setConfirmDelete(null)}>
+                  {confirmBlock && (
+                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setConfirmBlock(null)}>
                               <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
-                                    <h2 className="text-base font-bold text-gray-800">Delete User?</h2>
-                                    <p className="text-sm text-gray-500">This will permanently delete <span className="font-semibold text-gray-700">{confirmDelete.name}</span>. This action cannot be undone.</p>
+                                    <h2 className="text-base font-bold text-gray-800">{confirmBlock.isBlocked ? "Unblock User?" : "Block User?"}</h2>
+                                    <p className="text-sm text-gray-500">
+                                          {confirmBlock.isBlocked
+                                                ? <>This will unblock <span className="font-semibold text-gray-700">{confirmBlock.name}</span> and restore their access immediately.</>
+                                                : <>This will block <span className="font-semibold text-gray-700">{confirmBlock.name}</span> for 7 days. They can still log in but their role-based actions will be restricted.</>
+                                          }
+                                    </p>
                                     <div className="flex gap-3">
-                                          <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-xl border border-border text-sm font-medium text-gray-600 hover:bg-gray-50 transition cursor-pointer">Cancel</button>
-                                          <button onClick={() => handleDelete(confirmDelete)} disabled={!!deleting} className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition disabled:opacity-60 cursor-pointer">Delete</button>
+                                          <button onClick={() => setConfirmBlock(null)} className="flex-1 py-2.5 rounded-xl border border-border text-sm font-medium text-gray-600 hover:bg-gray-50 transition cursor-pointer">Cancel</button>
+                                          <button onClick={() => handleBlock(confirmBlock)} disabled={!!blocking} className={`flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition disabled:opacity-60 cursor-pointer ${
+                                                confirmBlock.isBlocked ? "bg-green-600 hover:bg-green-700" : "bg-orange-600 hover:bg-orange-700"
+                                          }`}>{confirmBlock.isBlocked ? "Unblock" : "Block"}</button>
                                     </div>
                               </div>
                         </div>

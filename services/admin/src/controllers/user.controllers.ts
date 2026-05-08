@@ -2,6 +2,7 @@ import { Response } from "express";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { AdminRequest } from "../middleware/isAdminAuthenticated.js";
 import { User } from "../models/User.js";
+import { Restaurant } from "../models/Restaurant.js";
 import { publishAdminEvent } from "../config/rabbitmq.js";
 
 export const getAllUsers = TryCatch(async (req: AdminRequest, res: Response) => {
@@ -44,22 +45,43 @@ export const getUserById = TryCatch(async (req: AdminRequest, res: Response) => 
       });
 });
 
-export const deleteUser = TryCatch(async (req: AdminRequest, res: Response) => {
-      const user = await User.findByIdAndDelete(req.params["userId"]);
-      if (!user) return res.status(404).json({
-            success: false,
-            message: "User not found",
-            error: true
-      });
-      publishAdminEvent("USER_DELETED", {
+const BLOCK_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+
+export const blockUser = TryCatch(async (req: AdminRequest, res: Response) => {
+      const user = await User.findById(req.params["userId"]);
+      if (!user) return res.status(404).json({ success: false, message: "User not found", error: true });
+
+      const now = new Date();
+      const isCurrentlyBlocked = user.isBlocked && user.blockedUntil && user.blockedUntil > now;
+
+      if (isCurrentlyBlocked) {
+            user.isBlocked = false;
+            user.blockedUntil = null;
+      } else {
+            user.isBlocked = true;
+            user.blockedUntil = new Date(now.getTime() + BLOCK_DURATION_MS);
+      }
+
+      await user.save();
+
+      let restaurantId: string | null = null;
+      if (user.role === "seller") {
+            const restaurant = await Restaurant.findOne({ ownerId: user._id.toString() }).select("_id").lean();
+            restaurantId = restaurant?._id?.toString() ?? null;
+      }
+
+      publishAdminEvent("USER_BLOCK_STATUS_CHANGED", {
             userId: user._id.toString(),
             role: user.role ?? null,
+            isBlocked: user.isBlocked,
+            blockedUntil: user.blockedUntil?.toISOString() ?? null,
+            restaurantId,
       });
 
       return res.status(200).json({
             success: true,
-            message: "User deleted successfully",
+            message: user.isBlocked ? "User blocked for 7 days" : "User unblocked",
             error: false,
-            data: {}
+            data: { isBlocked: user.isBlocked, blockedUntil: user.blockedUntil }
       });
 });

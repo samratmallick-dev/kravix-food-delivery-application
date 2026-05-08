@@ -16,7 +16,8 @@ interface Address {
 };
 
 const Checkout = () => {
-      const { cart, subTotal, quantity, location: userLocation } = useAppData();
+      const { cart, subTotal, quantity, location: userLocation, user } = useAppData();
+      const isBlocked = !!(user?.isBlocked && user.blockedUntil && new Date(user.blockedUntil) > new Date());
       const [addresses, setAddresses] = useState<Address[]>([]);
       const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
       const [loadingAddress, setLoadingAddress] = useState(true);
@@ -84,6 +85,15 @@ const Checkout = () => {
                   const { data } = await axios.post(`${paymentBaseUrl}/razorpay`, { orderId });
                   const { razorpayOrderId, key_id } = data.data;
 
+                  await new Promise<void>((resolve, reject) => {
+                        if ((window as any).Razorpay) return resolve();
+                        const script = document.createElement("script");
+                        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+                        script.onload = () => resolve();
+                        script.onerror = () => reject(new Error("Razorpay SDK failed to load"));
+                        document.head.appendChild(script);
+                  });
+
                   const options = {
                         key: key_id,
                         amount: Math.round(totalAmount * 100),
@@ -118,7 +128,7 @@ const Checkout = () => {
             }
       };
 
-      const stripePromise = loadStripe(stripPublishableKey);
+      const stripePromise = useMemo(() => loadStripe(stripPublishableKey), []);
 
       const payWithStripe = async () => {
             try {
@@ -189,6 +199,15 @@ const Checkout = () => {
       return (
             <div className="container-app space-y-6 py-6">
                   <h1 className="text-2xl font-bold text-gray-700 text-center md:text-start">Checkout Your Order</h1>
+                  {isBlocked && (
+                        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                              <span className="text-red-500 text-xl">🚫</span>
+                              <div>
+                                    <p className="text-sm font-semibold text-red-700">Your account is temporarily blocked</p>
+                                    <p className="text-xs text-red-500">You cannot place orders until {new Date(user!.blockedUntil!).toLocaleDateString("en-IN")}.</p>
+                              </div>
+                        </div>
+                  )}
                   <div className="flex flex-col lg:flex-row gap-6">
                         <div className="flex-1 space-y-4">
                               <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
@@ -385,7 +404,7 @@ const Checkout = () => {
 
                                     <button
                                           onClick={() => {selectedPayment === "razorpay" ? payWithRazorpay() : payWithStripe()}}
-                                          disabled={!selectedAddressId || !selectedPayment || loadingRazorpay || loadingStripe || creatingOrders}
+                                          disabled={isBlocked || !selectedAddressId || !selectedPayment || loadingRazorpay || loadingStripe || creatingOrders}
                                           className="mt-4 w-full py-3 rounded-xl font-semibold text-white transition bg-primary hover:bg-primary/90 disabled:bg-gray-300 disabled:cursor-not-allowed active:scale-95"
                                     >
                                           {(loadingRazorpay || loadingStripe || creatingOrders) ? (
@@ -393,9 +412,10 @@ const Checkout = () => {
                                                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                                       Processing...
                                                 </span>
-                                          ) : !selectedAddressId ? "Select a delivery address"
-                                                : !selectedPayment ? "Select a payment method"
-                                                      : `Pay ₹${total} via ${selectedPayment === "razorpay" ? "Razorpay" : "Stripe"}`}
+                                          ) : isBlocked ? "Account blocked — cannot place orders"
+                                                : !selectedAddressId ? "Select a delivery address"
+                                                      : !selectedPayment ? "Select a payment method"
+                                                            : `Pay ₹${total} via ${selectedPayment === "razorpay" ? "Razorpay" : "Stripe"}`}
                                     </button>
                               </div>
                         </div>

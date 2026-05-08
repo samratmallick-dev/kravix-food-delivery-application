@@ -18,7 +18,7 @@ interface SocketContextType {
 const SocketContext = createContext<SocketContextType>({ socket: null });
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
-      const { isAuth } = useAppData();
+      const { isAuth, setUser } = useAppData();
       const socketRef = useRef<Socket | null>(null);
       const [socket, setSocket] = useState<Socket | null>(null);
 
@@ -58,6 +58,10 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
             newSocket.on("connect_error", (err) => {
                   console.log("🚨 Socket connection error:", err.message);
+            });
+
+            newSocket.on("user:blockStatusChanged", ({ isBlocked, blockedUntil }: { isBlocked: boolean; blockedUntil: string | null }) => {
+                  setUser((prev) => prev ? { ...prev, isBlocked, blockedUntil } : prev);
             });
 
             return () => {

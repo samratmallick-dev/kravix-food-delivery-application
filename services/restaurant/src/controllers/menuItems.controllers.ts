@@ -6,6 +6,7 @@ import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import { MenuItem } from "../model/MenuItems.js";
 import mongoose from "mongoose";
+import { normalizeSearchQuery } from "../utils/searchNormalizer.js";
 
 export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
@@ -181,10 +182,12 @@ export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Resp
             });
       }
 
+      const normalizedSearch = await normalizeSearchQuery(search as string);
+
       const matchingItems = await MenuItem.find({
-            name: { $regex: search as string, $options: "i" },
+            name: { $regex: normalizedSearch, $options: "i" },
             isAvailable: true
-      }).select("restaurantId name price imageUrl description isAvailable");
+      }).select("restaurantId name price imageUrl description isAvailable").limit(50);
 
       if (!matchingItems.length) {
             return res.status(200).json({
@@ -218,6 +221,7 @@ export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Resp
 
       const results = matchingItems
             .filter((item) => restaurantMap.has(item.restaurantId.toString()))
+            .slice(0, 25)
             .map((item) => ({
                   item: {
                         _id: item._id,

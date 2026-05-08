@@ -12,6 +12,7 @@ import { Loader, Minus, Plus } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
+import { detectSearchType } from "../utils/searchIntent";
 
 const SearchPage = () => {
       const { location, cart, fetchCart } = useAppData();
@@ -38,7 +39,8 @@ const SearchPage = () => {
       };
 
       const handleSearch = (value: string) => {
-            const params: Record<string, string> = { type: searchType };
+            const type = value ? detectSearchType(value) : searchType;
+            const params: Record<string, string> = { type };
             if (value) params.search = value;
             setSearchParams(params);
       };
@@ -100,6 +102,8 @@ const SearchPage = () => {
 
       useEffect(() => {
             if (!location?.latitude || !location.longitude) return;
+            setRestaurants([]);
+            setFoodResults([]);
             setLoading(true);
             joinedRooms.current.clear();
             const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
@@ -252,6 +256,7 @@ const SearchPage = () => {
                                                                   src={item.imageUrl || "https://placehold.co/400x160?text=Food"}
                                                                   alt={item.name}
                                                                   className="w-full h-40 object-cover"
+                                                                  loading="lazy"
                                                             />
                                                       </div>
                                                       <div className="p-3 flex flex-col flex-1 gap-1">

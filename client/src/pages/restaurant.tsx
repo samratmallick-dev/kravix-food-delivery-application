@@ -7,6 +7,7 @@ import RestaurantProfile from "../components/restaurant/restaurantProfile";
 import Menuitems from "../components/restaurant/menuitems";
 import AddMenuItems from "../components/restaurant/addMenuItems";
 import RestaurantOrders from "../components/restaurant/restaurantOrders";
+import SalesAnalytics from "../components/restaurant/SalesAnalytics";
 import { useMobile } from "../components/common/useMobile";
 import { useAppData } from "../context/AppContext";
 import { useSocket } from "../context/SocketContext";
@@ -16,8 +17,9 @@ type SellerTab = "menu" | "add-item" | "sales";
 
 const Restaurant = () => {
 
-      const { user } = useAppData();
+      const { user, setUser } = useAppData();
       const { socket } = useSocket();
+      const isBlocked = !!(user?.isBlocked && user.blockedUntil && new Date(user.blockedUntil) > new Date());
 
       const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
       const [loading, setLoading] = useState(true);
@@ -44,6 +46,7 @@ const Restaurant = () => {
 
                   if (data.token) {
                         localStorage.setItem("token", data.token);
+                        setUser((prev) => prev ? { ...prev, restaurantId: data.data?._id } : prev);
                   }
                   setRestaurant(data.data || null);
             } catch (error: any) {
@@ -55,7 +58,7 @@ const Restaurant = () => {
 
       useEffect(() => {
             fetchMyRestaurant();
-      }, [user]);
+      }, []);
 
       useEffect(() => {
             if (!socket || !restaurant?._id) return;
@@ -116,6 +119,15 @@ const Restaurant = () => {
       }
       return (
             <div className="min-h-screen bg-background">
+                  {isBlocked && (
+                        <div className="flex items-center gap-3 bg-red-50 border-b border-red-200 px-6 py-3">
+                              <span className="text-red-500 text-xl">🚫</span>
+                              <div>
+                                    <p className="text-sm font-semibold text-red-700">Your account is temporarily blocked</p>
+                                    <p className="text-xs text-red-500">Your restaurant is hidden from customers and you cannot manage orders until {new Date(user!.blockedUntil!).toLocaleDateString("en-IN")}.</p>
+                              </div>
+                        </div>
+                  )}
                   <RestaurantProfile restaurant={restaurant} onUpdate={setRestaurant} isSeller={true} fetchMyRestaurant={fetchMyRestaurant} />
                   <RestaurantOrders restaurantId={restaurant._id} />
                   <div className="w-full container-app sm:px-6 py-8 space-y-6">
@@ -152,10 +164,7 @@ const Restaurant = () => {
                                           <AddMenuItems onItemAdded={() => fetchMenuItem(restaurant._id)} />
                                     )}
                                     {tab === "sales" && (
-                                          <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-2">
-                                                <span className="text-4xl">📊</span>
-                                                <p className="text-sm font-medium">Sales Analytics Coming Soon</p>
-                                          </div>
+                                          <SalesAnalytics restaurantId={restaurant._id} />
                                     )}
                               </div>
                         </div>

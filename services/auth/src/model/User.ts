@@ -5,6 +5,8 @@ export interface IUser extends Document {
       email: string;
       image: string;
       role: string;
+      isBlocked: boolean;
+      blockedUntil: Date | null;
 };
 
 const userSchema: Schema<IUser> = new Schema({
@@ -24,6 +26,14 @@ const userSchema: Schema<IUser> = new Schema({
       },
       role: {
             type: String,
+            default: null
+      },
+      isBlocked: {
+            type: Boolean,
+            default: false
+      },
+      blockedUntil: {
+            type: Date,
             default: null
       }
 }, { timestamps: true });

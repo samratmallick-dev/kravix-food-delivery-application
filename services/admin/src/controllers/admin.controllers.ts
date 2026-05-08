@@ -27,7 +27,7 @@ export const adminLogin = TryCatch(async (req: Request, res: Response) => {
       const token = jwt.sign(
             { _id: "admin", email, role: "admin" },
             process.env.JWT_SECRET as string,
-            { expiresIn: "7d" }
+            { expiresIn: "15d" }
       );
 
       return res.status(200).json({
