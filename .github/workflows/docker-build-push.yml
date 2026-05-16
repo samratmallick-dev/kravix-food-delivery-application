@@ -65,19 +65,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t abarkhabo-admin ./services/admin
+        run: docker build -t kravix-admin ./services/admin
 
       - name: Tag image
-        run: docker tag abarkhabo-admin ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-admin:latest
+        if: github.event_name != 'pull_request'
+        run: docker tag kravix-admin ${{ env.DOCKERHUB_USERNAME }}/kravix-admin:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-admin:latest
+        if: github.event_name != 'pull_request'
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-admin:latest
 
   # ─── Auth Service ────────────────────────────────────────────────
   build-auth:
@@ -90,19 +93,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t abarkhabo-auth ./services/auth
+        run: docker build -t kravix-auth ./services/auth
 
       - name: Tag image
-        run: docker tag abarkhabo-auth ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-auth:latest
+        if: github.event_name != 'pull_request'
+        run: docker tag kravix-auth ${{ env.DOCKERHUB_USERNAME }}/kravix-auth:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-auth:latest
+        if: github.event_name != 'pull_request'
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-auth:latest
 
   # ─── Realtime Service ───────────────────────────────────────────
   build-realtime:
@@ -115,19 +121,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t abarkhabo-realtime ./services/realtime
+        run: docker build -t kravix-realtime ./services/realtime
 
       - name: Tag image
-        run: docker tag abarkhabo-realtime ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-realtime:latest
+        if: github.event_name != 'pull_request'
+        run: docker tag kravix-realtime ${{ env.DOCKERHUB_USERNAME }}/kravix-realtime:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-realtime:latest
+        if: github.event_name != 'pull_request'
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-realtime:latest
 
   # ─── Restaurant Service ─────────────────────────────────────────
   build-restaurant:
@@ -140,19 +149,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t abarkhabo-restaurant ./services/restaurant
+        run: docker build -t kravix-restaurant ./services/restaurant
 
       - name: Tag image
-        run: docker tag abarkhabo-restaurant ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-restaurant:latest
+        if: github.event_name != 'pull_request'
+        run: docker tag kravix-restaurant ${{ env.DOCKERHUB_USERNAME }}/kravix-restaurant:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-restaurant:latest
+        if: github.event_name != 'pull_request'
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-restaurant:latest
 
   # ─── Rider Service ──────────────────────────────────────────────
   build-rider:
@@ -165,19 +177,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t abarkhabo-rider ./services/rider
+        run: docker build -t kravix-rider ./services/rider
 
       - name: Tag image
-        run: docker tag abarkhabo-rider ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-rider:latest
+        if: github.event_name != 'pull_request'
+        run: docker tag kravix-rider ${{ env.DOCKERHUB_USERNAME }}/kravix-rider:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-rider:latest
+        if: github.event_name != 'pull_request'
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-rider:latest
 
   # ─── Utilities Service ──────────────────────────────────────────
   build-utilities:
@@ -190,17 +205,20 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t abarkhabo-utilities ./services/utilities
+        run: docker build -t kravix-utilities ./services/utilities
 
       - name: Tag image
-        run: docker tag abarkhabo-utilities ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-utilities:latest
+        if: github.event_name != 'pull_request'
+        run: docker tag kravix-utilities ${{ env.DOCKERHUB_USERNAME }}/kravix-utilities:latest
 
       - name: Push image
-        run: docker push ${{ env.DOCKERHUB_USERNAME }}/abarakhabo-utilities:latest
+        if: github.event_name != 'pull_request'
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-utilities:latest
 
