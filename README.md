@@ -181,7 +181,7 @@ services/<service-name>/
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/samratmallick-dev/kravix-online-food-dellivery-application.git
+git clone https://github.com/samratmallick-dev/kravix-food-delivery-application.git
 cd kravix-online-food-dellivery-application
 ```
 
