@@ -12,7 +12,7 @@ const Hero = () => {
                         </div>
                         <div className="container-app relative z-10 w-full flex flex-col items-center" style={{ padding: isMobile ? "40px 16px" : "80px 16px" }}>
                               <h1 className="font-bold text-white max-w-2xl text-center" style={{ fontSize: isMobile ? "1.75rem" : "3.75rem" }}>
-                                    Order your favorite food from our app <span className="text-gradient">আবার খাবো</span>
+                                    Order your favorite food from our app <span className="text-gradient">Kravix</span>
                               </h1>
                               <p className="text-white/90 mt-4 max-w-2xl text-center" style={{ fontSize: isMobile ? "1rem" : "1.25rem" }}>
                                     Experience the best food delivery service with fast and reliable delivery.

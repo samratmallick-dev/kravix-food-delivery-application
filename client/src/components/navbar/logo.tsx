@@ -7,7 +7,7 @@ const Logo = () => {
                   <div className="md:w-12 w-8 md:h-12 h-8 bg-white rounded-xl flex items-center justify-center">
                         <UtensilsCrossed className="w-7 h-7 text-primary" />
                   </div>
-                  <span className="md:text-2xl text-xl font-extrabold text-gradient ">আবার খাবো</span>
+                  <span className="md:text-2xl text-xl font-extrabold text-gradient ">Kravix</span>
             </Link>
       );
 }

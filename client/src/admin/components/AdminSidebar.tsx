@@ -36,7 +36,7 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
                               <div className="flex items-center gap-2.5">
                                     <UtensilsCrossed size={22} className="text-primary" />
                                     <div>
-                                          <p className="text-white font-bold text-sm leading-tight">আবার খাবো</p>
+                                          <p className="text-white font-bold text-sm leading-tight">Kravix</p>
                                           <p className="text-gray-400 text-xs">Admin Panel</p>
                                     </div>
                               </div>

@@ -53,7 +53,7 @@ const Login = () => {
                         <h1 className="text-center w-full flex items-center justify-center">
                               <span className="text-3xl font-extrabold text-gradient flex items-center gap-2">
                                     <UtensilsCrossed className="w-7 h-7 text-primary" />
-                                    <span>আবার খাবো</span>
+                                    <span>Kravix</span>
                               </span>
                         </h1>
                         <p className="text-center text-sm text-gray-500">

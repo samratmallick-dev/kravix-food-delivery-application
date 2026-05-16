@@ -98,7 +98,7 @@ const Checkout = () => {
                         key: key_id,
                         amount: Math.round(totalAmount * 100),
                         currency: "INR",
-                        name: "আবার খাবো - Online Food Delivery Platform",
+                        name: "Kravix - Online Food Delivery Platform",
                         description: "Food Order Payment",
                         order_id: razorpayOrderId,
                         handler: async (response: any) => {

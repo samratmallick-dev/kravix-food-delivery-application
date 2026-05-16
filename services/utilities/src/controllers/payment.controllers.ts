@@ -144,7 +144,7 @@ export const payWithStripe = async (req: Request, res: Response) => {
                         price_data: {
                               currency: "inr",
                               product_data: {
-                                    name: "আবার খাবো - Online Food order"
+                                    name: "Kravix - Online Food order"
                               },
                               unit_amount: Math.round(data.data.totalAmount * 100)
                         },

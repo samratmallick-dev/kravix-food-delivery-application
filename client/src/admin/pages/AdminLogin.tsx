@@ -25,7 +25,7 @@ const AdminLogin = () => {
                   <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
                         <div className="bg-primary px-8 py-7 flex flex-col items-center gap-2">
                               <UtensilsCrossed size={32} className="text-white" />
-                              <h1 className="text-white text-xl font-bold">আবার খাবো</h1>
+                              <h1 className="text-white text-xl font-bold">Kravix</h1>
                               <p className="text-red-200 text-xs">Admin Panel</p>
                         </div>
 
@@ -38,7 +38,7 @@ const AdminLogin = () => {
                                                 type="email"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                placeholder="admin@abarkhabo.com"
+                                                placeholder="admin@kravix.com"
                                                 required
                                                 className="flex-1 outline-none text-sm text-gray-700 bg-transparent"
                                           />

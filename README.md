@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="./client/public/apple-touch-icon.png" width="30%" alt="Abar Khabo Banner" />
+  <img src="./client/public/apple-touch-icon.png" width="30%" alt="Kravix Banner" />
 </p>
 
-<h1 align="center">🍛 আবার খাবো — Abar Khabo</h1>
+<h1 align="center">🍛 Kravix — Online Food Ordering and Delivery Platform</h1>
 <p align="center"><em>🍔 Craving something delicious? Let's eat again! A full-stack food delivery platform built with love from Kolkata.</em></p>
 
 <p align="center">
@@ -37,7 +37,7 @@
 
 ## 🌟 Overview
 
-**আবার খাবো (Abar Khabo)** — meaning **"Let's Eat Again"** in Bengali — is a production-grade online food delivery web application. Built as a TypeScript-first monorepo with a microservices backend, it delivers a seamless experience for three key user roles:
+**Kravix (Kravix)** — meaning **"Let's Eat Again"** in Bengali — is a production-grade online food delivery web application. Built as a TypeScript-first monorepo with a microservices backend, it delivers a seamless experience for three key user roles:
 
 | Role | Description |
 |------|-------------|
@@ -110,7 +110,7 @@
 ## 📁 Project Structure
 
 ```
-abar-khabo/
+kravix/
 ├── .github/
 │   └── workflows/
 │       └── docker-build-push.yml    # CI/CD — per-service Docker builds
@@ -181,8 +181,8 @@ services/<service-name>/
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/samratmallick-dev/abar-khabo-online-food-dellivery-application.git
-cd abar-khabo-online-food-dellivery-application
+git clone https://github.com/samratmallick-dev/kravix-online-food-dellivery-application.git
+cd kravix-online-food-dellivery-application
 ```
 
 ### Step 2: Install Dependencies
@@ -338,14 +338,14 @@ CMD [ "node", "dist/index.js" ]
 
 ```bash
 # Build a single service
-docker build -t abarkhabo-restaurant ./services/restaurant
+docker build -t kravix-restaurant ./services/restaurant
 
 # Run a service (pass env vars at runtime)
 docker run -d \
-  --name abarkhabo-restaurant \
+  --name kravix-restaurant \
   -p 9000:9000 \
   --env-file ./services/restaurant/.env \
-  abarkhabo-restaurant
+  kravix-restaurant
 ```
 
 ### Build All Services
@@ -354,7 +354,7 @@ docker run -d \
 # Build all 6 services
 for service in admin auth realtime restaurant rider utilities; do
   echo "Building $service..."
-  docker build -t abarkhabo-$service ./services/$service
+  docker build -t kravix-$service ./services/$service
 done
 ```
 
@@ -364,17 +364,17 @@ Pre-built images are automatically published to Docker Hub via CI/CD:
 
 | Service    | Docker Hub Image                               |
 | ---------- | ---------------------------------------------- |
-| Admin      | `samratmallick/abarakhabo-admin:latest`        |
-| Auth       | `samratmallick/abarakhabo-auth:latest`         |
-| Realtime   | `samratmallick/abarakhabo-realtime:latest`     |
-| Restaurant | `samratmallick/abarakhabo-restaurant:latest`   |
-| Rider      | `samratmallick/abarakhabo-rider:latest`        |
-| Utilities  | `samratmallick/abarakhabo-utilities:latest`    |
+| Admin      | `samratmallick/kravix-admin:latest`        |
+| Auth       | `samratmallick/kravix-auth:latest`         |
+| Realtime   | `samratmallick/kravix-realtime:latest`     |
+| Restaurant | `samratmallick/kravix-restaurant:latest`   |
+| Rider      | `samratmallick/kravix-rider:latest`        |
+| Utilities  | `samratmallick/kravix-utilities:latest`    |
 
 ```bash
 # Pull and run a published image
-docker pull samratmallick/abarakhabo-restaurant:latest
-docker run -d -p 9000:9000 --env-file .env samratmallick/abarakhabo-restaurant:latest
+docker pull samratmallick/kravix-restaurant:latest
+docker run -d -p 9000:9000 --env-file .env samratmallick/kravix-restaurant:latest
 ```
 
 ---
@@ -423,10 +423,10 @@ Each service includes a multi-stage `Dockerfile` (Node 22 Alpine):
 
 ```bash
 # Build a single service
-docker build -t abarkhabo-auth ./services/auth
+docker build -t kravix-auth ./services/auth
 
 # Run the container
-docker run -p 8000:8000 --env-file ./services/auth/.env abarkhabo-auth
+docker run -p 8000:8000 --env-file ./services/auth/.env kravix-auth
 ```
 
 > The GitHub Actions workflow (`.github/workflows/docker-build-push.yml`) automatically detects changed services and builds/pushes only the affected Docker images to Docker Hub.
@@ -460,7 +460,7 @@ docker run -p 8000:8000 --env-file ./services/auth/.env abarkhabo-auth
 | `PORT` | All | Service listen port | `8000` |
 | `ALLOWED_ORIGINS` | All | CORS allowed origins | `http://localhost:5173` |
 | `MONGO_URI` | Auth, Restaurant, Rider, Admin | MongoDB connection string | `mongodb+srv://...` |
-| `DB_NAME` | Auth, Restaurant, Rider, Admin | Database name | `abarkhabo_db` |
+| `DB_NAME` | Auth, Restaurant, Rider, Admin | Database name | `kravix_db` |
 | `JWT_SECRET` | Auth, Restaurant, Rider, Admin, Realtime | JWT signing secret | `your-256-bit-secret` |
 | `INTERNAL_SERVICE_KEY` | Restaurant, Rider, Admin, Realtime, Utilities | Inter-service auth key | `your-internal-key` |
 | `GOOGLE_CLIENT_ID` | Auth | Google OAuth client ID | `861...` |
@@ -765,5 +765,5 @@ This project is built with the help of these amazing open-source technologies:
 <p align="center">
   Made with ❤️ in Kolkata, India
   <br />
-  <strong>আবার খাবো — Let's Eat Again! 🍛</strong>
+  <strong>Kravix — Let's Eat Again! 🍛</strong>
 </p>

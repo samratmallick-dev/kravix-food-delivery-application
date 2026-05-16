@@ -45,7 +45,7 @@ const SelectRole = () => {
                   <div className="max-w-md w-full space-y-6">
                         <h1 className="text-center w-full flex items-center justify-center">
                               <span className="text-3xl font-extrabold text-gradient flex items-center gap-2">
-                                    <UtensilsCrossed className="w-7 h-7 text-primary" /><span>আবার খাবো</span>
+                                    <UtensilsCrossed className="w-7 h-7 text-primary" /><span>Kravix</span>
                               </span>
                         </h1>
                         <div className="w-full space-y-6">

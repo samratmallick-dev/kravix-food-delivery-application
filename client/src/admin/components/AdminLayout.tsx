@@ -21,7 +21,7 @@ const AdminLayout = () => {
                               </button>
                               <div className="flex items-center gap-2">
                                     <UtensilsCrossed size={18} className="text-primary" />
-                                    <span className="text-white font-bold text-sm">আবার খাবো</span>
+                                    <span className="text-white font-bold text-sm">Kravix</span>
                               </div>
                         </header>
                         <main className="flex-1 overflow-y-auto">

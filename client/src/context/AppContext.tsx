@@ -126,7 +126,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                         try {
                               const response = await fetch(
                                     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-                                    { headers: { "User-Agent": "AbarKhabo/1.0" } }
+                                    { headers: { "User-Agent": "Kravix/1.0" } }
                               );
                               if (response.status === 429) throw new Error("Rate limited");
 

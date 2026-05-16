@@ -37,7 +37,7 @@ const Footer = () => {
                                           </div>
                                     </div>
                                     <div className="mt-8 pt-8 border-t border-border text-center text-sm text-gray-500">
-                                          © {new Date().getFullYear()} আবার খাবো. All rights reserved. Made By ❤️ Abar Kahbo Teams.
+                                          © {new Date().getFullYear()} Kravix. All rights reserved. Made By ❤️ Kravix Teams.
                                     </div>
                               </div>
                         </footer>
