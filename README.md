@@ -462,14 +462,15 @@ docker run -p 8000:8000 --env-file ./services/auth/.env kravix-auth
 | `MONGO_URI` | Auth, Restaurant, Rider, Admin | MongoDB connection string | `mongodb+srv://...` |
 | `DB_NAME` | Auth, Restaurant, Rider, Admin | Database name | `kravix_db` |
 | `JWT_SECRET` | Auth, Restaurant, Rider, Admin, Realtime | JWT signing secret | `your-256-bit-secret` |
-| `INTERNAL_SERVICE_KEY` | Restaurant, Rider, Admin, Realtime, Utilities | Inter-service auth key | `your-internal-key` |
+| `INTERNAL_SERVICE_KEY` | Auth, Restaurant, Rider, Admin, Realtime, Utilities | Inter-service auth key | `your-internal-key` |
 | `GOOGLE_CLIENT_ID` | Auth | Google OAuth client ID | `861...` |
 | `GOOGLE_CLIENT_SECRET` | Auth | Google OAuth client secret | `GOCSPX-...` |
-| `RABITMQ_URL` | Restaurant, Rider, Admin, Utilities | RabbitMQ connection URL | `amqp://admin:admin123@localhost:5672` |
+| `RABITMQ_URL` | Auth, Restaurant, Rider, Admin, Utilities | RabbitMQ connection URL | `amqp://admin:admin123@localhost:5672` |
 | `PAYMENT_QUEUE` | Restaurant, Admin, Utilities | Payment event queue name | `payment_event` |
 | `ORDER_READY_QUEUE` | Restaurant, Rider | Order ready queue name | `order_ready_queue` |
 | `RIDER_QUEUE` | Restaurant, Rider | Rider assignment queue | `rider_oueue` |
 | `ADMIN_EVENT_QUEUE` | Restaurant, Admin | Admin event queue | `admin_event_queue` |
+| `AUTH_EVENT_QUEUE` | Auth | Auth events queue (registrations, role changes) | `auth_event_queue` |
 | `CLOUD_NAME` | Utilities | Cloudinary cloud name | `your-cloud-name` |
 | `CLOUD_API_KEY` | Utilities | Cloudinary API key | `977...` |
 | `CLOUD_API_SECRET` | Utilities | Cloudinary API secret | `your-secret` |
@@ -480,6 +481,7 @@ docker run -p 8000:8000 --env-file ./services/auth/.env kravix-auth
 | `RIDER_SEARCH_RADIUS_METERS` | Rider | Geo search radius | `500` |
 | `ADMIN_EMAIL` | Admin | Admin login email | `admin@admin.dev` |
 | `ADMIN_PASSWORD` | Admin | Admin login password | `your-password` |
+| `REALTIME_SOCKET_SERVICE_URI` | Auth, Restaurant, Rider, Admin | Realtime service base URL | `http://localhost:9999` |
 
 ---
 
@@ -648,6 +650,7 @@ graph TB
     ADMIN --> MONGO
 
     REST -- "Publishes events" --> RABBIT
+    AUTH -- "Publishes events" --> RABBIT
     RABBIT -- "Consumes events" --> RIDER
     RABBIT -- "Consumes events" --> ADMIN
     RABBIT -- "Consumes events" --> UTIL

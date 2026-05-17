@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { User } from "../model/User.js";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
+import { publishAuthEvent } from "../config/authPublisher.js";
 
 interface TokenPayload {
       _id: string;
@@ -98,9 +99,11 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
       const { email, name, picture } = userResponse.data;
 
       let user = await User.findOne({ email });
+      let isNewUser = false;
 
       if (!user) {
             user = await User.create({ email, name, image: picture });
+            isNewUser = true;
       }
 
       const token = tokengenerator({
@@ -110,6 +113,15 @@ export const loginController = TryCatch(async (req: Request, res: Response) => {
             image: user.image,
             role: user.role ?? null,
       });
+
+      if (isNewUser) {
+            publishAuthEvent("USER_REGISTERED", {
+                  userId: user._id.toString(),
+                  name: user.name,
+                  email: user.email,
+                  image: user.image,
+            });
+      }
 
       return res.status(200).json({
             success: true,
@@ -163,6 +175,14 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
             name: updateUser.name,
             email: updateUser.email,
             image: updateUser.image,
+            role: updateUser.role ?? null,
+      });
+
+      // Fire-and-forget: publish role update event without blocking the response
+      publishAuthEvent("USER_ROLE_UPDATED", {
+            userId: updateUser._id.toString(),
+            name: updateUser.name,
+            email: updateUser.email,
             role: updateUser.role ?? null,
       });
 

@@ -6,6 +6,7 @@ import {
       useState,
       type ReactNode
 } from "react";
+import toast from "react-hot-toast";
 
 import { Socket, io } from "socket.io-client";
 import { realtimeSocketBaseUrl } from "../components/common/constant";
@@ -62,6 +63,27 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
             newSocket.on("user:blockStatusChanged", ({ isBlocked, blockedUntil }: { isBlocked: boolean; blockedUntil: string | null }) => {
                   setUser((prev) => prev ? { ...prev, isBlocked, blockedUntil } : prev);
+            });
+
+            newSocket.on("user:registered", (payload: { userId: string; name: string; email: string; image: string }) => {
+                  console.log("[Socket] 📥 user:registered event received:", payload);
+                  setUser((prev) =>
+                        prev
+                              ? {
+                                    ...prev,
+                                    name: payload.name,
+                                    email: payload.email,
+                                    image: payload.image,
+                              }
+                              : prev
+                  );
+                  toast.success("Profile synced successfully!");
+            });
+
+            newSocket.on("user:role_updated", (payload: { userId: string; role: string | null }) => {
+                  console.log("[Socket] 📥 user:role_updated event received:", payload);
+                  setUser((prev) => prev ? { ...prev, role: payload.role } : prev);
+                  toast.success(`Role updated to ${payload.role || "customer"}`);
             });
 
             return () => {

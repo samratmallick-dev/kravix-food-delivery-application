@@ -1,12 +1,20 @@
 import "dotenv/config";
 import { app } from "./app.js";
 import ConnectDb from "./config/db/db.js";
+import { connectRabbitMQ } from "./config/rabbitmq.js";
 
 const PORT = process.env.PORT || 8000;
 
 const start = async () => {
       try {
             await ConnectDb();
+
+            try {
+                  await connectRabbitMQ();
+            } catch (mqErr) {
+                  console.error("[Auth] ⚠️  RabbitMQ connection failed — event publishing will be unavailable:", mqErr);
+            }
+
             const server = app.listen(PORT, () => {
                   console.log(`[Auth server]: Auth Server is running at http://localhost:${PORT}`);
             });

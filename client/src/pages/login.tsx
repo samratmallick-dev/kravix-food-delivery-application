@@ -12,7 +12,8 @@ const Login = () => {
       const [loading, setLoading] = useState(false);
       const navigate = useNavigate();
       const { setUser, setIsAuth } = useAppData();
-      const isProcessing = useRef(false); 
+      const isProcessing = useRef(false);
+      const retryCount = useRef(0);
 
       const responseGoogle = async (authResult: any) => {
             if (isProcessing.current || !authResult?.code) return;
@@ -20,13 +21,32 @@ const Login = () => {
             isProcessing.current = true;
             setLoading(true);
 
-            try {
-                  const result = await axios.post(
+            const attemptLogin = async (code: string) => {
+                  return axios.post(
                         `${authBaseUrl}/sessions`,
-                        { code: authResult.code },
+                        { code },
                         { withCredentials: true }
                   );
+            };
 
+            try {
+                  let result;
+                  try {
+                        result = await attemptLogin(authResult.code);
+                  } catch (firstErr: any) {
+                        if (firstErr?.response || retryCount.current >= 1) {
+                              retryCount.current = 0;
+                              throw firstErr;
+                        }
+                        console.warn("Network error on login, re-triggering Google auth...");
+                        retryCount.current += 1;
+                        isProcessing.current = false;
+                        setLoading(false);
+                        setTimeout(() => googleLogin(), 300);
+                        return;
+                  }
+
+                  retryCount.current = 0; // Reset on success
                   localStorage.setItem("token", result.data.token);
                   setUser(result.data.data);
                   setIsAuth(true);
@@ -34,7 +54,7 @@ const Login = () => {
                   navigate("/");
             } catch (error: any) {
                   console.error("Login error:", error);
-                  toast.error(error.response?.data?.message || "Problem while login");
+                  toast.error(error.response?.data?.message || "Server unreachable. Please try again later.");
             } finally {
                   setLoading(false);
                   isProcessing.current = false;
