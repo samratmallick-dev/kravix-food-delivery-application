@@ -46,7 +46,7 @@ const Login = () => {
                         return;
                   }
 
-                  retryCount.current = 0; // Reset on success
+                  retryCount.current = 0;
                   localStorage.setItem("token", result.data.token);
                   setUser(result.data.data);
                   setIsAuth(true);
