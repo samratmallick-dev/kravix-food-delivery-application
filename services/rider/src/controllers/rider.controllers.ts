@@ -302,14 +302,18 @@ export const fetchEarnings = TryCatch(async (req: AuthenticatedRequest, res: Res
                   .filter((o) => new Date(o.createdAt) >= weekAgo)
                   .reduce((sum, o) => sum + (o.riderAmount ?? 0), 0);
 
+            const getLocalDateString = (d: Date) => {
+                  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            };
+
             const dailyMap: Record<string, number> = {};
             for (let i = 6; i >= 0; i--) {
                   const d = new Date(today);
                   d.setDate(d.getDate() - i);
-                  dailyMap[d.toISOString().slice(0, 10)] = 0;
+                  dailyMap[getLocalDateString(d)] = 0;
             }
             orders.forEach((o) => {
-                  const day = new Date(o.createdAt).toISOString().slice(0, 10);
+                  const day = getLocalDateString(new Date(o.createdAt));
                   if (day in dailyMap) dailyMap[day] += o.riderAmount ?? 0;
             });
             const weeklyBreakdown = Object.entries(dailyMap).map(([date, amount]) => ({ date, amount }));

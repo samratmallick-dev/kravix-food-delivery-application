@@ -70,7 +70,8 @@ const EarningsDashboard = () => {
                         <div className="flex items-end gap-1.5" style={{ height: CHART_H + 16 }}>
                               {earnings.weeklyBreakdown.map(({ date, amount }) => {
                                     const barH = amount === 0 ? 3 : Math.max((amount / maxAmount) * CHART_H, 6);
-                                    const label = new Date(date).toLocaleDateString("en-IN", { weekday: "short" });
+                                    const [year, month, day] = date.split("-");
+                                    const label = new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString("en-IN", { weekday: "short" });
                                     return (
                                           <div key={date} className="flex-1 flex flex-col items-center justify-end gap-1" style={{ height: CHART_H + 16 }}>
                                                 <div
