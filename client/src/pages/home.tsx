@@ -129,7 +129,7 @@ const Home = () => {
                                                             resLat,
                                                             resLong
                                                       );
-                                                      return <RestaurantsCard 
+                                                      return <RestaurantsCard
                                                             key={restaurant._id}
                                                             id={restaurant._id}
                                                             name={restaurant.name}

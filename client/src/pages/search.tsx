@@ -167,7 +167,7 @@ const SearchPage = () => {
                               joinedRooms.current.add(_id);
                         }
                   });
-            }).catch(() => {});
+            }).catch(() => { });
       }, [socket, searchType, location]);
 
       useEffect(() => {

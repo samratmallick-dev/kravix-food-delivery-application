@@ -111,7 +111,7 @@ const Checkout = () => {
                                     });
                                     toast.success("🎉 Payment Successful!");
                                     navigate("/payment-success/" + response.razorpay_payment_id);
-                                     window.scrollTo({ top: 0, behavior: "smooth" });
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
                               } catch (error: any) {
                                     toast.error(error.response?.data?.message || "Payment verification failed!");
                               }
@@ -144,7 +144,7 @@ const Checkout = () => {
                               orderId
                         });
 
-                        if(data.data.url) {
+                        if (data.data.url) {
                               window.location.href = data.data.url;
                         } else {
                               toast.error("Failed to create stripe payment session.");
@@ -403,7 +403,7 @@ const Checkout = () => {
                                     </div>
 
                                     <button
-                                          onClick={() => {selectedPayment === "razorpay" ? payWithRazorpay() : payWithStripe()}}
+                                          onClick={() => { selectedPayment === "razorpay" ? payWithRazorpay() : payWithStripe() }}
                                           disabled={isBlocked || !selectedAddressId || !selectedPayment || loadingRazorpay || loadingStripe || creatingOrders}
                                           className="mt-4 w-full py-3 rounded-xl font-semibold text-white transition bg-primary hover:bg-primary/90 disabled:bg-gray-300 disabled:cursor-not-allowed active:scale-95"
                                     >
