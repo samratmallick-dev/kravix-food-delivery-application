@@ -11,6 +11,7 @@ import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
 import toast from "react-hot-toast";
+import { storage } from "../utils/secureStorage";
 
 const CustomerRestaurantPage = () => {
       const { id } = useParams();
@@ -27,7 +28,7 @@ const CustomerRestaurantPage = () => {
             try {
                   const { data } = await axios.get(`${restaurantBaseUrl}/${id}`, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
                   setRestaurant(data.data || null);
@@ -42,7 +43,7 @@ const CustomerRestaurantPage = () => {
             try {
                   const { data } = await axios.get(`${menuBaseUrl}/${id}`, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
 

@@ -13,6 +13,7 @@ import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
 import { detectSearchType } from "../utils/searchIntent";
+import { storage } from "../utils/secureStorage";
 
 const SearchPage = () => {
       const { location, cart, fetchCart } = useAppData();
@@ -56,7 +57,7 @@ const SearchPage = () => {
                   setLoadingItemId(itemId);
                   setLoadingAction("add");
                   const { data } = await axios.post(`${cartBaseUrl}`, { restaurantId, itemId }, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                        headers: { Authorization: `Bearer ${storage.getToken()}` }
                   });
                   toast.success(data.message);
                   await fetchCart();
@@ -73,7 +74,7 @@ const SearchPage = () => {
                   setLoadingItemId(itemId);
                   setLoadingAction("inc");
                   await axios.patch(`${cartBaseUrl}/increment`, { itemId }, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                        headers: { Authorization: `Bearer ${storage.getToken()}` }
                   });
                   await fetchCart();
             } catch (error: any) {
@@ -89,7 +90,7 @@ const SearchPage = () => {
                   setLoadingItemId(itemId);
                   setLoadingAction("dec");
                   await axios.patch(`${cartBaseUrl}/decrement`, { itemId }, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                        headers: { Authorization: `Bearer ${storage.getToken()}` }
                   });
                   await fetchCart();
             } catch (error: any) {
@@ -106,7 +107,7 @@ const SearchPage = () => {
             setFoodResults([]);
             setLoading(true);
             joinedRooms.current.clear();
-            const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+            const headers = { Authorization: `Bearer ${storage.getToken()}` };
 
             if (searchType === "restaurant") {
                   axios.get(`${restaurantBaseUrl}`, {
@@ -155,7 +156,7 @@ const SearchPage = () => {
       useEffect(() => {
             if (!socket || !location?.latitude || !location.longitude || searchType !== "food") return;
 
-            const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+            const headers = { Authorization: `Bearer ${storage.getToken()}` };
             axios.get(`${restaurantBaseUrl}`, {
                   params: { latitude: location.latitude, longitude: location.longitude },
                   headers

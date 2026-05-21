@@ -12,6 +12,7 @@ import { useMobile } from "../components/common/useMobile";
 import { useAppData } from "../context/AppContext";
 import { useSocket } from "../context/SocketContext";
 import toast from "react-hot-toast";
+import { storage } from "../utils/secureStorage";
 
 type SellerTab = "menu" | "add-item" | "sales";
 
@@ -26,17 +27,17 @@ const Restaurant = () => {
       const isMobile = useMobile();
 
       const [tab, setTab] = useState<SellerTab>(
-            () => (localStorage.getItem("restaurantTab") as SellerTab) || "menu"
+            () => (storage.getRestaurantTab() as SellerTab) || "menu"
       );
 
       const handleTabChange = (value: SellerTab) => {
             setTab(value);
-            localStorage.setItem("restaurantTab", value);
+            storage.setRestaurantTab(value);
       };
 
       const fetchMyRestaurant = async () => {
             try {
-                  const token = localStorage.getItem("token");
+                  const token = storage.getToken();
                   const { data } = await axios.get(`${restaurantBaseUrl}/me`, {
                         headers: {
                               Authorization: `Bearer ${token}`
@@ -45,7 +46,7 @@ const Restaurant = () => {
                   });
 
                   if (data.token) {
-                        localStorage.setItem("token", data.token);
+                        storage.setToken(data.token);
                         setUser((prev) => prev ? { ...prev, restaurantId: data.data?._id } : prev);
                   }
                   setRestaurant(data.data || null);
@@ -89,7 +90,7 @@ const Restaurant = () => {
             try {
                   const { data } = await axios.get(`${menuBaseUrl}/${restaurantId}`, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
 

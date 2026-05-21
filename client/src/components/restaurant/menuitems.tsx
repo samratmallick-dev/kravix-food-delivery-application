@@ -7,6 +7,7 @@ import { cartBaseUrl, menuBaseUrl } from "../common/constant";
 import toast from "react-hot-toast";
 import { useAppData } from "../../context/AppContext";
 import { useSocket } from "../../context/SocketContext";
+import { storage } from "../../utils/secureStorage";
 
 interface MenuItemProps {
       items: IMenuItem[];
@@ -53,7 +54,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             try {
                   const response = await axios.delete(`${menuBaseUrl}/${itemId}`, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
                   toast.success(response.data.message);
@@ -71,7 +72,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             try {
                   const response = await axios.patch(`${menuBaseUrl}/${itemId}/availability`, {}, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
                   toast.success(response.data.message);
@@ -91,7 +92,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                         restaurantId, itemId
                   }, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
 
@@ -112,7 +113,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   setLoadingAction("inc");
                   await axios.patch(`${cartBaseUrl}/increment`, { itemId }, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
                   await fetchCart();
@@ -131,7 +132,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   setLoadingAction("dec");
                   await axios.patch(`${cartBaseUrl}/decrement`, { itemId }, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
                   await fetchCart();

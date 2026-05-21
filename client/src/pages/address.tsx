@@ -13,6 +13,7 @@ import L from "leaflet";
 import { LuLocateFixed } from "react-icons/lu";
 import { BiLoader, BiPlus, BiTrash, BiMapPin, BiPhone, BiSearch } from "react-icons/bi";
 import { addressBaseUrl } from "../components/common/constant";
+import { storage } from "../utils/secureStorage";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -115,7 +116,7 @@ const AddAddressPage = () => {
                   const { data } = await
                         axios.get(`${addressBaseUrl}`, {
                               headers: {
-                                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                                    Authorization: `Bearer ${storage.getToken()}`,
                               },
                         });
                   setAddresses(data.data || []);
@@ -181,8 +182,8 @@ const AddAddressPage = () => {
                         },
                         {
                               headers: {
-                                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                              },
+                                    Authorization: `Bearer ${storage.getToken()}`,
+                              }
                         }
                   );
                   toast.success(data.message);
@@ -205,7 +206,7 @@ const AddAddressPage = () => {
                   setDeletingId(id);
                   const { data } = await axios.delete(`${addressBaseUrl}/${id}`, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`,
+                              Authorization: `Bearer ${storage.getToken()}`,
                         },
                   });
                   toast.success(data.message);

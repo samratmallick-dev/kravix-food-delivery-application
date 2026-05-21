@@ -7,6 +7,7 @@ import { authBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useAppData } from "../context/AppContext";
+import { storage } from "../utils/secureStorage";
 
 const Login = () => {
       const [loading, setLoading] = useState(false);
@@ -47,7 +48,7 @@ const Login = () => {
                   }
 
                   retryCount.current = 0;
-                  localStorage.setItem("token", result.data.token);
+                  storage.setToken(result.data.token);
                   setUser(result.data.data);
                   setIsAuth(true);
                   toast.success(result.data.message || "Login Successful");

@@ -5,6 +5,7 @@ import { useSocket } from "../context/SocketContext";
 import axios from "axios";
 import { orderBaseUrl } from "../components/common/constant";
 import { ShoppingBag, MapPin, Clock } from "lucide-react";
+import { storage } from "../utils/secureStorage";
 
 const ACTIVE_STATUSES = [
       "placed",
@@ -26,7 +27,7 @@ const CustomerOrder = () => {
       const fetchOrders = useCallback(async () => {
             try {
                   const { data } = await axios.get(`${orderBaseUrl}/me`, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
                         withCredentials: true
                   });
                   setOrders(data.data.orders || []);

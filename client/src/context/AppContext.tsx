@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { authBaseUrl, cartBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import type { ICart, AppContextType, LocationData, User } from "../types/types";
+import { storage } from "../utils/secureStorage";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -26,7 +27,7 @@ const isCacheStillValid = (
 export const AppProvider = ({ children }: AppProviderProps) => {
 
     const [user, setUser] = useState<User | null>(null);
-    const [isAuth, setIsAuth] = useState(() => !!localStorage.getItem("token"));
+    const [isAuth, setIsAuth] = useState(() => !!storage.getToken());
     const [loading, setLoading] = useState(false);
 
     const [location, setLocation] = useState<LocationData | null>(null);
@@ -38,7 +39,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     const [quantity, setQuantity] = useState(0);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
+        const token = storage.getToken();
         if (!token) {
             setUser(null);
             setIsAuth(false);
@@ -69,7 +70,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     }, []);
 
     const fetchCart = useCallback(async () => {
-        const token = localStorage.getItem("token");
+        const token = storage.getToken();
         if (!token) { setCart([]); setSubTotal(0); setQuantity(0); return; }
         try {
             const { data } = await axios.get(`${cartBaseUrl}`, {

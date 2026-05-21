@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { Socket, io } from "socket.io-client";
 import { realtimeSocketBaseUrl } from "../components/common/constant";
 import { useAppData } from "./AppContext";
+import { storage } from "../utils/secureStorage";
 
 interface SocketContextType {
       socket: Socket | null;
@@ -33,7 +34,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
             if (socketRef.current) return;
 
-            const token = localStorage.getItem("token");
+            const token = storage.getToken();
             if (!token) {
                   console.log("No token found for socket connection");
                   return;

@@ -5,6 +5,7 @@ import axios from "axios";
 import { orderBaseUrl } from "../common/constant";
 import toast from "react-hot-toast";
 import { MapPin, CreditCard, ChevronRight, Loader2, RefreshCw } from "lucide-react";
+import { storage } from "../../utils/secureStorage";
 
 interface props {
       order: IOrder;
@@ -91,7 +92,7 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
                   const { data } = await axios.patch(
                         `${orderBaseUrl}/${order._id}/status`,
                         { status },
-                        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }, withCredentials: true }
+                        { headers: { Authorization: `Bearer ${storage.getToken()}` }, withCredentials: true }
                   );
                   toast.success(data.message || "Order status updated successfully");
                   onStatusUpdate(order._id, status as IOrder["status"]);

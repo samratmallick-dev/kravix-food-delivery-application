@@ -16,6 +16,7 @@ import CurrentOrderCard from "../components/rider/CurrentOrderCard";
 import DeliveryHistoryCard from "../components/rider/DeliveryHistoryCard";
 import RiderOrderMap from "../components/rider/riderOrderMap";
 import EarningsDashboard from "../components/rider/EarningsDashboard";
+import { storage } from "../utils/secureStorage";
 
 type Tab = "orders" | "earnings";
 
@@ -63,7 +64,7 @@ const RiderDashboard = () => {
       const fetchProfile = async () => {
             try {
                   const { data } = await axios.get(`${riderBaseUrl}/me`, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
                   });
                   setProfile(data.data || null);
             } catch {
@@ -85,7 +86,7 @@ const RiderDashboard = () => {
       const fetchCurrentOrder = async () => {
             try {
                   const { data } = await axios.get(`${riderBaseUrl}/orders/current`, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
                   });
                   setCurrentOrder(data.data || null);
             } catch (error: any) {
@@ -97,7 +98,7 @@ const RiderDashboard = () => {
       const fetchDeliveryHistory = async () => {
             try {
                   const { data } = await axios.get(`${riderBaseUrl}/orders/delivery-history`, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
                   });
                   setDeliveryHistory(data.data?.orders || []);
             } catch {
@@ -148,11 +149,11 @@ const RiderDashboard = () => {
                   try {
                         await axios.patch(`${riderBaseUrl}/me/availability`,
                               { isAvailable: false, latitude: location?.latitude ?? 0, longitude: location?.longitude ?? 0 },
-                              { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+                              { headers: { Authorization: `Bearer ${storage.getToken()}` } }
                         );
                   } catch { }
             }
-            localStorage.removeItem("token");
+            storage.removeToken();
             toast.success("Logout Successfully");
             setUser(null);
             setIsAuth(false);
@@ -167,7 +168,7 @@ const RiderDashboard = () => {
             try {
                   const { data } = await axios.patch(`${riderBaseUrl}/me/availability`,
                         { isAvailable: !profile?.isAvailable, latitude: location.latitude, longitude: location.longitude },
-                        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
                   );
                   toast.success(data.message);
                   setProfile((prev) => prev ? { ...prev, isAvailable: !prev.isAvailable } : prev);
@@ -193,7 +194,7 @@ const RiderDashboard = () => {
 
                   const { data } = await axios.patch(`${riderBaseUrl}/orders/status`,
                         { orderId: currentOrder._id, latitude: lat, longitude: lng, ...(otp ? { otp } : {}) },
-                        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
                   );
                   toast.success(data.message || "Status updated!");
 
@@ -217,7 +218,7 @@ const RiderDashboard = () => {
             try {
                   await axios.post(`${riderBaseUrl}/orders/otp/generate`,
                         { orderId: currentOrder._id },
-                        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
                   );
                   toast.success("OTP sent to customer!");
             } catch (err: any) {
@@ -261,7 +262,7 @@ const RiderDashboard = () => {
             try {
                   setSubmitting(true);
                   const { data } = await axios.post(`${riderBaseUrl}`, formData, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
                         withCredentials: true
                   });
                   if (data.success) { toast.success(data.message || "Rider profile created successfully."); fetchProfile(); }
@@ -492,7 +493,7 @@ const RiderDashboard = () => {
                                                                   const { data } = await axios.post(
                                                                         `${riderBaseUrl}/orders/${orderId}/accept`,
                                                                         {},
-                                                                        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+                                                                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
                                                                   );
                                                                   toast.success(data.message || "Order accepted!");
                                                                   setInCommingOrders([]);

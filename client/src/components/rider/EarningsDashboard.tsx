@@ -3,6 +3,7 @@ import axios from "axios";
 import { riderBaseUrl } from "../common/constant";
 import { TrendingUp, Star, Package, Loader2, IndianRupee } from "lucide-react";
 import type { IRiderEarnings } from "../../types/types";
+import { storage } from "../../utils/secureStorage";
 
 const EarningsDashboard = () => {
       const [earnings, setEarnings] = useState<IRiderEarnings | null>(null);
@@ -10,7 +11,7 @@ const EarningsDashboard = () => {
 
       useEffect(() => {
             axios.get(`${riderBaseUrl}/me/earnings`, {
-                  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                  headers: { Authorization: `Bearer ${storage.getToken()}` }
             }).then(({ data }) => setEarnings(data.data))
                   .catch(() => setEarnings(null))
                   .finally(() => setLoading(false));

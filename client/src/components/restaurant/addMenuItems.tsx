@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { menuBaseUrl } from "../common/constant";
 import { ImagePlus } from "lucide-react";
 import { VscLoading } from "react-icons/vsc";
+import { storage } from "../../utils/secureStorage";
 
 const AddMenuItems = (
       { onItemAdded }: { onItemAdded: () => void }
@@ -41,7 +42,7 @@ const AddMenuItems = (
                   const response = await axios.post(`${menuBaseUrl}`, formData, {
                         headers: {
                               "Content-Type": "multipart/form-data",
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
 

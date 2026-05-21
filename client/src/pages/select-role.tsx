@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { authBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
+import { storage } from "../utils/secureStorage";
 
 type Role = "customer" | "rider" | "seller" | null;
 const SelectRole = () => {
@@ -18,7 +19,7 @@ const SelectRole = () => {
 
       const addRole = async () => {
             try {
-                  const token = localStorage.getItem("token");
+                  const token = storage.getToken();
                   const { data } = await axios.patch(`${authBaseUrl}/me/role`, { role }, {
                         headers: {
                               Authorization: `Bearer ${token}`
@@ -27,7 +28,7 @@ const SelectRole = () => {
                   });
 
                   if (data.success) {
-                        localStorage.setItem("token", data.token);
+                        storage.setToken(data.token);
                         toast.success(data.message || "Role Updated Successfully");
                         setUser(data.data);
                         navigate("/", { replace: true });

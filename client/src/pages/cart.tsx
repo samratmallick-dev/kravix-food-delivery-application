@@ -6,6 +6,7 @@ import axios from "axios";
 import { cartBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import { ArrowRight, ShoppingBag, Trash2 } from "lucide-react";
+import { storage } from "../utils/secureStorage";
 
 const Cart = () => {
 
@@ -61,7 +62,7 @@ const Cart = () => {
             try {
                   setLoadingItemInc(itemId);
                   await axios.patch(`${cartBaseUrl}/increment`, { itemId }, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
                         withCredentials: true
                   });
                   await fetchCart();
@@ -77,7 +78,7 @@ const Cart = () => {
             try {
                   setLoadingItemDec(itemId);
                   await axios.patch(`${cartBaseUrl}/decrement`, { itemId }, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
                         withCredentials: true
                   });
                   await fetchCart();
@@ -95,7 +96,7 @@ const Cart = () => {
                   setClearingCart(true)
                   await axios.delete(`${cartBaseUrl}`, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }, withCredentials: true
                   });
                   await fetchCart();

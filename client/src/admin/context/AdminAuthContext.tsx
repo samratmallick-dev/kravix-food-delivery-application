@@ -2,6 +2,7 @@ import axios from "axios";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { adminBaseUrl } from "../../components/common/constant";
 import toast from "react-hot-toast";
+import { storage } from "../../utils/secureStorage";
 
 interface AdminAuthContextType {
       isAdminAuth: boolean;
@@ -14,15 +15,15 @@ const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefin
 
 export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
       const [isAdminAuth, setIsAdminAuth] = useState<boolean>(
-            () => !!localStorage.getItem("adminToken")
+            () => !!storage.getAdminToken()
       );
 
-      const getAdminToken = () => localStorage.getItem("adminToken");
+      const getAdminToken = () => storage.getAdminToken();
 
       const adminLogin = async (email: string, password: string): Promise<boolean> => {
             try {
                   const { data } = await axios.post(`${adminBaseUrl}/login`, { email, password });
-                  localStorage.setItem("adminToken", data.data.token);
+                  storage.setAdminToken(data.data.token);
                   setIsAdminAuth(true);
                   return true;
             } catch (error: any) {
@@ -32,7 +33,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
       };
 
       const adminLogout = () => {
-            localStorage.removeItem("adminToken");
+            storage.removeAdminToken();
             setIsAdminAuth(false);
       };
 

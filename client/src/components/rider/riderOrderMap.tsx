@@ -8,6 +8,7 @@ import axios from "axios";
 import { riderBaseUrl } from "../common/constant";
 import deliveryIconImage from "../../assets/Delivery_man.jpg";
 import homeIconImage from "../../assets/Home.jpg";
+import { storage } from "../../utils/secureStorage";
 
 declare module "leaflet" {
       namespace Routing {
@@ -70,7 +71,7 @@ const RiderOrderMap = ({ order }: { order: IOrder }) => {
                               axios.patch(
                                     `${riderBaseUrl}/me/location`,
                                     { latitude, longitude, orderId: order._id, customerUserId: order.userId },
-                                    { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+                                    { headers: { Authorization: `Bearer ${storage.getToken()}` } }
                               ).catch((err) => console.error("Failed to emit rider location:", err));
                         }
                   },

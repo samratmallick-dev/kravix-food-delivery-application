@@ -7,6 +7,7 @@ import { orderBaseUrl } from "../common/constant";
 import { ShoppingBag, VolumeX } from "lucide-react";
 import OrderCard from "./orderCard";
 import toast from "react-hot-toast";
+import { storage } from "../../utils/secureStorage";
 
 const ALLOWED_STATUSES = [
       "placed",
@@ -63,7 +64,7 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
       const fetchOrders = useCallback(async () => {
             try {
                   const { data } = await axios.get(`${orderBaseUrl}/restaurants/${restaurantId}`, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
                   });
                   setOrders(data.data.orders || []);
             } catch (error) {

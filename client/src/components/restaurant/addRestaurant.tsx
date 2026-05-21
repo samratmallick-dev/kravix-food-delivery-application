@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { restaurantBaseUrl } from "../common/constant";
 import { ImagePlus, Loader2, MapPin, Phone, Store, FileText } from "lucide-react";
+import { storage } from "../../utils/secureStorage";
 
 interface props {
       fetchMyRestaurant: () => Promise<void>;
@@ -42,7 +43,7 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
 
             try {
                   setSubmitting(true);
-                  const token = localStorage.getItem("token");
+                  const token = storage.getToken();
                   const response = await axios.post(`${restaurantBaseUrl}`, formData, {
                         headers: {
                               "Content-Type": "multipart/form-data",
@@ -52,7 +53,7 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
                   });
                   if (response.data.success) {
                         if (response.data.token) {
-                              localStorage.setItem("token", response.data.token);
+                              storage.setToken(response.data.token);
                         }
                         toast.success(response.data.message || "Restaurant added successfully.");
                         fetchMyRestaurant();

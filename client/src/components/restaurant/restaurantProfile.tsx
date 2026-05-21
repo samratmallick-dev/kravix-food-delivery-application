@@ -7,6 +7,7 @@ import { BiMapPin } from "react-icons/bi";
 import { Edit, SaveAll } from "lucide-react";
 import { useAppData } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
+import { storage } from "../../utils/secureStorage";
 
 interface props {
       restaurant: IRestaurant;
@@ -32,7 +33,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
                   const { data } = await axios.patch(`${restaurantBaseUrl}/me/status`, { status: !isOpen },
                         {
                               headers: {
-                                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                                    Authorization: `Bearer ${storage.getToken()}`
                               },
                               withCredentials: true
                         }
@@ -51,7 +52,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
                   setLoading(true);
                   const { data } = await axios.patch(`${restaurantBaseUrl}/me`, { name, description }, {
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         },
                         withCredentials: true
                   });
@@ -71,12 +72,12 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
       const navigate = useNavigate();
 
       const logoutHandler = () => {
-            const token = localStorage.getItem("token");
+            const token = storage.getToken();
             axios.patch(`${restaurantBaseUrl}/me/status`, { status: false }, {
                   headers: { Authorization: `Bearer ${token}` },
                   withCredentials: true
             }).catch(() => {});
-            localStorage.removeItem("token");
+            storage.removeToken();
             setIsAuth(false);
             setUser(null);
             navigate("/login");

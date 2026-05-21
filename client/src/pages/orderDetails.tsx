@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import CustomerTrackingMap from "../components/customer/CustomerTrackingMap";
 import confetti from "canvas-confetti";
+import { storage } from "../utils/secureStorage";
 
 const STEPS = [
       { key: "placed",           label: "Placed",       Icon: ClipboardList },
@@ -184,7 +185,7 @@ const OrderDetails = () => {
             if (!id) return;
             try {
                   const { data } = await axios.get(`${orderBaseUrl}/me/${id}`, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
                         withCredentials: true,
                   });
                   setOrder(data.data);
@@ -208,7 +209,7 @@ const OrderDetails = () => {
                   const { data } = await axios.post(
                         `${orderBaseUrl}/reorder/${order._id}`,
                         {},
-                        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
                   );
                   await fetchCart();
                   toast.success(data.message);

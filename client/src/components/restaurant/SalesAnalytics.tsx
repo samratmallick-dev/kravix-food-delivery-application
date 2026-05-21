@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { orderBaseUrl } from "../common/constant";
 import { TrendingUp, ShoppingBag, IndianRupee } from "lucide-react";
+import { storage } from "../../utils/secureStorage";
 import {
       ResponsiveContainer,
       AreaChart,
@@ -42,7 +43,7 @@ export default function SalesAnalytics({ restaurantId }: { restaurantId: string 
                   try {
                         const { data } = await axios.get(
                               `${orderBaseUrl}/restaurants/${restaurantId}/sales-stats`,
-                              { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }, withCredentials: true }
+                              { headers: { Authorization: `Bearer ${storage.getToken()}` }, withCredentials: true }
                         );
                         setStats(data.data);
                   } catch {

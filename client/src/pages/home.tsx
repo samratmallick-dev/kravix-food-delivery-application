@@ -11,6 +11,7 @@ import RestaurantsCard from "../components/restaurant/restaurantsCard";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
+import { storage } from "../utils/secureStorage";
 
 const Home = () => {
 
@@ -49,7 +50,7 @@ const Home = () => {
                               search
                         },
                         headers: {
-                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                              Authorization: `Bearer ${storage.getToken()}`
                         }
                   });
                   setRestaurants(data.data || []);

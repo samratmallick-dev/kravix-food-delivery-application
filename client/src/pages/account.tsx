@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { BiMapPin, BiPackage } from "react-icons/bi";
 import { LogOut } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
+import { storage } from "../utils/secureStorage";
 
 const Account = () => {
       const { user, setUser, setIsAuth } = useAppData();
@@ -11,7 +12,7 @@ const Account = () => {
       const isMobile = useMobile();
 
       const logoutHandler = () => {
-            localStorage.removeItem("token");
+            storage.removeToken();
             setUser(null);
             setIsAuth(false);
             navigate("/login");

@@ -6,6 +6,7 @@ import axios from "axios";
 import { restaurantBaseUrl, menuBaseUrl } from "../common/constant";
 import { useAppData } from "../../context/AppContext";
 import { detectSearchType } from "../../utils/searchIntent";
+import { storage } from "../../utils/secureStorage";
 
 interface Suggestion {
       id: string;
@@ -47,7 +48,7 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
             const timer = setTimeout(async () => {
                   setLoading(true);
                   try {
-                        const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+                        const headers = { Authorization: `Bearer ${storage.getToken()}` };
                         const params = { latitude: location.latitude, longitude: location.longitude, search: value, radius: 10000 };
 
                         const [resRes, foodRes] = await Promise.allSettled([

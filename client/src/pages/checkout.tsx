@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import type { ICart, IMenuItem, IRestaurant } from "../types/types";
 import toast from "react-hot-toast";
 import { loadStripe } from "@stripe/stripe-js";
+import { storage } from "../utils/secureStorage";
 
 interface Address {
       _id: string;
@@ -28,7 +29,7 @@ const Checkout = () => {
 
       const location = useLocation();
       const navigate = useNavigate();
-      const token = localStorage.getItem("token");
+      const token = storage.getToken();
 
       const restaurant = (cart?.[0]?.restaurantId as IRestaurant) ?? null;
       const platformFee = 7;
