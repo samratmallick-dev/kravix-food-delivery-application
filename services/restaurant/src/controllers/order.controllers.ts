@@ -467,7 +467,7 @@ export const getCurrentOrdersForRiders = TryCatch(async (req, res) => {
       }
 
       const order = await Order.findOne({
-            riderId: riderId,
+            riderId: riderId as string,
             status: { $ne: "delivered" },
             paymentStatus: "paid"
       }).populate("restaurantId");
@@ -687,7 +687,7 @@ export const getDeliveredOrdersByRider = TryCatch(async (req, res) => {
       }
 
       const orders = await Order.find({
-            riderId: riderId,
+            riderId: riderId as string,
             status: "delivered",
             paymentStatus: "paid"
       }).sort({ createdAt: -1 });
