@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppData } from "../context/AppContext";
 import axios from "axios";
-import { addressBaseUrl, orderBaseUrl, paymentBaseUrl, stripPublishableKey } from "../components/common/constant";
+import { addressBaseUrl, orderBaseUrl, paymentBaseUrl, stripPublishableKey, couponBaseUrl } from "../components/common/constant";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { ICart, IMenuItem, IRestaurant } from "../types/types";
 import toast from "react-hot-toast";
@@ -16,6 +16,20 @@ interface Address {
       longitude: number;
 };
 
+interface ICoupon {
+      _id: string;
+      code: string;
+      discountType: "percentage" | "flat" | "free_delivery";
+      discountValue: number;
+      maxDiscountAmount: number;
+      minOrderAmount: number;
+      expiryDate: string;
+      couponType: "global" | "restaurant";
+      usageLimit: number;
+      usedCount: number;
+      perUserLimit: number;
+}
+
 const Checkout = () => {
       const { cart, subTotal, quantity, location: userLocation, user } = useAppData();
       const isBlocked = !!(user?.isBlocked && user.blockedUntil && new Date(user.blockedUntil) > new Date());
@@ -26,6 +40,19 @@ const Checkout = () => {
       const [loadingStripe, setLoadingStripe] = useState(false);
       const [creatingOrders, setCreatingOrder] = useState(false);
       const [selectedPayment, setSelectedPayment] = useState<"razorpay" | "stripe" | null>(null);
+
+      // Coupon States
+      const [couponInput, setCouponInput] = useState("");
+      const [appliedCoupon, setAppliedCoupon] = useState<{
+            code: string;
+            discountType: string;
+            discountValue: number;
+            discountAmount: number;
+      } | null>(null);
+      const [applyingCoupon, setApplyingCoupon] = useState(false);
+      const [availableCoupons, setAvailableCoupons] = useState<ICoupon[]>([]);
+      const [loadingCoupons, setLoadingCoupons] = useState(false);
+      const [showAllCoupons, setShowAllCoupons] = useState(false);
 
       const location = useLocation();
       const navigate = useNavigate();
@@ -53,10 +80,110 @@ const Checkout = () => {
             return Math.ceil(distance <= 3 ? 35 : 35 + (distance - 3) * 9);
       }, [subTotal, selectedAddress, userLocation, restaurant?.autoLocation?.coordinates]);
 
-      const foodGST = +(subTotal * 0.05).toFixed(2);
+      const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+      const discountedSubtotal = Math.max(0, subTotal - discountAmount);
+      const foodGST = +(discountedSubtotal * 0.05).toFixed(2);
       const deliveryGST = +(deliveryFee * 0.18).toFixed(2);
       const totalGST = +(foodGST + deliveryGST).toFixed(2);
-      const total = (subTotal + deliveryFee + platformFee + totalGST).toFixed(2);
+      const total = (discountedSubtotal + deliveryFee + platformFee + totalGST).toFixed(2);
+
+      // Fetch available coupons for the restaurant
+      useEffect(() => {
+            if (!restaurant?._id) return;
+            const fetchCoupons = async () => {
+                  setLoadingCoupons(true);
+                  try {
+                        const { data } = await axios.get(`${couponBaseUrl}`, {
+                              params: { restaurantId: restaurant._id },
+                              headers: token ? { Authorization: `Bearer ${token}` } : {}
+                        });
+                        if (data.success) {
+                              setAvailableCoupons(data.data || []);
+                        }
+                  } catch (error) {
+                        console.error("Failed to fetch coupons:", error);
+                  } finally {
+                        setLoadingCoupons(false);
+                  }
+            };
+            fetchCoupons();
+      }, [restaurant?._id]);
+
+      const handleApplyCoupon = async (e?: React.FormEvent) => {
+            if (e) e.preventDefault();
+            if (!couponInput.trim()) {
+                  toast.error("Please enter a coupon code");
+                  return;
+            }
+            if (!restaurant) return;
+            setApplyingCoupon(true);
+            try {
+                  const res = await axios.post(
+                        `${couponBaseUrl}/apply`,
+                        {
+                              code: couponInput.trim(),
+                              restaurantId: restaurant._id,
+                              orderAmount: subTotal,
+                              deliveryFee: deliveryFee
+                        },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                  );
+                  if (res.data && res.data.success) {
+                        setAppliedCoupon(res.data.data);
+                        toast.success(`Coupon Applied! Saved ₹${res.data.data.discountAmount}`);
+                  }
+            } catch (error: any) {
+                  console.error(error);
+                  toast.error(error.response?.data?.message || "Invalid coupon code");
+            } finally {
+                  setApplyingCoupon(false);
+            }
+      };
+
+      const handleRemoveCoupon = () => {
+            setAppliedCoupon(null);
+            setCouponInput("");
+            toast.success("Coupon removed");
+      };
+
+      const handleQuickApplyCoupon = async (code: string) => {
+            setCouponInput(code);
+            if (!restaurant) return;
+            setApplyingCoupon(true);
+            try {
+                  const res = await axios.post(
+                        `${couponBaseUrl}/apply`,
+                        {
+                              code: code.trim(),
+                              restaurantId: restaurant._id,
+                              orderAmount: subTotal,
+                              deliveryFee: deliveryFee
+                        },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                  );
+                  if (res.data && res.data.success) {
+                        setAppliedCoupon(res.data.data);
+                        toast.success(`🎉 Coupon Applied! Saved ₹${res.data.data.discountAmount}`);
+                  }
+            } catch (error: any) {
+                  console.error(error);
+                  toast.error(error.response?.data?.message || "Coupon not applicable");
+            } finally {
+                  setApplyingCoupon(false);
+            }
+      };
+
+      const getCouponLabel = (coupon: ICoupon): string => {
+            if (coupon.discountType === "percentage") {
+                  const cap = coupon.maxDiscountAmount > 0 ? ` (up to ₹${coupon.maxDiscountAmount})` : "";
+                  return `${coupon.discountValue}% off${cap}`;
+            } else if (coupon.discountType === "flat") {
+                  return `₹${coupon.discountValue} flat off`;
+            } else if (coupon.discountType === "free_delivery") {
+                  return "Free Delivery";
+            }
+            return "";
+      };
 
       const createOrder = async (paymentMethod: "razorpay" | "stripe") => {
             if (!selectedAddressId) return null;
@@ -64,7 +191,7 @@ const Checkout = () => {
             try {
                   const { data } = await axios.post(
                         `${orderBaseUrl}`,
-                        { paymentMethod, addressId: selectedAddressId },
+                        { paymentMethod, addressId: selectedAddressId, couponCode: appliedCoupon?.code || undefined },
                         { headers: { Authorization: `Bearer ${token}` } }
                   );
                   return data.data;
@@ -355,6 +482,12 @@ const Checkout = () => {
                                                 <span>GST</span>
                                                 <span>₹{totalGST}</span>
                                           </div>
+                                          {appliedCoupon && (
+                                                <div className="flex justify-between text-green-650 font-medium">
+                                                      <span>Discount ({appliedCoupon.code})</span>
+                                                      <span>-₹{appliedCoupon.discountAmount}</span>
+                                                </div>
+                                          )}
                                           {deliveryFee > 0 && subTotal < 250 && (
                                                 <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
                                                       🎉 Add ₹{250 - subTotal} more for free delivery!
@@ -365,6 +498,134 @@ const Checkout = () => {
                                                 <span>₹{total}</span>
                                           </div>
                                     </div>
+                              </div>
+
+                              {/* Coupon/Promo Code Section */}
+                              <div className="bg-white rounded-2xl shadow-sm border border-border p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                          <h2 className="font-semibold text-gray-800">Coupons & Offers</h2>
+                                          {availableCoupons.length > 0 && !appliedCoupon && (
+                                                <span className="text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full">
+                                                      {availableCoupons.length} offer{availableCoupons.length > 1 ? "s" : ""} available
+                                                </span>
+                                          )}
+                                    </div>
+
+                                    {appliedCoupon ? (
+                                          <div className="flex items-center justify-between border-2 border-dashed border-green-500 bg-green-50/50 rounded-xl p-3.5 transition">
+                                                <div className="flex items-center gap-2">
+                                                      <span className="text-lg">🎟️</span>
+                                                      <div>
+                                                            <p className="text-sm font-bold text-green-700 uppercase tracking-wide">{appliedCoupon.code}</p>
+                                                            <p className="text-xs text-green-600">Saved ₹{appliedCoupon.discountAmount} on this order</p>
+                                                      </div>
+                                                </div>
+                                                <button
+                                                      onClick={handleRemoveCoupon}
+                                                      className="text-xs font-semibold text-red-500 hover:text-red-750 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition cursor-pointer"
+                                                >
+                                                      Remove
+                                                </button>
+                                          </div>
+                                    ) : (
+                                          <>
+                                                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                                                      <input
+                                                            type="text"
+                                                            placeholder="Enter Promo Code"
+                                                            value={couponInput}
+                                                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                                                            className="flex-1 px-3 py-2 border border-border bg-gray-50 focus:bg-white rounded-xl text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-hidden"
+                                                      />
+                                                      <button
+                                                            type="submit"
+                                                            disabled={applyingCoupon || !couponInput.trim()}
+                                                            className="px-4 py-2 bg-primary text-white font-semibold text-sm rounded-xl hover:bg-primary/95 transition cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                                      >
+                                                            {applyingCoupon ? "Applying..." : "Apply"}
+                                                      </button>
+                                                </form>
+
+                                                {/* Available Coupons List */}
+                                                {loadingCoupons ? (
+                                                      <div className="mt-3 space-y-2">
+                                                            {[1, 2].map((i) => (
+                                                                  <div key={i} className="h-16 rounded-xl bg-gray-100 animate-pulse" />
+                                                            ))}
+                                                      </div>
+                                                ) : availableCoupons.length > 0 ? (
+                                                      <div className="mt-3">
+                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Available Coupons</p>
+                                                            <div className="space-y-2">
+                                                                  {(showAllCoupons ? availableCoupons : availableCoupons.slice(0, 3)).map((coupon) => {
+                                                                        const isExpiringSoon = new Date(coupon.expiryDate).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
+                                                                        const isLimitedLeft = coupon.usageLimit > 0 && (coupon.usageLimit - coupon.usedCount) <= 5;
+                                                                        const meetsMin = subTotal >= coupon.minOrderAmount;
+                                                                        return (
+                                                                              <div
+                                                                                    key={coupon._id}
+                                                                                    className={`relative flex items-center justify-between gap-3 border-2 border-dashed rounded-xl px-3.5 py-3 transition ${
+                                                                                          meetsMin
+                                                                                                ? "border-primary/30 bg-primary/[0.03] hover:border-primary/60"
+                                                                                                : "border-gray-200 bg-gray-50 opacity-60"
+                                                                                    }`}
+                                                                              >
+                                                                                    {/* Left notch decoration */}
+                                                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white border border-gray-200" />
+                                                                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 rounded-full bg-white border border-gray-200" />
+
+                                                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                                                          <span className="text-xl shrink-0">{coupon.discountType === "free_delivery" ? "🚚" : "🏷️"}</span>
+                                                                                          <div className="min-w-0">
+                                                                                                <p className="text-sm font-bold text-gray-800 uppercase tracking-wide">{coupon.code}</p>
+                                                                                                <p className="text-xs font-medium text-primary">{getCouponLabel(coupon)}</p>
+                                                                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                                                                                                      {coupon.minOrderAmount > 0 && (
+                                                                                                            <span className={`text-[10px] ${meetsMin ? "text-gray-400" : "text-red-400 font-medium"}`}>
+                                                                                                                  Min ₹{coupon.minOrderAmount}
+                                                                                                                  {!meetsMin && ` (need ₹${coupon.minOrderAmount - subTotal} more)`}
+                                                                                                            </span>
+                                                                                                      )}
+                                                                                                      <span className={`text-[10px] ${isExpiringSoon ? "text-orange-500 font-semibold" : "text-gray-400"}`}>
+                                                                                                            Expires {new Date(coupon.expiryDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                                                                                                      </span>
+                                                                                                      {coupon.couponType === "global" && (
+                                                                                                            <span className="text-[10px] bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded-full font-medium">Global</span>
+                                                                                                      )}
+                                                                                                      {isLimitedLeft && (
+                                                                                                            <span className="text-[10px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded-full font-medium">Limited!</span>
+                                                                                                      )}
+                                                                                                </div>
+                                                                                          </div>
+                                                                                    </div>
+
+                                                                                    <button
+                                                                                          onClick={() => meetsMin && handleQuickApplyCoupon(coupon.code)}
+                                                                                          disabled={!meetsMin || applyingCoupon}
+                                                                                          className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer disabled:cursor-not-allowed
+                                                                                                border-primary text-primary hover:bg-primary hover:text-white
+                                                                                                disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent"
+                                                                                    >
+                                                                                          Apply
+                                                                                    </button>
+                                                                              </div>
+                                                                        );
+                                                                  })}
+                                                            </div>
+                                                            {availableCoupons.length > 3 && (
+                                                                  <button
+                                                                        onClick={() => setShowAllCoupons((p) => !p)}
+                                                                        className="mt-2 w-full text-xs text-center text-primary font-medium hover:underline cursor-pointer"
+                                                                  >
+                                                                        {showAllCoupons ? "Show less ↑" : `View all ${availableCoupons.length} coupons ↓`}
+                                                                  </button>
+                                                            )}
+                                                      </div>
+                                                ) : (
+                                                      <p className="mt-3 text-xs text-gray-400 text-center py-2">No coupons available for this restaurant right now.</p>
+                                                )}
+                                          </>
+                                    )}
                               </div>
 
                               <div className="bg-white rounded-2xl shadow-sm border border-border p-4">

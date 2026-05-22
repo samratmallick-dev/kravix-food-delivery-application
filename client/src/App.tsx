@@ -29,6 +29,9 @@ const AdminUsers = lazy(() => import("./admin/pages/AdminUsers"));
 const AdminRestaurants = lazy(() => import("./admin/pages/AdminRestaurants"));
 const AdminRiders = lazy(() => import("./admin/pages/AdminRiders"));
 const AdminOrders = lazy(() => import("./admin/pages/AdminOrders"));
+const AdminAnalytics = lazy(() => import("./admin/pages/AdminAnalytics"));
+const AdminCoupons = lazy(() => import("./admin/pages/AdminCoupons"));
+const AdminReviews = lazy(() => import("./admin/pages/AdminReviews"));
 
 const App = () => {
       const { loading } = useAppData();
@@ -47,6 +50,9 @@ const App = () => {
                                     <Route path="restaurants" element={<AdminRestaurants />} />
                                     <Route path="riders" element={<AdminRiders />} />
                                     <Route path="orders" element={<AdminOrders />} />
+                                    <Route path="analytics" element={<AdminAnalytics />} />
+                                    <Route path="coupons" element={<AdminCoupons />} />
+                                    <Route path="reviews" element={<AdminReviews />} />
                               </Route>
 
                               <Route element={<PublicRoutes />}>

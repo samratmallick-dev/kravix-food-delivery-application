@@ -39,6 +39,9 @@ export interface IOrder extends Document {
 
       deliveryOtp?: string | null;
 
+      couponCode?: string | null;
+      discountAmount?: number;
+
       expiresAt: Date;
 
       createdAt: Date;
@@ -101,6 +104,14 @@ const orderSchema: Schema = new Schema<IOrder>({
       subtotal: Number,
       deliveryFee: Number,
       platformFee: Number,
+      discountAmount: {
+            type: Number,
+            default: 0
+      },
+      couponCode: {
+            type: String,
+            default: null
+      },
       totalAmount: Number,
       addressId: {
             type: String,

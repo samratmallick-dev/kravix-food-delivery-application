@@ -1,6 +1,8 @@
 import axios from "axios";
 import { Order } from "../model/Order.js";
 import { getRabbitMQChannel } from "./rabbitmq.js";
+import { Coupon } from "../model/Coupon.js";
+import { CouponUsage } from "../model/CouponUsage.js";
 
 export const startPayment = async () => {
       const channel = getRabbitMQChannel();
@@ -37,6 +39,26 @@ export const startPayment = async () => {
                   if (!order) {
                         channel.ack(msg);
                         return;
+                  }
+
+                  // Record Coupon Usage
+                  if (order.couponCode && order.discountAmount && order.discountAmount > 0) {
+                        try {
+                              const coupon = await Coupon.findOne({ code: order.couponCode.trim().toUpperCase() });
+                              if (coupon) {
+                                    await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } });
+                                    await CouponUsage.create({
+                                          couponId: coupon._id,
+                                          userId: order.userId,
+                                          orderId: order._id.toString(),
+                                          discountApplied: order.discountAmount,
+                                          usedAt: new Date()
+                                    });
+                                    console.log(`✅ Coupon ${order.couponCode} applied and recorded for Order: ${order._id}`);
+                              }
+                        } catch (err) {
+                              console.error("❌ Failed to record coupon usage:", err);
+                        }
                   }
 
                   channel.ack(msg);

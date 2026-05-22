@@ -8,6 +8,9 @@ export const paymentBaseUrl = import.meta.env.VITE_API_URL_PAYMENT;
 export const realtimeSocketBaseUrl = import.meta.env.VITE_API_URL_REALTIME_SOCKET;
 export const riderBaseUrl = import.meta.env.VITE_API_URL_RIDER;
 export const adminBaseUrl = import.meta.env.VITE_API_URL_ADMIN;
+export const couponBaseUrl = import.meta.env.VITE_COUPON_BASE_URL || "http://localhost:9000/api/v1/coupons";
+export const reviewBaseUrl = import.meta.env.VITE_REVIEW_BASE_URL || "http://localhost:9000/api/v1/reviews";
+export const analyticsBaseUrl = import.meta.env.VITE_API_URL_ANALYTICS || "http://localhost:6002/api/v1/analytics";
 
 export const stripPublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 

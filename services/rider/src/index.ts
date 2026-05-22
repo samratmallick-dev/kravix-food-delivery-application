@@ -3,6 +3,7 @@ import { app } from "./app.js";
 import { connectRabbitMQ } from "./config/rabbitmq.js";
 import connectDb from "./config/db.js";
 import { orderReadyConsumer } from "./config/orderReadyConsumer.js";
+import { startRatingConsumer } from "./config/ratingConsumer.js";
 
 const PORT = process.env.PORT || 7000;
 const start = async () => {
@@ -10,6 +11,7 @@ const start = async () => {
             await Promise.all([connectDb(), connectRabbitMQ()]);
 
             await orderReadyConsumer();
+            await startRatingConsumer();
 
             const server = app.listen(PORT, () => {
                   console.log(`✅ [Rider Service] Running at http://localhost:${PORT}`);

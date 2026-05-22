@@ -1,9 +1,12 @@
-import { LayoutDashboard, Users, Store, Bike, ShoppingBag, LogOut, UtensilsCrossed, X } from "lucide-react";
+import { LayoutDashboard, Users, Store, Bike, ShoppingBag, LogOut, UtensilsCrossed, X, BarChart3, Ticket, MessageSquare } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 
 const links = [
       { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+      { to: "/admin/analytics", icon: BarChart3,       label: "Analytics" },
+      { to: "/admin/coupons",   icon: Ticket,          label: "Coupons" },
+      { to: "/admin/reviews",   icon: MessageSquare,   label: "Reviews" },
       { to: "/admin/users",     icon: Users,           label: "Users" },
       { to: "/admin/restaurants", icon: Store,         label: "Restaurants" },
       { to: "/admin/riders",    icon: Bike,            label: "Riders" },
@@ -44,7 +47,7 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
                                     <X size={18} />
                               </button>
                         </div>
-\
+
                         <nav className="flex-1 px-3 py-4 space-y-1">
                               {links.map(({ to, icon: Icon, label }) => (
                                     <NavLink

@@ -8,6 +8,8 @@ import { Restaurant } from "../model/Restaurant.js";
 import { IOrder, Order } from "../model/Order.js";
 import axios from "axios";
 import { publishEvent } from "../config/orderPublisher.js";
+import { Coupon } from "../model/Coupon.js";
+import { CouponUsage } from "../model/CouponUsage.js";
 
 export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
       const user = req.user;
@@ -19,7 +21,7 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
             });
       }
 
-      const { paymentMethod, addressId } = req.body;
+      const { paymentMethod, addressId, couponCode } = req.body;
 
       if (!addressId) {
             return res.status(400).json({
@@ -120,10 +122,47 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
       })();
 
       const platformFee = 7;
-      const foodGST = +(subTotal * 0.05).toFixed(2);
+
+      let discountAmount = 0;
+      if (couponCode) {
+            const coupon = await Coupon.findOne({ code: couponCode.trim().toUpperCase(), isActive: true });
+            if (coupon && new Date(coupon.expiryDate) >= new Date()) {
+                  if (coupon.couponType === "global" || coupon.restaurantId === restaurantId.toString()) {
+                        if (subTotal >= coupon.minOrderAmount) {
+                              let usageValid = true;
+                              if (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit) {
+                                    usageValid = false;
+                              }
+                              if (coupon.perUserLimit > 0) {
+                                    const count = await CouponUsage.countDocuments({ couponId: coupon._id, userId: user._id });
+                                    if (count >= coupon.perUserLimit) {
+                                          usageValid = false;
+                                    }
+                              }
+                              if (usageValid) {
+                                    if (coupon.discountType === "percentage") {
+                                          discountAmount = (subTotal * coupon.discountValue) / 100;
+                                          if (coupon.maxDiscountAmount > 0 && discountAmount > coupon.maxDiscountAmount) {
+                                                discountAmount = coupon.maxDiscountAmount;
+                                          }
+                                    } else if (coupon.discountType === "flat") {
+                                          discountAmount = coupon.discountValue;
+                                    } else if (coupon.discountType === "free_delivery") {
+                                          discountAmount = deliveryFee;
+                                    }
+                                    discountAmount = Math.round(discountAmount * 100) / 100;
+                                    discountAmount = Math.min(discountAmount, subTotal);
+                              }
+                        }
+                  }
+            }
+      }
+
+      const discountedSubtotal = Math.max(0, subTotal - discountAmount);
+      const foodGST = +(discountedSubtotal * 0.05).toFixed(2);
       const deliveryGST = +(deliveryFee * 0.18).toFixed(2);
       const totalGST = +(foodGST + deliveryGST).toFixed(2);
-      const totalAmount = subTotal + deliveryFee + platformFee + totalGST;
+      const totalAmount = +(discountedSubtotal + deliveryFee + platformFee + totalGST).toFixed(2);
 
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -145,6 +184,8 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
             subtotal: subTotal,
             deliveryFee: deliveryFee,
             platformFee: platformFee,
+            discountAmount: discountAmount,
+            couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
             totalAmount: totalAmount,
             addressId: addressId.toString(),
             deliveryAddress: {
