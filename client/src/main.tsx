@@ -1,4 +1,3 @@
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
@@ -11,18 +10,16 @@ import { AdminAuthProvider } from './admin/context/AdminAuthContext.tsx';
 import { AdminSocketProvider } from './admin/context/AdminSocketContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
-      <StrictMode>
-            <GoogleOAuthProvider clientId={googleClientId}>
-                  <AdminAuthProvider>
-                        <AdminSocketProvider>
-                              <AppProvider>
-                                    <SocketProvider>
-                                          <App />
-                                    </SocketProvider>
-                              </AppProvider>
-                        </AdminSocketProvider>
-                  </AdminAuthProvider>
-                  <Toaster />
-            </GoogleOAuthProvider>
-      </StrictMode>,
+      <GoogleOAuthProvider clientId={googleClientId}>
+            <AdminAuthProvider>
+                  <AdminSocketProvider>
+                        <AppProvider>
+                              <SocketProvider>
+                                    <App />
+                              </SocketProvider>
+                        </AppProvider>
+                  </AdminSocketProvider>
+            </AdminAuthProvider>
+            <Toaster />
+      </GoogleOAuthProvider>
 );
