@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kravix DFD Level-0 Context Diagram</title>
+  <style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:transparent}
+.canvas{background:#1a1c1f;border-radius:12px;padding:0;overflow:hidden;position:relative}
+.title-bar{background:#111315;padding:10px 18px;border-bottom:1px solid #2a2d31;display:flex;align-items:center;justify-content:space-between}
+.title-bar span{font-size:12px;color:#9ca3af;letter-spacing:.03em}
+.title-bar strong{font-size:13px;color:#e2e8f0;font-weight:500}
+svg.dfd{display:block;width:100%;background:#1a1c1f}
+.actor-box{cursor:pointer}
+.actor-box rect{fill:#111315;stroke:#374151;stroke-width:1;rx:6}
+.actor-box:hover rect{stroke:#6b7280}
+.actor-box text{fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle}
+.actor-icon{fill:none;stroke:#9ca3af;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.main-process rect{fill:#1d2535;stroke:#3b5bdb;stroke-width:1.5}
+.main-process text.label{fill:#93c5fd;font-size:13px;font-weight:500;font-family:var(--font-sans);text-anchor:middle}
+.main-process text.sub{fill:#6b7280;font-size:10px;font-family:var(--font-sans);text-anchor:middle}
+.flow-label{fill:#e2e8f0;font-size:9.5px;font-family:var(--font-sans);text-anchor:middle}
+  </style>
+</head>
+<body style="background-color: #1a1c1f; margin: 0; padding: 20px;">
+<div class="canvas">
+
+  <svg class="dfd" viewBox="0 0 680 560" role="img">
+    <title>DFD Level-0 context diagram for Kravix food delivery platform</title>
+    <desc>All external actors send data to and receive data from the central Kravix platform process</desc>
+    <defs>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4b8ef7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#5eead4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fb923c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-lightgreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#86efac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+
+    <!-- -- Central main process -- -->
+    <g class="main-process">
+      <rect x="225" y="215" width="230" height="100" rx="10"/>
+      <text class="label" x="340" y="256">0.0</text>
+      <text class="label" x="340" y="275" font-size="11">Kravix food delivery</text>
+      <text class="label" x="340" y="290" font-size="11">platform</text>
+    </g>
+
+    <!-- -- LEFT ACTORS -- -->
+    <!-- Customer -->
+    <g class="actor-box" onclick="sendPrompt('Show me the DFD Level-1 Customer flows in detail')">
+      <rect x="18" y="190" width="80" height="70" rx="6"/>
+      <circle cx="58" cy="210" r="9" class="actor-icon"/>
+      <line x1="58" y1="219" x2="58" y2="238" class="actor-icon"/>
+      <line x1="58" y1="224" x2="44" y2="232" class="actor-icon"/>
+      <line x1="58" y1="224" x2="72" y2="232" class="actor-icon"/>
+      <line x1="58" y1="238" x2="48" y2="250" class="actor-icon"/>
+      <line x1="58" y1="238" x2="68" y2="250" class="actor-icon"/>
+      <text x="58" y="262" class="actor-box" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">Customer</text>
+    </g>
+    <!-- Restaurant -->
+    <g class="actor-box" onclick="sendPrompt('Show me the DFD Level-1 Restaurant Management flows')">
+      <rect x="18" y="330" width="80" height="60" rx="6"/>
+      <rect x="34" y="340" width="48" height="32" rx="3" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+      <line x1="44" y1="340" x2="44" y2="372" stroke="#9ca3af" stroke-width="1"/>
+      <line x1="34" y1="354" x2="82" y2="354" stroke="#9ca3af" stroke-width="1"/>
+      <text x="58" y="382" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">Restaurant</text>
+    </g>
+    <!-- Rider -->
+    <g class="actor-box" onclick="sendPrompt('Show me the DFD Level-1 Rider Assignment flows')">
+      <rect x="18" y="440" width="80" height="60" rx="6"/>
+      <circle cx="58" cy="455" r="8" class="actor-icon"/>
+      <path d="M42 478 Q58 468 74 478" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+      <circle cx="44" cy="476" r="4" class="actor-icon"/>
+      <circle cx="72" cy="476" r="4" class="actor-icon"/>
+      <text x="58" y="492" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">Rider</text>
+    </g>
+
+    <!-- -- RIGHT ACTORS -- -->
+    <!-- Admin -->
+    <g class="actor-box" onclick="sendPrompt('Show me the DFD Level-1 Admin Management flows')">
+      <rect x="582" y="90" width="80" height="60" rx="6"/>
+      <path d="M622 100 L630 118 L614 118 Z" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+      <circle cx="622" cy="110" r="5" class="actor-icon"/>
+      <text x="622" y="142" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">Admin</text>
+    </g>
+    <!-- Payment Gateway -->
+    <g class="actor-box" onclick="sendPrompt('Show me the Payment Processing DFD Level-2 flows')">
+      <rect x="582" y="185" width="80" height="60" rx="6"/>
+      <rect x="594" y="196" width="56" height="34" rx="3" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+      <line x1="594" y1="207" x2="650" y2="207" stroke="#9ca3af" stroke-width="2"/>
+      <text x="622" y="238" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">Payment</text>
+      <text x="622" y="250" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">gateway</text>
+    </g>
+
+    <!-- Cloudinary -->
+    <g class="actor-box" onclick="sendPrompt('Show me how Cloudinary integrates with the Utilities service')">
+      <rect x="582" y="285" width="80" height="60" rx="6"/>
+      <rect x="598" y="296" width="48" height="30" rx="3" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+      <path d="M606 296 Q622 284 638 296" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+      <text x="622" y="337" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">Cloudinary</text>
+      <text x="622" y="349" style="fill:#6b7280;font-size:10px;font-family:var(--font-sans);text-anchor:middle">storage</text>
+    </g>
+    <!-- Gemini AI -->
+    <g class="actor-box" onclick="sendPrompt('Show me how Gemini AI integrates with the Restaurant service')">
+      <rect x="582" y="380" width="80" height="60" rx="6"/>
+      <path d="M614 388 Q622 380 630 388 L634 408 Q622 418 610 408 Z" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+      <circle cx="622" cy="398" r="4" class="actor-icon"/>
+      <text x="622" y="432" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">Gemini AI</text>
+      <text x="622" y="444" style="fill:#6b7280;font-size:10px;font-family:var(--font-sans);text-anchor:middle">menu desc.</text>
+    </g>
+    <!-- Google OAuth -->
+    <g class="actor-box" onclick="sendPrompt('Show me how Google OAuth integrates with the Auth service')">
+      <rect x="582" y="465" width="80" height="52" rx="6"/>
+      <text x="622" y="488" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">Google</text>
+      <text x="622" y="500" style="fill:#d1d5db;font-size:11px;font-family:var(--font-sans);text-anchor:middle">OAuth</text>
+    </g>
+
+    <!-- -- FLOWS: Customer <-> Platform -- -->
+    <!-- Customer -> Platform: registration, search, order, payment -->
+    <path d="M98 215 L225 248" fill="none" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text class="flow-label" x="152" y="226">Registration / login</text>
+
+    <path d="M98 230 L225 255" fill="none" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+
+    <path d="M98 240 L225 263" fill="none" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text class="flow-label" x="150" y="255">Search / cart / order</text>
+
+    <!-- Platform -> Customer: JWT, order status, notifications -->
+    <path d="M225 270 L98 260" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <text class="flow-label" x="150" y="280">JWT token / status</text>
+
+    <!-- Restaurant -> Platform -->
+    <path d="M98 350 L225 278" fill="none" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <text class="flow-label" x="145" y="325">Menu / order updates</text>
+
+    <!-- Platform -> Restaurant -->
+    <path d="M225 285 L98 362" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <text class="flow-label" x="148" y="342">New orders / analytics</text>
+
+    <!-- Rider -> Platform -->
+    <path d="M98 462 L225 304" fill="none" stroke="#fb923c" stroke-width="1.3" marker-end="url(#arrow-orange)"/>
+    <text class="flow-label" x="140" y="400">Location / status</text>
+
+    <!-- Platform -> Rider -->
+    <path d="M225 308 L98 472" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <text class="flow-label" x="135" y="420">Assignment / OTP</text>
+
+    <!-- Admin -> Platform -->
+    <path d="M582 120 L455 230" fill="none" stroke="#c4b5fd" stroke-width="1.3" marker-end="url(#arrow-purple)"/>
+    <text class="flow-label" x="530" y="168">Admin credentials</text>
+
+    <!-- Platform -> Admin -->
+    <path d="M455 237 L582 127" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <text class="flow-label" x="525" y="194">Reports / dashboard</text>
+
+    <!-- Platform <-> Payment Gateway -->
+    <path d="M455 248 L582 210" fill="none" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text class="flow-label" x="524" y="242">Payment request</text>
+    <path d="M582 220 L455 256" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <text class="flow-label" x="524" y="258">Payment response</text>
+
+
+    <!-- Platform <-> Cloudinary -->
+    <path d="M455 270 L582 305" fill="none" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text class="flow-label" x="525" y="282">image upload</text>
+    <path d="M582 314 L455 277" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <text class="flow-label" x="524" y="300">CDN URL</text>
+
+    <!-- Platform <-> Gemini AI -->
+    <path d="M455 290 L582 398" fill="none" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text class="flow-label" x="528" y="346">item name</text>
+    <path d="M582 405 L455 296" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <text class="flow-label" x="526" y="366">AI description</text>
+
+    <!-- Platform <-> Google OAuth -->
+    <path d="M455 300 L582 480" fill="none" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text class="flow-label" x="536" y="400">OAuth token</text>
+    <path d="M582 488 L455 308" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <text class="flow-label" x="534" y="420">User profile</text>
+
+    <!-- Legend -->
+    <g>
+      <rect x="220" y="12" width="260" height="36" rx="6" fill="#111315" stroke="#2a2d31" stroke-width="0.5"/>
+      <line x1="232" y1="30" x2="258" y2="30" stroke="#4b8ef7" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+      <text x="264" y="34" style="fill:#e2e8f0;font-size:10px;font-family:var(--font-sans)">Input flow</text>
+      <line x1="332" y1="30" x2="358" y2="30" stroke="#6ee7b7" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+      <text x="364" y="34" style="fill:#e2e8f0;font-size:10px;font-family:var(--font-sans)">Output flow</text>
+      <line x1="418" y1="30" x2="444" y2="30" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow-yellow)"/>
+      <text x="450" y="34" style="fill:#e2e8f0;font-size:10px;font-family:var(--font-sans)">Async</text>
+    </g>
+  </svg>
+</div>
+</body>
+</html>

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kravix DFD Level-2 Decomposition Diagram</title>
+  <style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.canvas{background:#1a1c1f;border-radius:12px;overflow:hidden}
+.title-bar{background:#111315;padding:10px 18px;border-bottom:1px solid #2a2d31;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.title-bar span{font-size:11px;color:#9ca3af}
+.title-bar strong{font-size:13px;color:#e2e8f0;font-weight:500}
+svg.panel{display:block;width:100%;background:#1a1c1f}
+.sec-divider{background:#111315;padding:6px 18px;border-top:1px solid #2a2d31;border-bottom:1px solid #2a2d31}
+.sec-divider span{font-size:11px;color:#6b7280;letter-spacing:.04em}
+  </style>
+</head>
+<body style="background-color: #1a1c1f; margin: 0; padding: 20px;">
+<div class="canvas">
+
+  <!-- === 1.0 AUTH === -->
+  <div class="sec-divider"><span>1.0  Auth service - :8000</span></div>
+  <svg class="panel" viewBox="0 0 680 180" role="img">
+    <title>Level-2 Auth service decomposition</title>
+    <desc>Sub-processes 1.1 through 1.5 for authentication and authorization</desc>
+    <defs>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4b8ef7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#5eead4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fb923c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-lightgreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#86efac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+    <!-- Actors -->
+    <rect x="8" y="66" width="60" height="36" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="38" y="83" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Customer</text>
+    <text x="38" y="95" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">/ Restaurant</text>
+    <rect x="612" y="50" width="62" height="28" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="643" y="67" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Google OAuth</text>
+    <!-- D1 -->
+    <rect x="612" y="108" width="60" height="24" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="612" y="108" width="60" height="8" rx="2" fill="#374151"/>
+    <text x="642" y="124" text-anchor="middle" style="fill:#e2e8f0;font-size:9px;font-family:var(--font-sans)">D1 User DB</text>
+    <!-- Sub-processes -->
+    <!-- 1.1 Google OAuth -->
+    <rect x="90" y="56" width="96" height="50" rx="6" fill="#1d2535" stroke="#3b5bdb" stroke-width="1"/>
+    <rect x="90" y="56" width="96" height="14" rx="4" fill="#2d3f6b"/>
+    <rect x="90" y="62" width="96" height="8" fill="#2d3f6b"/>
+    <text x="138" y="67" text-anchor="middle" style="fill:#93c5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">1.1 OAuth verify</text>
+    <text x="138" y="80" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">Google client ID</text>
+    <text x="138" y="91" text-anchor="middle" style="fill:#93c5fd;font-size:8px;font-family:var(--font-sans)">POST /sessions</text>
+    <text x="138" y="100" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">idToken validation</text>
+    <!-- 1.2 Role set -->
+    <rect x="202" y="56" width="96" height="50" rx="6" fill="#1d2535" stroke="#3b5bdb" stroke-width="1"/>
+    <rect x="202" y="56" width="96" height="14" rx="4" fill="#2d3f6b"/>
+    <rect x="202" y="62" width="96" height="8" fill="#2d3f6b"/>
+    <text x="250" y="67" text-anchor="middle" style="fill:#93c5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">1.2 Role assignment</text>
+    <text x="250" y="80" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">customer/seller/rider</text>
+    <text x="250" y="91" text-anchor="middle" style="fill:#93c5fd;font-size:8px;font-family:var(--font-sans)">PATCH /me/role</text>
+    <text x="250" y="100" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">MongoDB upsert</text>
+    <!-- 1.3 JWT gen -->
+    <rect x="314" y="56" width="96" height="50" rx="6" fill="#1d2535" stroke="#3b5bdb" stroke-width="1"/>
+    <rect x="314" y="56" width="96" height="14" rx="4" fill="#2d3f6b"/>
+    <rect x="314" y="62" width="96" height="8" fill="#2d3f6b"/>
+    <text x="362" y="67" text-anchor="middle" style="fill:#93c5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">1.3 JWT generation</text>
+    <text x="362" y="80" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">JWT_SECRET sign</text>
+    <text x="362" y="91" text-anchor="middle" style="fill:#93c5fd;font-size:8px;font-family:var(--font-sans)">HS256 token</text>
+    <text x="362" y="100" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">userId + role payload</text>
+    <!-- 1.4 Middleware guard -->
+    <rect x="426" y="56" width="96" height="50" rx="6" fill="#1d2535" stroke="#3b5bdb" stroke-width="1"/>
+    <rect x="426" y="56" width="96" height="14" rx="4" fill="#2d3f6b"/>
+    <rect x="426" y="62" width="96" height="8" fill="#2d3f6b"/>
+    <text x="474" y="67" text-anchor="middle" style="fill:#93c5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">1.4 Auth middleware</text>
+    <text x="474" y="80" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">all protected routes</text>
+    <text x="474" y="91" text-anchor="middle" style="fill:#93c5fd;font-size:8px;font-family:var(--font-sans)">verify JWT</text>
+    <text x="474" y="100" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">attach req.user</text>
+    <!-- 1.5 Profile -->
+    <rect x="538" y="56" width="66" height="50" rx="6" fill="#1d2535" stroke="#3b5bdb" stroke-width="1"/>
+    <rect x="538" y="56" width="66" height="14" rx="4" fill="#2d3f6b"/>
+    <rect x="538" y="62" width="66" height="8" fill="#2d3f6b"/>
+    <text x="571" y="67" text-anchor="middle" style="fill:#93c5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">1.5 Profile</text>
+    <text x="571" y="80" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">GET /me</text>
+    <text x="571" y="91" text-anchor="middle" style="fill:#93c5fd;font-size:8px;font-family:var(--font-sans)">user record</text>
+    <text x="571" y="100" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">D1 read</text>
+    <!-- Flows -->
+    <line x1="68" y1="84" x2="90" y2="81" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <line x1="186" y1="81" x2="202" y2="81" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text x="194" y="78" text-anchor="middle" style="fill:#e2e8f0;font-size:8px;font-family:var(--font-sans)">profile</text>
+    <line x1="298" y1="81" x2="314" y2="81" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text x="306" y="78" text-anchor="middle" style="fill:#e2e8f0;font-size:8px;font-family:var(--font-sans)">role set</text>
+    <line x1="410" y1="81" x2="426" y2="81" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text x="418" y="78" text-anchor="middle" style="fill:#6ee7b7;font-size:8px;font-family:var(--font-sans)">JWT</text>
+    <line x1="186" y1="86" x2="186" y2="86"/>
+    <line x1="90" y1="71" x2="90" y2="50" stroke="#4b8ef7" stroke-width="1"/>
+    <line x1="90" y1="50" x2="612" y2="60" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text x="350" y="46" text-anchor="middle" style="fill:#e2e8f0;font-size:8px;font-family:var(--font-sans)">idToken -> Google validate</text>
+    <line x1="612" y1="66" x2="560" y2="66" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <line x1="604" y1="108" x2="574" y2="106" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <line x1="250" y1="106" x2="250" y2="140" stroke="#4b8ef7" stroke-width="1"/>
+    <line x1="250" y1="140" x2="612" y2="120" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <text x="450" y="150" text-anchor="middle" style="fill:#e2e8f0;font-size:8px;font-family:var(--font-sans)">upsert user record (D1)</text>
+    <line x1="612" y1="130" x2="362" y2="106" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <!-- Internal key note -->
+    <rect x="8" y="140" width="200" height="28" rx="4" fill="#0f1a0f" stroke="#166534" stroke-width="0.5"/>
+    <text x="18" y="153" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">INTERNAL_SERVICE_KEY - shared across</text>
+    <text x="18" y="164" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">all 6 services via env (inter-service auth)</text>
+  </svg>
+
+  <!-- === 2.0 RESTAURANT + MENU + CART + ORDER === -->
+  <div class="sec-divider"><span>2.0  Restaurant service - :9000</span></div>
+  <svg class="panel" viewBox="0 0 680 190" role="img">
+    <title>Level-2 Restaurant service decomposition</title>
+    <desc>Sub-processes 2.1 through 2.6 covering menu, cart, search, and order creation</desc>
+    <defs>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4b8ef7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#5eead4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fb923c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-lightgreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#86efac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+    <!-- Actors -->
+    <rect x="8" y="30" width="60" height="28" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="38" y="47" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Customer</text>
+    <rect x="8" y="90" width="60" height="28" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="38" y="107" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Restaurant</text>
+    <!-- Data stores -->
+    <rect x="612" y="24" width="62" height="22" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="612" y="24" width="62" height="7" rx="2" fill="#374151"/>
+    <text x="643" y="38" text-anchor="middle" style="fill:#e2e8f0;font-size:8.5px;font-family:var(--font-sans)">D2 Restaurant</text>
+    <rect x="612" y="58" width="62" height="22" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="612" y="58" width="62" height="7" rx="2" fill="#374151"/>
+    <text x="643" y="72" text-anchor="middle" style="fill:#e2e8f0;font-size:8.5px;font-family:var(--font-sans)">D3 Order DB</text>
+    <rect x="612" y="92" width="62" height="22" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="612" y="92" width="62" height="7" rx="2" fill="#374151"/>
+    <text x="643" y="106" text-anchor="middle" style="fill:#e2e8f0;font-size:8.5px;font-family:var(--font-sans)">D5 Cart DB</text>
+    <rect x="612" y="122" width="62" height="22" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="612" y="122" width="62" height="7" rx="2" fill="#374151"/>
+    <text x="643" y="136" text-anchor="middle" style="fill:#e2e8f0;font-size:8.5px;font-family:var(--font-sans)">D6 Address DB</text>
+    <!-- Sub-processes -->
+    <rect x="88" y="22" width="88" height="52" rx="6" fill="#1f1a0f" stroke="#b45309" stroke-width="1"/>
+    <rect x="88" y="22" width="88" height="13" rx="4" fill="#3b2a0a"/>
+    <rect x="88" y="28" width="88" height="7" fill="#3b2a0a"/>
+    <text x="132" y="31" text-anchor="middle" style="fill:#fcd34d;font-size:9px;font-weight:500;font-family:var(--font-sans)">2.1 Restaurant</text>
+    <text x="132" y="41" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">CRUD + geo-index</text>
+    <text x="132" y="52" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">POST/PATCH /restaurants</text>
+    <text x="132" y="63" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">2dsphere index</text>
+    <text x="132" y="73" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">toggle open/closed</text>
+
+    <rect x="188" y="22" width="88" height="52" rx="6" fill="#1f1a0f" stroke="#b45309" stroke-width="1"/>
+    <rect x="188" y="22" width="88" height="13" rx="4" fill="#3b2a0a"/>
+    <rect x="188" y="28" width="88" height="7" fill="#3b2a0a"/>
+    <text x="232" y="31" text-anchor="middle" style="fill:#fcd34d;font-size:9px;font-weight:500;font-family:var(--font-sans)">2.2 Menu CRUD</text>
+    <text x="232" y="41" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">+ Gemini AI desc</text>
+    <text x="232" y="52" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">POST/DELETE /menu</text>
+    <text x="232" y="63" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">Cloudinary images</text>
+    <text x="232" y="73" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">toggle availability</text>
+
+    <rect x="288" y="22" width="88" height="52" rx="6" fill="#1f1a0f" stroke="#b45309" stroke-width="1"/>
+    <rect x="288" y="22" width="88" height="13" rx="4" fill="#3b2a0a"/>
+    <rect x="288" y="28" width="88" height="7" fill="#3b2a0a"/>
+    <text x="332" y="31" text-anchor="middle" style="fill:#fcd34d;font-size:9px;font-weight:500;font-family:var(--font-sans)">2.3 Search</text>
+    <text x="332" y="41" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">nearest + food search</text>
+    <text x="332" y="52" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">GET /restaurants</text>
+    <text x="332" y="63" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">$near + $regex</text>
+    <text x="332" y="73" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">GET /menu/search</text>
+
+    <rect x="388" y="22" width="88" height="52" rx="6" fill="#1f1a0f" stroke="#b45309" stroke-width="1"/>
+    <rect x="388" y="22" width="88" height="13" rx="4" fill="#3b2a0a"/>
+    <rect x="388" y="28" width="88" height="7" fill="#3b2a0a"/>
+    <text x="432" y="31" text-anchor="middle" style="fill:#fcd34d;font-size:9px;font-weight:500;font-family:var(--font-sans)">2.4 Cart</text>
+    <text x="432" y="41" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">add/inc/dec/clear</text>
+    <text x="432" y="52" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">POST /cart</text>
+    <text x="432" y="63" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">single restaurant</text>
+    <text x="432" y="73" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">rule enforced</text>
+
+    <rect x="488" y="22" width="88" height="52" rx="6" fill="#1f1a0f" stroke="#b45309" stroke-width="1"/>
+    <rect x="488" y="22" width="88" height="13" rx="4" fill="#3b2a0a"/>
+    <rect x="488" y="28" width="88" height="7" fill="#3b2a0a"/>
+    <text x="532" y="31" text-anchor="middle" style="fill:#fcd34d;font-size:9px;font-weight:500;font-family:var(--font-sans)">2.5 Order create</text>
+    <text x="532" y="41" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">POST /orders</text>
+    <text x="532" y="52" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">status: pending</text>
+    <text x="532" y="63" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">writes D3 Order DB</text>
+    <text x="532" y="73" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">awaits payment event</text>
+
+    <!-- Order status machine -->
+    <rect x="88" y="106" width="500" height="50" rx="6" fill="#141010" stroke="#374151" stroke-width="1"/>
+    <text x="338" y="120" text-anchor="middle" style="fill:#6b7280;font-size:9px;font-family:var(--font-sans)">2.6 Order state machine  (PATCH /orders/:id/status)</text>
+    <rect x="100" y="128" width="66" height="20" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <text x="133" y="141" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">pending</text>
+    <line x1="166" y1="138" x2="178" y2="138" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <rect x="178" y="128" width="66" height="20" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <text x="211" y="141" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">confirmed</text>
+    <line x1="244" y1="138" x2="256" y2="138" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <rect x="256" y="128" width="66" height="20" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <text x="289" y="141" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">preparing</text>
+    <line x1="322" y1="138" x2="334" y2="138" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <rect x="334" y="128" width="66" height="20" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <text x="367" y="141" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">ready</text>
+    <line x1="400" y1="138" x2="412" y2="138" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <rect x="412" y="128" width="66" height="20" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <text x="445" y="141" text-anchor="middle" style="fill:#fcd34d;font-size:8px;font-family:var(--font-sans)">picked up</text>
+    <line x1="478" y1="138" x2="490" y2="138" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <rect x="490" y="128" width="74" height="20" rx="4" fill="#14361e" stroke="#166534" stroke-width="1"/>
+    <text x="527" y="141" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">delivered ok</text>
+    <!-- cancelled branch -->
+    <path d="M133 148 L133 162 L289 162 L289 148" fill="none" stroke="#ef4444" stroke-width="1.3" stroke-dasharray="3 2" marker-end="url(#arrow-red)"/>
+    <text x="211" y="172" text-anchor="middle" style="fill:#ef4444;font-size:8px;font-family:var(--font-sans)">cancelled (any stage)</text>
+    <!-- Flows to data stores -->
+    <line x1="576" y1="44" x2="612" y2="32" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <line x1="532" y1="74" x2="612" y2="66" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <line x1="432" y1="74" x2="612" y2="103" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <line x1="532" y1="74" x2="612" y2="133" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+    <line x1="612" y1="35" x2="576" y2="52" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <!-- Actor flows -->
+    <line x1="68" y1="44" x2="88" y2="44" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <line x1="68" y1="104" x2="88" y2="62" stroke="#fbbf24" stroke-width="1.3" marker-end="url(#arrow-yellow)"/>
+  </svg>
+
+  <!-- === 3.0 RIDER === -->
+  <div class="sec-divider"><span>3.0  Rider service - :7000</span></div>
+  <svg class="panel" viewBox="0 0 680 150" role="img">
+    <title>Level-2 Rider service decomposition</title>
+    <desc>Sub-processes 3.1 through 3.6 covering rider availability, GPS tracking, delivery, and OTP</desc>
+    <defs>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4b8ef7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#5eead4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fb923c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-lightgreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#86efac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+    <rect x="8" y="50" width="60" height="28" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="38" y="67" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Rider</text>
+    <rect x="612" y="50" width="62" height="22" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="612" y="50" width="62" height="7" rx="2" fill="#374151"/>
+    <text x="643" y="64" text-anchor="middle" style="fill:#e2e8f0;font-size:8.5px;font-family:var(--font-sans)">D4 Rider DB</text>
+    <rect x="612" y="84" width="62" height="22" rx="4" fill="#261a0d" stroke="#92400e" stroke-width="1"/>
+    <rect x="612" y="84" width="62" height="7" rx="2" fill="#92400e"/>
+    <text x="643" y="98" text-anchor="middle" style="fill:#fde68a;font-size:8.5px;font-family:var(--font-sans)">RabbitMQ</text>
+    <text x="643" y="109" text-anchor="middle" style="fill:#fbbf24;font-size:7px;font-family:var(--font-sans)">ORDER_READY_Q</text>
+
+    <rect x="88" y="34" width="82" height="66" rx="6" fill="#0f1a12" stroke="#166534" stroke-width="1"/>
+    <rect x="88" y="34" width="82" height="14" rx="4" fill="#14361e"/>
+    <rect x="88" y="40" width="82" height="8" fill="#14361e"/>
+    <text x="129" y="44" text-anchor="middle" style="fill:#86efac;font-size:9px;font-weight:500;font-family:var(--font-sans)">3.1 Availability</text>
+    <text x="129" y="56" text-anchor="middle" style="fill:#6b7280;font-size:7.5px;font-family:var(--font-sans)">PATCH /me/availability</text>
+    <text x="129" y="68" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">isAvailable toggle</text>
+    <text x="129" y="79" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">verified riders only</text>
+    <text x="129" y="90" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">D4 write</text>
+
+    <rect x="182" y="34" width="82" height="66" rx="6" fill="#0f1a12" stroke="#166534" stroke-width="1"/>
+    <rect x="182" y="34" width="82" height="14" rx="4" fill="#14361e"/>
+    <rect x="182" y="40" width="82" height="8" fill="#14361e"/>
+    <text x="223" y="44" text-anchor="middle" style="fill:#86efac;font-size:9px;font-weight:500;font-family:var(--font-sans)">3.2 GPS update</text>
+    <text x="223" y="56" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">PATCH /me/location</text>
+    <text x="223" y="68" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">GeoJSON Point</text>
+    <text x="223" y="79" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">2dsphere index</text>
+    <text x="223" y="90" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">-> Realtime :9999</text>
+
+    <rect x="276" y="34" width="82" height="66" rx="6" fill="#0f1a12" stroke="#166534" stroke-width="1"/>
+    <rect x="276" y="34" width="82" height="14" rx="4" fill="#14361e"/>
+    <rect x="276" y="40" width="82" height="8" fill="#14361e"/>
+    <text x="317" y="44" text-anchor="middle" style="fill:#86efac;font-size:8px;font-weight:500;font-family:var(--font-sans)">3.3 Broadcast Order</text>
+    <text x="317" y="56" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">RabbitMQ consumer</text>
+    <text x="317" y="68" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">geo-radius query</text>
+    <text x="317" y="79" text-anchor="middle" style="fill:#6b7280;font-size:7px;font-family:var(--font-sans)">ORDER_READY_FOR_RIDER</text>
+    <text x="317" y="90" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">notifies nearby riders</text>
+
+    <rect x="370" y="34" width="82" height="66" rx="6" fill="#0f1a12" stroke="#166534" stroke-width="1"/>
+    <rect x="370" y="34" width="82" height="14" rx="4" fill="#14361e"/>
+    <rect x="370" y="40" width="82" height="8" fill="#14361e"/>
+    <text x="411" y="44" text-anchor="middle" style="fill:#86efac;font-size:9px;font-weight:500;font-family:var(--font-sans)">3.4 Accept / reject</text>
+    <text x="411" y="56" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">POST /orders/:id/accept</text>
+    <text x="411" y="68" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">update order status</text>
+    <text x="411" y="79" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">lock to rider</text>
+    <text x="411" y="90" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">-> D3 Order DB</text>
+
+    <rect x="464" y="34" width="82" height="66" rx="6" fill="#0f1a12" stroke="#166534" stroke-width="1"/>
+    <rect x="464" y="34" width="82" height="14" rx="4" fill="#14361e"/>
+    <rect x="464" y="40" width="82" height="8" fill="#14361e"/>
+    <text x="505" y="44" text-anchor="middle" style="fill:#86efac;font-size:9px;font-weight:500;font-family:var(--font-sans)">3.5 OTP delivery</text>
+    <text x="505" y="56" text-anchor="middle" style="fill:#6b7280;font-size:7px;font-family:var(--font-sans)">POST /orders/otp/generate</text>
+    <text x="505" y="68" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">6-digit secure OTP</text>
+    <text x="505" y="79" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">customer confirms</text>
+    <text x="505" y="90" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">-> delivered state</text>
+
+    <rect x="558" y="34" width="44" height="66" rx="6" fill="#0f1a12" stroke="#166534" stroke-width="1"/>
+    <rect x="558" y="34" width="44" height="14" rx="4" fill="#14361e"/>
+    <rect x="558" y="40" width="44" height="8" fill="#14361e"/>
+    <text x="580" y="44" text-anchor="middle" style="fill:#86efac;font-size:9px;font-weight:500;font-family:var(--font-sans)">3.6 Earn</text>
+    <text x="580" y="56" text-anchor="middle" style="fill:#6b7280;font-size:8.5px;font-family:var(--font-sans)">GET /me/earnings</text>
+    <text x="580" y="68" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">history</text>
+    <text x="580" y="79" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">analytics</text>
+    <text x="580" y="90" text-anchor="middle" style="fill:#86efac;font-size:8px;font-family:var(--font-sans)">D4 read</text>
+
+    <line x1="68" y1="64" x2="88" y2="64" stroke="#fb923c" stroke-width="1.3" marker-end="url(#arrow-orange)"/>
+    <line x1="170" y1="67" x2="182" y2="67" stroke="#86efac" stroke-width="1.3" marker-end="url(#arrow-lightgreen)"/>
+    <line x1="264" y1="67" x2="276" y2="67" stroke="#86efac" stroke-width="1.3" marker-end="url(#arrow-lightgreen)"/>
+    <line x1="358" y1="67" x2="370" y2="67" stroke="#86efac" stroke-width="1.3" marker-end="url(#arrow-lightgreen)"/>
+    <line x1="452" y1="67" x2="464" y2="67" stroke="#86efac" stroke-width="1.3" marker-end="url(#arrow-lightgreen)"/>
+    <line x1="546" y1="67" x2="558" y2="67" stroke="#86efac" stroke-width="1.3" marker-end="url(#arrow-lightgreen)"/>
+    <line x1="612" y1="61" x2="602" y2="61" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <line x1="580" y1="100" x2="580" y2="106" stroke="#86efac" stroke-width="1"/>
+    <line x1="580" y1="106" x2="643" y2="91" stroke="#86efac" stroke-width="1.3" marker-end="url(#arrow-lightgreen)"/>
+    <path d="M 612,96 L 612,115 L 317,115 L 317,100" fill="none" stroke="#f59e0b" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arrow-yellow)"/>
+    <text x="460" y="116" text-anchor="middle" style="fill:#f59e0b;font-size:8px;font-family:var(--font-sans)">ORDER_READY_Q message triggers 3.3</text>
+  </svg>
+
+  <!-- === 4.0 ADMIN === -->
+  <div class="sec-divider"><span>4.0  Admin service - :6001</span></div>
+  <svg class="panel" viewBox="0 0 680 190" role="img">
+    <title>Level-2 Admin service decomposition</title>
+    <desc>Sub-processes 4.1 through 4.7 covering moderation, verification, and analytics</desc>
+    <defs>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4b8ef7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#5eead4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fb923c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-lightgreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#86efac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+    <!-- Actors -->
+    <rect x="8" y="81" width="60" height="28" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="38" y="98" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Admin</text>
+
+    <!-- Data Stores & MQ -->
+    <!-- D1 -->
+    <rect x="508" y="20" width="70" height="22" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="508" y="20" width="70" height="6" rx="2" fill="#374151"/>
+    <text x="543" y="34" text-anchor="middle" style="fill:#e2e8f0;font-size:8px;font-family:var(--font-sans)">D1 User DB</text>
+    <!-- D2 -->
+    <rect x="508" y="52" width="70" height="22" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="508" y="52" width="70" height="6" rx="2" fill="#374151"/>
+    <text x="543" y="66" text-anchor="middle" style="fill:#e2e8f0;font-size:8px;font-family:var(--font-sans)">D2 Restaurant</text>
+    <!-- D3 -->
+    <rect x="508" y="84" width="70" height="22" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="508" y="84" width="70" height="6" rx="2" fill="#374151"/>
+    <text x="543" y="98" text-anchor="middle" style="fill:#e2e8f0;font-size:8px;font-family:var(--font-sans)">D3 Order DB</text>
+    <!-- D4 -->
+    <rect x="508" y="116" width="70" height="22" rx="4" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+    <rect x="508" y="116" width="70" height="6" rx="2" fill="#374151"/>
+    <text x="543" y="130" text-anchor="middle" style="fill:#e2e8f0;font-size:8px;font-family:var(--font-sans)">D4 Rider DB</text>
+    <!-- RabbitMQ admin_event_queue -->
+    <rect x="508" y="148" width="70" height="22" rx="4" fill="#261a0d" stroke="#92400e" stroke-width="1"/>
+    <rect x="508" y="148" width="70" height="6" rx="2" fill="#92400e"/>
+    <text x="543" y="160" text-anchor="middle" style="fill:#fde68a;font-size:8px;font-family:var(--font-sans)">RabbitMQ</text>
+    <text x="543" y="168" text-anchor="middle" style="fill:#fbbf24;font-size:7px;font-family:var(--font-sans)">admin_event_q</text>
+
+    <!-- Realtime Server Socket -->
+    <rect x="600" y="81" width="72" height="28" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="636" y="98" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Realtime :9999</text>
+
+    <!-- Sub-processes -->
+    <!-- 4.1 Admin Login -->
+    <rect x="88" y="24" width="94" height="68" rx="6" fill="#16101f" stroke="#5b21b6" stroke-width="1"/>
+    <rect x="88" y="24" width="94" height="14" rx="4" fill="#2e1c4a"/>
+    <rect x="88" y="30" width="94" height="8" fill="#2e1c4a"/>
+    <text x="135" y="34" text-anchor="middle" style="fill:#c4b5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">4.1 Admin Login</text>
+    <text x="135" y="48" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">POST /login</text>
+    <text x="135" y="60" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">verifies password</text>
+    <text x="135" y="72" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">issues Admin JWT</text>
+    <text x="135" y="84" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">D1 read</text>
+
+    <!-- 4.2 Dashboard Analytics -->
+    <rect x="194" y="24" width="94" height="68" rx="6" fill="#16101f" stroke="#5b21b6" stroke-width="1"/>
+    <rect x="194" y="24" width="94" height="14" rx="4" fill="#2e1c4a"/>
+    <rect x="194" y="30" width="94" height="8" fill="#2e1c4a"/>
+    <text x="241" y="34" text-anchor="middle" style="fill:#c4b5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">4.2 Dashboard</text>
+    <text x="241" y="48" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">GET /dashboard</text>
+    <text x="241" y="60" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">analytics readout</text>
+    <text x="241" y="72" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">aggregates stats</text>
+    <text x="241" y="84" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">reads D1,D2,D3,D4</text>
+
+    <!-- 4.3 User Moderation -->
+    <rect x="300" y="24" width="94" height="68" rx="6" fill="#16101f" stroke="#5b21b6" stroke-width="1"/>
+    <rect x="300" y="24" width="94" height="14" rx="4" fill="#2e1c4a"/>
+    <rect x="300" y="30" width="94" height="8" fill="#2e1c4a"/>
+    <text x="347" y="34" text-anchor="middle" style="fill:#c4b5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">4.3 Moderation</text>
+    <text x="347" y="48" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">PATCH /users/:id/block</text>
+    <text x="347" y="60" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">block/unblock user</text>
+    <text x="347" y="72" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">writes D1 User DB</text>
+    <text x="347" y="84" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">publishes admin_event</text>
+
+    <!-- 4.4 Restaurant Verification -->
+    <rect x="406" y="24" width="94" height="68" rx="6" fill="#16101f" stroke="#5b21b6" stroke-width="1"/>
+    <rect x="406" y="24" width="94" height="14" rx="4" fill="#2e1c4a"/>
+    <rect x="406" y="30" width="94" height="8" fill="#2e1c4a"/>
+    <text x="453" y="34" text-anchor="middle" style="fill:#c4b5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">4.4 Verify Restaurant</text>
+    <text x="453" y="48" text-anchor="middle" style="fill:#6b7280;font-size:7px;font-family:var(--font-sans)">PATCH /restaurants/:id/verify</text>
+    <text x="453" y="60" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">approves restaurant</text>
+    <text x="453" y="72" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">writes D2 Rest DB</text>
+    <text x="453" y="84" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">publishes admin_event</text>
+
+    <!-- 4.5 Rider Verification -->
+    <rect x="88" y="104" width="94" height="68" rx="6" fill="#16101f" stroke="#5b21b6" stroke-width="1"/>
+    <rect x="88" y="104" width="94" height="14" rx="4" fill="#2e1c4a"/>
+    <rect x="88" y="110" width="94" height="8" fill="#2e1c4a"/>
+    <text x="135" y="114" text-anchor="middle" style="fill:#c4b5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">4.5 Verify Rider</text>
+    <text x="135" y="128" text-anchor="middle" style="fill:#6b7280;font-size:7px;font-family:var(--font-sans)">PATCH /riders/:id/verify</text>
+    <text x="135" y="140" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">approves rider status</text>
+    <text x="135" y="152" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">writes D4 Rider DB</text>
+    <text x="135" y="164" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">publishes admin_event</text>
+
+    <!-- 4.6 Order Oversight -->
+    <rect x="194" y="104" width="94" height="68" rx="6" fill="#16101f" stroke="#5b21b6" stroke-width="1"/>
+    <rect x="194" y="104" width="94" height="14" rx="4" fill="#2e1c4a"/>
+    <rect x="194" y="110" width="94" height="8" fill="#2e1c4a"/>
+    <text x="241" y="114" text-anchor="middle" style="fill:#c4b5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">4.6 Order Oversight</text>
+    <text x="241" y="128" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">PATCH /orders/:id/cancel</text>
+    <text x="241" y="140" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">cancels any order</text>
+    <text x="241" y="152" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">writes D3 Order DB</text>
+    <text x="241" y="164" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">triggers refund flow</text>
+
+    <!-- 4.7 MQ Event Consumer -->
+    <rect x="300" y="104" width="94" height="68" rx="6" fill="#16101f" stroke="#5b21b6" stroke-width="1"/>
+    <rect x="300" y="104" width="94" height="14" rx="4" fill="#2e1c4a"/>
+    <rect x="300" y="110" width="94" height="8" fill="#2e1c4a"/>
+    <text x="347" y="114" text-anchor="middle" style="fill:#c4b5fd;font-size:9px;font-weight:500;font-family:var(--font-sans)">4.7 MQ Consumer</text>
+    <text x="347" y="128" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">adminEventConsumer</text>
+    <text x="347" y="140" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">consumes admin_event_q</text>
+    <text x="347" y="152" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">relays socket events</text>
+    <text x="347" y="164" text-anchor="middle" style="fill:#c4b5fd;font-size:8px;font-family:var(--font-sans)">to Admin &amp; user rooms</text>
+
+    <!-- Flow Lines -->
+    <line x1="68" y1="95" x2="88" y2="58" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <path d="M 68,95 L 347,95 L 347,92" fill="none" stroke="#c4b5fd" stroke-width="1.3" marker-end="url(#arrow-purple)"/>
+    <path d="M 508,26 L 508,10 L 135,10 L 135,24" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <path d="M 508,63 L 490,98 L 241,98 L 241,92" fill="none" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+    <path d="M 347,24 L 347,16 L 508,16 L 508,22" fill="none" stroke="#c4b5fd" stroke-width="1.3" marker-end="url(#arrow-purple)"/>
+    <line x1="500" y1="58" x2="508" y2="58" stroke="#c4b5fd" stroke-width="1.3" marker-end="url(#arrow-purple)"/>
+    <path d="M 135,172 L 135,180 L 508,180 L 508,127" fill="none" stroke="#c4b5fd" stroke-width="1.3" marker-end="url(#arrow-purple)"/>
+    <path d="M 241,172 L 241,184 L 508,184 L 508,95" fill="none" stroke="#c4b5fd" stroke-width="1.3" marker-end="url(#arrow-purple)"/>
+    <line x1="508" y1="159" x2="394" y2="159" stroke="#f59e0b" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arrow-yellow)"/>
+    <path d="M 394,138 L 490,138 L 490,111 L 600,111 L 600,95" fill="none" stroke="#c4b5fd" stroke-width="1.3" marker-end="url(#arrow-purple)"/>
+  </svg>
+
+  <!-- === 5.0 UTILITIES === -->
+  <div class="sec-divider"><span>5.0  Utilities service - :8888</span></div>
+  <svg class="panel" viewBox="0 0 680 140" role="img">
+    <title>Level-2 Payment processing decomposition</title>
+    <desc>Sub-processes 5.1 through 5.5 covering Stripe, Razorpay, webhook verification, and transaction logging</desc>
+    <defs>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4b8ef7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#5eead4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fb923c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-lightgreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#86efac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+    <rect x="8" y="48" width="60" height="28" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="38" y="65" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Customer</text>
+    <rect x="612" y="30" width="62" height="22" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="643" y="45" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Stripe</text>
+    <rect x="612" y="62" width="62" height="22" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="643" y="77" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Razorpay</text>
+    <rect x="612" y="94" width="62" height="22" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="643" y="108" text-anchor="middle" style="fill:#d1d5db;font-size:8px;font-family:var(--font-sans)">Cloudinary</text>
+
+    <rect x="88" y="28" width="94" height="72" rx="6" fill="#1f0f0f" stroke="#991b1b" stroke-width="1"/>
+    <rect x="88" y="28" width="94" height="14" rx="4" fill="#3b1010"/>
+    <rect x="88" y="34" width="94" height="8" fill="#3b1010"/>
+    <text x="135" y="38" text-anchor="middle" style="fill:#fca5a5;font-size:9px;font-weight:500;font-family:var(--font-sans)">5.1 Stripe session</text>
+    <text x="135" y="51" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">POST /payment/stripe</text>
+    <text x="135" y="63" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">checkout.sessions</text>
+    <text x="135" y="75" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">.create()</text>
+    <text x="135" y="87" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">redirect URL return</text>
+    <text x="135" y="97" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">STRIPE_SECRET_KEY</text>
+
+    <rect x="194" y="28" width="94" height="72" rx="6" fill="#1f0f0f" stroke="#991b1b" stroke-width="1"/>
+    <rect x="194" y="28" width="94" height="14" rx="4" fill="#3b1010"/>
+    <rect x="194" y="34" width="94" height="8" fill="#3b1010"/>
+    <text x="241" y="38" text-anchor="middle" style="fill:#fca5a5;font-size:9px;font-weight:500;font-family:var(--font-sans)">5.2 Razorpay order</text>
+    <text x="241" y="51" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">POST /payment/razorpay</text>
+    <text x="241" y="63" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">orders.create()</text>
+    <text x="241" y="75" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">amount in paise</text>
+    <text x="241" y="87" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">orderId returned</text>
+    <text x="241" y="97" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">RAZORPAY_API_KEY</text>
+
+    <rect x="300" y="28" width="94" height="72" rx="6" fill="#1f0f0f" stroke="#991b1b" stroke-width="1"/>
+    <rect x="300" y="28" width="94" height="14" rx="4" fill="#3b1010"/>
+    <rect x="300" y="34" width="94" height="8" fill="#3b1010"/>
+    <text x="347" y="38" text-anchor="middle" style="fill:#fca5a5;font-size:9px;font-weight:500;font-family:var(--font-sans)">5.3 Stripe verify</text>
+    <text x="347" y="51" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">POST /stripe/verify</text>
+    <text x="347" y="63" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">session.retrieve()</text>
+    <text x="347" y="75" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">payment_status check</text>
+    <text x="347" y="87" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">-> payment_event MQ</text>
+    <text x="347" y="97" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">on success</text>
+
+    <rect x="406" y="28" width="94" height="72" rx="6" fill="#1f0f0f" stroke="#991b1b" stroke-width="1"/>
+    <rect x="406" y="28" width="94" height="14" rx="4" fill="#3b1010"/>
+    <rect x="406" y="34" width="94" height="8" fill="#3b1010"/>
+    <text x="453" y="38" text-anchor="middle" style="fill:#fca5a5;font-size:9px;font-weight:500;font-family:var(--font-sans)">5.4 Razorpay verify</text>
+    <text x="453" y="51" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">POST /razorpay/verify</text>
+    <text x="453" y="63" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">HMAC-SHA256 sig</text>
+    <text x="453" y="75" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">orderId+paymentId</text>
+    <text x="453" y="87" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">signature verify</text>
+    <text x="453" y="97" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">-> payment_event MQ</text>
+
+    <rect x="512" y="28" width="86" height="72" rx="6" fill="#1f0f0f" stroke="#991b1b" stroke-width="1"/>
+    <rect x="512" y="28" width="86" height="14" rx="4" fill="#3b1010"/>
+    <rect x="512" y="34" width="86" height="8" fill="#3b1010"/>
+    <text x="555" y="38" text-anchor="middle" style="fill:#fca5a5;font-size:9px;font-weight:500;font-family:var(--font-sans)">5.5 Cloudinary</text>
+    <text x="555" y="51" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">POST /cloudinary/images</text>
+    <text x="555" y="63" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">uploads image buffer</text>
+    <text x="555" y="75" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">or base64 URI</text>
+    <text x="555" y="87" text-anchor="middle" style="fill:#fca5a5;font-size:8px;font-family:var(--font-sans)">returns secure URL</text>
+    <text x="555" y="97" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">and public ID</text>
+
+    <line x1="68" y1="62" x2="88" y2="62" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <line x1="182" y1="64" x2="194" y2="64" stroke="#fca5a5" stroke-width="1.3" marker-end="url(#arrow-red)"/>
+    <line x1="288" y1="64" x2="300" y2="64" stroke="#fca5a5" stroke-width="1.3" marker-end="url(#arrow-red)"/>
+    <line x1="394" y1="64" x2="406" y2="64" stroke="#fca5a5" stroke-width="1.3" marker-end="url(#arrow-red)"/>
+    <line x1="500" y1="64" x2="512" y2="64" stroke="#fca5a5" stroke-width="1.3" marker-end="url(#arrow-red)"/>
+    <path d="M 135,28 L 135,16 L 612,16 L 612,30" fill="none" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <path d="M 241,100 L 241,114 L 612,114 L 612,73" fill="none" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <line x1="555" y1="100" x2="612" y2="102" stroke="#4b8ef7" stroke-width="1.3" marker-end="url(#arrow-blue)"/>
+    <line x1="612" y1="108" x2="555" y2="100" stroke="#6ee7b7" stroke-width="1.3" marker-end="url(#arrow-green)"/>
+  </svg>
+
+  <!-- === 6.0 REALTIME === -->
+  <div class="sec-divider"><span>6.0  Realtime service - :9999 * Socket.IO + RabbitMQ consumers</span></div>
+  <svg class="panel" viewBox="0 0 680 120" role="img">
+    <title>Level-2 Realtime service decomposition</title>
+    <desc>Sub-processes 6.1 through 6.4 for Socket.IO event relay and real-time notifications</desc>
+    <defs>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4b8ef7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#5eead4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#fb923c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arrow-lightgreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#86efac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+    <!-- Internal trigger source -->
+    <rect x="8" y="38" width="68" height="36" rx="4" fill="#261a0d" stroke="#92400e" stroke-width="1"/>
+    <text x="42" y="54" text-anchor="middle" style="fill:#fde68a;font-size:9px;font-family:var(--font-sans)">Services</text>
+    <text x="42" y="65" text-anchor="middle" style="fill:#fbbf24;font-size:8px;font-family:var(--font-sans)">POST /events</text>
+    <!-- End clients -->
+    <rect x="610" y="38" width="62" height="36" rx="4" fill="#111315" stroke="#374151" stroke-width="1"/>
+    <text x="641" y="54" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">Customer</text>
+    <text x="641" y="66" text-anchor="middle" style="fill:#d1d5db;font-size:9px;font-family:var(--font-sans)">/ Rider</text>
+
+    <rect x="90" y="24" width="104" height="68" rx="6" fill="#0a1a1a" stroke="#0f766e" stroke-width="1"/>
+    <rect x="90" y="24" width="104" height="14" rx="4" fill="#0f2e2e"/>
+    <rect x="90" y="30" width="104" height="8" fill="#0f2e2e"/>
+    <text x="142" y="34" text-anchor="middle" style="fill:#5eead4;font-size:9px;font-weight:500;font-family:var(--font-sans)">6.1 Order status</text>
+    <text x="142" y="48" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">event: order_status</text>
+    <text x="142" y="60" text-anchor="middle" style="fill:#5eead4;font-size:8px;font-family:var(--font-sans)">emit to customerId room</text>
+    <text x="142" y="72" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">confirmed->delivering</text>
+    <text x="142" y="84" text-anchor="middle" style="fill:#5eead4;font-size:8px;font-family:var(--font-sans)">delivered + confetti</text>
+
+    <rect x="206" y="24" width="104" height="68" rx="6" fill="#0a1a1a" stroke="#0f766e" stroke-width="1"/>
+    <rect x="206" y="24" width="104" height="14" rx="4" fill="#0f2e2e"/>
+    <rect x="206" y="30" width="104" height="8" fill="#0f2e2e"/>
+    <text x="258" y="34" text-anchor="middle" style="fill:#5eead4;font-size:9px;font-weight:500;font-family:var(--font-sans)">6.2 Rider location</text>
+    <text x="258" y="48" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">event: rider_location</text>
+    <text x="258" y="60" text-anchor="middle" style="fill:#5eead4;font-size:8px;font-family:var(--font-sans)">emit to orderId room</text>
+    <text x="258" y="72" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">lat/lng GeoJSON</text>
+    <text x="258" y="84" text-anchor="middle" style="fill:#5eead4;font-size:8px;font-family:var(--font-sans)">Leaflet map update</text>
+
+    <rect x="322" y="24" width="104" height="68" rx="6" fill="#0a1a1a" stroke="#0f766e" stroke-width="1"/>
+    <rect x="322" y="24" width="104" height="14" rx="4" fill="#0f2e2e"/>
+    <rect x="322" y="30" width="104" height="8" fill="#0f2e2e"/>
+    <text x="374" y="34" text-anchor="middle" style="fill:#5eead4;font-size:9px;font-weight:500;font-family:var(--font-sans)">6.3 New order alert</text>
+    <text x="374" y="48" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">event: new_order</text>
+    <text x="374" y="60" text-anchor="middle" style="fill:#5eead4;font-size:8px;font-family:var(--font-sans)">emit to restaurantId</text>
+    <text x="374" y="72" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">seller dashboard notify</text>
+    <text x="374" y="84" text-anchor="middle" style="fill:#5eead4;font-size:8px;font-family:var(--font-sans)">immediate push</text>
+
+    <rect x="438" y="24" width="104" height="68" rx="6" fill="#0a1a1a" stroke="#0f766e" stroke-width="1"/>
+    <rect x="438" y="24" width="104" height="14" rx="4" fill="#0f2e2e"/>
+    <rect x="438" y="30" width="104" height="8" fill="#0f2e2e"/>
+    <text x="490" y="34" text-anchor="middle" style="fill:#5eead4;font-size:9px;font-weight:500;font-family:var(--font-sans)">6.4 Rider assignment</text>
+    <text x="490" y="48" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">event: delivery_request</text>
+    <text x="490" y="60" text-anchor="middle" style="fill:#5eead4;font-size:8px;font-family:var(--font-sans)">emit to riderId room</text>
+    <text x="490" y="72" text-anchor="middle" style="fill:#6b7280;font-size:8px;font-family:var(--font-sans)">accept/reject prompt</text>
+    <text x="490" y="84" text-anchor="middle" style="fill:#5eead4;font-size:8px;font-family:var(--font-sans)">10s timeout</text>
+
+    <line x1="76" y1="56" x2="90" y2="56" stroke="#f59e0b" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arrow-yellow)"/>
+    <line x1="194" y1="58" x2="206" y2="58" stroke="#5eead4" stroke-width="1.3" marker-end="url(#arrow-teal)"/>
+    <line x1="310" y1="58" x2="322" y2="58" stroke="#5eead4" stroke-width="1.3" marker-end="url(#arrow-teal)"/>
+    <line x1="426" y1="58" x2="438" y2="58" stroke="#5eead4" stroke-width="1.3" marker-end="url(#arrow-teal)"/>
+    <line x1="542" y1="58" x2="610" y2="58" stroke="#5eead4" stroke-width="1.3" stroke-dasharray="5 3" marker-end="url(#arrow-teal)"/>
+    <text x="576" y="54" text-anchor="middle" style="fill:#5eead4;font-size:8px;font-family:var(--font-sans)">WS push</text>
+  </svg>
+
+  <!-- === ASSUMPTIONS === -->
+  <div class="sec-divider"><span>Assumptions &amp; notes</span></div>
+  <svg class="panel" viewBox="0 0 680 70" role="img">
+    <title>Assumptions and notes for the Kravix DFD</title>
+    <desc>Assumptions made where implementation details were not explicitly visible in the repository</desc>
+    <rect x="8" y="8" width="664" height="54" rx="6" fill="#111315" stroke="#2a2d31" stroke-width="0.5"/>
+    <text x="20" y="24" style="fill:#6b7280;font-size:9px;font-family:var(--font-sans)">Assumption A1: Email/SMS notification service not present in repo - event-driven triggers via RabbitMQ assumed routable to an external provider (SendGrid / Twilio).</text>
+    <text x="20" y="38" style="fill:#6b7280;font-size:9px;font-family:var(--font-sans)">Assumption A2: Analytics aggregation endpoint (GET /dashboard) in admin service reads directly from MongoDB. A separate analytics pipeline is not evident in the repo.</text>
+    <text x="20" y="52" style="fill:#6b7280;font-size:9px;font-family:var(--font-sans)">Assumption A3: Coupon/discount handling not present in repo - omitted from DFD. Review &amp; rating module not in active routes - marked for future implementation.</text>
+  </svg>
+</div>
+</body>
+</html>
