@@ -7,7 +7,6 @@ const PORT = process.env.PORT || 6002;
 
 const start = async () => {
       try {
-            // Establish shared database and RabbitMQ connections
             await Promise.all([connectDb(), connectRabbitMQ()]);
 
             const server = app.listen(PORT, () => {

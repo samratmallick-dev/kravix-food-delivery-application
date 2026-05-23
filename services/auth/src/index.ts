@@ -7,29 +7,31 @@ const PORT = process.env.PORT || 8000;
 
 const start = async () => {
       try {
-            await ConnectDb();
-
-            try {
-                  await connectRabbitMQ();
-            } catch (mqErr) {
-                  console.error("[Auth] ⚠️  RabbitMQ connection failed — event publishing will be unavailable:", mqErr);
-            }
+            await Promise.all([ConnectDb(), connectRabbitMQ()]);
 
             const server = app.listen(PORT, () => {
-                  console.log(`[Auth server]: Auth Server is running at http://localhost:${PORT}`);
+                  console.log(`✅ [Auth Service] Running at http://localhost:${PORT}`);
             });
+
             server.on("error", (err) => {
-                  console.error("Server error:", err);
+                  console.error("[Auth Service] HTTP server error:", err);
                   process.exit(1);
             });
+
+            process.on("unhandledRejection", (reason) => {
+                  console.error("[Auth Service] Unhandled rejection:", reason);
+                  process.exit(1);
+            });
+
+            process.on("uncaughtException", (err) => {
+                  console.error("[Auth Service] Uncaught exception:", err);
+                  process.exit(1);
+            });
+
       } catch (err) {
-            console.error("MongoDB failed to connect. Server not started:", err);
+            console.error("[Auth Service] Startup failed:", err);
             process.exit(1);
       }
 };
 
 start();
-
-process.on("unhandledRejection", (reason) => {
-      console.error("[Auth] Unhandled Rejection:", reason);
-});
