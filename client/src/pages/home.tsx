@@ -113,7 +113,7 @@ const Home = () => {
             <div>
                   <Hero />
                   <FeatureBanmner />
-                  <div className="container-app py-5 space-y-3">
+                  <div id="nearest-restaurants" className="container-app py-5 space-y-3">
                         <h1 className={`font-semibold text-wrap text-primary ${isMobile ? "text-lg" : "text-2xl"}`}>Your Nearest Restaurants</h1>
                         {searching && (
                               <p className="text-sm text-gray-400 animate-pulse">Searching...</p>

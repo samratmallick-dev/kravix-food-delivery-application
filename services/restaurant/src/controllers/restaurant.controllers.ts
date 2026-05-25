@@ -81,7 +81,9 @@ export const addRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Res
       const { data: updateResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`, {
             image: fileBuffer
       }, {
-            headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY }
+            headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
       });
 
 

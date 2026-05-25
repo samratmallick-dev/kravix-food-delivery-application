@@ -6,6 +6,16 @@
       --color-primary: #C22630;
       --color-background: oklch(98% 0.02 30);
       --color-border: oklch(90% 0.015 30);
+      --animate-subtle-zoom: subtle-zoom 20s ease-in-out infinite alternate;
+
+      @keyframes subtle-zoom {
+            from {
+                  transform: scale(1);
+            }
+            to {
+                  transform: scale(1.05);
+            }
+      }
 }
 
 @layer base {
@@ -49,4 +59,5 @@
 
 button {
       @apply cursor-pointer disabled:cursor-not-allowed;
+      animation: subtle-zoom 20s ease-in-out infinite alternate !important;
 }

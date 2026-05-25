@@ -2,7 +2,7 @@
   <img src="./client/public/apple-touch-icon.png" width="30%" alt="Kravix Banner" />
 </p>
 
-<h1 align="center">🍛 Kravix — Online Food Ordering and Delivery Platform</h1>
+<h1 align="center">🍛 Kravix — Be Smart, Eat Better</h1>
 <p align="center"><em>🍔 Craving something delicious? Let's eat again! A full-stack food delivery platform built with love from Kolkata.</em></p>
 
 <p align="center">
@@ -832,5 +832,5 @@ This project is built with the help of these amazing open-source technologies:
 <p align="center">
   Made with ❤️ in Kolkata, India
   <br />
-  <strong>Kravix — Let's Eat Again! 🍛</strong>
+  <strong>Kravix — Be Smart, Eat Better 🍛</strong>
 </p>

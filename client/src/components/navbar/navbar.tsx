@@ -17,34 +17,38 @@ const Navbar = () => {
       const isCustomer = isAuth && user?.role === "customer";
 
       return (
-            <div className="w-full bg-background shadow-md">
-                  <div className="container-app w-full mx-auto flex items-center justify-between gap-2 px-4 py-3" style={{ height: isMobile ? 64 : 96 }}>
+            <div className="w-full bg-background shadow-xs border-b border-gray-100">
+                  <div className="container-app w-full mx-auto flex items-center justify-between gap-3 px-4 h-16 md:h-24 transition-all duration-300">
                         <Logo />
                         <div className="flex items-center gap-3">
                               {isAuth ? (
                                     <Link
                                           to="/account"
-                                          className="flex gap-2 items-center bg-gray-200 hover:bg-primary px-3 py-2 rounded-lg group transition-all duration-300 ease-in-out"
+                                          className="flex gap-2 items-center bg-gray-100/80 hover:bg-primary px-3 py-1.5 md:py-2 rounded-xl group transition-all duration-300 ease-in-out border border-gray-200/20 shadow-xs hover:shadow-sm"
                                           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                                     >
-                                          <FaRegUserCircle size={isMobile ? 20 : 24} className="text-primary group-hover:text-white transition-colors duration-300" />
-                                          {!isMobile && <span className="text-gray-500 group-hover:text-white font-medium transition-colors duration-300">Account</span>}
+                                          <FaRegUserCircle size={isMobile ? 18 : 22} className="text-primary group-hover:text-white transition-colors duration-300 shrink-0" />
+                                          {!isMobile && <span className="text-gray-600 group-hover:text-white font-semibold transition-colors duration-300 text-sm">Account</span>}
                                     </Link>
                               ) : (
                                     <Link
                                           to="/login"
-                                          className="flex gap-2 items-center bg-gray-200 hover:bg-primary px-3 py-2 rounded-lg group transition-all duration-300 ease-in-out"
+                                          className="flex gap-2 items-center bg-gray-100/80 hover:bg-primary px-3 py-1.5 md:py-2 rounded-xl group transition-all duration-300 ease-in-out border border-gray-200/20 shadow-xs hover:shadow-sm"
                                           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                                     >
-                                          <FaRegUserCircle size={isMobile ? 20 : 24} className="text-primary group-hover:text-white transition-colors duration-300" />
-                                          {!isMobile && <span className="text-gray-500 group-hover:text-white font-medium transition-colors duration-300">Login</span>}
+                                          <FaRegUserCircle size={isMobile ? 18 : 22} className="text-primary group-hover:text-white transition-colors duration-300 shrink-0" />
+                                          {!isMobile && <span className="text-gray-600 group-hover:text-white font-semibold transition-colors duration-300 text-sm">Login</span>}
                                     </Link>
                               )}
                               {isCustomer && (
-                                    <Link to="/cart" className="relative" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                                          <ShoppingCart size={isMobile ? 22 : 26} className="text-primary" />
+                                    <Link 
+                                          to="/cart" 
+                                          className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group flex items-center justify-center" 
+                                          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                                    >
+                                          <ShoppingCart size={isMobile ? 22 : 26} className="text-primary transition-transform duration-300 group-hover:scale-105" />
                                           {quantity > 0 && (
-                                                <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-5 h-5 bg-primary text-gray-200 rounded-full text-xs">
+                                                <span className="absolute top-0.5 right-0.5 inline-flex items-center justify-center w-5 h-5 bg-primary text-white rounded-full text-[10px] font-bold shadow-sm border-2 border-background">
                                                       {quantity}
                                                 </span>
                                           )}
@@ -54,18 +58,18 @@ const Navbar = () => {
                   </div>
 
                   {showSearch && (
-                        <div className="border-t border-gray-200 py-2 px-3">
+                        <div className="border-t border-gray-150 py-2 px-3 bg-white/50 backdrop-blur-xs">
                               <div className="container-app">
                                     {isSearchPage ? (
                                           <div className="flex items-center gap-2 text-gray-600 py-1">
-                                                <BiMapPin size={18} className="text-primary shrink-0" />
-                                                <span className="text-sm">{location?.formattedAddress || city}</span>
+                                                <BiMapPin size={18} className="text-primary shrink-0 animate-bounce-once" />
+                                                <span className="text-sm font-medium">{location?.formattedAddress || city}</span>
                                           </div>
                                     ) : (
                                           <SearchBar redirectOnFocus={isHomePage} locationPrefix={
-                                                <div className="flex md:flex-row flex-col items-center md:gap-2 gap-0.5 text-gray-600 shrink-0 border-r border-gray-200 pr-3">
-                                                      <BiMapPin size={18} className="text-primary" />
-                                                      <span className="text-sm truncate max-w-36">{city}</span>
+                                                <div className="flex md:flex-row flex-col items-center md:gap-1.5 gap-0.5 text-gray-600 shrink-0 border-r border-gray-250 pr-3">
+                                                      <BiMapPin size={16} className="text-primary shrink-0" />
+                                                      <span className="text-xs md:text-sm font-semibold truncate max-w-20 sm:max-w-28 md:max-w-36">{city}</span>
                                                 </div>
                                           } />
                                     )}

@@ -1,13 +1,28 @@
-import { UtensilsCrossed } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Logo = () => {
       return (
-            <Link to="/" className="flex items-center gap-1 z-10 border-0 outline-none" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                  <div className="md:w-12 w-8 md:h-12 h-8 bg-white rounded-xl flex items-center justify-center">
-                        <UtensilsCrossed className="w-7 h-7 text-primary" />
+            <Link 
+                  to="/" 
+                  className="flex items-center gap-2 z-10 border-0 outline-none select-none group" 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+                  <div className="md:w-11 w-9 md:h-11 h-9 bg-white rounded-xl flex items-center justify-center overflow-hidden shadow-xs border border-gray-100/50 shrink-0 transition-transform duration-300 group-hover:scale-105">
+                        <img 
+                              src="/apple-touch-icon.png" 
+                              alt="Kravix Icon" 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/favicon-32x32.png";
+                              }}
+                        />
                   </div>
-                  <span className="md:text-2xl text-xl font-extrabold text-gradient ">Kravix</span>
+                  <span className="md:text-2xl text-lg font-extrabold text-gradient flex flex-col leading-none tracking-tight">
+                        Kravix
+                        <span className="hidden sm:block text-[10px] md:text-xs font-semibold text-gradient mt-1 opacity-90">
+                              Be Smart, Eat Better
+                        </span>
+                  </span>
             </Link>
       );
 }

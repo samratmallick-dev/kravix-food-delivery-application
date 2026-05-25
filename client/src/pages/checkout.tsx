@@ -7,6 +7,8 @@ import type { ICart, IMenuItem, IRestaurant } from "../types/types";
 import toast from "react-hot-toast";
 import { loadStripe } from "@stripe/stripe-js";
 import { storage } from "../utils/secureStorage";
+import AddressModal from "../components/customer/AddressModal";
+import { Trash2 } from "lucide-react";
 
 interface Address {
       _id: string;
@@ -40,8 +42,9 @@ const Checkout = () => {
       const [loadingStripe, setLoadingStripe] = useState(false);
       const [creatingOrders, setCreatingOrder] = useState(false);
       const [selectedPayment, setSelectedPayment] = useState<"razorpay" | "stripe" | null>(null);
+      const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+      const [deletingId, setDeletingId] = useState<string | null>(null);
 
-      // Coupon States
       const [couponInput, setCouponInput] = useState("");
       const [appliedCoupon, setAppliedCoupon] = useState<{
             code: string;
@@ -87,7 +90,6 @@ const Checkout = () => {
       const totalGST = +(foodGST + deliveryGST).toFixed(2);
       const total = (discountedSubtotal + deliveryFee + platformFee + totalGST).toFixed(2);
 
-      // Fetch available coupons for the restaurant
       useEffect(() => {
             if (!restaurant?._id) return;
             const fetchCoupons = async () => {
@@ -130,6 +132,7 @@ const Checkout = () => {
                   );
                   if (res.data && res.data.success) {
                         setAppliedCoupon(res.data.data);
+                        storage.setAppliedCoupon(res.data.data.code);
                         toast.success(`Coupon Applied! Saved ₹${res.data.data.discountAmount}`);
                   }
             } catch (error: any) {
@@ -143,6 +146,7 @@ const Checkout = () => {
       const handleRemoveCoupon = () => {
             setAppliedCoupon(null);
             setCouponInput("");
+            storage.removeAppliedCoupon();
             toast.success("Coupon removed");
       };
 
@@ -163,6 +167,7 @@ const Checkout = () => {
                   );
                   if (res.data && res.data.success) {
                         setAppliedCoupon(res.data.data);
+                        storage.setAppliedCoupon(res.data.data.code);
                         toast.success(`🎉 Coupon Applied! Saved ₹${res.data.data.discountAmount}`);
                   }
             } catch (error: any) {
@@ -226,7 +231,7 @@ const Checkout = () => {
                         key: key_id,
                         amount: Math.round(totalAmount * 100),
                         currency: "INR",
-                        name: "Kravix - Online Food Delivery Platform",
+                        name: "Kravix - Be Smart, Eat Better",
                         description: "Food Order Payment",
                         order_id: razorpayOrderId,
                         handler: async (response: any) => {
@@ -238,6 +243,7 @@ const Checkout = () => {
                                           orderId
                                     });
                                     toast.success("🎉 Payment Successful!");
+                                    storage.removeAppliedCoupon();
                                     navigate("/payment-success/" + response.razorpay_payment_id);
                                     window.scrollTo({ top: 0, behavior: "smooth" });
                               } catch (error: any) {
@@ -273,6 +279,7 @@ const Checkout = () => {
                         });
 
                         if (data.data.url) {
+                              storage.removeAppliedCoupon();
                               window.location.href = data.data.url;
                         } else {
                               toast.error("Failed to create stripe payment session.");
@@ -288,25 +295,104 @@ const Checkout = () => {
             }
       };
 
+      const fetchAddress = async () => {
+            if (!cart || cart.length === 0) {
+                  setLoadingAddress(false);
+                  return;
+            }
+            try {
+                  const { data } = await axios.get(`${addressBaseUrl}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                  });
+                  setAddresses(data.data || []);
+            } catch (error) {
+                  console.log(error);
+            } finally {
+                  setLoadingAddress(false);
+            }
+      };
+
+      const handleAddressAdded = async (newAddress: Address) => {
+            if (!cart || cart.length === 0) return;
+            try {
+                  const { data } = await axios.get(`${addressBaseUrl}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                  });
+                  const list = data.data || [];
+                  setAddresses(list);
+                  if (newAddress && newAddress._id) {
+                        setSelectedAddressId(newAddress._id);
+                  }
+            } catch (error) {
+                  console.log(error);
+            } finally {
+                  setIsAddressModalOpen(false);
+            }
+      };
+
+      const handleDeleteAddress = async (id: string, e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (!window.confirm("Delete this address?")) return;
+            if (deletingId) return;
+            setDeletingId(id);
+            try {
+                  const { data } = await axios.delete(`${addressBaseUrl}/${id}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                  });
+                  toast.success(data.message || "Address deleted successfully");
+                  setAddresses(prev => prev.filter(a => a._id !== id));
+                  if (selectedAddressId === id) {
+                        setSelectedAddressId(null);
+                  }
+            } catch (error: any) {
+                  console.error(error);
+                  toast.error(error.response?.data?.message || "Failed to delete address");
+            } finally {
+                  setDeletingId(null);
+            }
+      };
+
       useEffect(() => {
-            const fetchAddress = async () => {
-                  if (!cart || cart.length === 0) {
-                        setLoadingAddress(false);
-                        return;
-                  }
-                  try {
-                        const { data } = await axios.get(`${addressBaseUrl}`, {
-                              headers: { Authorization: `Bearer ${token}` },
-                        });
-                        setAddresses(data.data || []);
-                  } catch (error) {
-                        console.log(error);
-                  } finally {
-                        setLoadingAddress(false);
-                  }
-            };
             fetchAddress();
       }, [cart]);
+
+      useEffect(() => {
+            const savedCouponCode = storage.getAppliedCoupon();
+            if (!savedCouponCode || !restaurant?._id || !token) {
+                  return;
+            }
+            let active = true;
+            const revalidateCoupon = async () => {
+                  try {
+                        const res = await axios.post(
+                              `${couponBaseUrl}/apply`,
+                              {
+                                    code: savedCouponCode,
+                                    restaurantId: restaurant._id,
+                                    orderAmount: subTotal,
+                                    deliveryFee: deliveryFee
+                              },
+                              { headers: { Authorization: `Bearer ${token}` } }
+                        );
+                        if (active && res.data && res.data.success) {
+                              setAppliedCoupon(res.data.data);
+                              setCouponInput(savedCouponCode);
+                        }
+                  } catch (error: any) {
+                        if (active) {
+                              console.error(error);
+                              storage.removeAppliedCoupon();
+                              setAppliedCoupon(null);
+                              setCouponInput("");
+                              toast.error(error.response?.data?.message || "Applied coupon is no longer valid");
+                        }
+                  }
+            };
+            revalidateCoupon();
+            return () => {
+                  active = false;
+            };
+      }, [restaurant?._id, subTotal, deliveryFee, token]);
 
       useEffect(() => {
             if ((!cart || cart.length === 0) && location.pathname === "/checkout") {
@@ -386,7 +472,7 @@ const Checkout = () => {
                                           <h2 className="font-semibold text-gray-800">Delivery Address</h2>
                                           {addresses.length > 0 && (
                                                 <button
-                                                      onClick={() => navigate("/address")}
+                                                      onClick={() => setIsAddressModalOpen(true)}
                                                       className="text-xs font-medium text-primary border border-primary px-3 py-1.5 rounded-lg hover:bg-primary/10 transition"
                                                 >
                                                       + Add Address
@@ -410,16 +496,30 @@ const Checkout = () => {
                                                                   : "border-border hover:border-gray-300"
                                                                   }`}
                                                       >
-                                                            <div className="flex items-start gap-3">
-                                                                  <div className="mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0">
-                                                                        {selectedAddressId === address._id && (
-                                                                              <span className="w-2 h-2 rounded-full bg-primary" />
+                                                            <div className="flex items-start justify-between gap-3">
+                                                                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                                                                        <div className="mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0">
+                                                                              {selectedAddressId === address._id && (
+                                                                                    <span className="w-2 h-2 rounded-full bg-primary" />
+                                                                              )}
+                                                                        </div>
+                                                                        <div className="min-w-0">
+                                                                              <p className="text-sm text-gray-600 leading-relaxed">{address.formatedAddress}</p>
+                                                                              <p className="text-xs text-gray-500 mt-1">📞 {address.mobile}</p>
+                                                                        </div>
+                                                                  </div>
+                                                                  <button
+                                                                        type="button"
+                                                                        onClick={(e) => handleDeleteAddress(address._id, e)}
+                                                                        disabled={deletingId === address._id}
+                                                                        className="ml-2 rounded-lg p-2 text-gray-400 hover:bg-red-55/10 hover:text-red-600 transition shrink-0"
+                                                                  >
+                                                                        {deletingId === address._id ? (
+                                                                              <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin block" />
+                                                                        ) : (
+                                                                              <Trash2 size={16} className="text-red-500 hover:text-red-750" />
                                                                         )}
-                                                                  </div>
-                                                                  <div className="min-w-0">
-                                                                        <p className="text-sm text-gray-600 mt-1 leading-relaxed">{address.formatedAddress}</p>
-                                                                        <p className="text-xs text-gray-500 mt-1">📞 {address.mobile}</p>
-                                                                  </div>
+                                                                  </button>
                                                             </div>
                                                       </div>
                                                 ))}
@@ -429,7 +529,7 @@ const Checkout = () => {
                                                 <span className="text-4xl block mb-3">🏠</span>
                                                 <p className="text-gray-500">No address found</p>
                                                 <button
-                                                      onClick={() => navigate("/address")}
+                                                      onClick={() => setIsAddressModalOpen(true)}
                                                       className="mt-3 text-sm text-primary font-medium hover:underline"
                                                 >
                                                       Add Address →
@@ -500,7 +600,6 @@ const Checkout = () => {
                                     </div>
                               </div>
 
-                              {/* Coupon/Promo Code Section */}
                               <div className="bg-white rounded-2xl shadow-sm border border-border p-4">
                                     <div className="flex items-center justify-between mb-3">
                                           <h2 className="font-semibold text-gray-800">Coupons & Offers</h2>
@@ -546,7 +645,6 @@ const Checkout = () => {
                                                       </button>
                                                 </form>
 
-                                                {/* Available Coupons List */}
                                                 {loadingCoupons ? (
                                                       <div className="mt-3 space-y-2">
                                                             {[1, 2].map((i) => (
@@ -566,11 +664,10 @@ const Checkout = () => {
                                                                                     key={coupon._id}
                                                                                     className={`relative flex items-center justify-between gap-3 border-2 border-dashed rounded-xl px-3.5 py-3 transition ${
                                                                                           meetsMin
-                                                                                                ? "border-primary/30 bg-primary/[0.03] hover:border-primary/60"
+                                                                                                ? "border-primary/30 bg-primary/3 hover:border-primary/60"
                                                                                                 : "border-gray-200 bg-gray-50 opacity-60"
                                                                                     }`}
                                                                               >
-                                                                                    {/* Left notch decoration */}
                                                                                     <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white border border-gray-200" />
                                                                                     <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 rounded-full bg-white border border-gray-200" />
 
@@ -682,6 +779,11 @@ const Checkout = () => {
                               </div>
                         </div>
                   </div>
+                  <AddressModal
+                        isOpen={isAddressModalOpen}
+                        onClose={() => setIsAddressModalOpen(false)}
+                        onAddressAdded={handleAddressAdded}
+                  />
             </div>
       );
 };

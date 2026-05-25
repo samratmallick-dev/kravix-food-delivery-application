@@ -217,6 +217,7 @@ const OrderDetails = () => {
       }, [order]);
 
       const submitReview = async (type: "restaurant" | "rider" | "menu_item", targetId: string, stateKey: string) => {
+            if (!order) return;
             const state = ratings[stateKey];
             if (!state || !state.rating || !state.comment.trim()) {
                   toast.error("Please provide both a star rating and comment.");

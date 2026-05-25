@@ -7,9 +7,6 @@ import {
       Eye,
       X,
       Search,
-      Calendar,
-      Percent,
-      IndianRupee,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { couponBaseUrl } from "../../components/common/constant";
@@ -55,7 +52,6 @@ const AdminCoupons = () => {
       // Dialog States
       const [isCreateOpen, setIsCreateOpen] = useState(false);
       const [selectedCouponAnalytics, setSelectedCouponAnalytics] = useState<CouponAnalytics | null>(null);
-      const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
       // Create Form States
       const [code, setCode] = useState("");
@@ -180,7 +176,6 @@ const AdminCoupons = () => {
       };
 
       const fetchCouponAnalytics = async (id: string) => {
-            setLoadingAnalytics(true);
             setSelectedCouponAnalytics(null);
             try {
                   const token = storage.getAdminToken();
@@ -193,8 +188,6 @@ const AdminCoupons = () => {
             } catch (error: any) {
                   console.error("Failed to load coupon analytics:", error);
                   toast.error("Could not fetch redemption details");
-            } finally {
-                  setLoadingAnalytics(false);
             }
       };
 

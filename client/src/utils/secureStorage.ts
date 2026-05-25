@@ -34,4 +34,15 @@ export const storage = {
     setRestaurantTab: (tab: string): void => {
         secureLocalStorage.setItem(RESTAURANT_TAB_KEY, tab);
     },
+
+    getAppliedCoupon: (): string | null => {
+        const val = secureLocalStorage.getItem("appliedCouponCode");
+        return typeof val === "string" ? val : null;
+    },
+    setAppliedCoupon: (code: string): void => {
+        secureLocalStorage.setItem("appliedCouponCode", code);
+    },
+    removeAppliedCoupon: (): void => {
+        secureLocalStorage.removeItem("appliedCouponCode");
+    },
 };
