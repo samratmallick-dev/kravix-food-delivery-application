@@ -804,3 +804,75 @@ export const reorderItems = TryCatch(async (req: AuthenticatedRequest, res: Resp
             data: { cartCount: availableItems.reduce((sum, i) => sum + i.quantity, 0), unavailableItems: unavailableNames }
       });
 });
+
+export const cancelMyOrder = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
+      const user = req.user;
+      if (!user) {
+            return res.status(401).json({
+                  success: false,
+                  message: "Unauthorized User",
+                  error: true
+            });
+      }
+
+      const { orderId } = req.params;
+
+      const order = await Order.findById(orderId);
+      if (!order) {
+            return res.status(404).json({
+                  success: false,
+                  message: "Order not found",
+                  error: true
+            });
+      }
+
+      if (order.userId !== user._id.toString()) {
+            return res.status(403).json({
+                  success: false,
+                  message: "Access denied. You don't have permission to cancel this order.",
+                  error: true
+            });
+      }
+
+      const ALLOWED_CANCELLATION_STATUSES = ["placed", "accepted"];
+      if (!ALLOWED_CANCELLATION_STATUSES.includes(order.status)) {
+            return res.status(400).json({
+                  success: false,
+                  message: `Cannot cancel order. The order is already in the '${order.status}' stage.`,
+                  error: true
+            });
+      }
+
+      order.status = "cancelled";
+      await order.save();
+
+      const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/events`;
+      const emitHeaders = { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! };
+      const statusPayload = { orderId: order._id.toString(), status: "cancelled" };
+
+      const emits = [
+            axios.post(emitUrl, { event: "order:update", room: `User:${order.userId}`, payload: statusPayload }, { headers: emitHeaders }),
+            axios.post(emitUrl, { event: "order:update", room: `Restaurant:${order.restaurantId}`, payload: statusPayload }, { headers: emitHeaders }),
+            axios.post(emitUrl, { event: "order:update", room: "Admin", payload: statusPayload }, { headers: emitHeaders }),
+      ];
+
+      if (order.riderId) {
+            emits.push(
+                  axios.post(emitUrl, { event: "order:update", room: `Rider:${order.riderId}`, payload: statusPayload }, { headers: emitHeaders })
+            );
+      }
+
+      Promise.allSettled(emits).then((results) => {
+            results.forEach((r) => {
+                  if (r.status === "rejected") console.error("Socket emit failed:", r.reason?.message);
+            });
+      });
+
+      return res.status(200).json({
+            success: true,
+            error: false,
+            message: "Order cancelled successfully",
+            data: order
+      });
+});
+

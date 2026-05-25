@@ -2,6 +2,7 @@ import { Router } from "express";
 import { isAuthenticated, isSeller, checkBlocked } from "../middleware/isAuthenticated.js";
 import {
       assignRiderToOrder,
+      cancelMyOrder,
       createOrder,
       fetchOrderForPayment,
       fetchRestaurantOrders,
@@ -22,6 +23,7 @@ const router = Router();
 router.route("/").post(isAuthenticated, checkBlocked, createOrder);
 router.route("/me").get(isAuthenticated, getMyOrders);
 router.route("/me/:orderId").get(isAuthenticated, getSingleOrder);
+router.route("/me/:orderId/cancel").patch(isAuthenticated, checkBlocked, cancelMyOrder);
 router.route("/reorder/:orderId").post(isAuthenticated, checkBlocked, reorderItems);
 
 router.route("/internal/rider-assignment").patch(assignRiderToOrder);

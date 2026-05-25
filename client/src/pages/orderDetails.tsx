@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import {
       MapPin, Phone, Store, CreditCard, Wallet,
       CheckCircle2, ChefHat, UtensilsCrossed, Bike, PackageCheck,
-      Clock, ClipboardList, KeyRound, Star, RotateCcw
+      Clock, ClipboardList, KeyRound, Star, RotateCcw, Ban
 } from "lucide-react";
 import CustomerTrackingMap from "../components/customer/CustomerTrackingMap";
 import confetti from "canvas-confetti";
@@ -177,6 +177,8 @@ const OrderDetails = () => {
       const [loading, setLoading] = useState(true);
       const [deliveryOtp, setDeliveryOtp] = useState<string | null>(null);
       const [isReordering, setIsReordering] = useState(false);
+      const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+      const [isCancelling, setIsCancelling] = useState(false);
 
       const [ratings, setRatings] = useState<Record<string, { rating: number; comment: string; submitting: boolean; submitted: boolean }>>({});
 
@@ -426,6 +428,28 @@ const OrderDetails = () => {
             }
       };
 
+      const handleCancelOrder = async () => {
+            if (!order) return;
+            setIsCancelling(true);
+            try {
+                  const { data } = await axios.patch(
+                        `${orderBaseUrl}/me/${order._id}/cancel`,
+                        {},
+                        {
+                              headers: { Authorization: `Bearer ${storage.getToken()}` },
+                              withCredentials: true
+                        }
+                  );
+                  setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
+                  toast.success(data.message || "Order cancelled successfully");
+                  setShowCancelConfirm(false);
+            } catch (err: any) {
+                  toast.error(err?.response?.data?.message ?? "Failed to cancel order");
+            } finally {
+                  setIsCancelling(false);
+            }
+      };
+
       useEffect(() => {
             if (!order) return;
             const hasJustDelivered = prevStatusRef.current !== null && prevStatusRef.current !== "delivered" && order.status === "delivered";
@@ -529,6 +553,24 @@ const OrderDetails = () => {
                   </div>
 
                   <StatusStepper status={order.status} />
+
+                  {["placed", "accepted"].includes(order.status) && (
+                        <div className="bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 shadow-sm space-y-3 animate-fadeIn">
+                              <div className="flex justify-between items-center">
+                                    <div>
+                                          <p className="text-sm font-semibold text-gray-800">Need to cancel?</p>
+                                          <p className="text-xs text-gray-400 mt-0.5">You can cancel your order before preparation starts.</p>
+                                    </div>
+                                    <button
+                                          onClick={() => setShowCancelConfirm(true)}
+                                          className="px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shrink-0"
+                                    >
+                                          <Ban size={14} />
+                                          Cancel Order
+                                    </button>
+                              </div>
+                        </div>
+                  )}
 
                   {deliveryOtp && order.status === "reached_delivery_location" && (
                         <OtpBanner otp={deliveryOtp} />
@@ -637,6 +679,43 @@ const OrderDetails = () => {
                               }
                               {isReordering ? "Adding to Cart..." : "Reorder"}
                         </button>
+                  )}
+
+                  {showCancelConfirm && (
+                        <div 
+                              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300"
+                              onClick={() => setShowCancelConfirm(false)}
+                        >
+                              <div 
+                                    className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 space-y-4"
+                                    onClick={(e) => e.stopPropagation()}
+                              >
+                                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 mx-auto">
+                                          <Ban size={22} />
+                                    </div>
+                                    <div className="text-center space-y-1">
+                                          <h3 className="text-base font-bold text-gray-800">Cancel your order?</h3>
+                                          <p className="text-xs text-gray-500">Are you sure you want to cancel this order? This action cannot be undone.</p>
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                          <button 
+                                                onClick={() => setShowCancelConfirm(false)} 
+                                                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 active:scale-95 transition cursor-pointer"
+                                          >
+                                                No, Keep Order
+                                          </button>
+                                          <button 
+                                                onClick={handleCancelOrder} 
+                                                disabled={isCancelling}
+                                                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold active:scale-95 transition disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
+                                          >
+                                                {isCancelling ? (
+                                                      <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                                ) : "Yes, Cancel"}
+                                          </button>
+                                    </div>
+                              </div>
+                        </div>
                   )}
 
             </div>
