@@ -220,27 +220,13 @@ kravix/
 
 ---
 
-## 📸 Screenshots
+## 📸 Screenshots / Demo
 
-### Customer Application
-| Home / Restaurant List | Menu Browsing | Cart & Checkout | Live Order Tracking |
-| --- | --- | --- | --- |
-| _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ |
+🚧 **Coming Soon** — Screenshots and a live demo link will be added here.
 
-### Merchant / Seller Panel
-| Sales Analytics Dashboard | Menu Management | Order Processing | Coupon Configurations |
-| --- | --- | --- | --- |
-| _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ |
-
-### Rider Mobile View
-| Job Offers Map | Navigation Route | Payment / Earnings Details |
-| --- | --- | --- |
-| _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ |
-
-### Admin Dashboard
-| Platform Stats Overview | Merchant Verification Queue | Review Moderation Logs |
-| --- | --- | --- |
-| _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ |
+<p align="center">
+  <img src="https://img.shields.io/badge/🔗_Live_Demo-Coming_Soon-gray?style=for-the-badge" alt="Live Demo" />
+</p>
 
 ---
 
@@ -752,7 +738,7 @@ We appreciate contributions to Kravix! To contribute:
 
 ## 📄 License
 
-This repository is licensed under the MIT License. See [License](file:///d:/Web%20Devolopment/kravix-online-food-dellivery-application/License) for details.
+This repository is licensed under the MIT License. See [License](./License) for details.
 
 ---
 
