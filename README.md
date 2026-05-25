@@ -1,9 +1,11 @@
 <p align="center">
-  <img src="./client/public/apple-touch-icon.png" width="30%" alt="Kravix Banner" />
+  <img src="./client/public/apple-touch-icon.png" width="20%" alt="Kravix Logo" />
 </p>
 
 <h1 align="center">🍛 Kravix — Be Smart, Eat Better</h1>
-<p align="center"><em>🍔 Craving something delicious? Let's eat again! A full-stack food delivery platform built with love from Kolkata.</em></p>
+<p align="center">
+  <em>🍔 Craving something delicious? Let's eat again! A production-grade, event-driven online food delivery web application built with a modern TypeScript monorepo architecture.</em>
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/TypeScript-99.3%25-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
@@ -20,679 +22,68 @@
 ## 📑 Table of Contents
 
 - [Overview](#-overview)
+- [Project Architecture](#-project-architecture)
+- [Folder Structure](#-folder-structure)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
+- [Screenshots](#-screenshots)
+- [Installation Guide](#-installation-guide)
 - [Environment Variables](#-environment-variables)
-- [API Documentation](#-api-documentation)
-- [Screenshots / Demo](#-screenshots--demo)
-- [Architecture Diagram](#-architecture-diagram)
-- [Contributing](#-contributing)
-- [Roadmap](#-roadmap)
+- [API Documentation Summary](#-api-documentation-summary)
+- [Database Design Overview](#-database-design-overview)
+- [Authentication & Security](#-authentication--security)
+- [Payment System](#-payment-system)
+- [Real-Time Features](#-real-time-features)
+- [Deployment](#-deployment)
+- [Scripts](#-scripts)
+- [Future Improvements](#-future-improvements)
+- [Contribution Guide](#-contribution-guide)
 - [License](#-license)
-- [Contact & Acknowledgements](#-contact--acknowledgements)
+- [Author & Credits](#-author--credits)
 
 ---
 
 ## 🌟 Overview
 
-**Kravix (Kravix)** — meaning **"Let's Eat Again"** in Bengali — is a production-grade online food delivery web application. Built as a TypeScript-first monorepo with a microservices backend, it delivers a seamless experience for three key user roles:
+**Kravix** — meaning **"Let's Eat Again"** in Bengali — is a production-grade online food delivery application designed around a real-world business use case. The platform coordinates an event-driven food delivery ecosystem connecting three distinct roles: Customers, Restaurant Owners, and Delivery Riders, under the oversight of Platform Administrators. 
 
-| Role | Description |
-|------|-------------|
-| 🧑‍💻 **Customers** | Browse nearby restaurants, search food, build carts, place orders, pay online, apply coupons, leave reviews, and track deliveries in real time |
-| 🍳 **Restaurant Owners** | Register restaurants, manage menus, create coupons/promotions, view sales analytics, and process incoming orders |
-| 🏍️ **Delivery Riders** | Accept delivery requests, update live location, manage earnings, and complete deliveries with OTP verification |
-| 🛡️ **Admins** | Platform-wide dashboard, advanced analytics, coupon management, review moderation, user/restaurant/rider management, order oversight, and verification workflows |
-
-> **Key Value Proposition:** A complete, event-driven food delivery ecosystem with real-time tracking, dual payment gateway support (Stripe + Razorpay), AI-powered menu descriptions (Gemini), a coupon & promotions engine, a review & rating system, and a dedicated analytics microservice with Redis caching — all in one monorepo.
+### Real-World Business Use Case
+The platform operates as a multi-party marketplace where:
+- **Customers** register, search for nearby restaurants using geographic coordinates, manage their cart, apply coupons, select payment gateways, and track their order.
+- **Sellers (Restaurants)** manage restaurant availability, update menu items, configure global or localized promotional coupons, and view detailed revenue charts.
+- **Riders** toggle online availability and receive real-time location-based delivery jobs.
+- **Admins** manage roles, verify newly registered restaurants or riders, cancel orders, block users, and moderate review logs.
 
 ---
 
-## ✨ Features
+## 🏗️ Project Architecture
 
-### 👤 Customer Features
-- 🔐 **Google OAuth & JWT Authentication** — Secure sign-in with Google One-Tap
-- 🗺️ **Location-Based Discovery** — Browse nearest restaurants using geospatial queries
-- 🔍 **Smart Search** — Search food items across all restaurants
-- 🛒 **Cart Management** — Add, increment, decrement items with real-time totals
-- 📍 **Address Management** — Save and manage multiple delivery addresses
-- 💳 **Dual Payment Gateways** — Pay via Stripe or Razorpay
-- 🎟️ **Coupon & Promo Codes** — Browse available coupons on checkout, apply codes, and get instant discounts
-- ⭐ **Ratings & Reviews** — Rate restaurants and riders after delivery
-- 📦 **Order Tracking** — Real-time order status updates via WebSocket
-- 🗂️ **Order History** — View past orders and reorder with one tap
-- 🎉 **Delivery Celebration** — Confetti animation on successful delivery
-
-### 🍳 Restaurant Owner Features
-- 🏪 **Restaurant Registration** — Create restaurant profiles with image uploads
-- 📋 **Menu Management** — Add, delete, and toggle item availability
-- 🤖 **AI-Powered Descriptions** — Auto-generate menu item descriptions with Google Gemini
-- 🎟️ **Coupon Management** — Create, update, and delete promotional coupons (percentage, flat, free delivery)
-- 📊 **Sales Dashboard** — Interactive charts for revenue and order analytics
-- 📝 **Order Management** — Accept, prepare, and mark orders ready for pickup
-- 📈 **Analytics Dashboard** — Detailed revenue trends, top-selling foods, and peak order hours
-
-### 🏍️ Rider Features
-- 📱 **Rider Dashboard** — Professional dashboard with earnings overview
-- 🟢 **Availability Toggle** — Go online/offline for delivery requests
-- 📍 **Live Location Updates** — Real-time GPS tracking on customer maps
-- ✅ **OTP-Based Delivery** — Secure order handoff with one-time passwords
-- 💰 **Earnings Analytics** — Track delivery income and history
-- ⭐ **Rider Reviews** — View customer feedback on completed deliveries
-
-### 🛡️ Admin Features
-- 📊 **Platform Dashboard** — Overview of users, restaurants, riders, and orders
-- 📈 **Advanced Analytics** — Platform-wide revenue trends, top restaurants, user growth, rider performance, and peak order hours — with CSV export
-- 🎟️ **Coupon Management** — Create, view, update, and delete global & restaurant-specific coupons
-- ✅ **Verification Workflows** — Approve restaurants and riders
-- 🚫 **User Moderation** — Block/unblock users across the platform
-- 📦 **Order Oversight** — View and cancel orders when necessary
-- ⭐ **Review Moderation** — View and moderate customer reviews across restaurants and riders
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------| 
-| **Frontend** | React 19, TypeScript, Vite 7 | SPA with code-splitting & lazy loading |
-| **Styling** | Tailwind CSS 4 | Utility-first responsive design |
-| **State** | React Context API | Global state management |
-| **Routing** | React Router DOM 7 | Client-side navigation with route guards |
-| **Maps** | Leaflet + React-Leaflet | Interactive maps & delivery tracking |
-| **Charts** | Recharts | Sales analytics & dashboard visuals |
-| **Backend** | Node.js, Express 5, TypeScript | RESTful microservices |
-| **Database** | MongoDB Atlas (Mongoose 9) | Document store with geospatial indexes |
-| **Auth** | JWT + Google OAuth 2.0 | Stateless authentication |
-| **Realtime** | Socket.IO 4 | WebSocket events for live updates |
-| **Message Queue** | RabbitMQ (amqplib) | Async inter-service communication |
-| **Caching** | Redis (ioredis) + In-Memory fallback | Analytics response caching |
-| **Payments** | Stripe + Razorpay | Dual payment gateway integration |
-| **File Storage** | Cloudinary | Image uploads for menus & profiles |
-| **AI** | Google Gemini API | AI-generated menu item descriptions |
-| **Scheduler** | node-cron | Periodic analytics snapshot jobs |
-| **DevOps** | Docker, GitHub Actions | Multi-stage builds & automated CI/CD |
-
----
-
-## 📁 Project Structure
-
-```
-kravix/
-├── .github/
-│   └── workflows/
-│       └── docker-build-push.yml    # CI/CD — per-service Docker builds
-├── client/                          # ── Frontend (React + Vite + TS) ──
-│   ├── public/                      # Static assets & favicons
-│   ├── src/
-│   │   ├── admin/                   # Admin panel (pages, components, hooks)
-│   │   │   └── pages/               # AdminDashboard, AdminAnalytics, AdminCoupons,
-│   │   │                            #   AdminReviews, AdminUsers, AdminRestaurants,
-│   │   │                            #   AdminOrders, AdminRiders, AdminLogin
-│   │   ├── assets/                  # Images & static resources
-│   │   ├── components/
-│   │   │   ├── common/              # ProtectedRoutes, PublicRoutes, constants
-│   │   │   ├── customer/            # CustomerTrackingMap
-│   │   │   ├── home/                # Landing page & footer
-│   │   │   ├── navbar/              # Navigation bar
-│   │   │   ├── restaurant/          # Seller dashboard components
-│   │   │   └── rider/               # Rider dashboard components
-│   │   ├── context/                 # AppContext, SocketContext
-│   │   ├── pages/                   # Route-level page components
-│   │   ├── types/                   # TypeScript type definitions
-│   │   └── utils/                   # Helper functions (secureStorage, etc.)
-│   ├── index.html                   # Entry HTML with SEO meta tags
-│   ├── vite.config.ts               # Vite bundler configuration
-│   └── package.json
-├── services/                        # ── Backend Microservices ──
-│   ├── auth/          (port 8000)   # Authentication & user profiles
-│   ├── restaurant/    (port 9000)   # Restaurants, menus, cart, address, orders,
-│   │                                #   coupons & reviews
-│   ├── rider/         (port 7000)   # Rider profiles, delivery, earnings
-│   ├── admin/         (port 6001)   # Admin dashboard & moderation
-│   ├── analytics/     (port 6002)   # Platform & seller analytics with Redis caching  ← NEW
-│   ├── realtime/      (port 9999)   # Socket.IO event relay service
-│   └── utilities/     (port 8888)   # Cloudinary uploads & payment processing
-├── .gitignore
-└── README.md
-```
-
-Each backend service follows a consistent structure:
-
-```
-services/<service-name>/
-├── src/
-│   ├── app.ts              # Express app setup, middleware, route mounting
-│   ├── index.ts            # Server bootstrap & DB/MQ connections
-│   ├── config/             # CORS, database, RabbitMQ configuration
-│   ├── controllers/        # Request handlers (business logic)
-│   ├── middleware/          # Auth guards, file uploads (Multer)
-│   ├── model/ (or models/) # Mongoose schemas & models
-│   ├── routes/             # Express route definitions
-│   ├── services/           # Business logic / aggregation services
-│   └── utils/              # Shared helpers
-├── Dockerfile              # Multi-stage Docker build (Node 22 Alpine)
-├── .env.example            # Environment variable template (no secrets)
-├── .env                    # Environment variables (git-ignored)
-├── tsconfig.json
-└── package.json
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-| Tool | Version | Purpose |
-|------|---------|---------| 
-| Node.js | ≥ 22.x | Runtime for all services |
-| npm | ≥ 10.x | Package management |
-| Docker | ≥ 24.x | Containerized deployments (optional) |
-| RabbitMQ | ≥ 3.x | Message broker for event-driven flows |
-| MongoDB | Atlas or local | Database (Atlas recommended) |
-| Redis | ≥ 7.x *(optional)* | Analytics caching (falls back to in-memory if unavailable) |
-
-### Step 1: Clone the Repository
-
-```bash
-git clone https://github.com/samratmallick-dev/kravix-food-delivery-application.git
-cd kravix-online-food-dellivery-application
-```
-
-### Step 2: Install Dependencies
-
-Each service has its own `package.json`. Install dependencies for each:
-
-```bash
-# Frontend
-cd client && npm install
-
-# Backend services
-cd services/auth && npm install
-cd services/restaurant && npm install
-cd services/rider && npm install
-cd services/admin && npm install
-cd services/analytics && npm install
-cd services/utilities && npm install
-cd services/realtime && npm install
-```
-
-### Step 2.5: Compile TypeScript (Initial Build)
-
-Before running the services for the first time, compile TypeScript to generate the `dist/` output:
-
-```bash
-# Compile each backend service
-cd services/auth && npx tsc
-cd services/restaurant && npx tsc
-cd services/rider && npx tsc
-cd services/admin && npx tsc
-cd services/analytics && npx tsc
-cd services/utilities && npx tsc
-cd services/realtime && npx tsc
-```
-
-> **Note:** This step is only needed for the initial setup. In development, `npm run dev` automatically watches and recompiles TypeScript via `tsc --watch`.
-
-### Step 3: Configure Environment Variables
-
-Each service and the client includes a `.env.example` file. Copy them to create your `.env` files:
-
-```bash
-# Client
-cp client/.env.example client/.env
-
-# Backend services
-cp services/auth/.env.example services/auth/.env
-cp services/restaurant/.env.example services/restaurant/.env
-cp services/rider/.env.example services/rider/.env
-cp services/admin/.env.example services/admin/.env
-cp services/analytics/.env.example services/analytics/.env
-cp services/utilities/.env.example services/utilities/.env
-cp services/realtime/.env.example services/realtime/.env
-```
-
-Then fill in the required secret values in each `.env` file. Refer to the [Environment Variables](#-environment-variables) section for details.
-
-> **Critical**: All backend services must share the **same** `JWT_SECRET` and `INTERNAL_SERVICE_KEY`. All services must point to the **same** MongoDB database (`DB_NAME`).
-
-### Step 4: Start RabbitMQ
-
-```bash
-# Using Docker (recommended)
-docker run -d --name rabbitmq \
-  -p 5672:5672 -p 15672:15672 \
-  -e RABBITMQ_DEFAULT_USER=admin \
-  -e RABBITMQ_DEFAULT_PASS=admin123 \
-  rabbitmq:3-management
-```
-
-Management UI will be available at `http://localhost:15672`.
-
-### Step 4.5: Start Redis *(Optional — for Analytics Caching)*
-
-```bash
-# Using Docker
-docker run -d --name redis -p 6379:6379 redis:7-alpine
-```
-
-> If Redis is not configured, the Analytics service automatically falls back to an **in-memory cache**. No data loss, just no persistence across restarts.
-
-### Step 5: Start All Backend Services (Development)
-
-Open **7 separate terminals** and run:
-
-```bash
-# Terminal 1 — Auth Service (port 8000)
-cd services/auth && npm run dev
-
-# Terminal 2 — Restaurant Service (port 9000)
-cd services/restaurant && npm run dev
-
-# Terminal 3 — Rider Service (port 7000)
-cd services/rider && npm run dev
-
-# Terminal 4 — Admin Service (port 6001)
-cd services/admin && npm run dev
-
-# Terminal 5 — Analytics Service (port 6002)
-cd services/analytics && npm run dev
-
-# Terminal 6 — Utilities Service (port 8888)
-cd services/utilities && npm run dev
-
-# Terminal 7 — Realtime Socket Service (port 9999)
-cd services/realtime && npm run dev
-```
-
-Each `npm run dev` runs `concurrently "tsc --watch" "node --watch dist/index.js"` — compiling TypeScript and auto-restarting on changes.
-
-### Step 6: Start the Frontend
-
-```bash
-cd client
-npm run dev
-```
-
-The application will be running at `http://localhost:5173`.
-
-### Step 7: Build for Production
-
-```bash
-# Build each backend service
-cd services/auth && npm run build && npm start
-cd services/restaurant && npm run build && npm start
-# ... repeat for each service
-
-# Build frontend
-cd client && npm run build
-# Serve the dist/ folder with any static file server
-npm run preview
-```
-
----
-
-## 🐳 Docker Setup
-
-All backend microservices are fully containerized with **multi-stage Docker builds** for optimized production images.
-
-### Docker Architecture
-
-Each service includes:
-- **`Dockerfile`** — Multi-stage build (build stage with full dev dependencies → production stage with minimal footprint)
-- **`.dockerignore`** — Excludes `node_modules`, `.env`, source files, and other non-essential files from the build context
-
-### Multi-Stage Build Process
-
-```dockerfile
-# Stage 1: Build — Compile TypeScript
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY tsconfig.json ./
-COPY src ./src
-RUN npm run build
-
-# Stage 2: Production — Minimal runtime image
-FROM node:22-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --only=production
-COPY --from=builder /app/dist ./dist
-CMD [ "node", "dist/index.js" ]
-```
-
-### Building & Running Containers Manually
-
-```bash
-# Build a single service
-docker build -t kravix-restaurant ./services/restaurant
-
-# Run a service (pass env vars at runtime)
-docker run -d \
-  --name kravix-restaurant \
-  -p 9000:9000 \
-  --env-file ./services/restaurant/.env \
-  kravix-restaurant
-```
-
-### Build All Services
-
-```bash
-# Build all 7 services
-for service in admin analytics auth realtime restaurant rider utilities; do
-  echo "Building $service..."
-  docker build -t kravix-$service ./services/$service
-done
-```
-
-### Docker Hub Images
-
-Pre-built images are automatically published to Docker Hub via CI/CD:
-
-| Service    | Docker Hub Image                               |
-| ---------- | ---------------------------------------------- |
-| Admin      | `samratmallick/kravix-admin:latest`        |
-| Analytics  | `samratmallick/kravix-analytics:latest`    |
-| Auth       | `samratmallick/kravix-auth:latest`         |
-| Realtime   | `samratmallick/kravix-realtime:latest`     |
-| Restaurant | `samratmallick/kravix-restaurant:latest`   |
-| Rider      | `samratmallick/kravix-rider:latest`        |
-| Utilities  | `samratmallick/kravix-utilities:latest`    |
-
-```bash
-# Pull and run a published image
-docker pull samratmallick/kravix-analytics:latest
-docker run -d -p 6002:6002 --env-file .env samratmallick/kravix-analytics:latest
-```
-
----
-
-## 🔄 CI/CD Pipeline
-
-The project uses **GitHub Actions** for automated Docker image builds and pushes.
-
-### Workflow: `docker-build-push.yml`
-
-**Location:** `.github/workflows/docker-build-push.yml`
-
-### Trigger Conditions
-
-| Trigger              | Condition                                         |
-| -------------------- | ------------------------------------------------- |
-| `push` to `main`     | Only when files in `services/` are changed        |
-| `pull_request` to `main` | Only when files in `services/` are changed    |
-| `workflow_dispatch`  | Manual trigger — builds **all** services          |
-
-### How It Works
-
-```mermaid
-flowchart LR
-    A[Push / PR to main] --> B{Detect Changed Services}
-    B --> C[Build only changed services]
-    C --> D[docker build + tag]
-    D --> E[Push to Docker Hub]
-    F[Manual Dispatch] --> G[Build ALL services]
-    G --> D
-```
-
-1. **Change Detection** — Uses `dorny/paths-filter` to detect which services have file changes
-2. **Selective Builds** — Only changed services are rebuilt (saves CI minutes)
-3. **Docker Hub Push** — Images are tagged as `latest` and pushed to the `samratmallick` Docker Hub account
-4. **Manual Override** — `workflow_dispatch` rebuilds all 7 services regardless of changes
-
----
-
-## 🔐 Environment Variables
-
-### Client (`client/.env`)
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_API_URL_AUTH` | Auth service base URL | `http://localhost:8000/api/v1/auth` |
-| `VITE_API_URL_RESTAURANT` | Restaurant API URL | `http://localhost:9000/api/v1/restaurants` |
-| `VITE_API_URL_MENU` | Menu API URL | `http://localhost:9000/api/v1/menu` |
-| `VITE_API_URL_CART` | Cart API URL | `http://localhost:9000/api/v1/cart` |
-| `VITE_API_URL_ADDRESS` | Address API URL | `http://localhost:9000/api/v1/address` |
-| `VITE_API_URL_ORDER` | Orders API URL | `http://localhost:9000/api/v1/orders` |
-| `VITE_API_URL_PAYMENT` | Payment API URL | `http://localhost:8888/api/v1/payment` |
-| `VITE_API_URL_REALTIME_SOCKET` | Socket.IO server URL | `http://localhost:9999` |
-| `VITE_API_URL_RIDER` | Rider API URL | `http://localhost:7000/api/v1/riders` |
-| `VITE_API_URL_ADMIN` | Admin API URL | `http://localhost:6001/api/v1/admin` |
-| `VITE_API_URL_ANALYTICS` | Analytics API URL | `http://localhost:6002/api/v1/analytics` |
-| `VITE_COUPON_BASE_URL` | Coupon API URL | `http://localhost:9000/api/v1/coupons` |
-| `VITE_REVIEW_BASE_URL` | Review API URL | `http://localhost:9000/api/v1/reviews` |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key | `pk_test_...` |
-| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID | `861...apps.googleusercontent.com` |
-| `VITE_INTERNAL_KEY` | Internal service key | `your-internal-key` |
-
-### Backend Services
-
-| Variable | Services | Description | Example |
-|----------|----------|-------------|---------|
-| `PORT` | All | Service listen port | `8000` |
-| `ALLOWED_ORIGINS` | All | CORS allowed origins | `http://localhost:5173` |
-| `MONGO_URI` | Auth, Restaurant, Rider, Admin, Analytics | MongoDB connection string | `mongodb+srv://...` |
-| `DB_NAME` | Auth, Restaurant, Rider, Admin, Analytics | Database name | `kravix_db` |
-| `JWT_SECRET` | Auth, Restaurant, Rider, Admin, Analytics, Realtime | JWT signing secret | `your-256-bit-secret` |
-| `INTERNAL_SERVICE_KEY` | All | Inter-service auth key | `your-internal-key` |
-| `GOOGLE_CLIENT_ID` | Auth | Google OAuth client ID | `861...` |
-| `GOOGLE_CLIENT_SECRET` | Auth | Google OAuth client secret | `GOCSPX-...` |
-| `RABITMQ_URL` | Auth, Restaurant, Rider, Admin, Analytics, Utilities | RabbitMQ connection URL | `amqp://admin:admin123@localhost:5672` |
-| `REDIS_URL` | Analytics | Redis connection URL *(optional)* | `redis://localhost:6379` |
-| `PAYMENT_QUEUE` | Restaurant, Admin, Utilities | Payment event queue name | `payment_event` |
-| `ORDER_READY_QUEUE` | Restaurant, Rider | Order ready queue name | `order_ready_queue` |
-| `RIDER_QUEUE` | Restaurant, Rider | Rider assignment queue | `rider_oueue` |
-| `ADMIN_EVENT_QUEUE` | Restaurant, Admin | Admin event queue | `admin_event_queue` |
-| `AUTH_EVENT_QUEUE` | Auth | Auth events queue (registrations, role changes) | `auth_event_queue` |
-| `CLOUD_NAME` | Utilities | Cloudinary cloud name | `your-cloud-name` |
-| `CLOUD_API_KEY` | Utilities | Cloudinary API key | `977...` |
-| `CLOUD_API_SECRET` | Utilities | Cloudinary API secret | `your-secret` |
-| `RAZORPAY_API_KEY` | Utilities | Razorpay key ID | `rzp_test_...` |
-| `RAZORPAY_API_KEY_SECRET` | Utilities | Razorpay key secret | `your-secret` |
-| `STRIPE_SECRET_KEY` | Utilities | Stripe secret key | `sk_test_...` |
-| `GEMINI_API_KEY` | Restaurant | Google Gemini API key | `AIza...` |
-| `RIDER_SEARCH_RADIUS_METERS` | Rider | Geo search radius | `500` |
-| `ADMIN_EMAIL` | Admin | Admin login email | `admin@admin.dev` |
-| `ADMIN_PASSWORD` | Admin | Admin login password | `your-password` |
-| `REALTIME_SOCKET_SERVICE_URI` | Auth, Restaurant, Rider, Admin | Realtime service base URL | `http://localhost:9999` |
-
----
-
-## 📡 API Documentation
-
-### Auth Service — `:8000/api/v1/auth`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/sessions` | Login / register via Google OAuth | ❌ |
-| `PATCH` | `/me/role` | Set user role (customer/seller/rider) | ✅ |
-| `GET` | `/me` | Get authenticated user profile | ✅ |
-
-### Restaurant Service — `:9000/api/v1/restaurants`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/` | Create a new restaurant | ✅ Seller |
-| `GET` | `/` | Get nearest restaurants (geospatial) | ✅ |
-| `GET` | `/me` | Get own restaurant profile | ✅ Seller |
-| `PATCH` | `/me` | Update restaurant details | ✅ Seller |
-| `PATCH` | `/me/status` | Toggle restaurant open/closed | ✅ Seller |
-| `GET` | `/:id` | Get single restaurant by ID | ✅ |
-
-### Menu Service — `:9000/api/v1/menu`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/` | Add menu item (with image upload) | ✅ Seller |
-| `GET` | `/search` | Search food items globally | ✅ |
-| `GET` | `/:restaurantId` | Get all items for a restaurant | ✅ |
-| `DELETE` | `/:itemId` | Delete a menu item | ✅ Seller |
-| `PATCH` | `/:itemId/availability` | Toggle item availability | ✅ Seller |
-
-### Cart Service — `:9000/api/v1/cart`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/` | Add item to cart | ✅ |
-| `GET` | `/` | Fetch current cart | ✅ |
-| `PATCH` | `/increment` | Increment item quantity | ✅ |
-| `PATCH` | `/decrement` | Decrement item quantity | ✅ |
-| `DELETE` | `/` | Clear entire cart | ✅ |
-
-### Address Service — `:9000/api/v1/address`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/` | Add a delivery address | ✅ |
-| `GET` | `/` | Get saved addresses | ✅ |
-| `DELETE` | `/:addressId` | Delete an address | ✅ |
-
-### Order Service — `:9000/api/v1/orders`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/` | Create a new order (supports `couponCode`) | ✅ |
-| `GET` | `/me` | Get customer's orders | ✅ |
-| `GET` | `/me/:orderId` | Get single order details | ✅ |
-| `POST` | `/reorder/:orderId` | Reorder a delivered order | ✅ |
-| `GET` | `/restaurants/:restaurantId` | Get restaurant orders | ✅ Seller |
-| `GET` | `/restaurants/:restaurantId/sales-stats` | Sales analytics data | ✅ Seller |
-| `PATCH` | `/:orderId/status` | Update order status | ✅ Seller |
-| `GET` | `/:id/payment` | Fetch order for payment | ❌ |
-
-### Coupon Service — `:9000/api/v1/coupons`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/` | Create a coupon (global or restaurant-specific) | ✅ Seller / Admin |
-| `GET` | `/` | List available coupons (filter by `restaurantId`) | ❌ |
-| `POST` | `/apply` | Validate & apply a coupon to an order | ✅ |
-| `GET` | `/analytics/:id` | Get usage analytics for a coupon | ✅ Seller |
-| `PUT` | `/:id` | Update a coupon | ✅ Seller / Admin |
-| `DELETE` | `/:id` | Delete a coupon | ✅ Seller / Admin |
-
-### Review Service — `:9000/api/v1/reviews`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/` | Submit a review (restaurant or rider) | ✅ |
-| `GET` | `/restaurant/:id` | Get reviews for a restaurant | ❌ |
-| `GET` | `/rider/:id` | Get reviews for a rider | ❌ |
-| `POST` | `/report` | Report a review | ✅ |
-| `GET` | `/admin` | List all reviews (admin only) | ✅ Admin |
-| `PUT` | `/admin/moderate/:id` | Moderate (approve/remove) a review | ✅ Admin |
-
-### Rider Service — `:7000/api/v1/riders`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/` | Register rider profile | ✅ |
-| `GET` | `/me` | Get rider profile | ✅ |
-| `PATCH` | `/me/availability` | Toggle online/offline | ✅ |
-| `PATCH` | `/me/location` | Update live GPS location | ✅ |
-| `GET` | `/me/earnings` | Fetch earnings data | ✅ |
-| `GET` | `/orders/current` | Get current active order | ✅ |
-| `PATCH` | `/orders/status` | Update delivery status | ✅ |
-| `GET` | `/orders/delivery-history` | Get delivery history | ✅ |
-| `POST` | `/orders/:orderId/accept` | Accept a delivery request | ✅ |
-| `POST` | `/orders/otp/generate` | Generate delivery OTP | ✅ |
-
-### Admin Service — `:6001/api/v1/admin`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/login` | Admin login | ❌ |
-| `GET` | `/dashboard` | Platform analytics overview | ✅ Admin |
-| `GET` | `/users` | List all users | ✅ Admin |
-| `GET` | `/users/:userId` | Get user details | ✅ Admin |
-| `PATCH` | `/users/:userId/block` | Block/unblock user | ✅ Admin |
-| `GET` | `/restaurants` | List all restaurants | ✅ Admin |
-| `GET` | `/restaurants/:restaurantId` | Get restaurant details | ✅ Admin |
-| `PATCH` | `/restaurants/:restaurantId/verify` | Verify a restaurant | ✅ Admin |
-| `DELETE` | `/restaurants/:restaurantId` | Delete a restaurant | ✅ Admin |
-| `GET` | `/riders` | List all riders | ✅ Admin |
-| `GET` | `/riders/:riderId` | Get rider details | ✅ Admin |
-| `PATCH` | `/riders/:riderId/verify` | Verify a rider | ✅ Admin |
-| `DELETE` | `/riders/:riderId` | Delete a rider | ✅ Admin |
-| `GET` | `/orders` | List all orders | ✅ Admin |
-| `GET` | `/orders/:orderId` | Get order details | ✅ Admin |
-| `PATCH` | `/orders/:orderId/cancel` | Cancel an order | ✅ Admin |
-
-### Analytics Service — `:6002/api/v1/analytics`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `GET` | `/` | Get full dashboard analytics (summary, trends, top foods, peak hours, top restaurants, user growth, rider performance) | ✅ Admin / Seller |
-| `GET` | `/export` | Export revenue trends as CSV | ✅ Admin / Seller |
-
-**Query Parameters for Analytics:**
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `startDate` | ISO Date string | Filter start date |
-| `endDate` | ISO Date string | Filter end date |
-| `interval` | `daily` \| `weekly` \| `monthly` | Grouping interval for trends |
-| `restaurantId` | MongoDB ObjectId | Scope data to a specific restaurant (admin only; auto-set for sellers) |
-
-### Utilities Service — `:8888/api/v1`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/cloudinary/images` | Upload image to Cloudinary | 🔑 Internal |
-| `POST` | `/payment/razorpay` | Create Razorpay order | ❌ |
-| `POST` | `/payment/razorpay/verify` | Verify Razorpay payment | ❌ |
-| `POST` | `/payment/stripe` | Create Stripe checkout session | ❌ |
-| `POST` | `/payment/stripe/verify` | Verify Stripe payment | ❌ |
-
-### Realtime Service — `:9999/api/v1/socket`
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/events` | Emit Socket.IO event (internal) | 🔑 Internal |
-
----
-
-## 📸 Screenshots / Demo
-
-> 🚧 **Coming Soon** — Screenshots and a live demo link will be added here.
-
-<p align="center">
-  <img src="https://img.shields.io/badge/🔗_Live_Demo-Coming_Soon-gray?style=for-the-badge" alt="Live Demo" />
-</p>
-
----
-
-## 🏗️ Architecture Diagram
+Kravix is organized as a monorepo containing a **React SPA frontend** and **seven backend microservices** developed in Node.js with Express v5 and TypeScript. 
 
 ```mermaid
 graph TB
-    subgraph Client["🌐 Client — React + Vite (port 5173)"]
+    subgraph Client["🌐 Client Application — React + Vite (Port 5173)"]
         UI[Customer / Seller / Rider / Admin UI]
     end
 
-    subgraph Gateway["⚡ Backend Microservices"]
-        AUTH["🔐 Auth Service<br/>:8000"]
-        REST["🍽️ Restaurant Service<br/>:9000<br/>(Orders, Cart, Coupons, Reviews)"]
-        RIDER["🏍️ Rider Service<br/>:7000"]
-        ADMIN["🛡️ Admin Service<br/>:6001"]
-        ANALYTICS["📈 Analytics Service<br/>:6002"]
-        UTIL["🔧 Utilities Service<br/>:8888"]
-        RT["📡 Realtime Service<br/>:9999"]
+    subgraph Gateway["⚡ Direct Service Communications (No API Gateway)"]
+        AUTH["🔐 Auth Service (Port 8000)"]
+        REST["🍽️ Restaurant Service (Port 9000 — Menu, Cart, Address, Orders, Coupons, Reviews)"]
+        RIDER["🏍️ Rider Service (Port 7000)"]
+        ADMIN["🛡️ Admin Service (Port 6001)"]
+        ANALYTICS["📈 Analytics Service (Port 6002)"]
+        UTIL["🔧 Utilities Service (Port 8888)"]
+        RT["📡 Realtime Socket Service (Port 9999)"]
     end
 
-    subgraph Infra["🗄️ Infrastructure"]
-        MONGO[(MongoDB Atlas)]
-        RABBIT[("🐇 RabbitMQ")]
-        REDIS[("⚡ Redis")]
+    subgraph Infra["🗄️ Shared Infrastructure & Third-Party APIs"]
+        MONGO[(MongoDB Atlas - db: kravix_db)]
+        RABBIT[("🐇 RabbitMQ Message Broker")]
+        REDIS[("⚡ Redis Cache")]
         CLOUD["☁️ Cloudinary"]
         STRIPE["💳 Stripe"]
         RAZORPAY["💳 Razorpay"]
-        GEMINI["🤖 Google Gemini"]
+        GEMINI["🤖 Google Gemini 2.0"]
     end
 
     UI -- "REST API" --> AUTH
@@ -709,7 +100,7 @@ graph TB
     ADMIN --> MONGO
     ANALYTICS --> MONGO
 
-    ANALYTICS -- "Cache (optional)" --> REDIS
+    ANALYTICS -- "Caching" --> REDIS
 
     REST -- "Publishes events" --> RABBIT
     AUTH -- "Publishes events" --> RABBIT
@@ -727,110 +118,656 @@ graph TB
     REST --> GEMINI
 ```
 
+### Architectural Flow
+1. **Client-to-Service Communication**: The frontend client communicates directly with respective microservice ports. There is no central API gateway; base endpoints are injected via client-side environment configurations.
+2. **Inter-Service Event Flow**: Microservices communicate asynchronously via a **RabbitMQ** broker using dedicated exchange queues (`payment_event`, `order_ready_queue`, `rider_queue`, `admin_event_queue`, `auth_event_queue`).
+3. **Database Sharing Model**: Microservices point to a unified MongoDB cluster (`kravix_db`) but are separated logically. Critical validation models (like User and Restaurant blocked states) are synchronized via inter-service event handlers.
+4. **Caching Layer**: The Analytics service utilizes Redis (`ioredis`) for dashboard caching with a local in-memory fallback.
+
 ---
 
-## 🤝 Contributing
+## 📁 Folder Structure
 
-Contributions are welcome! Here's how to get started:
-
-### Workflow
-
-```bash
-# 1. Fork the repository
-# 2. Create a feature branch
-git checkout -b feat/your-feature-name
-
-# 3. Make your changes and commit
-git commit -m "feat(scope): add your feature description"
-
-# 4. Push to your fork
-git push origin feat/your-feature-name
-
-# 5. Open a Pull Request against `main`
+```txt
+kravix/
+ ├── .github/
+ │    └── workflows/
+ │         └── docker-build-push.yml   # Multi-service selective builds
+ ├── client/                           # ── Frontend (React 19 + Vite 7 + TS) ──
+ │    ├── public/                      # Static assets, icons, and index.html
+ │    ├── src/
+ │    │    ├── admin/                  # Admin routes, components, and pages
+ │    │    ├── assets/                 # Brand assets
+ │    │    ├── components/
+ │    │    │    ├── common/            # Route guards, skeletons, utilities
+ │    │    │    ├── customer/          # Leaflet maps and customer panels
+ │    │    │    ├── home/              # Landing page details
+ │    │    │    ├── navbar/            # Role-aware navigation bars
+ │    │    │    ├── restaurant/        # Seller dashboard items
+ │    │    │    └── rider/             # Rider dashboard items
+ │    │    ├── context/                # Global states (AppContext, SocketContext)
+ │    │    ├── pages/                  # Route views (Home, Checkout, Orders)
+ │    │    ├── types/                  # TypeScript interface mappings
+ │    │    └── utils/                  # Helper modules (secureStorage, constants)
+ │    ├── tailwind.config.js
+ │    ├── vite.config.ts
+ │    └── package.json
+ └── services/                         # ── Backend Microservices ──
+      ├── admin/                       # Port 6001: Moderation, verification, and oversight
+      ├── analytics/                   # Port 6002: Analytics aggregation, CSV export, Redis
+      ├── auth/                        # Port 8000: User profiles, roles, and Google OAuth
+      ├── realtime/                    # Port 9999: Socket.IO message routing and auth check
+      ├── restaurant/                  # Port 9000: Menus, geospatial discovery, cart, orders, coupons
+      ├── rider/                       # Port 7000: Rider profiles, geosearch, tracking, delivery OTPs
+      └── utilities/                   # Port 8888: Cloudinary uploader, Stripe, and Razorpay
 ```
 
-### Commit Convention
+---
 
-This project follows [Conventional Commits](https://www.conventionalcommits.org/):
+## ✨ Features
 
-| Prefix | Purpose |
-|--------|---------|
-| `feat:` | New feature |
-| `fix:` | Bug fix |
-| `docs:` | Documentation changes |
-| `style:` | Code formatting (no logic change) |
-| `refactor:` | Code restructuring |
-| `perf:` | Performance improvement |
-| `test:` | Adding or updating tests |
-| `chore:` | Build, CI, or tooling changes |
+### 👤 Customer Features
+- **Stateless Authentication**: Secure user login with Google One-Tap OAuth.
+- **Location-Based Discovery**: Retrieve nearest open and verified restaurants using Mongoose geospatial queries (`$geoNear`).
+- **Geographic Address Management**: Register multiple delivery locations with latitude, longitude, and formatted names.
+- **Smart Food Search**: Natural language query search normalized via Google Gemini 2.0 (interpreting regional terms like "bhat", "dal", "mach").
+- **Cart Management**: Add, increment, decrement, and clear cart items saved dynamically.
+- **Checkout & Promotions**: Apply flat, percentage-based, or free-delivery coupons.
+- **Dual Payment Integration**: Secure checkout powered by Stripe or Razorpay.
+- **Live Order Tracking**: Dynamic step-by-step route visualization using Leaflet Maps and WebSocket.
+- **Celebration Effects**: Confetti UI celebration triggers upon successful order delivery.
 
-### Code Style
+### 🍳 Restaurant Features
+- **Merchant Registration**: Create custom restaurant profiles with image uploads.
+- **Menu Management**: Add, delete, and toggle real-time availability of menu items.
+- **Sales Analytics Dashboard**: Track monthly, weekly, and daily earnings and order trends with interactive Recharts.
+- **Order Pipeline Management**: Process orders through states: `placed` ➔ `accepted` ➔ `preparing` ➔ `ready_for_rider`.
+- **Coupon Engine**: Manage restaurant-specific coupons (setting usage limits, minimum order amounts, and expiration dates).
 
-- TypeScript strict mode across all packages
-- ESLint configured for both client and services
-- Consistent Express controller pattern: `config → model → middleware → controller → route`
+### 🏍️ Rider Features
+- **Online/Offline Toggle**: Toggle delivery availability dynamically.
+- **Live Tracking System**: Stream GPS coordinate updates to the database and Socket rooms.
+- **OTP Handoff Verification**: Secure delivery completion using one-time passwords generated at customer locations.
+- **Earnings Analytics**: Monitor completed deliveries and aggregate delivery payouts.
+
+### 🛡️ Admin Features
+- **Platform Analytics Summary**: Unified panel metrics for total users, orders, verification requests, and system health.
+- **Geographic & Sales Aggregations**: Export historical system logs and sales trends as CSV files.
+- **Verification Workflows**: Formally review, approve, or reject restaurant and rider registrations.
+- **User & Merchant Moderation**: Instantly block or unblock users or merchants violating platform policies.
+- **Order Oversight**: Access system-wide order pipelines and manually trigger cancellations for stuck processes.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 19, TypeScript, Vite 7
+- **Styling**: Tailwind CSS v4, Lucide React icons
+- **Client Routing**: React Router DOM 7
+- **State Management**: React Context API, secure local storage (`react-secure-storage`)
+- **Maps & Tracking**: Leaflet, React-Leaflet, Leaflet Routing Machine
+- **Charts & Visualizations**: Recharts
+- **Backend Runtime**: Node.js 22 (ES modules), Express v5, TypeScript
+- **Database**: MongoDB Atlas, Mongoose 9 (geospatial indexes, aggregation pipelines)
+- **Message Broker**: RabbitMQ (`amqplib`)
+- **Caching**: Redis (`ioredis`)
+- **Authentication**: JWT, Google OAuth 2.0 (`googleapis`)
+- **AI Integrations**: Google Generative AI (`@google/generative-ai` — Gemini 2.0 Flash)
+- **Payment Gateways**: Stripe, Razorpay
+- **Image Storage**: Cloudinary SDK
+- **Scheduling**: `node-cron` (Analytics snapshots)
+- **DevOps & Containers**: Docker, multi-stage Alpine builds, GitHub Actions CI/CD
+
+---
+
+## 📸 Screenshots
+
+### Customer Application
+| Home / Restaurant List | Menu Browsing | Cart & Checkout | Live Order Tracking |
+| --- | --- | --- | --- |
+| _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ |
+
+### Merchant / Seller Panel
+| Sales Analytics Dashboard | Menu Management | Order Processing | Coupon Configurations |
+| --- | --- | --- | --- |
+| _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ |
+
+### Rider Mobile View
+| Job Offers Map | Navigation Route | Payment / Earnings Details |
+| --- | --- | --- |
+| _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ |
+
+### Admin Dashboard
+| Platform Stats Overview | Merchant Verification Queue | Review Moderation Logs |
+| --- | --- | --- |
+| _[Placeholder]_ | _[Placeholder]_ | _[Placeholder]_ |
+
+---
+
+## 🚀 Installation Guide
+
+Since Kravix is structured as a monorepo without a root-level `package.json`, dependencies are managed and run within each project directory.
+
+### Prerequisites
+- **Node.js**: `v22.x` or higher
+- **Docker**: For running RabbitMQ and Redis services
+- **MongoDB Atlas**: Account or a local instance running on port `27017`
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/samratmallick-dev/kravix-food-delivery-application.git
+cd kravix-online-food-dellivery-application
+```
+
+### Step 2: Install Node Dependencies
+Run the install command inside the client and each microservice directory:
+```bash
+# Frontend Client
+cd client && npm install && cd ..
+
+# Backend Microservices
+for service in admin analytics auth realtime restaurant rider utilities; do
+  echo "Installing dependencies for: $service..."
+  cd services/$service && npm install && cd ../..
+done
+```
+
+### Step 3: Initial TypeScript Compilation
+Compile the backend TypeScript files before starting the development servers:
+```bash
+for service in admin analytics auth realtime restaurant rider utilities; do
+  echo "Compiling: $service..."
+  cd services/$service && npx tsc && cd ../..
+done
+```
+
+### Step 4: Configure Infrastructure (via Docker)
+Start the message broker (RabbitMQ) and cache (Redis):
+```bash
+# Start RabbitMQ container with management UI
+docker run -d --name kravix-rabbitmq \
+  -p 5672:5672 -p 15672:15672 \
+  -e RABBITMQ_DEFAULT_USER=admin \
+  -e RABBITMQ_DEFAULT_PASS=admin123 \
+  rabbitmq:3-management
+
+# Start Redis container
+docker run -d --name kravix-redis -p 6379:6379 redis:7-alpine
+```
+
+### Step 5: Start Local Development Servers
+Launch individual terminal tabs or processes to run the client and backend servers:
+```bash
+# Start Frontend Client (Runs on http://localhost:5173)
+cd client && npm run dev
+
+# Start Services (Each service compiles dynamically via concurrently and watches for code changes)
+cd services/auth && npm run dev
+cd services/restaurant && npm run dev
+cd services/rider && npm run dev
+cd services/admin && npm run dev
+cd services/analytics && npm run dev
+cd services/utilities && npm run dev
+cd services/realtime && npm run dev
+```
+
+---
+
+## 🔐 Environment Variables
+
+You must create a `.env` file in the `client` directory and each service folder under `services/`. Use these configurations:
+
+### Frontend Client (`client/.env`)
+```env
+VITE_API_URL_AUTH=http://localhost:8000/api/v1/auth
+VITE_API_URL_RESTAURANT=http://localhost:9000/api/v1/restaurants
+VITE_API_URL_MENU=http://localhost:9000/api/v1/menu
+VITE_API_URL_CART=http://localhost:9000/api/v1/cart
+VITE_API_URL_ADDRESS=http://localhost:9000/api/v1/address
+VITE_API_URL_ORDER=http://localhost:9000/api/v1/orders
+VITE_API_URL_PAYMENT=http://localhost:8888/api/v1/payment
+VITE_API_URL_REALTIME_SOCKET=http://localhost:9999
+VITE_API_URL_RIDER=http://localhost:7000/api/v1/riders
+VITE_API_URL_ADMIN=http://localhost:6001/api/v1/admin
+VITE_API_URL_ANALYTICS=http://localhost:6002/api/v1/analytics
+VITE_COUPON_BASE_URL=http://localhost:9000/api/v1/coupons
+VITE_REVIEW_BASE_URL=http://localhost:9000/api/v1/reviews
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_yourstripekeyhere
+VITE_GOOGLE_CLIENT_ID=your-google-client-id-here.apps.googleusercontent.com
+VITE_INTERNAL_KEY=your-internal-service-key-here
+```
+
+### Microservices Shared configurations
+All backend microservices must share the **same** `JWT_SECRET` and `INTERNAL_SERVICE_KEY`.
+
+#### Auth Service (`services/auth/.env`)
+```env
+PORT=8000
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
+DB_NAME=kravix_db
+JWT_SECRET=your-shared-jwt-secret-string
+INTERNAL_SERVICE_KEY=your-internal-service-key-here
+GOOGLE_CLIENT_ID=your-google-client-id-here.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+RABITMQ_URL=amqp://admin:admin123@localhost:5672
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+```
+
+#### Restaurant Service (`services/restaurant/.env`)
+```env
+PORT=9000
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
+DB_NAME=kravix_db
+JWT_SECRET=your-shared-jwt-secret-string
+INTERNAL_SERVICE_KEY=your-internal-service-key-here
+RABITMQ_URL=amqp://admin:admin123@localhost:5672
+UTILS_SERVICE_URI=http://localhost:8888
+REALTIME_SOCKET_SERVICE_URI=http://localhost:9999
+PAYMENT_QUEUE=payment_event
+RIDER_QUEUE=rider_queue
+ORDER_READY_QUEUE=order_ready_queue
+ADMIN_EVENT_QUEUE=admin_event_queue
+GEMINI_API_KEY=your-google-gemini-api-key-here
+ALLOWED_ORIGINS=http://localhost:5173
+```
+
+#### Rider Service (`services/rider/.env`)
+```env
+PORT=7000
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
+DB_NAME=kravix_db
+JWT_SECRET=your-shared-jwt-secret-string
+INTERNAL_SERVICE_KEY=your-internal-service-key-here
+RABITMQ_URL=amqp://admin:admin123@localhost:5672
+REALTIME_SOCKET_SERVICE_URI=http://localhost:9999
+ORDER_READY_QUEUE=order_ready_queue
+RIDER_QUEUE=rider_queue
+RIDER_SEARCH_RADIUS_METERS=1000
+ALLOWED_ORIGINS=http://localhost:5173
+```
+
+#### Admin Service (`services/admin/.env`)
+```env
+PORT=6001
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
+DB_NAME=kravix_db
+JWT_SECRET=your-shared-jwt-secret-string
+INTERNAL_SERVICE_KEY=your-internal-service-key-here
+ADMIN_EMAIL=admin@kravix.com
+ADMIN_PASSWORD=your-secure-admin-password
+RABITMQ_URL=amqp://admin:admin123@localhost:5672
+ADMIN_EVENT_QUEUE=admin_event_queue
+ALLOWED_ORIGINS=http://localhost:5173
+```
+
+#### Analytics Service (`services/analytics/.env`)
+```env
+PORT=6002
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
+DB_NAME=kravix_db
+JWT_SECRET=your-shared-jwt-secret-string
+INTERNAL_SERVICE_KEY=your-internal-service-key-here
+RABITMQ_URL=amqp://admin:admin123@localhost:5672
+REDIS_URL=redis://localhost:6379
+ALLOWED_ORIGINS=http://localhost:5173
+```
+
+#### Utilities Service (`services/utilities/.env`)
+```env
+PORT=8888
+INTERNAL_SERVICE_KEY=your-internal-service-key-here
+RABITMQ_URL=amqp://admin:admin123@localhost:5672
+PAYMENT_QUEUE=payment_event
+CLOUD_NAME=your-cloudinary-cloud-name
+CLOUD_API_KEY=your-cloudinary-api-key
+CLOUD_API_SECRET=your-cloudinary-api-secret
+RAZORPAY_API_KEY=rzp_test_yourrazorpaykeyid
+RAZORPAY_API_KEY_SECRET=yourrazorpaysecret
+STRIPE_SECRET_KEY=sk_test_yourstripesecretkey
+CLIENT_URL=http://localhost:5173
+RESTAURANT_BASE_URL=http://localhost:9000
+ALLOWED_ORIGINS=http://localhost:5173
+```
+
+#### Realtime Service (`services/realtime/.env`)
+```env
+PORT=9999
+JWT_SECRET=your-shared-jwt-secret-string
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+```
+
+---
+
+## 📡 API Documentation Summary
+
+### Auth Service (`:8000/api/v1/auth`)
+- `POST /sessions` - Exchanges a Google auth code for a user session and profile. Returns a JWT.
+- `PATCH /me/role` - Sets user role to `customer`, `seller`, or `rider`. Updates local token claims.
+- `GET /me` - Fetches the authenticated user profile.
+
+### Restaurant Service (`:9000`)
+#### Restaurant Profile Management (`/api/v1/restaurants`)
+- `POST /` - Registers restaurant profile (coordinates, address, cuisines, image upload) (Seller Only).
+- `GET /` - Fetches nearest active verified restaurants based on user geospatial location parameters.
+- `GET /me` - Retrieves seller's restaurant profile details.
+- `PATCH /me` - Updates restaurant metadata.
+- `PATCH /me/status` - Toggles restaurant `isOpen` boolean state.
+- `GET /:id` - Fetches a single restaurant details.
+
+#### Menu Management (`/api/v1/menu`)
+- `POST /` - Adds a new food item (with name, price, description, and image) (Seller Only).
+- `GET /search` - Geospatially normalizes user query and retrieves matching active food items.
+- `GET /:restaurantId` - Fetches menu items belonging to a restaurant.
+- `DELETE /:itemId` - Deletes a menu item (Seller Only).
+- `PATCH /:itemId/availability` - Toggles menu item availability status (Seller Only).
+
+#### Shopping Cart (`/api/v1/cart`)
+- `POST /` - Adds food item to user cart.
+- `GET /` - Retrieves user cart list and aggregates price subtotal.
+- `PATCH /increment` - Increments menu item quantity.
+- `PATCH /decrement` - Decrements menu item quantity.
+- `DELETE /` - Clears entire shopping cart items.
+
+#### Address Management (`/api/v1/address`)
+- `POST /` - Registers new delivery address.
+- `GET /` - Retrieves user's registered delivery addresses.
+- `DELETE /:addressId` - Deletes a registered address.
+
+#### Order Management (`/api/v1/orders`)
+- `POST /` - Places a new order from current cart (calculating fees, distance, and applying active coupons).
+- `GET /me` - Fetches active and completed orders for the authenticated customer.
+- `GET /me/:orderId` - Fetches complete details of a specific customer order.
+- `PATCH /me/:orderId/cancel` - Cancels a customer order.
+- `POST /reorder/:orderId` - Re-populates cart with elements of a past order.
+- `GET /restaurants/:restaurantId` - Fetches incoming orders for a restaurant (Seller Only).
+- `PATCH /:orderId/status` - Transitions order status (`preparing`, `ready_for_rider`) (Seller Only).
+
+#### Coupon Engine (`/api/v1/coupons`)
+- `POST /` - Creates restaurant-specific or global coupons (Seller / Admin Only).
+- `GET /` - Retrieves valid coupons matching query parameters.
+- `POST /apply` - Validates minimum amount and limits, and computes discount.
+
+#### Reviews (`/api/v1/reviews`)
+- `POST /` - Submits a review score and comment (restaurant or rider).
+- `GET /restaurant/:id` - Fetches reviews matching a restaurant.
+- `GET /rider/:id` - Fetches reviews matching a rider.
+- `POST /report` - Flags a review for admin review.
+
+### Rider Service (`:7000/api/v1/riders`)
+- `POST /` - Registers a delivery rider profile with vehicles information.
+- `GET /me` - Fetches the authenticated rider profile details.
+- `PATCH /me/availability` - Toggles availability status.
+- `PATCH /me/location` - Receives and stores updated live coordinate data.
+- `GET /me/earnings` - Aggregates completed delivery fees.
+- `GET /orders/current` - Fetches currently active delivery job.
+- `POST /orders/:orderId/accept` - Accept a delivery request.
+- `POST /orders/otp/generate` - Generates unique handoff OTP.
+- `PATCH /orders/status` - Updates order delivery status (`picked_up`, `out_for_delivery`, `delivered`).
+
+### Admin Service (`:6001/api/v1/admin`)
+- `POST /login` - Verifies email/password against environment variables and issues a JWT with admin permissions.
+- `GET /dashboard` - Aggregates registered users, riders, verified restaurants, and pending items.
+- `PATCH /users/:userId/block` - Blocks/unblocks a user profile.
+- `PATCH /restaurants/:restaurantId/verify` - Approves a restaurant and registers it on maps.
+- `PATCH /riders/:riderId/verify` - Verifies a delivery rider.
+- `PATCH /orders/:orderId/cancel` - Cancels an order.
+
+### Analytics Service (`:6002/api/v1/analytics`)
+- `GET /` - Fetches platform statistics dashboard (revenue trends, peak hours, top foods) (Admin / Seller Only).
+- `GET /export` - Streams revenue trends as a CSV document file download.
+
+### Utilities Service (`:8888/api/v1`)
+- `POST /cloudinary/images` - Uploads raw base64 data to Cloudinary.
+- `POST /payment/stripe` - Initiates Stripe checkout session.
+- `POST /payment/stripe/verify` - Confirms Stripe transaction session.
+- `POST /payment/razorpay` - Creates Razorpay order session.
+- `POST /payment/razorpay/verify` - Verifies Razorpay HMAC signature.
+
+### Realtime Service (`:9999/api/v1/socket`)
+- `POST /events` - Emits a Socket.IO event to a room internally (Internal Microservice Key Authentication).
+
+---
+
+## 🗄️ Database Design Overview
+
+The application utilizes Mongoose ODM to write schemas and interface with MongoDB collections:
+
+### 1. User (`User` - Auth/Admin Services)
+- `email`: String (unique)
+- `name`: String
+- `image`: String
+- `role`: String (`customer` | `seller` | `rider` | `null`)
+- `isBlocked`: Boolean
+- `blockedUntil`: Date
+
+### 2. Restaurant (`Restaurant` - Restaurant Service)
+- `ownerId`: String (references User)
+- `name`: String
+- `image`: String
+- `location`: GeoJSON Point (`{ type: "Point", coordinates: [lng, lat] }`)
+- `address`: String
+- `cuisines`: Array of Strings
+- `isVerified`: Boolean
+- `isOpen`: Boolean
+
+### 3. MenuItem (`MenuItem` - Restaurant Service)
+- `restaurantId`: ObjectId (references Restaurant)
+- `name`: String
+- `description`: String
+- `price`: Number
+- `imageUrl`: String
+- `isAvailable`: Boolean
+
+### 4. Cart (`Cart` - Restaurant Service)
+- `userId`: String (unique)
+- `items`: Array (`{ menuItemId, quantity }`)
+
+### 5. Order (`Order` - Restaurant Service)
+- `userId`: String
+- `restaurantId`: String
+- `riderId`: String (nullable)
+- `items`: Array (`{ itemId, name, price, quantity }`)
+- `subtotal`: Number
+- `deliveryFee`: Number
+- `platformFee`: Number
+- `totalAmount`: Number
+- `status`: String (`placed` | `preparing` | `ready_for_rider` | `delivered` | `cancelled`, etc.)
+- `paymentStatus`: String (`pending` | `paid` | `failed`)
+- `deliveryOtp`: String (nullable)
+- `couponCode`: String (nullable)
+- `discountAmount`: Number
+
+### 6. Coupon (`Coupon` - Restaurant Service)
+- `code`: String (unique)
+- `discountType`: String (`percentage` | `flat` | `free_delivery`)
+- `discountValue`: Number
+- `restaurantId`: String (nullable — for global vs restaurant specific)
+- `isActive`: Boolean
+
+### Relationships Mapping
+```
+   [User] ──(1:1)──> [Cart]
+     │
+     └──(1:1)──> [Restaurant] ──(1:N)──> [MenuItem]
+     │                 │
+     │                 └──(1:N)──> [Order]
+     │                                │
+     └──(1:N)─────────────────────────┘
+```
+
+---
+
+## 🔐 Authentication & Security
+
+Kravix implements a dual-layer security model for web traffic:
+
+### Google OAuth Flow
+```
+   [Client App] ───(One-Tap Code)───> [Auth Service]
+        │                                 │
+   [JWT Token] <───(Issues JWT)────── [Google API Token Exchange]
+```
+1. The customer initiates authentication via Google OAuth 2.0 login.
+2. The client sends the authorization `code` directly to `/api/v1/auth/sessions`.
+3. The Auth service verifies the code with Google OAuth servers, retrieves user information, registers the profile if new, and publishes a `USER_REGISTERED` event to the `auth_event_queue`.
+4. The service returns a signed JWT token containing user identifiers and claims.
+
+### Role-Based Access Controls
+- Client requests append the token in the `Authorization: Bearer <token>` header.
+- Microservices validate the JWT signature statelessly via localized `isAuthenticated` middleware.
+- Dedicated middleware guards (e.g. `isSeller`, `isAdminAuthenticated`, `checkBlocked`) parse user role attributes in claims to prevent cross-privilege route access.
+- Inter-service REST endpoints authenticate requests using a secure, shared `INTERNAL_SERVICE_KEY` in the headers.
+
+---
+
+## 💳 Payment System
+
+The payment flow isolates checkout from backend order mutation via Stripe and Razorpay integrations:
+
+```
+[Client] ──(1. Place Order)──> [Restaurant Service] ──(Create Pending Order)
+   │                                                         │
+[Client] ──(2. Initiate Payment Session)──> [Utilities Service]
+   │                                             │
+   │                                      [Stripe/Razorpay Server]
+   │                                             │
+[Client] ──(3. Pay on Gateway UI) ───────────────┘
+   │
+   │ <──(Callback/Success Redirect)
+   ▼
+[Client] ──(4. Verify)──> [Utilities Service] ──(Publish success)──> [RabbitMQ]
+                                                                        │
+[Restaurant Service] <──(Update Order Status: placed, paid) ────────────┘
+```
+
+1. **Order Creation**: The customer places an order. The Restaurant service creates a pending order with `paymentStatus: pending` and returns the order details.
+2. **Payment Session Initiation**: The client sends the order ID to the Utilities service (`/payment/stripe` or `/payment/razorpay`). The service retrieves the order from the Restaurant service over internal HTTP (using `INTERNAL_SERVICE_KEY`) and registers a session on Stripe or Razorpay.
+3. **Gateway Handoff**: The client completes payment on Stripe Checkout or Razorpay modal.
+4. **Signature Verification & Publishing**: The client redirects back and calls the verification route on the Utilities service. If signature checks match, the Utilities service publishes a `PAYMENT_SUCCESS` event to the `payment_event` queue.
+5. **Consumption**: The Restaurant service consumes the event, updates status (`paymentStatus: paid`, `status: placed`), records coupon usage, and sends a WebSocket event `order:new` to the merchant dashboard.
+
+---
+
+## 📡 Real-Time Features
+
+Real-time coordination is facilitated by the Realtime Socket service using **Socket.IO**.
+
+### Connection & Authentication
+- Socket.IO handshakes require a valid JWT token in `auth.token`.
+- Upon token validation, the socket maps the client connection into a personalized user room: `User:<userId>`.
+- If the user holds a restaurant owner role, the socket automatically connects them to `Restaurant:<restaurantId>`.
+
+### Key Real-Time Event Flows
+- **Restaurant Notification** (`order:new`): Broadcasts to the restaurant room when a payment is processed.
+- **Rider Job Offer** (`order:available`): Dispatched to the rooms of riders within geographical range when a restaurant completes order preparation.
+- **Menu Sync**: Broadcasts updates (`menuitem:deleted`, `menuitem:availability`) to notify clients viewing the restaurant menu.
+- **Rider Coordinates updates** (`join:rider`): Broadcasts rider live coordinates during delivery.
+
+---
+
+## 🐳 Deployment & CI/CD
+
+### Docker Container Configuration
+All microservices are package-ready and feature double-stage Alpine configurations for production deployment:
+
+```dockerfile
+# Stage 1: Build compilation
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
+
+# Stage 2: Minimal runtime image
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --only=production
+COPY --from=builder /app/dist ./dist
+CMD [ "node", "dist/index.js" ]
+```
+
+### CI/CD Workflow (`docker-build-push.yml`)
+The repository contains a GitHub Actions workflow configured in `.github/workflows/docker-build-push.yml`:
+- **Path-selective triggers**: Triggers when backend files change within the `services/**` folders.
+- **Selective Service Building**: Uses path filters (`dorny/paths-filter`) to compile and push only modified services, optimizing build times.
+- **Docker Hub Repository Pushing**: Tags images with `latest` and publishes them directly to Docker Hub.
+
+---
+
+## 📜 Scripts
+
+Each service folder contains distinct development and compilation scripts in their `package.json`:
+
+```bash
+# Compile TypeScript files into Javascript (/dist)
+npm run build
+
+# Run service in production mode
+npm run start
+
+# Run service in development mode (TypeScript compilation and hot-reloads)
+npm run dev
+```
+
+---
+
+## 🗺️ Future Improvements
+
+- **Dedicated API Gateway**: Route all public calls through a centralized gateway (e.g., Kong, Nginx, Express Gateway) to support rate-limiting, unified CORS policies, and centralized logging.
+- **In-App Wallet System**: Add customer wallets to support refunds, promotional cashbacks, and instant checkout.
+- **Rider Payout Pipeline**: Build automated merchant revenue settlements and automated rider payout pipelines.
+- **Push Notification Integration**: Implement web push notifications (via Firebase Cloud Messaging) to alert customers about order status changes when the web tab is closed.
+- **AI Recommendation Engine**: Feed order histories and cuisine preferences to Gemini to generate personalized food recommendation carousels.
+
+---
+
+## 🤝 Contribution Guide
+
+We appreciate contributions to Kravix! To contribute:
+
+1. **Fork the Repository**: Create a personal copy on GitHub.
+2. **Create a Feature Branch**:
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
+3. **Write Code**: Ensure strict TypeScript configurations are met.
+4. **Follow Conventional Commit Guidelines**:
+   - `feat(scope): new user feature`
+   - `fix(scope): resolved calculation bug`
+   - `docs(scope): updated api references`
+5. **Open a Pull Request**: Submit your changes to the `main` branch.
+
+---
+
+## 🛠️ Code Style Guidelines
+
+- **TypeScript strict mode**: Enforced across all workspace packages.
+- **ESLint & Prettier**: Configured uniformly for both client and microservices.
+- **Consistent Express Request Flow**: `routes` ➔ `middleware` ➔ `controllers` ➔ `models` (handling routing, token authentication, controller business logic, and schema definition respectively).
 
 ---
 
 ## 📄 License
 
-```
-MIT License
-
-Copyright (c) 2026 Samrat Mallick
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+This repository is licensed under the MIT License. See [License](file:///d:/Web%20Devolopment/kravix-online-food-dellivery-application/License) for details.
 
 ---
 
-## 📬 Contact & Acknowledgements
+## 👤 Author & Credits
 
-### Author
+Designed and developed with ❤️ by **Samrat Mallick** from Kolkata, India.
+- **GitHub**: [@samratmallick-dev](https://github.com/samratmallick-dev)
 
-<a href="https://github.com/samratmallick-dev">
-  <img src="https://img.shields.io/badge/GitHub-samratmallick--dev-181717?style=for-the-badge&logo=github" alt="GitHub" />
-</a>
-
-### Acknowledgements
-
-This project is built with the help of these amazing open-source technologies:
-
-- [React](https://react.dev/) — UI library
-- [Vite](https://vitejs.dev/) — Frontend build tool
-- [Express](https://expressjs.com/) — Node.js web framework
-- [MongoDB](https://www.mongodb.com/) & [Mongoose](https://mongoosejs.com/) — Database & ODM
-- [Socket.IO](https://socket.io/) — Real-time communication
-- [RabbitMQ](https://www.rabbitmq.com/) — Message broker
-- [Redis](https://redis.io/) & [ioredis](https://github.com/redis/ioredis) — Caching layer
-- [Leaflet](https://leafletjs.com/) — Interactive maps
-- [Recharts](https://recharts.org/) — Charting library
-- [Cloudinary](https://cloudinary.com/) — Media management
-- [Stripe](https://stripe.com/) & [Razorpay](https://razorpay.com/) — Payment processing
-- [Tailwind CSS](https://tailwindcss.com/) — Utility-first CSS framework
-- [Lucide React](https://lucide.dev/) / [React-Icons](https://react-icons.github.io/react-icons) — Icon library
-- [node-cron](https://github.com/node-cron/node-cron) — Task scheduling
-
----
-
-<p align="center">
-  Made with ❤️ in Kolkata, India
-  <br />
-  <strong>Kravix — Be Smart, Eat Better 🍛</strong>
-</p>
+### Special Thanks
+Built using these open-source tools and packages:
+- [React 19](https://react.dev/) & [Vite](https://vite.dev/)
+- [Express 5](https://expressjs.com/) & [TypeScript](https://www.typescriptlang.org/)
+- [Leaflet Maps](https://leafletjs.com/)
+- [RabbitMQ Broker](https://www.rabbitmq.com/)
+- [Redis Cache](https://redis.io/)
+- [Stripe Checkout](https://stripe.com/) & [Razorpay India](https://razorpay.com/)
+- [Google Gemini API](https://ai.google.dev/)
+- [Cloudinary Service](https://cloudinary.com/)
