@@ -58,7 +58,7 @@ The platform operates as a multi-party marketplace where:
 
 ## 🏗️ Project Architecture
 
-Kravix is organized as a monorepo containing a **React SPA frontend** and **seven backend microservices** developed in Node.js with Express v5 and TypeScript. 
+Kravix is organized as a monorepo containing a **React SPA frontend** and **eight backend microservices** developed in Node.js with Express v5 and TypeScript. 
 
 ```mermaid
 graph TB
@@ -74,6 +74,7 @@ graph TB
         ANALYTICS["📈 Analytics Service (Port 6002)"]
         UTIL["🔧 Utilities Service (Port 8888)"]
         RT["📡 Realtime Socket Service (Port 9999)"]
+        EMAIL["📧 Email Service (Port 8500)"]
     end
 
     subgraph Infra["🗄️ Shared Infrastructure & Third-Party APIs"]
@@ -84,6 +85,7 @@ graph TB
         STRIPE["💳 Stripe"]
         RAZORPAY["💳 Razorpay"]
         GEMINI["🤖 Google Gemini 2.0"]
+        GMAIL["✉️ Gmail API"]
     end
 
     UI -- "REST API" --> AUTH
@@ -107,6 +109,9 @@ graph TB
     RABBIT -- "Consumes events" --> RIDER
     RABBIT -- "Consumes events" --> ADMIN
     RABBIT -- "Consumes events" --> UTIL
+    RABBIT -- "Consumes events" --> EMAIL
+
+    EMAIL --> GMAIL
 
     REST --> RT
     RIDER --> RT
@@ -156,6 +161,7 @@ kravix/
       ├── admin/                       # Port 6001: Moderation, verification, and oversight
       ├── analytics/                   # Port 6002: Analytics aggregation, CSV export, Redis
       ├── auth/                        # Port 8000: User profiles, roles, and Google OAuth
+      ├── email/                       # Port 8500: Email notifications via RabbitMQ and Gmail API
       ├── realtime/                    # Port 9999: Socket.IO message routing and auth check
       ├── restaurant/                  # Port 9000: Menus, geospatial discovery, cart, orders, coupons
       ├── rider/                       # Port 7000: Rider profiles, geosearch, tracking, delivery OTPs
@@ -252,7 +258,7 @@ Run the install command inside the client and each microservice directory:
 cd client && npm install && cd ..
 
 # Backend Microservices
-for service in admin analytics auth realtime restaurant rider utilities; do
+for service in admin analytics auth email realtime restaurant rider utilities; do
   echo "Installing dependencies for: $service..."
   cd services/$service && npm install && cd ../..
 done
@@ -261,7 +267,7 @@ done
 ### Step 3: Initial TypeScript Compilation
 Compile the backend TypeScript files before starting the development servers:
 ```bash
-for service in admin analytics auth realtime restaurant rider utilities; do
+for service in admin analytics auth email realtime restaurant rider utilities; do
   echo "Compiling: $service..."
   cd services/$service && npx tsc && cd ../..
 done
@@ -292,6 +298,7 @@ cd services/auth && npm run dev
 cd services/restaurant && npm run dev
 cd services/rider && npm run dev
 cd services/admin && npm run dev
+cd services/email && npm run dev
 cd services/analytics && npm run dev
 cd services/utilities && npm run dev
 cd services/realtime && npm run dev
@@ -396,6 +403,20 @@ INTERNAL_SERVICE_KEY=your-internal-service-key-here
 RABITMQ_URL=amqp://admin:admin123@localhost:5672
 REDIS_URL=redis://localhost:6379
 ALLOWED_ORIGINS=http://localhost:5173
+```
+
+#### Email Service (`services/email/.env`)
+```env
+PORT=8500
+RABBITMQ_URL=amqp://admin:admin123@localhost:5672
+EMAIL_QUEUE=email_queue
+GMAIL_CLIENT_ID=your-gmail-client-id
+GMAIL_CLIENT_SECRET=your-gmail-client-secret
+GMAIL_REDIRECT_URI=htts://localhost
+GMAIL_REFRESH_TOKEN=your-gmail-refresh-token
+EMAIL_FROM_ADDRESS=your-gmail@gmail.com
+EMAIL_FROM_NAME=Kravix
+CLIENT_URL=http://localhost:5173
 ```
 
 #### Utilities Service (`services/utilities/.env`)
