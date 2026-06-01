@@ -23,6 +23,7 @@ jobs:
     outputs:
       admin: ${{ steps.changes.outputs.admin }}
       auth: ${{ steps.changes.outputs.auth }}
+      email: ${{ steps.changes.outputs.email }}
       realtime: ${{ steps.changes.outputs.realtime }}
       restaurant: ${{ steps.changes.outputs.restaurant }}
       rider: ${{ steps.changes.outputs.rider }}
@@ -42,6 +43,8 @@ jobs:
               - 'services/admin/**'
             auth:
               - 'services/auth/**'
+            email:
+              - 'services/email/**'
             realtime:
               - 'services/realtime/**'
             restaurant:
@@ -81,6 +84,34 @@ jobs:
       - name: Push image
         if: github.event_name != 'pull_request'
         run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-admin:latest
+
+  # ─── Email Service ────────────────────────────────────────────────
+  build-email:
+    name: Build & Push — Email
+    needs: detect-changes
+    if: needs.detect-changes.outputs.email == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t kravix-email ./services/email
+
+      - name: Tag image
+        if: github.event_name != 'pull_request'
+        run: docker tag kravix-email ${{ env.DOCKERHUB_USERNAME }}/kravix-email:latest
+
+      - name: Push image
+        if: github.event_name != 'pull_request'
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-email:latest
 
   # ─── Auth Service ────────────────────────────────────────────────
   build-auth:

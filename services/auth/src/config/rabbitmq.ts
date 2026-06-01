@@ -11,6 +11,7 @@ export const connectRabbitMQ = async () => {
             channel.prefetch(1);
 
             await channel.assertQueue(process.env.AUTH_EVENT_QUEUE!, { durable: true });
+            await channel.assertQueue(process.env.EMAIL_QUEUE!, { durable: true });
 
             console.log("✅ Connected to RabbitMQ in Auth Service");
 

@@ -8,6 +8,10 @@ import { useAppData } from "./context/AppContext";
 import Footer from "./components/home/footer";
 
 const Login = lazy(() => import("./pages/login"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const Home = lazy(() => import("./pages/home"));
 const SelectRole = lazy(() => import("./pages/select-role"));
 const Account = lazy(() => import("./pages/account"));
@@ -55,8 +59,12 @@ const App = () => {
                                     <Route path="reviews" element={<AdminReviews />} />
                               </Route>
 
+                              <Route path="/verify-email" element={<VerifyEmailPage />} />
                               <Route element={<PublicRoutes />}>
                                     <Route path="/login" element={<Login />} />
+                                    <Route path="/register" element={<RegisterPage />} />
+                                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                                    <Route path="/reset-password" element={<ResetPasswordPage />} />
                               </Route>
                               <Route element={<ProtectedRoutes />}>
                                     <Route path="/seller" element={<Restaurant />} />

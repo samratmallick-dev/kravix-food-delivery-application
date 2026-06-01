@@ -1,0 +1,106 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { CheckCircle, XCircle, Loader2, UtensilsCrossed } from "lucide-react";
+import { verifyEmail, resendVerificationEmail } from "../utils/auth.api";
+
+const VerifyEmailPage = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = searchParams.get("token");
+
+  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [message, setMessage] = useState("");
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendMsg, setResendMsg] = useState("");
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    verifyEmail(token)
+      .then((data) => {
+        setMessage(data.message);
+        setStatus("success");
+      })
+      .catch((err: unknown) => {
+        setMessage((err as Error).message ?? "Verification failed.");
+        setStatus("error");
+      });
+  }, [token, navigate]);
+
+  const handleResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResendMsg("");
+    try {
+      const data = await resendVerificationEmail(resendEmail);
+      setResendMsg(data.message);
+    } catch {
+      setResendMsg("Failed to resend. Please try again.");
+    }
+  };
+
+  return (
+    <div className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+      <div className="max-w-md w-full space-y-6 text-center">
+        <h1 className="flex items-center justify-center">
+          <span className="text-3xl font-extrabold text-gradient flex items-center gap-2">
+            <UtensilsCrossed className="w-7 h-7 text-primary" />
+            <span>Kravix</span>
+          </span>
+        </h1>
+
+        {status === "loading" && (
+          <div className="space-y-3">
+            <Loader2 className="w-10 h-10 animate-spin text-orange-500 mx-auto" />
+            <p className="text-gray-500">Verifying your email...</p>
+          </div>
+        )}
+
+        {status === "success" && (
+          <div className="space-y-4">
+            <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
+            <p className="text-gray-700 font-medium">{message}</p>
+            <Link
+              to="/login"
+              className="inline-block bg-orange-500 text-white px-6 py-2 rounded-md text-sm font-semibold hover:bg-orange-600"
+            >
+              Go to Sign In
+            </Link>
+          </div>
+        )}
+
+        {status === "error" && (
+          <div className="space-y-4">
+            <XCircle className="w-12 h-12 text-red-500 mx-auto" />
+            <p className="text-red-600 font-medium">{message}</p>
+            <form onSubmit={handleResend} className="space-y-3 text-left">
+              <label className="block text-sm font-medium text-gray-700">
+                Resend verification email
+              </label>
+              <input
+                type="email"
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+                required
+                placeholder="your@email.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+              {resendMsg && (
+                <p className="text-sm text-green-600">{resendMsg}</p>
+              )}
+              <button
+                type="submit"
+                className="w-full bg-orange-500 text-white py-2 rounded-md text-sm font-semibold hover:bg-orange-600 cursor-pointer"
+              >
+                Resend verification email
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default VerifyEmailPage;

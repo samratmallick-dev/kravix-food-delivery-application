@@ -9,6 +9,8 @@ export interface User {
       restaurantId?: string | null;
       isBlocked?: boolean;
       blockedUntil?: string | null;
+      authProvider?: "google" | "email";
+      isEmailVerified?: boolean;
 };
 
 export interface LocationData {
