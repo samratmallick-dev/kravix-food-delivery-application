@@ -173,14 +173,15 @@ kravix/
 ## ✨ Features
 
 ### 👤 Customer Features
-- **Stateless Authentication**: Secure user login with Google One-Tap OAuth.
+- **Stateless Authentication**: Secure user login via Google One-Tap OAuth and standard Email/Password authentication with JWT.
+- **Account Security**: Comprehensive email verification, forgot password, and password reset flows powered by Gmail API.
 - **Location-Based Discovery**: Retrieve nearest open and verified restaurants using Mongoose geospatial queries (`$geoNear`).
-- **Geographic Address Management**: Register multiple delivery locations with latitude, longitude, and formatted names.
+- **Geographic Address Management**: Register multiple delivery locations using an interactive inline Leaflet map modal.
 - **Smart Food Search**: Natural language query search normalized via Google Gemini 2.0 (interpreting regional terms like "bhat", "dal", "mach").
 - **Cart Management**: Add, increment, decrement, and clear cart items saved dynamically.
-- **Checkout & Promotions**: Apply flat, percentage-based, or free-delivery coupons.
+- **Checkout & Promotions**: Apply flat, percentage-based, or free-delivery coupons with secure local persistence and automatic revalidation.
 - **Dual Payment Integration**: Secure checkout powered by Stripe or Razorpay.
-- **Live Order Tracking**: Dynamic step-by-step route visualization using Leaflet Maps and WebSocket.
+- **Order Management**: Dynamic step-by-step route visualization using Leaflet Maps and WebSocket, plus manual order cancellation with confirmation flows.
 - **Celebration Effects**: Confetti UI celebration triggers upon successful order delivery.
 
 ### 🍳 Restaurant Features
@@ -449,6 +450,12 @@ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
 
 ### Auth Service (`:8000/api/v1/auth`)
 - `POST /sessions` - Exchanges a Google auth code for a user session and profile. Returns a JWT.
+- `POST /register` - Registers a new user via email and password.
+- `POST /login` - Authenticates a user using email and password. Returns a JWT.
+- `GET /verify-email` - Verifies a user's email address using a token.
+- `POST /resend-verification` - Resends the email verification link.
+- `POST /forgot-password` - Initiates the password reset flow and sends an email.
+- `POST /reset-password` - Resets the user's password using a secure token.
 - `PATCH /me/role` - Sets user role to `customer`, `seller`, or `rider`. Updates local token claims.
 - `GET /me` - Fetches the authenticated user profile.
 
