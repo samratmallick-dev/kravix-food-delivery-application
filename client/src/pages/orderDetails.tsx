@@ -121,7 +121,7 @@ const RiderCard = ({ order }: { order: IOrder }) => {
             <div className="bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 shadow-sm">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Your Rider</p>
                   <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center shrink-0 ring-2 ring-primary/20">
+                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary/20 to-primary/40 flex items-center justify-center shrink-0 ring-2 ring-primary/20">
                               <Bike size={20} className="text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -619,7 +619,7 @@ const OrderDetails = () => {
                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Delivery Address</p>
                         <div className="flex items-start gap-2 text-sm text-gray-500">
                               <MapPin size={15} className="mt-0.5 shrink-0 text-gray-400" />
-                              <span className="break-words">{order.deliveryAddress.formatedAddress}</span>
+                              <span className="wrap-break-word">{order.deliveryAddress.formatedAddress}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                               <Phone size={15} className="shrink-0 text-gray-400" />
@@ -671,11 +671,11 @@ const OrderDetails = () => {
                         <button
                               onClick={handleReorder}
                               disabled={isReordering}
-                              className="group w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-semibold text-white bg-gradient-to-r from-primary to-red-600 shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+                              className="group w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-semibold text-white bg-linear-to-r from-primary to-red-600 shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
                         >
                               {isReordering
                                     ? <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                                    : <RotateCcw size={18} className="group-hover:rotate-[-45deg] transition-transform duration-300" />
+                                    : <RotateCcw size={18} className="group-hover:-rotate-45 transition-transform duration-300" />
                               }
                               {isReordering ? "Adding to Cart..." : "Reorder"}
                         </button>
