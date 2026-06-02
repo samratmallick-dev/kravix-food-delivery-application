@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { UtensilsCrossed } from "lucide-react";
 import { useAppData } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { authBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import { storage } from "../utils/secureStorage";
+import Logo from "../components/navbar/logo";
 
 type Role = "customer" | "rider" | "seller" | null;
 const SelectRole = () => {
@@ -44,11 +44,9 @@ const SelectRole = () => {
       return (
             <div className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
                   <div className="max-w-md w-full space-y-6">
-                        <h1 className="text-center w-full flex items-center justify-center">
-                              <span className="text-3xl font-extrabold text-gradient flex items-center gap-2">
-                                    <UtensilsCrossed className="w-7 h-7 text-primary" /><span>Kravix</span>
-                              </span>
-                        </h1>
+                        <div className="flex justify-center">
+                              <Logo auth />
+                        </div>
                         <div className="w-full space-y-6">
                               <h1 className="text-center text-xl font-bold text-gray-500">
                                     Select Your Role
@@ -59,14 +57,14 @@ const SelectRole = () => {
                                                 key={item}
                                                 onClick={() => setRole(item)}
                                                 className={`w-full flex items-center justify-between p-4 border rounded-lg transition-all cursor-pointer ${role === item
-                                                      ? "border-blue-500 bg-blue-50"
+                                                      ? "border-primary bg-red-50"
                                                       : "border-gray-200 hover:border-gray-300"
                                                       }`}
                                           >
                                                 <span className="font-medium capitalize">Continue as {item}</span>
                                                 <div className="w-5 h-5 rounded-full border flex items-center justify-center">
                                                       {role === item && (
-                                                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                                            <div className="w-2 h-2 rounded-full bg-primary"></div>
                                                       )}
                                                 </div>
                                           </button>
@@ -75,10 +73,11 @@ const SelectRole = () => {
                               <button
                                     onClick={addRole}
                                     disabled={!role}
-                                    className={`w-full rounded-xl px-4 py-3 text-sm font-semibold transition
-                                          ${role ? "bg-blue-500 text-white hover:bg-blue-600 cursor-pointer"
-                                                : "bg-gray-100 text-gray-400 cursor-not-allowed"}`
-                                    }
+                                    className={`w-full rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                                          role
+                                                ? "bg-primary text-white hover:bg-red-700 cursor-pointer"
+                                                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    }`}
                               >
                                     Continue
                               </button>

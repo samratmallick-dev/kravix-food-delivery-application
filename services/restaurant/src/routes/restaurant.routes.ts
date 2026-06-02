@@ -19,7 +19,7 @@ const router = Router();
 router.route("/me").get(isAuthenticated, isSeller, fetchMyRestaurant);
 router
       .route("/me")
-      .patch(isAuthenticated, isSeller, checkBlocked, updateRestaurant);
+      .patch(isAuthenticated, isSeller, checkBlocked, upload, updateRestaurant);
 router
       .route("/me/status")
       .patch(isAuthenticated, isSeller, checkBlocked, updateRestaurantStatus);

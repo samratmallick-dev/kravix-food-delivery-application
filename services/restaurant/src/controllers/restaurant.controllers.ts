@@ -278,14 +278,39 @@ export const updateRestaurant = TryCatch(
             }
 
             const { name, description } = req.body;
+            const updates: { name?: string; description?: string; image?: string } = {};
+            if (name) updates.name = name;
+            if (description !== undefined) updates.description = description;
 
-            const updateRestaurant = await Restaurant.findOneAndUpdate(
+            const file = req.file;
+            if (file) {
+                  const fileBuffer = getBuffer(file);
+                  if (!fileBuffer) {
+                        return res.status(500).json({
+                              message: "Failed to create file buffer.",
+                              success: false,
+                              error: true,
+                        });
+                  }
+                  const { data: uploadResult } = await axios.post(
+                        `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+                        { image: fileBuffer },
+                        {
+                              headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
+                              maxContentLength: Infinity,
+                              maxBodyLength: Infinity,
+                        },
+                  );
+                  updates.image = uploadResult.url;
+            }
+
+            const updatedRestaurant = await Restaurant.findOneAndUpdate(
                   { ownerId: user._id },
-                  { name, description },
+                  updates,
                   { new: true },
             );
 
-            if (!updateRestaurant) {
+            if (!updatedRestaurant) {
                   return res.status(404).json({
                         message: "Failed to update restaurant",
                         success: false,
@@ -297,7 +322,7 @@ export const updateRestaurant = TryCatch(
                   message: "Restaurant updated successfully",
                   success: true,
                   error: false,
-                  data: updateRestaurant,
+                  data: updatedRestaurant,
             });
       },
 );

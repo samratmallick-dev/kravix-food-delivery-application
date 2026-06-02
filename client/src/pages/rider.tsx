@@ -7,7 +7,7 @@ import { riderBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import {
       ImagePlus, Loader2, Phone, MapPin, CreditCard, FileText,
-      Bike, VolumeX, History, LogOut, TrendingUp
+      Bike, VolumeX, History, LogOut, TrendingUp, Pencil, X
 } from "lucide-react";
 import { RIDER_ORDER_TRANSITIONS } from "../utils/orderFlow";
 import audio from "../assets/rider_order_alert.mp3";
@@ -35,6 +35,15 @@ const RiderDashboard = () => {
       const [preview, setPreview] = useState<string | null>(null);
       const [submitting, setSubmitting] = useState(false);
       const [activeTab, setActiveTab] = useState<Tab>("orders");
+
+      const [editingProfile, setEditingProfile] = useState(false);
+      const [editPhone, setEditPhone] = useState("");
+      const [editAadhaar, setEditAadhaar] = useState("");
+      const [editLicense, setEditLicense] = useState("");
+      const [editImageFile, setEditImageFile] = useState<File | null>(null);
+      const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+      const [savingProfile, setSavingProfile] = useState(false);
+      const editFileInputRef = useRef<HTMLInputElement>(null);
 
       const [inCommingOrders, setInCommingOrders] = useState<string[]>([]);
       const [currentOrder, setCurrentOrder] = useState<IOrder | null>(null);
@@ -75,9 +84,12 @@ const RiderDashboard = () => {
       };
 
       useEffect(() => {
-            if (user?.role === "rider") fetchProfile();
-            else setLoading(false);
-      }, [user]);
+            if (!user?._id || user.role !== "rider") {
+                  setLoading(false);
+                  return;
+            }
+            fetchProfile();
+      }, [user?._id, user?.role]);
 
       useEffect(() => {
             if (socket && user?._id) socket.emit("join:rider", user._id);
@@ -138,11 +150,37 @@ const RiderDashboard = () => {
       }, [socket]);
 
       useEffect(() => {
-            if (user?.role === "rider") {
-                  fetchCurrentOrder();
-                  fetchDeliveryHistory();
+            if (!user?._id || user.role !== "rider") return;
+            fetchCurrentOrder();
+            fetchDeliveryHistory();
+      }, [user?._id, user?.role]);
+
+      const handleProfileUpdate = async () => {
+            const formData = new FormData();
+            if (editPhone) formData.append("phoneNumber", editPhone);
+            if (editAadhaar) formData.append("aadhaarNumber", editAadhaar);
+            if (editLicense) formData.append("drivingLicesce", editLicense);
+            if (editImageFile) formData.append("file", editImageFile);
+            if (!formData.has("phoneNumber") && !formData.has("aadhaarNumber") && !formData.has("drivingLicesce") && !editImageFile) {
+                  setEditingProfile(false);
+                  return;
             }
-      }, [user]);
+            setSavingProfile(true);
+            try {
+                  const { data } = await axios.patch(`${riderBaseUrl}/me`, formData, {
+                        headers: { Authorization: `Bearer ${storage.getToken()}` },
+                  });
+                  setProfile(data.data);
+                  toast.success(data.message || "Profile updated!");
+                  setEditingProfile(false);
+                  setEditImageFile(null);
+                  setEditImagePreview(null);
+            } catch (err: any) {
+                  toast.error(err?.response?.data?.message || "Failed to update profile");
+            } finally {
+                  setSavingProfile(false);
+            }
+      };
 
       const handleLogout = async () => {
             if (profile?.isAvailable) {
@@ -364,8 +402,27 @@ const RiderDashboard = () => {
                               >
                                     <LogOut size={14} /> Logout
                               </button>
-                              <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-white">
-                                    <img src={profile.picture} className="w-full h-full object-cover object-top" alt="rider" />
+                              <div className="relative">
+                                    <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-white">
+                                          <img src={editImagePreview ?? profile.picture} className="w-full h-full object-cover object-top" alt="rider" />
+                                    </div>
+                                    {editingProfile && (
+                                          <button
+                                                onClick={() => editFileInputRef.current?.click()}
+                                                className="absolute bottom-0 right-0 bg-white text-primary rounded-full p-1.5 shadow"
+                                          >
+                                                <ImagePlus size={16} />
+                                          </button>
+                                    )}
+                                    <input
+                                          ref={editFileInputRef}
+                                          type="file" accept="image/*" className="hidden"
+                                          onChange={(e) => {
+                                                const file = e.target.files?.[0] ?? null;
+                                                setEditImageFile(file);
+                                                setEditImagePreview(file ? URL.createObjectURL(file) : null);
+                                          }}
+                                    />
                               </div>
                               <div className="text-center">
                                     <h2 className="text-white text-xl font-bold">{user?.name}</h2>
@@ -374,9 +431,61 @@ const RiderDashboard = () => {
                                           {profile.isAvailable ? "Available" : "Unavailable"}
                                     </span>
                               </div>
+                              <button
+                                    onClick={() => {
+                                          if (editingProfile) {
+                                                setEditingProfile(false);
+                                                setEditPhone("");
+                                                setEditAadhaar("");
+                                                setEditLicense("");
+                                                setEditImageFile(null);
+                                                setEditImagePreview(null);
+                                          } else {
+                                                setEditPhone(profile.phoneNumber);
+                                                setEditAadhaar(profile.aadhaarNumber);
+                                                setEditLicense(profile.drivingLicesce);
+                                                setEditingProfile(true);
+                                          }
+                                    }}
+                                    className="flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition cursor-pointer"
+                              >
+                                    {editingProfile ? <><X size={14} /> Cancel</> : <><Pencil size={14} /> Edit Profile</>}
+                              </button>
                         </div>
 
                         <div className="px-6 py-5 space-y-3">
+                              {editingProfile && (
+                                    <div className="space-y-3 pb-3 border-b border-gray-100">
+                                          <div className="space-y-1">
+                                                <label className="text-xs font-medium text-gray-500">Phone Number</label>
+                                                <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 focus-within:border-primary">
+                                                      <Phone size={14} className="text-gray-400 shrink-0" />
+                                                      <input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="flex-1 outline-none text-sm text-gray-700 bg-transparent" placeholder="+91-9999999999" />
+                                                </div>
+                                          </div>
+                                          <div className="space-y-1">
+                                                <label className="text-xs font-medium text-gray-500">Aadhaar Number</label>
+                                                <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 focus-within:border-primary">
+                                                      <CreditCard size={14} className="text-gray-400 shrink-0" />
+                                                      <input value={editAadhaar} onChange={(e) => setEditAadhaar(e.target.value)} className="flex-1 outline-none text-sm text-gray-700 bg-transparent" placeholder="XXXX-XXXX-XXXX" />
+                                                </div>
+                                          </div>
+                                          <div className="space-y-1">
+                                                <label className="text-xs font-medium text-gray-500">Driving License</label>
+                                                <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 focus-within:border-primary">
+                                                      <FileText size={14} className="text-gray-400 shrink-0" />
+                                                      <input value={editLicense} onChange={(e) => setEditLicense(e.target.value)} className="flex-1 outline-none text-sm text-gray-700 bg-transparent" placeholder="WB-0420110012345" />
+                                                </div>
+                                          </div>
+                                          <button
+                                                onClick={handleProfileUpdate}
+                                                disabled={savingProfile}
+                                                className="w-full bg-primary hover:bg-red-700 disabled:opacity-60 text-white font-semibold py-2 rounded-xl transition flex items-center justify-center gap-2"
+                                          >
+                                                {savingProfile ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : "Save Changes"}
+                                          </button>
+                                    </div>
+                              )}
                               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                                     <Phone size={18} className="text-primary shrink-0" />
                                     <div>

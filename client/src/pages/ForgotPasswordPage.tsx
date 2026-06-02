@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { UtensilsCrossed } from "lucide-react";
+import Logo from "../components/navbar/logo";
 import { forgotPassword } from "../utils/auth.api";
 
 const ForgotPasswordPage = () => {
@@ -26,18 +26,15 @@ const ForgotPasswordPage = () => {
   return (
     <div className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
       <div className="max-w-md w-full space-y-6">
-        <h1 className="text-center w-full flex items-center justify-center">
-          <span className="text-3xl font-extrabold text-gradient flex items-center gap-2">
-            <UtensilsCrossed className="w-7 h-7 text-primary" />
-            <span>Kravix</span>
-          </span>
-        </h1>
+        <div className="flex justify-center">
+          <Logo auth />
+        </div>
         <p className="text-center text-sm text-gray-500">Reset your password</p>
 
         {success ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center space-y-3">
             <p className="text-green-700 font-medium">{success}</p>
-            <Link to="/login" className="text-sm text-orange-500 hover:underline">
+            <Link to="/login" className="text-sm text-primary hover:underline">
               Back to Sign In
             </Link>
           </div>
@@ -52,7 +49,7 @@ const ForgotPasswordPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="you@example.com"
               />
             </div>
@@ -62,13 +59,13 @@ const ForgotPasswordPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 text-white py-2 rounded-md text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full bg-primary text-white py-2 rounded-md text-sm font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? "Sending..." : "Send Reset Link"}
             </button>
 
             <p className="text-center text-sm">
-              <Link to="/login" className="text-orange-500 hover:underline">
+              <Link to="/login" className="text-primary hover:underline">
                 Back to Sign In
               </Link>
             </p>

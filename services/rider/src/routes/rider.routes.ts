@@ -15,12 +15,14 @@ import {
       toggleRiderAvailability,
       updateLiveLocation,
       updateOrderStatus,
+      updateRiderProfile,
 } from "../controllers/rider.controllers.js";
 
 const router = Router();
 
 router.route("/").post(isAuthenticated, upload, addRiderProfile);
 router.route("/me").get(isAuthenticated, fetchMyProfile);
+router.route("/me").patch(isAuthenticated, checkBlocked, upload, updateRiderProfile);
 router
       .route("/me/availability")
       .patch(isAuthenticated, checkBlocked, toggleRiderAvailability);

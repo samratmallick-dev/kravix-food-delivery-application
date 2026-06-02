@@ -1,8 +1,11 @@
 import { authBaseUrl } from "../components/common/constant";
 
-async function request<T>(path: string, options: RequestInit): Promise<T> {
+async function request<T>(path: string, options: RequestInit, token?: string): Promise<T> {
   const res = await fetch(`${authBaseUrl}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...options,
   });
   const data = (await res.json()) as T & { message?: string };
@@ -39,6 +42,25 @@ export interface LoginResponse {
 export interface MessageResponse {
   message: string;
 }
+
+export interface UpdateProfilePayload {
+  name?: string;
+  image?: string;
+}
+
+export interface UpdateProfileResponse {
+  token: string;
+  data: {
+    _id: string;
+    name: string;
+    email: string;
+    image: string;
+    role: string | null;
+  };
+}
+
+export const updateProfile = (payload: UpdateProfilePayload, token: string): Promise<UpdateProfileResponse> =>
+  request<UpdateProfileResponse>("/me", { method: "PATCH", body: JSON.stringify(payload) }, token);
 
 export const registerWithEmail = (payload: RegisterPayload): Promise<MessageResponse> =>
   request<MessageResponse>("/register", { method: "POST", body: JSON.stringify(payload) });

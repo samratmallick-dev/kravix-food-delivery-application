@@ -212,6 +212,62 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
   });
 });
 
+export const updateUserProfile = TryCatch(
+  async (req: AuthenticatedRequest, res) => {
+    const user = req.user;
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized user", error: true });
+    }
+
+    const { name, image } = req.body as { name?: string; image?: string };
+
+    if (
+      name !== undefined &&
+      (name.trim().length < 2 || name.trim().length > 50)
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Name must be between 2 and 50 characters.",
+          error: true,
+        });
+    }
+
+    const updates: { name?: string; image?: string } = {};
+    if (name !== undefined) updates.name = name.trim();
+    if (image !== undefined) updates.image = image;
+
+    const updatedUser = await User.findByIdAndUpdate(user._id, updates, {
+      returnDocument: "after",
+    });
+
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found", error: true });
+    }
+
+    const token = tokengenerator({
+      _id: updatedUser._id.toString(),
+      name: updatedUser.name,
+      email: updatedUser.email,
+      image: updatedUser.image,
+      role: updatedUser.role ?? null,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      error: false,
+      token,
+      data: updatedUser,
+    });
+  },
+);
+
 export const getUserProfile = TryCatch(
   async (req: AuthenticatedRequest, res) => {
     const user = req.user;
@@ -319,12 +375,10 @@ export const loginWithEmail = TryCatch(async (req: Request, res: Response) => {
   }
 
   if (!user.isEmailVerified) {
-    return res
-      .status(403)
-      .json({
-        message: "Please verify your email before logging in.",
-        code: "EMAIL_NOT_VERIFIED",
-      });
+    return res.status(403).json({
+      message: "Please verify your email before logging in.",
+      code: "EMAIL_NOT_VERIFIED",
+    });
   }
 
   const passwordMatch = await bcrypt.compare(

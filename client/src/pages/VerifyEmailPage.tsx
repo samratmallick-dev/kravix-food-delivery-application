@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { CheckCircle, XCircle, Loader2, UtensilsCrossed } from "lucide-react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import Logo from "../components/navbar/logo";
 import { verifyEmail, resendVerificationEmail } from "../utils/auth.api";
 
 const VerifyEmailPage = () => {
@@ -43,12 +44,9 @@ const VerifyEmailPage = () => {
   return (
     <div className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
       <div className="max-w-md w-full space-y-6 text-center">
-        <h1 className="flex items-center justify-center">
-          <span className="text-3xl font-extrabold text-gradient flex items-center gap-2">
-            <UtensilsCrossed className="w-7 h-7 text-primary" />
-            <span>Kravix</span>
-          </span>
-        </h1>
+        <div className="flex justify-center">
+          <Logo auth />
+        </div>
 
         {status === "loading" && (
           <div className="space-y-3">
@@ -63,7 +61,7 @@ const VerifyEmailPage = () => {
             <p className="text-gray-700 font-medium">{message}</p>
             <Link
               to="/login"
-              className="inline-block bg-orange-500 text-white px-6 py-2 rounded-md text-sm font-semibold hover:bg-orange-600"
+              className="inline-block bg-primary text-white px-6 py-2 rounded-md text-sm font-semibold hover:bg-red-700"
             >
               Go to Sign In
             </Link>
@@ -84,14 +82,14 @@ const VerifyEmailPage = () => {
                 onChange={(e) => setResendEmail(e.target.value)}
                 required
                 placeholder="your@email.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {resendMsg && (
                 <p className="text-sm text-green-600">{resendMsg}</p>
               )}
               <button
                 type="submit"
-                className="w-full bg-orange-500 text-white py-2 rounded-md text-sm font-semibold hover:bg-orange-600 cursor-pointer"
+                className="w-full bg-primary text-white py-2 rounded-md text-sm font-semibold hover:bg-red-700 cursor-pointer"
               >
                 Resend verification email
               </button>

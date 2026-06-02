@@ -5,6 +5,87 @@ import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { Rider } from "../model/Rider.js";
 
+export const updateRiderProfile = TryCatch(
+      async (req: AuthenticatedRequest, res: Response) => {
+            const user = req.user;
+            if (!user) {
+                  return res.status(401).json({
+                        success: false,
+                        message: "User not authenticated",
+                        error: true,
+                  });
+            }
+            if (user.role !== "rider") {
+                  return res.status(403).json({
+                        success: false,
+                        message: "Access denied. Riders only.",
+                        error: true,
+                  });
+            }
+            const riderProfile = await Rider.findOne({ userId: user._id });
+            if (!riderProfile) {
+                  return res.status(404).json({
+                        success: false,
+                        message: "Rider profile not found",
+                        error: true,
+                  });
+            }
+
+            const { phoneNumber, aadhaarNumber, drivingLicesce } = req.body;
+            const updates: {
+                  picture?: string;
+                  phoneNumber?: string;
+                  aadhaarNumber?: string;
+                  drivingLicesce?: string;
+            } = {};
+
+            if (phoneNumber) updates.phoneNumber = phoneNumber;
+            if (aadhaarNumber) updates.aadhaarNumber = aadhaarNumber;
+            if (drivingLicesce) updates.drivingLicesce = drivingLicesce;
+
+            const file = req.file;
+            if (file) {
+                  const fileBuffer = getBuffer(file);
+                  if (!fileBuffer)
+                        return res.status(500).json({
+                              success: false,
+                              message: "Error processing the image file",
+                              error: true,
+                        });
+
+                  const { data: uploadResult } = await axios.post(
+                        `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+                        { image: fileBuffer },
+                        {
+                              headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
+                              maxContentLength: Infinity,
+                              maxBodyLength: Infinity,
+                        },
+                  );
+                  updates.picture = uploadResult.url;
+            }
+
+            if (Object.keys(updates).length === 0) {
+                  return res
+                        .status(400)
+                        .json({ success: false, message: "No fields to update", error: true });
+            }
+
+            const updated = await Rider.findOneAndUpdate(
+                  { userId: user._id },
+                  updates,
+                  { new: true },
+            );
+
+            return res.status(200).json({
+                  success: true,
+                  message: "Rider profile updated successfully",
+                  error: false,
+                  data: updated,
+            });
+      },
+);
+
 export const addRiderProfile = TryCatch(
       async (req: AuthenticatedRequest, res: Response) => {
             const user = req.user;

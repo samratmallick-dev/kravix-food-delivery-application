@@ -1,4 +1,5 @@
-import { Eye, EyeOff, UtensilsCrossed } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import Logo from "../components/navbar/logo";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link } from "react-router-dom";
@@ -119,12 +120,9 @@ const RegisterPage = () => {
   return (
     <div className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
       <div className="max-w-md w-full space-y-6 py-8">
-        <h1 className="text-center w-full flex items-center justify-center">
-          <span className="text-3xl font-extrabold text-gradient flex items-center gap-2">
-            <UtensilsCrossed className="w-7 h-7 text-primary" />
-            <span>Kravix</span>
-          </span>
-        </h1>
+        <div className="flex justify-center">
+          <Logo auth />
+        </div>
         <p className="text-center text-sm text-gray-500">Create your account</p>
 
         {success ? (
@@ -140,7 +138,7 @@ const RegisterPage = () => {
             ) : (
               <button
                 onClick={handleResend}
-                className="text-sm text-orange-500 underline cursor-pointer"
+                className="text-sm text-primary underline cursor-pointer"
               >
                 Resend email
               </button>
@@ -155,7 +153,7 @@ const RegisterPage = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="John Doe"
               />
             </div>
@@ -166,7 +164,7 @@ const RegisterPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="you@example.com"
               />
             </div>
@@ -178,7 +176,7 @@ const RegisterPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 pr-10"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary pr-10"
                   placeholder="••••••••"
                 />
                 <button
@@ -217,7 +215,7 @@ const RegisterPage = () => {
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 pr-10"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary pr-10"
                   placeholder="••••••••"
                 />
                 <button
@@ -235,7 +233,7 @@ const RegisterPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 text-white py-2 rounded-md text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full bg-primary text-white py-2 rounded-md text-sm font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>
@@ -251,15 +249,15 @@ const RegisterPage = () => {
         <button
           onClick={() => { if (!googleLoading) googleLogin(); }}
           disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-primary/30 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
         >
           <FcGoogle size={20} />
-          {googleLoading ? "Signing in..." : "Continue with Google"}
+          {googleLoading ? "Signing up..." : "Sign up with Google"}
         </button>
 
         <p className="text-center text-sm text-gray-500">
           Already have an account?{" "}
-          <Link to="/login" className="text-orange-500 font-medium hover:underline">
+          <Link to="/login" className="text-primary font-medium hover:underline">
             Sign In
           </Link>
         </p>

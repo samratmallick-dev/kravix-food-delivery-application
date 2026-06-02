@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Eye, EyeOff, UtensilsCrossed } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import Logo from "../components/navbar/logo";
 import { resetPassword } from "../utils/auth.api";
 
 function getStrength(pw: string): { label: string; color: string; width: string } {
@@ -11,8 +12,8 @@ function getStrength(pw: string): { label: string; color: string; width: string 
   if (/\d/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
   if (score <= 1) return { label: "Weak", color: "bg-red-400", width: "w-1/4" };
-  if (score === 2) return { label: "Fair", color: "bg-yellow-400", width: "w-2/4" };
-  if (score === 3) return { label: "Good", color: "bg-blue-400", width: "w-3/4" };
+  if (score === 2) return { label: "Fair", color: "bg-orange-400", width: "w-2/4" };
+  if (score === 3) return { label: "Good", color: "bg-primary", width: "w-3/4" };
   return { label: "Strong", color: "bg-green-500", width: "w-full" };
 }
 
@@ -58,18 +59,15 @@ const ResetPasswordPage = () => {
   return (
     <div className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
       <div className="max-w-md w-full space-y-6">
-        <h1 className="text-center w-full flex items-center justify-center">
-          <span className="text-3xl font-extrabold text-gradient flex items-center gap-2">
-            <UtensilsCrossed className="w-7 h-7 text-primary" />
-            <span>Kravix</span>
-          </span>
-        </h1>
+        <div className="flex justify-center">
+          <Logo auth />
+        </div>
         <p className="text-center text-sm text-gray-500">Choose a new password</p>
 
         {success ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center space-y-3">
             <p className="text-green-700 font-medium">{success}</p>
-            <Link to="/login" className="text-sm text-orange-500 hover:underline">
+            <Link to="/login" className="text-sm text-primary hover:underline">
               Sign In
             </Link>
           </div>
@@ -83,7 +81,7 @@ const ResetPasswordPage = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 pr-10"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary pr-10"
                   placeholder="••••••••"
                 />
                 <button
@@ -113,7 +111,7 @@ const ResetPasswordPage = () => {
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 pr-10"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary pr-10"
                   placeholder="••••••••"
                 />
                 <button
@@ -130,7 +128,7 @@ const ResetPasswordPage = () => {
               <div className="text-sm text-red-600 space-y-1">
                 <p>{error}</p>
                 {error.toLowerCase().includes("invalid") || error.toLowerCase().includes("expired") ? (
-                  <Link to="/forgot-password" className="text-orange-500 underline">
+                  <Link to="/forgot-password" className="text-primary underline">
                     Request a new reset link
                   </Link>
                 ) : null}
@@ -140,7 +138,7 @@ const ResetPasswordPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 text-white py-2 rounded-md text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full bg-primary text-white py-2 rounded-md text-sm font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? "Resetting..." : "Reset Password"}
             </button>

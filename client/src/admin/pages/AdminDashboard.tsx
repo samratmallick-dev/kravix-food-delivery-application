@@ -6,6 +6,7 @@ import StatCard from "../components/StatCard";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import toast from "react-hot-toast";
 import type { IOrder } from "../../types/types";
+import { storage } from "../../utils/secureStorage";
 
 interface DashboardData {
       users: Record<string, number>;
@@ -61,6 +62,7 @@ const AdminDashboard = () => {
       }, [api]);
 
       useEffect(() => {
+            if (!storage.getAdminToken()) return;
             fetchStats();
             const interval = setInterval(fetchStats, 60_000);
             return () => clearInterval(interval);

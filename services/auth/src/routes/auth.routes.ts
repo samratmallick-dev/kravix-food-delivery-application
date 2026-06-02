@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   addUserRole,
   getUserProfile,
+  updateUserProfile,
   loginController,
   registerWithEmail,
   loginWithEmail,
@@ -16,7 +17,7 @@ const router = Router();
 
 router.route("/sessions").post(loginController);
 router.route("/me/role").patch(isAuthenticated, addUserRole);
-router.route("/me").get(isAuthenticated, getUserProfile);
+router.route("/me").get(isAuthenticated, getUserProfile).patch(isAuthenticated, updateUserProfile);
 
 router.route("/register").post(registerWithEmail);
 router.route("/login").post(loginWithEmail);

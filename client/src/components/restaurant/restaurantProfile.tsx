@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { IRestaurant } from "../../types/types";
 import axios from "axios";
 import { restaurantBaseUrl } from "../common/constant";
 import toast from "react-hot-toast";
 import { BiMapPin } from "react-icons/bi";
-import { Edit, SaveAll } from "lucide-react";
+import { Edit, SaveAll, ImagePlus } from "lucide-react";
 import { useAppData } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import { storage } from "../../utils/secureStorage";
@@ -23,6 +23,9 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
       const [description, setDescription] = useState(restaurant.description);
       const [isOpen, setIsOpen] = useState(restaurant.isOpen);
       const [loading, setLoading] = useState(false);
+      const [imageFile, setImageFile] = useState<File | null>(null);
+      const [imagePreview, setImagePreview] = useState<string | null>(null);
+      const fileInputRef = useRef<HTMLInputElement>(null);
 
       useEffect(() => {
             setIsOpen(restaurant.isOpen);
@@ -50,14 +53,21 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
       const saveChanges = async () => {
             try {
                   setLoading(true);
-                  const { data } = await axios.patch(`${restaurantBaseUrl}/me`, { name, description }, {
+                  const formData = new FormData();
+                  formData.append("name", name);
+                  formData.append("description", description);
+                  if (imageFile) formData.append("file", imageFile);
+                  const { data } = await axios.patch(`${restaurantBaseUrl}/me`, formData, {
                         headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
+                              Authorization: `Bearer ${storage.getToken()}`,
+                              "Content-Type": "multipart/form-data",
                         },
                         withCredentials: true
                   });
                   onUpdate(data.data);
                   toast.success(data.message);
+                  setImageFile(null);
+                  setImagePreview(null);
                   fetchMyRestaurant();
             } catch (error: any) {
                   console.log(error);
@@ -88,10 +98,33 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
             <div className="w-full bg-white rounded-b-2xl shadow-md overflow-hidden">
                   <div className="relative">
                         <div className={`h-56 bg-linear-to-r from-primary/20 to-orange-100 overflow-hidden ${!restaurant.isOpen && "grayscale brightness-75 opacity-80"}`}>
-                              {restaurant.image && (
-                                    <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-fill object-center" />
+                              {(imagePreview || restaurant.image) && (
+                                    <img src={imagePreview ?? restaurant.image} alt={restaurant.name} className="w-full h-full object-fill object-center" />
                               )}
                         </div>
+                        {editMode && (
+                              <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition cursor-pointer"
+                              >
+                                    <div className="flex flex-col items-center gap-1 text-white">
+                                          <ImagePlus size={28} />
+                                          <span className="text-xs font-medium">Change Image</span>
+                                    </div>
+                              </button>
+                        )}
+                        <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                    const file = e.target.files?.[0] ?? null;
+                                    setImageFile(file);
+                                    setImagePreview(file ? URL.createObjectURL(file) : null);
+                              }}
+                        />
                         <span className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full shadow ${
                               isOpen ? "bg-green-500 text-white" : "bg-red-500 text-white"
                         }`}>
