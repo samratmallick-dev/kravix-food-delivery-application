@@ -9,7 +9,7 @@ export interface IUser {
       image: string;
       role: string;
       restaurantId?: string;
-};
+}
 
 export interface AuthenticatedRequest extends Request {
       user?: IUser | null;
@@ -18,7 +18,7 @@ export interface AuthenticatedRequest extends Request {
 export const isAuthenticated = async (
       req: AuthenticatedRequest,
       res: Response,
-      next: NextFunction
+      next: NextFunction,
 ): Promise<void> => {
       if (req.method === "OPTIONS") return next();
 
@@ -29,7 +29,7 @@ export const isAuthenticated = async (
                   res.status(401).json({
                         message: "Unauthorized - No Auth Token in Headers",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
@@ -40,7 +40,7 @@ export const isAuthenticated = async (
                   res.status(401).json({
                         message: "Unauthorized - Missing Auth Token",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
@@ -51,21 +51,18 @@ export const isAuthenticated = async (
                   res.status(500).json({
                         message: "Server configuration error",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
 
-            const decodedToken = jwt.verify(
-                  token,
-                  secretKey
-            ) as JwtPayload;
+            const decodedToken = jwt.verify(token, secretKey) as JwtPayload;
 
             if (!decodedToken || !decodedToken._id) {
                   res.status(401).json({
                         message: "Invalid Token",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
@@ -75,21 +72,27 @@ export const isAuthenticated = async (
             next();
       } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
-                  res.status(401).json({ message: "Token expired", success: false, error: true });
+                  res
+                        .status(401)
+                        .json({ message: "Token expired", success: false, error: true });
                   return;
             }
             if (error instanceof jwt.JsonWebTokenError) {
-                  res.status(401).json({ message: "Invalid token", success: false, error: true });
+                  res
+                        .status(401)
+                        .json({ message: "Invalid token", success: false, error: true });
                   return;
             }
-            res.status(500).json({ message: "Internal Server error", success: false, error: true });
+            res
+                  .status(500)
+                  .json({ message: "Internal Server error", success: false, error: true });
       }
 };
 
 export const isSeller = async (
       req: AuthenticatedRequest,
       res: Response,
-      next: NextFunction
+      next: NextFunction,
 ): Promise<void> => {
       if (req.method === "OPTIONS") return next();
 
@@ -99,7 +102,7 @@ export const isSeller = async (
             res.status(403).json({
                   message: "Forbidden - Seller access only",
                   success: false,
-                  error: true
+                  error: true,
             });
             return;
       }
@@ -109,25 +112,44 @@ export const isSeller = async (
 export const checkBlocked = async (
       req: AuthenticatedRequest,
       res: Response,
-      next: NextFunction
+      next: NextFunction,
 ): Promise<void> => {
       const userId = req.user?._id;
-      if (!userId) { next(); return; }
+      if (!userId) {
+            next();
+            return;
+      }
 
-      const dbUser = await User.findById(userId).select("isBlocked blockedUntil").lean();
-      if (!dbUser) { next(); return; }
+      const dbUser = await User.findById(userId)
+            .select("isBlocked blockedUntil")
+            .lean();
+      if (!dbUser) {
+            next();
+            return;
+      }
 
-      if (dbUser.isBlocked && dbUser.blockedUntil && new Date(dbUser.blockedUntil) > new Date()) {
+      if (
+            dbUser.isBlocked &&
+            dbUser.blockedUntil &&
+            new Date(dbUser.blockedUntil) > new Date()
+      ) {
             res.status(403).json({
                   message: "Your account has been blocked. Access restricted.",
                   success: false,
-                  error: true
+                  error: true,
             });
             return;
       }
 
-      if (dbUser.isBlocked && dbUser.blockedUntil && new Date(dbUser.blockedUntil) <= new Date()) {
-            await User.findByIdAndUpdate(userId, { isBlocked: false, blockedUntil: null });
+      if (
+            dbUser.isBlocked &&
+            dbUser.blockedUntil &&
+            new Date(dbUser.blockedUntil) <= new Date()
+      ) {
+            await User.findByIdAndUpdate(userId, {
+                  isBlocked: false,
+                  blockedUntil: null,
+            });
       }
 
       next();

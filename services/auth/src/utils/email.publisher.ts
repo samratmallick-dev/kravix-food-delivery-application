@@ -13,17 +13,25 @@ function publish(job: EmailJob): void {
     channel.sendToQueue(
       process.env.EMAIL_QUEUE!,
       Buffer.from(JSON.stringify(job)),
-      { persistent: true }
+      { persistent: true },
     );
   } catch (err) {
     console.error(`[Auth] ❌ Failed to publish ${job.type} email job:`, err);
   }
 }
 
-export const publishVerificationEmail = (to: string, name: string, token: string): void => {
+export const publishVerificationEmail = (
+  to: string,
+  name: string,
+  token: string,
+): void => {
   publish({ type: "VERIFICATION", to, name, token });
 };
 
-export const publishPasswordResetEmail = (to: string, name: string, token: string): void => {
+export const publishPasswordResetEmail = (
+  to: string,
+  name: string,
+  token: string,
+): void => {
   publish({ type: "PASSWORD_RESET", to, name, token });
 };

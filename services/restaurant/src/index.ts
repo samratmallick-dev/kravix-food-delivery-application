@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { app } from './app.js';
+import { app } from "./app.js";
 import ConnectDb from "./config/db/db.js";
 import { connectRabbitMQ } from "./config/rabbitmq.js";
 import { startPayment } from "./config/paymentConsumer.js";
@@ -13,7 +13,9 @@ const start = async () => {
             await startPayment();
 
             const server = app.listen(PORT, () => {
-                  console.log(`✅ [Restaurant Service] Running at http://localhost:${PORT}`);
+                  console.log(
+                        `✅ [Restaurant Service] Running at http://localhost:${PORT}`,
+                  );
             });
 
             server.on("error", (err) => {
@@ -30,7 +32,6 @@ const start = async () => {
                   console.error("[Restaurant Service] Uncaught exception:", err);
                   process.exit(1);
             });
-
       } catch (err) {
             console.error("[Restaurant Service] Startup failed:", err);
             process.exit(1);

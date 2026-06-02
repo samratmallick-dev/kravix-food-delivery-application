@@ -3,14 +3,14 @@ import { google } from "googleapis";
 const oauth2Client = new google.auth.OAuth2(
   process.env.GMAIL_CLIENT_ID,
   process.env.GMAIL_CLIENT_SECRET,
-  process.env.GMAIL_REDIRECT_URI
+  process.env.GMAIL_REDIRECT_URI,
 );
 
 const enabled = Boolean(
   process.env.GMAIL_CLIENT_ID &&
   process.env.GMAIL_CLIENT_SECRET &&
   process.env.GMAIL_REFRESH_TOKEN &&
-  process.env.EMAIL_FROM_ADDRESS
+  process.env.EMAIL_FROM_ADDRESS,
 );
 
 if (enabled) {
@@ -19,7 +19,12 @@ if (enabled) {
   console.warn("⚠️ Gmail API email service disabled (missing env vars)");
 }
 
-function buildRawMessage(to: string, subject: string, html: string, text: string): string {
+function buildRawMessage(
+  to: string,
+  subject: string,
+  html: string,
+  text: string,
+): string {
   const boundary = "kravix_boundary_001";
   const raw = [
     `From: ${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
@@ -44,17 +49,29 @@ function buildRawMessage(to: string, subject: string, html: string, text: string
   return Buffer.from(raw).toString("base64url");
 }
 
-async function sendEmail(to: string, subject: string, html: string, text: string): Promise<void> {
-  if (!enabled) throw new Error("Email service disabled — check Gmail env vars");
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  text: string,
+): Promise<void> {
+  if (!enabled)
+    throw new Error("Email service disabled — check Gmail env vars");
 
-  oauth2Client.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN ?? null });
+  oauth2Client.setCredentials({
+    refresh_token: process.env.GMAIL_REFRESH_TOKEN ?? null,
+  });
   const gmail = google.gmail({ version: "v1", auth: oauth2Client });
   const raw = buildRawMessage(to, subject, html, text);
   await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
   console.log(`📧 Email sent to ${to}`);
 }
 
-export async function sendVerificationEmail(to: string, name: string, token: string): Promise<void> {
+export async function sendVerificationEmail(
+  to: string,
+  name: string,
+  token: string,
+): Promise<void> {
   const link = `${process.env.CLIENT_URL}/verify-email?token=${token}`;
   const subject = "Verify your Kravix account";
 
@@ -83,7 +100,11 @@ export async function sendVerificationEmail(to: string, name: string, token: str
   await sendEmail(to, subject, html, text);
 }
 
-export async function sendPasswordResetEmail(to: string, name: string, token: string): Promise<void> {
+export async function sendPasswordResetEmail(
+  to: string,
+  name: string,
+  token: string,
+): Promise<void> {
   const link = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
   const subject = "Reset your Kravix password";
 

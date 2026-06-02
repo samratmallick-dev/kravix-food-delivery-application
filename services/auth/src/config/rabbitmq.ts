@@ -23,7 +23,6 @@ export const connectRabbitMQ = async () => {
                   console.error("RabbitMQ connection closed in Auth Service — restarting");
                   process.exit(1);
             });
-
       } catch (error: unknown) {
             console.error("Error while connecting to RabbitMQ in Auth Service:", error);
             throw new Error(`RabbitMQ connection failed in Auth Service: ${error}`);

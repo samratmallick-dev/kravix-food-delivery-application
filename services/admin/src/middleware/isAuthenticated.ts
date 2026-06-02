@@ -1,1 +1,5 @@
-export { isAdminAuthenticated, AdminRequest, IAdminPayload } from "./isAdminAuthenticated.js";
+export {
+        isAdminAuthenticated,
+        AdminRequest,
+        IAdminPayload,
+} from "./isAdminAuthenticated.js";

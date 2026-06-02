@@ -31,7 +31,6 @@ const start = async () => {
                   console.error("[Rider Service] Uncaught exception:", err);
                   process.exit(1);
             });
-
       } catch (err) {
             console.error("[Rider Service] Startup failed:", err);
             process.exit(1);

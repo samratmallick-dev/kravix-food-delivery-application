@@ -27,7 +27,6 @@ const start = async () => {
                   console.error("[Auth Service] Uncaught exception:", err);
                   process.exit(1);
             });
-
       } catch (err) {
             console.error("[Auth Service] Startup failed:", err);
             process.exit(1);

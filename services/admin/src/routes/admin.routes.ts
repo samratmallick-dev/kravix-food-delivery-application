@@ -2,10 +2,28 @@ import { Router } from "express";
 import { isAdminAuthenticated } from "../middleware/isAdminAuthenticated.js";
 
 import { adminLogin } from "../controllers/admin.controllers.js";
-import { getAllUsers, getUserById, blockUser } from "../controllers/user.controllers.js";
-import { getAllRestaurants, getRestaurantById, verifyRestaurant, deleteRestaurant } from "../controllers/restaurant.controllers.js";
-import { getAllRiders, getRiderById, verifyRider, deleteRider } from "../controllers/rider.controllers.js";
-import { getAllOrders, getOrderById, cancelOrder } from "../controllers/order.controllers.js";
+import {
+        getAllUsers,
+        getUserById,
+        blockUser,
+} from "../controllers/user.controllers.js";
+import {
+        getAllRestaurants,
+        getRestaurantById,
+        verifyRestaurant,
+        deleteRestaurant,
+} from "../controllers/restaurant.controllers.js";
+import {
+        getAllRiders,
+        getRiderById,
+        verifyRider,
+        deleteRider,
+} from "../controllers/rider.controllers.js";
+import {
+        getAllOrders,
+        getOrderById,
+        cancelOrder,
+} from "../controllers/order.controllers.js";
 import { getDashboard } from "../controllers/dashboard.controllers.js";
 
 const router = Router();

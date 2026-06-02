@@ -14,7 +14,7 @@ export interface AdminRequest extends Request {
 export const isAdminAuthenticated = async (
       req: AdminRequest,
       res: Response,
-      next: NextFunction
+      next: NextFunction,
 ): Promise<void> => {
       if (req.method === "OPTIONS") return next();
 
@@ -25,7 +25,7 @@ export const isAdminAuthenticated = async (
                   res.status(401).json({
                         message: "Unauthorized - No Auth Token in Headers",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
@@ -36,7 +36,7 @@ export const isAdminAuthenticated = async (
                   res.status(401).json({
                         message: "Unauthorized - Missing Auth Token",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
@@ -47,7 +47,7 @@ export const isAdminAuthenticated = async (
                   res.status(500).json({
                         message: "Server configuration error",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
@@ -58,7 +58,7 @@ export const isAdminAuthenticated = async (
                   res.status(403).json({
                         message: "Forbidden - Admin access only",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
@@ -67,13 +67,19 @@ export const isAdminAuthenticated = async (
             next();
       } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
-                  res.status(401).json({ message: "Token expired", success: false, error: true });
+                  res
+                        .status(401)
+                        .json({ message: "Token expired", success: false, error: true });
                   return;
             }
             if (error instanceof jwt.JsonWebTokenError) {
-                  res.status(401).json({ message: "Invalid token", success: false, error: true });
+                  res
+                        .status(401)
+                        .json({ message: "Invalid token", success: false, error: true });
                   return;
             }
-            res.status(500).json({ message: "Internal Server error", success: false, error: true });
+            res
+                  .status(500)
+                  .json({ message: "Internal Server error", success: false, error: true });
       }
 };

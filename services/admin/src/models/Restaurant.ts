@@ -10,7 +10,7 @@ export interface IRestaurant extends Document {
       autoLocation: {
             type: "Point";
             coordinates: [number, number];
-            formattedAddress: string
+            formattedAddress: string;
       };
       isOpen: boolean;
       createdAt: Date;
@@ -22,45 +22,47 @@ const restaurantSchema = new Schema<IRestaurant>(
             name: {
                   type: String,
                   required: true,
-                  trim: true
+                  trim: true,
             },
             description: {
-                  type: String
+                  type: String,
             },
             image: {
                   type: String,
-                  required: true
+                  required: true,
             },
             ownerId: {
                   type: String,
-                  required: true
+                  required: true,
             },
             phone: {
                   type: Number,
-                  required: true
+                  required: true,
             },
             isVerified: {
                   type: Boolean,
                   required: true,
-                  default: false
+                  default: false,
             },
             autoLocation: {
                   type: {
                         type: String,
                         enum: ["Point"],
-                        required: true
+                        required: true,
                   },
                   coordinates: {
                         type: [Number],
-                        required: true
+                        required: true,
                   },
                   formattedAddress: String,
             },
             isOpen: { type: Boolean, default: false },
       },
-      { timestamps: true }
+      { timestamps: true },
 );
 
 restaurantSchema.index({ autoLocation: "2dsphere" });
 
-export const Restaurant = (mongoose.models["Restaurant"] as mongoose.Model<IRestaurant>) || mongoose.model<IRestaurant>("Restaurant", restaurantSchema);
+export const Restaurant =
+      (mongoose.models["Restaurant"] as mongoose.Model<IRestaurant>) ||
+      mongoose.model<IRestaurant>("Restaurant", restaurantSchema);

@@ -12,4 +12,6 @@ export interface PasswordResetEmailPayload {
   token: string;
 }
 
-export type EmailJobPayload = VerificationEmailPayload | PasswordResetEmailPayload;
+export type EmailJobPayload =
+  | VerificationEmailPayload
+  | PasswordResetEmailPayload;

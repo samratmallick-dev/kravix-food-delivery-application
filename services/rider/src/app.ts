@@ -1,5 +1,5 @@
-import express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
 import { corsOptions } from "./config/cors.js";
 
 const app = express();
@@ -8,7 +8,10 @@ app.use(cors(corsOptions));
 app.options("/{*path}", cors(corsOptions));
 app.use((req, res, next) => {
       res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
-      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.setHeader(
+            "Cache-Control",
+            "no-store, no-cache, must-revalidate, proxy-revalidate",
+      );
       res.setHeader("Pragma", "no-cache");
       res.setHeader("Expires", "0");
       res.setHeader("Surrogate-Control", "no-store");
@@ -20,8 +23,8 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 import riderRoutes from "./routes/rider.routes.js";
 app.use("/api/v1/riders", riderRoutes);
 
-app.get('/', (req, res) => {
-      res.send('Hello World!');
+app.get("/", (req, res) => {
+      res.send("Hello World!");
 });
 
 export { app };

@@ -5,9 +5,14 @@ export interface IUserBlocked extends Document {
       blockedUntil: Date | null;
 }
 
-const userSchema = new Schema<IUserBlocked>({
-      isBlocked: { type: Boolean, default: false },
-      blockedUntil: { type: Date, default: null },
-}, { strict: false, timestamps: true });
+const userSchema = new Schema<IUserBlocked>(
+      {
+            isBlocked: { type: Boolean, default: false },
+            blockedUntil: { type: Date, default: null },
+      },
+      { strict: false, timestamps: true },
+);
 
-export const User = (mongoose.models["User"] as mongoose.Model<IUserBlocked>) || mongoose.model<IUserBlocked>("User", userSchema);
+export const User =
+      (mongoose.models["User"] as mongoose.Model<IUserBlocked>) ||
+      mongoose.model<IUserBlocked>("User", userSchema);

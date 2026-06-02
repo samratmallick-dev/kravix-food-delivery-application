@@ -7,7 +7,7 @@ export const socketEmit = async (req: Request, res: Response) => {
                   return res.status(403).json({
                         success: false,
                         message: "Forbidden: Invalid or missing internal key",
-                        error: true
+                        error: true,
                   });
             }
 
@@ -17,7 +17,7 @@ export const socketEmit = async (req: Request, res: Response) => {
                   return res.status(400).json({
                         success: false,
                         message: "Event and room are required",
-                        error: true
+                        error: true,
                   });
             }
 
@@ -28,14 +28,13 @@ export const socketEmit = async (req: Request, res: Response) => {
             return res.status(200).json({
                   success: true,
                   message: "Event emitted successfully",
-                  error: false
+                  error: false,
             });
-
       } catch (error) {
             return res.status(500).json({
                   success: false,
                   message: error instanceof Error ? error.message : "Internal server error",
-                  error: true
+                  error: true,
             });
       }
 };

@@ -6,27 +6,21 @@ import {
       getRiderReviews,
       reportReview,
       getAdminReviews,
-      moderateReview
+      moderateReview,
 } from "../controllers/review.controllers.js";
 
 const router = Router();
 
-router.route("/")
-      .post(isAuthenticated, createReview);
+router.route("/").post(isAuthenticated, createReview);
 
-router.route("/restaurant/:id")
-      .get(getRestaurantReviews);
+router.route("/restaurant/:id").get(getRestaurantReviews);
 
-router.route("/rider/:id")
-      .get(getRiderReviews);
+router.route("/rider/:id").get(getRiderReviews);
 
-router.route("/report")
-      .post(isAuthenticated, reportReview);
+router.route("/report").post(isAuthenticated, reportReview);
 
-router.route("/admin")
-      .get(isAuthenticated, getAdminReviews);
+router.route("/admin").get(isAuthenticated, getAdminReviews);
 
-router.route("/admin/moderate/:id")
-      .put(isAuthenticated, moderateReview);
+router.route("/admin/moderate/:id").put(isAuthenticated, moderateReview);
 
 export default router;

@@ -27,370 +27,419 @@ const tokengenerator = (user: TokenPayload): string => {
       return jwt.sign(user, secretkey, { expiresIn: "15d" });
 };
 
-export const addRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
+export const addRestaurant = TryCatch(
+      async (req: AuthenticatedRequest, res: Response) => {
+            const user = req.user;
 
-      if (!user) {
-            return res.status(401).json({
-                  message: "User not authenticated",
-                  success: false,
-                  error: true
-            });
-      }
-
-      const existingRestaurantSerller = await Restaurant.findOne({
-            ownerId: user?._id
-      });
-
-      if (existingRestaurantSerller) {
-            return res.status(400).json({
-                  message: "Seller already has a restaurant",
-                  success: false,
-                  error: true
-            });
-      }
-
-      const { name, description, latitude, longitude, formattedAddress, phone } = req.body;
-
-      if ([name, latitude, longitude].some((field) => !field || field.trim() === "")) {
-            return res.status(400).json({
-                  message: "Name, latitude and longitude are required fields",
-                  success: false,
-                  error: true
-            });
-      }
-
-      const file = req.file;
-      if (!file) {
-            return res.status(400).json({
-                  message: "Image file is required",
-                  success: false,
-                  error: true
-            });
-      }
-
-      const fileBuffer = getBuffer(file);
-      if (!fileBuffer) {
-            return res.status(500).json({
-                  message: "Field to create file buffer.",
-                  success: false,
-                  error: true
-            });
-      }
-
-      const { data: updateResult } = await axios.post(`${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`, {
-            image: fileBuffer
-      }, {
-            headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity
-      });
-
-
-      const restaurant = await Restaurant.create({
-            name,
-            description,
-            image: updateResult.url,
-            ownerId: user._id,
-            phone,
-            autoLocation: {
-                  type: "Point",
-                  coordinates: [Number(longitude), Number(latitude)],
-                  formattedAddress
+            if (!user) {
+                  return res.status(401).json({
+                        message: "User not authenticated",
+                        success: false,
+                        error: true,
+                  });
             }
-      });
 
-      const token = tokengenerator({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            image: user.image,
-            role: user.role,
-            restaurantId: restaurant._id.toString()
-      });
-
-      return res.status(201).json({
-            message: "Restaurant created successfully",
-            success: true,
-            error: false,
-            data: restaurant,
-            token
-      });
-});
-
-export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
-      if (!user) {
-            return res.status(401).json({
-                  message: "User not authenticated",
-                  success: false,
-                  error: true
+            const existingRestaurantSerller = await Restaurant.findOne({
+                  ownerId: user?._id,
             });
-      }
-      const restaurant = await Restaurant.findOne({
-            ownerId: user._id
-      });
-      if (!restaurant) {
-            return res.status(404).json({
-                  message: "Restaurant not found for this seller",
-                  success: false,
-                  error: true
-            });
-      }
 
-      if (!req.user?.restaurantId) {
+            if (existingRestaurantSerller) {
+                  return res.status(400).json({
+                        message: "Seller already has a restaurant",
+                        success: false,
+                        error: true,
+                  });
+            }
+
+            const { name, description, latitude, longitude, formattedAddress, phone } =
+                  req.body;
+
+            if (
+                  [name, latitude, longitude].some((field) => !field || field.trim() === "")
+            ) {
+                  return res.status(400).json({
+                        message: "Name, latitude and longitude are required fields",
+                        success: false,
+                        error: true,
+                  });
+            }
+
+            const file = req.file;
+            if (!file) {
+                  return res.status(400).json({
+                        message: "Image file is required",
+                        success: false,
+                        error: true,
+                  });
+            }
+
+            const fileBuffer = getBuffer(file);
+            if (!fileBuffer) {
+                  return res.status(500).json({
+                        message: "Field to create file buffer.",
+                        success: false,
+                        error: true,
+                  });
+            }
+
+            const { data: updateResult } = await axios.post(
+                  `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+                  {
+                        image: fileBuffer,
+                  },
+                  {
+                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
+                        maxContentLength: Infinity,
+                        maxBodyLength: Infinity,
+                  },
+            );
+
+            const restaurant = await Restaurant.create({
+                  name,
+                  description,
+                  image: updateResult.url,
+                  ownerId: user._id,
+                  phone,
+                  autoLocation: {
+                        type: "Point",
+                        coordinates: [Number(longitude), Number(latitude)],
+                        formattedAddress,
+                  },
+            });
+
             const token = tokengenerator({
                   _id: user._id,
                   name: user.name,
                   email: user.email,
                   image: user.image,
                   role: user.role,
-                  restaurantId: restaurant._id.toString()
+                  restaurantId: restaurant._id.toString(),
             });
+
+            return res.status(201).json({
+                  message: "Restaurant created successfully",
+                  success: true,
+                  error: false,
+                  data: restaurant,
+                  token,
+            });
+      },
+);
+
+export const fetchMyRestaurant = TryCatch(
+      async (req: AuthenticatedRequest, res: Response) => {
+            const user = req.user;
+            if (!user) {
+                  return res.status(401).json({
+                        message: "User not authenticated",
+                        success: false,
+                        error: true,
+                  });
+            }
+            const restaurant = await Restaurant.findOne({
+                  ownerId: user._id,
+            });
+            if (!restaurant) {
+                  return res.status(404).json({
+                        message: "Restaurant not found for this seller",
+                        success: false,
+                        error: true,
+                  });
+            }
+
+            if (!req.user?.restaurantId) {
+                  const token = tokengenerator({
+                        _id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        image: user.image,
+                        role: user.role,
+                        restaurantId: restaurant._id.toString(),
+                  });
+
+                  return res.status(200).json({
+                        message: "Restaurant retrieved successfully",
+                        success: true,
+                        error: false,
+                        data: restaurant,
+                        token,
+                  });
+            }
 
             return res.status(200).json({
                   message: "Restaurant retrieved successfully",
                   success: true,
                   error: false,
                   data: restaurant,
-                  token
             });
-      }
+      },
+);
 
-      return res.status(200).json({
-            message: "Restaurant retrieved successfully",
-            success: true,
-            error: false,
-            data: restaurant
-      });
-});
-
-export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
-      if (!user) {
-            return res.status(401).json({
-                  message: "User not authenticated",
-                  success: false,
-                  error: true
-            });
-      }
-
-      const { status } = req.body;
-      if (typeof status !== "boolean") {
-            return res.status(400).json({
-                  message: "Status must be a boolean value",
-                  success: false,
-                  error: true
-            });
-      }
-
-      if (status === false) {
-            const restaurant = await Restaurant.findOne({ ownerId: user._id });
-            if (restaurant) {
-                  const activeOrder = await Order.findOne({
-                        restaurantId: restaurant._id.toString(),
-                        paymentStatus: "paid",
-                        status: { $nin: ["delivered", "cancelled"] }
+export const updateRestaurantStatus = TryCatch(
+      async (req: AuthenticatedRequest, res: Response) => {
+            const user = req.user;
+            if (!user) {
+                  return res.status(401).json({
+                        message: "User not authenticated",
+                        success: false,
+                        error: true,
                   });
-                  if (activeOrder) {
-                        return res.status(400).json({
-                              message: "Cannot close restaurant with active orders. Please complete all orders first.",
-                              success: false,
-                              error: true
+            }
+
+            const { status } = req.body;
+            if (typeof status !== "boolean") {
+                  return res.status(400).json({
+                        message: "Status must be a boolean value",
+                        success: false,
+                        error: true,
+                  });
+            }
+
+            if (status === false) {
+                  const restaurant = await Restaurant.findOne({ ownerId: user._id });
+                  if (restaurant) {
+                        const activeOrder = await Order.findOne({
+                              restaurantId: restaurant._id.toString(),
+                              paymentStatus: "paid",
+                              status: { $nin: ["delivered", "cancelled"] },
                         });
-                  }
-            }
-      }
-
-      const updateRestaurantStatus = await Restaurant.findOneAndUpdate(
-            { ownerId: user._id },
-            { isOpen: status },
-            { new: true }
-      );
-
-      if (!updateRestaurantStatus) {
-            return res.status(404).json({
-                  message: "Failed to update restaurant status",
-                  success: false,
-                  error: true
-            });
-      }
-      axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
-            {
-                  event: "restaurant:status",
-                  room: `Restaurant:${updateRestaurantStatus._id}`,
-                  payload: {
-                        isOpen: updateRestaurantStatus.isOpen,
-                        restaurantId: updateRestaurantStatus._id.toString()
-                  }
-            },
-            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
-      ).catch((err) => console.error("Socket emit failed:", err.message));
-
-      axios.post(
-            `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
-            {
-                  event: "admin:restaurant:status",
-                  room: "Admin",
-                  payload: {
-                        restaurantId: updateRestaurantStatus._id.toString(),
-                        isOpen: updateRestaurantStatus.isOpen
-                  }
-            },
-            { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } }
-      ).catch((err) => console.error("Admin socket emit failed:", err.message));
-
-      return res.status(200).json({
-            message: "Restaurant status updated successfully",
-            success: true,
-            error: false,
-            data: updateRestaurantStatus
-      });
-});
-
-export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const user = req.user;
-      if (!user) {
-            return res.status(401).json({
-                  message: "User not authenticated",
-                  success: false,
-                  error: true
-            });
-      }
-
-      const { name, description } = req.body;
-
-      const updateRestaurant = await Restaurant.findOneAndUpdate(
-            { ownerId: user._id },
-            { name, description },
-            { new: true }
-      );
-
-      if (!updateRestaurant) {
-            return res.status(404).json({
-                  message: "Failed to update restaurant",
-                  success: false,
-                  error: true
-            });
-      }
-
-      return res.status(200).json({
-            message: "Restaurant updated successfully",
-            success: true,
-            error: false,
-            data: updateRestaurant
-      });
-});
-
-export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const { latitude, longitude, radius = 5000, search = "" } = req.query;
-      if (!latitude || !longitude) {
-            return res.status(400).json({
-                  message: "Latitude and longitude are required",
-                  success: false,
-                  error: true
-            });
-      }
-
-      const now = new Date();
-      const blockedOwners = await User.find({
-            isBlocked: true,
-            blockedUntil: { $gt: now }
-      }).distinct("_id");
-      const blockedOwnerIds = blockedOwners.map((id: any) => id.toString());
-
-      const geoNearStage = {
-            $geoNear: {
-                  near: { type: "Point" as const, coordinates: [Number(longitude), Number(latitude)] as [number, number] },
-                  distanceField: "distance",
-                  maxDistance: Number(radius),
-                  spherical: true,
-                  query: { isVerified: true, ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}) }
-            }
-      };
-
-      const sortAndProject = [
-            { $sort: { distance: 1 as const, isOpen: -1 as const } },
-            { $addFields: { distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] } } },
-            { $limit: 25 }
-      ];
-
-      let restaurants: any[] = [];
-
-      if (search && typeof search === "string") {
-            const normalizedSearch = await normalizeSearchQuery(search);
-            const byName = await Restaurant.aggregate([
-                  {
-                        ...geoNearStage, $geoNear: {
-                              ...geoNearStage.$geoNear,
-                              query: {
-                                    isVerified: true,
-                                    name: {
-                                          $regex: normalizedSearch, $options: "i"
-                                    }
-                              }
+                        if (activeOrder) {
+                              return res.status(400).json({
+                                    message:
+                                          "Cannot close restaurant with active orders. Please complete all orders first.",
+                                    success: false,
+                                    error: true,
+                              });
                         }
-                  },
-                  ...sortAndProject
-            ]);
-            const matchingItems = await MenuItem.find({
-                  name: { $regex: normalizedSearch, $options: "i" },
-                  isAvailable: true
-            }).distinct("restaurantId");
+                  }
+            }
 
-            const byMenuItems = matchingItems.length > 0
-                  ? await Restaurant.aggregate([
+            const updateRestaurantStatus = await Restaurant.findOneAndUpdate(
+                  { ownerId: user._id },
+                  { isOpen: status },
+                  { new: true },
+            );
+
+            if (!updateRestaurantStatus) {
+                  return res.status(404).json({
+                        message: "Failed to update restaurant status",
+                        success: false,
+                        error: true,
+                  });
+            }
+            axios
+                  .post(
+                        `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
+                        {
+                              event: "restaurant:status",
+                              room: `Restaurant:${updateRestaurantStatus._id}`,
+                              payload: {
+                                    isOpen: updateRestaurantStatus.isOpen,
+                                    restaurantId: updateRestaurantStatus._id.toString(),
+                              },
+                        },
+                        { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } },
+                  )
+                  .catch((err) => console.error("Socket emit failed:", err.message));
+
+            axios
+                  .post(
+                        `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
+                        {
+                              event: "admin:restaurant:status",
+                              room: "Admin",
+                              payload: {
+                                    restaurantId: updateRestaurantStatus._id.toString(),
+                                    isOpen: updateRestaurantStatus.isOpen,
+                              },
+                        },
+                        { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } },
+                  )
+                  .catch((err) => console.error("Admin socket emit failed:", err.message));
+
+            return res.status(200).json({
+                  message: "Restaurant status updated successfully",
+                  success: true,
+                  error: false,
+                  data: updateRestaurantStatus,
+            });
+      },
+);
+
+export const updateRestaurant = TryCatch(
+      async (req: AuthenticatedRequest, res: Response) => {
+            const user = req.user;
+            if (!user) {
+                  return res.status(401).json({
+                        message: "User not authenticated",
+                        success: false,
+                        error: true,
+                  });
+            }
+
+            const { name, description } = req.body;
+
+            const updateRestaurant = await Restaurant.findOneAndUpdate(
+                  { ownerId: user._id },
+                  { name, description },
+                  { new: true },
+            );
+
+            if (!updateRestaurant) {
+                  return res.status(404).json({
+                        message: "Failed to update restaurant",
+                        success: false,
+                        error: true,
+                  });
+            }
+
+            return res.status(200).json({
+                  message: "Restaurant updated successfully",
+                  success: true,
+                  error: false,
+                  data: updateRestaurant,
+            });
+      },
+);
+
+export const getNearestRestaurant = TryCatch(
+      async (req: AuthenticatedRequest, res: Response) => {
+            const { latitude, longitude, radius = 5000, search = "" } = req.query;
+            if (!latitude || !longitude) {
+                  return res.status(400).json({
+                        message: "Latitude and longitude are required",
+                        success: false,
+                        error: true,
+                  });
+            }
+
+            const now = new Date();
+            const blockedOwners = await User.find({
+                  isBlocked: true,
+                  blockedUntil: { $gt: now },
+            }).distinct("_id");
+            const blockedOwnerIds = blockedOwners.map((id: any) => id.toString());
+
+            const geoNearStage = {
+                  $geoNear: {
+                        near: {
+                              type: "Point" as const,
+                              coordinates: [Number(longitude), Number(latitude)] as [
+                                    number,
+                                    number,
+                              ],
+                        },
+                        distanceField: "distance",
+                        maxDistance: Number(radius),
+                        spherical: true,
+                        query: {
+                              isVerified: true,
+                              ...(blockedOwnerIds.length > 0
+                                    ? { ownerId: { $nin: blockedOwnerIds } }
+                                    : {}),
+                        },
+                  },
+            };
+
+            const sortAndProject = [
+                  { $sort: { distance: 1 as const, isOpen: -1 as const } },
+                  {
+                        $addFields: {
+                              distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
+                        },
+                  },
+                  { $limit: 25 },
+            ];
+
+            let restaurants: any[] = [];
+
+            if (search && typeof search === "string") {
+                  const normalizedSearch = await normalizeSearchQuery(search);
+                  const byName = await Restaurant.aggregate([
                         {
                               ...geoNearStage,
                               $geoNear: {
                                     ...geoNearStage.$geoNear,
                                     query: {
                                           isVerified: true,
-                                          _id: {
-                                                $in: matchingItems.map((id: any) => new mongoose.Types.ObjectId(id.toString()))
-                                          }
-                                    }
-                              }
+                                          name: {
+                                                $regex: normalizedSearch,
+                                                $options: "i",
+                                          },
+                                    },
+                              },
                         },
-                        ...sortAndProject
-                  ])
-                  : [];
+                        ...sortAndProject,
+                  ]);
+                  const matchingItems = await MenuItem.find({
+                        name: { $regex: normalizedSearch, $options: "i" },
+                        isAvailable: true,
+                  }).distinct("restaurantId");
 
-            const seen = new Set<string>();
-            for (const r of [...byName, ...byMenuItems]) {
-                  const key = r._id.toString();
-                  if (!seen.has(key)) { seen.add(key); restaurants.push(r); }
+                  const byMenuItems =
+                        matchingItems.length > 0
+                              ? await Restaurant.aggregate([
+                                    {
+                                          ...geoNearStage,
+                                          $geoNear: {
+                                                ...geoNearStage.$geoNear,
+                                                query: {
+                                                      isVerified: true,
+                                                      _id: {
+                                                            $in: matchingItems.map(
+                                                                  (id: any) => new mongoose.Types.ObjectId(id.toString()),
+                                                            ),
+                                                      },
+                                                },
+                                          },
+                                    },
+                                    ...sortAndProject,
+                              ])
+                              : [];
+
+                  const seen = new Set<string>();
+                  for (const r of [...byName, ...byMenuItems]) {
+                        const key = r._id.toString();
+                        if (!seen.has(key)) {
+                              seen.add(key);
+                              restaurants.push(r);
+                        }
+                  }
+            } else {
+                  restaurants = await Restaurant.aggregate([
+                        geoNearStage,
+                        ...sortAndProject,
+                  ]);
             }
-      } else {
-            restaurants = await Restaurant.aggregate([geoNearStage, ...sortAndProject]);
-      }
 
-      return res.status(200).json({
-            message: "Restaurants fetched successfully",
-            success: true,
-            error: false,
-            count: restaurants.length,
-            data: restaurants
-      });
-});
-
-export const fetchSingleRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
-      const { id } = req.params;
-      const restaurant = await Restaurant.findById({
-            _id: id,
-      });
-      if (!restaurant) {
-            return res.status(404).json({
-                  message: "Restaurant not found",
-                  success: false,
-                  error: true
+            return res.status(200).json({
+                  message: "Restaurants fetched successfully",
+                  success: true,
+                  error: false,
+                  count: restaurants.length,
+                  data: restaurants,
             });
-      }
-      return res.status(200).json({
-            message: "Restaurant fetched successfully",
-            success: true,
-            error: false,
-            data: restaurant
-      });
-});
+      },
+);
+
+export const fetchSingleRestaurant = TryCatch(
+      async (req: AuthenticatedRequest, res: Response) => {
+            const { id } = req.params;
+            const restaurant = await Restaurant.findById({
+                  _id: id,
+            });
+            if (!restaurant) {
+                  return res.status(404).json({
+                        message: "Restaurant not found",
+                        success: false,
+                        error: true,
+                  });
+            }
+            return res.status(200).json({
+                  message: "Restaurant fetched successfully",
+                  success: true,
+                  error: false,
+                  data: restaurant,
+            });
+      },
+);

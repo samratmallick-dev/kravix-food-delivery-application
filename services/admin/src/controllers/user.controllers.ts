@@ -5,54 +5,69 @@ import { User } from "../models/User.js";
 import { Restaurant } from "../models/Restaurant.js";
 import { publishAdminEvent } from "../config/rabbitmq.js";
 
-export const getAllUsers = TryCatch(async (req: AdminRequest, res: Response) => {
-      const page = Math.max(1, parseInt(req.query["page"] as string) || 1);
-      const limit = Math.min(100, parseInt(req.query["limit"] as string) || 20);
-      const { role } = req.query;
+export const getAllUsers = TryCatch(
+      async (req: AdminRequest, res: Response) => {
+            const page = Math.max(1, parseInt(req.query["page"] as string) || 1);
+            const limit = Math.min(100, parseInt(req.query["limit"] as string) || 20);
+            const { role } = req.query;
 
-      const filter: Record<string, unknown> = {};
-      if (role === "null") filter["role"] = null;
-      else if (role) filter["role"] = role;
+            const filter: Record<string, unknown> = {};
+            if (role === "null") filter["role"] = null;
+            else if (role) filter["role"] = role;
 
-      const [users, total] = await Promise.all([
-            User.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
-            User.countDocuments(filter),
-      ]);
+            const [users, total] = await Promise.all([
+                  User.find(filter)
+                        .sort({ createdAt: -1 })
+                        .skip((page - 1) * limit)
+                        .limit(limit)
+                        .lean(),
+                  User.countDocuments(filter),
+            ]);
 
-      return res.status(200).json({
-            success: true, message: "Users fetched successfully", error: false,
-            data: {
-                  users,
-                  total,
-                  page,
-                  pages: Math.ceil(total / limit)
-            },
-      });
-});
+            return res.status(200).json({
+                  success: true,
+                  message: "Users fetched successfully",
+                  error: false,
+                  data: {
+                        users,
+                        total,
+                        page,
+                        pages: Math.ceil(total / limit),
+                  },
+            });
+      },
+);
 
-export const getUserById = TryCatch(async (req: AdminRequest, res: Response) => {
-      const user = await User.findById(req.params["userId"]).lean();
-      if (!user) return res.status(404).json({
-            success: false,
-            message: "User not found",
-            error: true
-      });
-      return res.status(200).json({
-            success: true,
-            message: "User fetched successfully",
-            error: false,
-            data: user
-      });
-});
+export const getUserById = TryCatch(
+      async (req: AdminRequest, res: Response) => {
+            const user = await User.findById(req.params["userId"]).lean();
+            if (!user)
+                  return res.status(404).json({
+                        success: false,
+                        message: "User not found",
+                        error: true,
+                  });
+            return res.status(200).json({
+                  success: true,
+                  message: "User fetched successfully",
+                  error: false,
+                  data: user,
+            });
+      },
+);
 
 const BLOCK_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const blockUser = TryCatch(async (req: AdminRequest, res: Response) => {
       const user = await User.findById(req.params["userId"]);
-      if (!user) return res.status(404).json({ success: false, message: "User not found", error: true });
+      if (!user)
+            return res
+                  .status(404)
+                  .json({ success: false, message: "User not found", error: true });
 
       const now = new Date();
-      const isCurrentlyBlocked = user.isBlocked && user.blockedUntil && user.blockedUntil > now;
+      const isCurrentlyBlocked =
+            user.isBlocked && user.blockedUntil && user.blockedUntil > now;
 
       if (isCurrentlyBlocked) {
             user.isBlocked = false;
@@ -66,7 +81,11 @@ export const blockUser = TryCatch(async (req: AdminRequest, res: Response) => {
 
       let restaurantId: string | null = null;
       if (user.role === "seller") {
-            const restaurant = await Restaurant.findOne({ ownerId: user._id.toString() }).select("_id").lean();
+            const restaurant = await Restaurant.findOne({
+                  ownerId: user._id.toString(),
+            })
+                  .select("_id")
+                  .lean();
             restaurantId = restaurant?._id?.toString() ?? null;
       }
 
@@ -82,6 +101,6 @@ export const blockUser = TryCatch(async (req: AdminRequest, res: Response) => {
             success: true,
             message: user.isBlocked ? "User blocked for 7 days" : "User unblocked",
             error: false,
-            data: { isBlocked: user.isBlocked, blockedUntil: user.blockedUntil }
+            data: { isBlocked: user.isBlocked, blockedUntil: user.blockedUntil },
       });
 });

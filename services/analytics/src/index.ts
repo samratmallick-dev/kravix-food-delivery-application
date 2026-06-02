@@ -27,7 +27,6 @@ const start = async () => {
                   console.error("[Analytics Service] Uncaught exception:", err);
                   process.exit(1);
             });
-
       } catch (err) {
             console.error("[Analytics Service] Startup failed:", err);
             process.exit(1);

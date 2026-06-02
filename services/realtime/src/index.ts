@@ -9,5 +9,7 @@ const server = http.createServer(app);
 initializeSocket(server);
 
 server.listen(PORT, () => {
-      console.log(`[Socket server]: Socket Server is running at http://localhost:${PORT}`);
+      console.log(
+            `[Socket server]: Socket Server is running at http://localhost:${PORT}`,
+      );
 });

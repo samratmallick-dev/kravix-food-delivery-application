@@ -30,7 +30,6 @@ const start = async () => {
                   console.error("[Admin Service] Uncaught exception:", err);
                   process.exit(1);
             });
-
       } catch (err) {
             console.error("[Admin Service] Startup failed:", err);
             process.exit(1);

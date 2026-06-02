@@ -3,7 +3,7 @@ import crypto from "crypto";
 export const verifyRazorpaySignature = (
       orderId: string,
       paymentId: string,
-      signature: string
+      signature: string,
 ) => {
       const body = `${orderId}|${paymentId}`;
       const expectedSignature = crypto
@@ -12,6 +12,6 @@ export const verifyRazorpaySignature = (
             .digest("hex");
       return crypto.timingSafeEqual(
             Buffer.from(expectedSignature, "hex"),
-            Buffer.from(signature, "hex")
+            Buffer.from(signature, "hex"),
       );
 };

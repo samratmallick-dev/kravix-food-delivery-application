@@ -10,7 +10,7 @@ export interface AuthenticatedRequest extends Request {
 export const isAuthenticated = async (
       req: AuthenticatedRequest,
       res: Response,
-      next: NextFunction
+      next: NextFunction,
 ): Promise<void> => {
       if (req.method === "OPTIONS") return next();
 
@@ -21,7 +21,7 @@ export const isAuthenticated = async (
                   res.status(401).json({
                         message: "Unauthorized - No Auth Token in Headers",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
@@ -32,32 +32,29 @@ export const isAuthenticated = async (
                   res.status(401).json({
                         message: "Unauthorized - Missing Auth Token",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
 
             const secretKey = process.env.JWT_SECRET as string;
-            
+
             if (!secretKey) {
                   res.status(500).json({
                         message: "Server configuration error",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
 
-            const decodedToken = jwt.verify(
-                  token,
-                  secretKey
-            ) as JwtPayload;
+            const decodedToken = jwt.verify(token, secretKey) as JwtPayload;
 
             if (!decodedToken || !decodedToken._id) {
                   res.status(401).json({
                         message: "Invalid Token",
                         success: false,
-                        error: true
+                        error: true,
                   });
                   return;
             }
@@ -67,13 +64,19 @@ export const isAuthenticated = async (
             next();
       } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
-                  res.status(401).json({ message: "Token expired", success: false, error: true });
+                  res
+                        .status(401)
+                        .json({ message: "Token expired", success: false, error: true });
                   return;
             }
             if (error instanceof jwt.JsonWebTokenError) {
-                  res.status(401).json({ message: "Invalid token", success: false, error: true });
+                  res
+                        .status(401)
+                        .json({ message: "Invalid token", success: false, error: true });
                   return;
             }
-            res.status(500).json({ message: "Internal Server error", success: false, error: true });
+            res
+                  .status(500)
+                  .json({ message: "Internal Server error", success: false, error: true });
       }
 };

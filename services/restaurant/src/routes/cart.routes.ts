@@ -5,7 +5,7 @@ import {
       clearCart,
       decrementCart,
       fetchCart,
-      incrementCart
+      incrementCart,
 } from "../controllers/cart.controllers.js";
 
 const router = Router();

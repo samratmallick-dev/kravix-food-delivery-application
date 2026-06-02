@@ -19,56 +19,57 @@ const riderSchema = new Schema<IRider>(
             userId: {
                   type: String,
                   unique: true,
-                  required: true
+                  required: true,
             },
             picture: {
                   type: String,
-                  required: false
+                  required: false,
             },
             phoneNumber: {
                   type: String,
-                  required: true
-
+                  required: true,
             },
             aadhaarNumber: {
                   type: String,
-                  required: true
+                  required: true,
             },
             drivingLicesce: {
                   type: String,
-                  required: true
+                  required: true,
             },
             isVerified: {
                   type: Boolean,
                   required: true,
-                  default: false
+                  default: false,
             },
             location: {
                   type: {
                         type: String,
                         required: true,
                         enum: ["Point"],
-                        default: "Point"
+                        default: "Point",
                   },
                   coordinates: {
                         type: [Number],
-                        required: true
+                        required: true,
                   },
             },
             isAvailable: {
                   type: Boolean,
                   required: true,
-                  default: false
+                  default: false,
             },
             lastActiveAt: {
                   type: Date,
                   required: true,
-                  default: Date.now()
+                  default: Date.now(),
             },
       },
-      { timestamps: true }
+      { timestamps: true },
 );
 
 riderSchema.index({ location: "2dsphere" });
 
-export const Rider = (mongoose.models["Rider"] as mongoose.Model<IRider>) || mongoose.model<IRider>("Rider", riderSchema);
+export const Rider =
+      (mongoose.models["Rider"] as mongoose.Model<IRider>) ||
+      mongoose.model<IRider>("Rider", riderSchema);

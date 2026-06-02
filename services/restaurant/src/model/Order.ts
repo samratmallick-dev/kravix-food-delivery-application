@@ -31,7 +31,17 @@ export interface IOrder extends Document {
             longitude: number;
       };
 
-      status: | "placed" | "accepted" | "preparing" | "ready_for_rider" | "rider_assigned" | "picked_up" | "out_for_delivery" | "reached_delivery_location" | "delivered" | "cancelled";
+      status:
+      | "placed"
+      | "accepted"
+      | "preparing"
+      | "ready_for_rider"
+      | "rider_assigned"
+      | "picked_up"
+      | "out_for_delivery"
+      | "reached_delivery_location"
+      | "delivered"
+      | "cancelled";
 
       paymentMethod: "razorpay" | "stripe";
 
@@ -46,135 +56,138 @@ export interface IOrder extends Document {
 
       createdAt: Date;
       updatedAt: Date;
-};
+}
 
-const orderSchema: Schema = new Schema<IOrder>({
-      userId: {
-            type: String,
-            required: true
-      },
-      restaurantId: {
-            type: String,
-            required: true
-      },
-      restaurantName: {
-            type: String,
-            required: true
-      },
-      riderId: {
-            type: String,
-            default: null
-      },
-      riderPhoneNumber: {
-            type: Number,
-            default: null
-      },
-      riderName: {
-            type: String,
-            default: null
-      },
-      distance: {
-            type: Number,
-            required: true
-      },
-      riderAmount: {
-            type: Number,
-            required: true
-      },
-      items: [
-            {
-                  itemId: {
-                        type: String,
-                        required: true
-                  },
-                  name: {
-                        type: String,
-                        required: true
-                  },
-                  price: {
-                        type: Number,
-                        required: true
-                  },
-                  quantity: {
-                        type: Number,
-                        required: true
-                  }
-            }
-      ],
-      subtotal: Number,
-      deliveryFee: Number,
-      platformFee: Number,
-      discountAmount: {
-            type: Number,
-            default: 0
-      },
-      couponCode: {
-            type: String,
-            default: null
-      },
-      totalAmount: Number,
-      addressId: {
-            type: String,
-            required: true
-      },
-      deliveryAddress: {
-            formatedAddress: {
+const orderSchema: Schema = new Schema<IOrder>(
+      {
+            userId: {
                   type: String,
-                  required: true
+                  required: true,
             },
-            mobile: {
-                  type: Number,
-                  required: true
-            },
-            customerName: {
+            restaurantId: {
                   type: String,
-                  required: true
+                  required: true,
             },
-            latitude: {
-                  type: Number,
-                  required: true
+            restaurantName: {
+                  type: String,
+                  required: true,
             },
-            longitude: {
+            riderId: {
+                  type: String,
+                  default: null,
+            },
+            riderPhoneNumber: {
                   type: Number,
-                  required: true
-            }
-      },
-      status: {
-            type: String,
-            enum: [
-                  "placed",
-                  "accepted",
-                  "preparing",
-                  "ready_for_rider",
-                  "rider_assigned",
-                  "picked_up",
-                  "out_for_delivery",
-                  "reached_delivery_location",
-                  "delivered",
-                  "cancelled"
+                  default: null,
+            },
+            riderName: {
+                  type: String,
+                  default: null,
+            },
+            distance: {
+                  type: Number,
+                  required: true,
+            },
+            riderAmount: {
+                  type: Number,
+                  required: true,
+            },
+            items: [
+                  {
+                        itemId: {
+                              type: String,
+                              required: true,
+                        },
+                        name: {
+                              type: String,
+                              required: true,
+                        },
+                        price: {
+                              type: Number,
+                              required: true,
+                        },
+                        quantity: {
+                              type: Number,
+                              required: true,
+                        },
+                  },
             ],
-            default: "placed"
+            subtotal: Number,
+            deliveryFee: Number,
+            platformFee: Number,
+            discountAmount: {
+                  type: Number,
+                  default: 0,
+            },
+            couponCode: {
+                  type: String,
+                  default: null,
+            },
+            totalAmount: Number,
+            addressId: {
+                  type: String,
+                  required: true,
+            },
+            deliveryAddress: {
+                  formatedAddress: {
+                        type: String,
+                        required: true,
+                  },
+                  mobile: {
+                        type: Number,
+                        required: true,
+                  },
+                  customerName: {
+                        type: String,
+                        required: true,
+                  },
+                  latitude: {
+                        type: Number,
+                        required: true,
+                  },
+                  longitude: {
+                        type: Number,
+                        required: true,
+                  },
+            },
+            status: {
+                  type: String,
+                  enum: [
+                        "placed",
+                        "accepted",
+                        "preparing",
+                        "ready_for_rider",
+                        "rider_assigned",
+                        "picked_up",
+                        "out_for_delivery",
+                        "reached_delivery_location",
+                        "delivered",
+                        "cancelled",
+                  ],
+                  default: "placed",
+            },
+            paymentMethod: {
+                  type: String,
+                  enum: ["razorpay", "stripe"],
+                  required: true,
+            },
+            paymentStatus: {
+                  type: String,
+                  enum: ["pending", "paid", "failed"],
+                  default: "pending",
+            },
+            deliveryOtp: {
+                  type: String,
+                  default: null,
+            },
+            expiresAt: {
+                  type: Date,
+                  index: {
+                        expireAfterSeconds: 0,
+                  },
+            },
       },
-      paymentMethod: {
-            type: String,
-            enum: ["razorpay", "stripe"],
-            required: true
-      },
-      paymentStatus: {
-            type: String,
-            enum: ["pending", "paid", "failed"],
-            default: "pending"
-      },
-      deliveryOtp: {
-            type: String,
-            default: null
-      },
-      expiresAt: {
-            type: Date,
-            index: {
-                  expireAfterSeconds: 0
-            }
-      }
-}, { timestamps: true });
+      { timestamps: true },
+);
 
 export const Order = mongoose.model<IOrder>("Order", orderSchema);

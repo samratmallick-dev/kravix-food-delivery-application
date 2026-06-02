@@ -9,10 +9,13 @@ const isRedisAvailable = async (): Promise<boolean> => {
                   if (!redisClient) {
                         redisClient = new Redis(process.env.REDIS_URL, {
                               maxRetriesPerRequest: 1,
-                              connectTimeout: 2000
+                              connectTimeout: 2000,
                         });
                         redisClient.on("error", (err) => {
-                              console.warn("Redis error, falling back to memory cache:", err.message);
+                              console.warn(
+                                    "Redis error, falling back to memory cache:",
+                                    err.message,
+                              );
                               redisClient = null;
                         });
                   }
@@ -28,7 +31,7 @@ const isRedisAvailable = async (): Promise<boolean> => {
 
 export const getCache = async (key: string): Promise<any | null> => {
       try {
-            if (await isRedisAvailable() && redisClient) {
+            if ((await isRedisAvailable()) && redisClient) {
                   const data = await redisClient.get(key);
                   return data ? JSON.parse(data) : null;
             }
@@ -36,7 +39,6 @@ export const getCache = async (key: string): Promise<any | null> => {
             console.warn("Redis GET failed, trying memory cache:", err);
       }
 
-      // Memory cache fallback
       const cached = memoryCache.get(key);
       if (cached) {
             if (cached.expiresAt > Date.now()) {
@@ -47,9 +49,13 @@ export const getCache = async (key: string): Promise<any | null> => {
       return null;
 };
 
-export const setCache = async (key: string, value: any, ttlSeconds: number = 300): Promise<void> => {
+export const setCache = async (
+      key: string,
+      value: any,
+      ttlSeconds: number = 300,
+): Promise<void> => {
       try {
-            if (await isRedisAvailable() && redisClient) {
+            if ((await isRedisAvailable()) && redisClient) {
                   await redisClient.set(key, JSON.stringify(value), "EX", ttlSeconds);
                   return;
             }
@@ -57,16 +63,15 @@ export const setCache = async (key: string, value: any, ttlSeconds: number = 300
             console.warn("Redis SET failed, trying memory cache:", err);
       }
 
-      // Memory cache fallback
       memoryCache.set(key, {
             value,
-            expiresAt: Date.now() + ttlSeconds * 1000
+            expiresAt: Date.now() + ttlSeconds * 1000,
       });
 };
 
 export const clearCache = async (): Promise<void> => {
       try {
-            if (await isRedisAvailable() && redisClient) {
+            if ((await isRedisAvailable()) && redisClient) {
                   await redisClient.flushall();
                   console.log("Redis cache flushed.");
             }

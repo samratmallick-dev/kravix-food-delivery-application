@@ -8,29 +8,35 @@ export interface ICouponUsage extends Document {
       usedAt: Date;
 }
 
-const couponUsageSchema: Schema = new Schema<ICouponUsage>({
-      couponId: {
-            type: Schema.Types.ObjectId,
-            ref: "Coupon",
-            required: true
+const couponUsageSchema: Schema = new Schema<ICouponUsage>(
+      {
+            couponId: {
+                  type: Schema.Types.ObjectId,
+                  ref: "Coupon",
+                  required: true,
+            },
+            userId: {
+                  type: String,
+                  required: true,
+            },
+            orderId: {
+                  type: String,
+                  required: true,
+            },
+            discountApplied: {
+                  type: Number,
+                  required: true,
+                  min: 0,
+            },
+            usedAt: {
+                  type: Date,
+                  default: Date.now,
+            },
       },
-      userId: {
-            type: String,
-            required: true
-      },
-      orderId: {
-            type: String,
-            required: true
-      },
-      discountApplied: {
-            type: Number,
-            required: true,
-            min: 0
-      },
-      usedAt: {
-            type: Date,
-            default: Date.now
-      }
-}, { timestamps: true });
+      { timestamps: true },
+);
 
-export const CouponUsage = mongoose.model<ICouponUsage>("CouponUsage", couponUsageSchema);
+export const CouponUsage = mongoose.model<ICouponUsage>(
+      "CouponUsage",
+      couponUsageSchema,
+);

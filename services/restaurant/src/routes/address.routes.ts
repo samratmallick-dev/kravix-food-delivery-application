@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { isAuthenticated } from "../middleware/isAuthenticated.js";
-import { addAddress, deleteAddress, getMyAddress } from "../controllers/address.controllers.js";
+import {
+        addAddress,
+        deleteAddress,
+        getMyAddress,
+} from "../controllers/address.controllers.js";
 
 const router = Router();
 

@@ -15,17 +15,25 @@ export const connectRabbitMQ = async (): Promise<amqp.Channel> => {
       console.log("✅ [Email Service] Connected to RabbitMQ");
 
       connection.on("error", (err) => {
-        console.error("[Email Service] RabbitMQ connection error:", err.message);
+        console.error(
+          "[Email Service] RabbitMQ connection error:",
+          err.message,
+        );
         const nextDelay = Math.min(delay * 2, 30000);
         setTimeout(() => connect(nextDelay), nextDelay);
       });
       connection.on("close", () => {
-        console.warn("[Email Service] RabbitMQ connection closed — reconnecting...");
+        console.warn(
+          "[Email Service] RabbitMQ connection closed — reconnecting...",
+        );
         const nextDelay = Math.min(delay * 2, 30000);
         setTimeout(() => connect(nextDelay), nextDelay);
       });
     } catch (err) {
-      console.error(`[Email Service] RabbitMQ connect failed, retrying in ${delay}ms:`, err);
+      console.error(
+        `[Email Service] RabbitMQ connect failed, retrying in ${delay}ms:`,
+        err,
+      );
       await new Promise((r) => setTimeout(r, delay));
       return connect(Math.min(delay * 2, 30000));
     }
@@ -36,6 +44,7 @@ export const connectRabbitMQ = async (): Promise<amqp.Channel> => {
 };
 
 export const getRabbitMQChannel = (): amqp.Channel => {
-  if (!channel) throw new Error("[Email Service] RabbitMQ channel not initialized");
+  if (!channel)
+    throw new Error("[Email Service] RabbitMQ channel not initialized");
   return channel;
 };

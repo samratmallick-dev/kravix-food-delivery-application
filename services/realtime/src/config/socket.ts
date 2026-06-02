@@ -6,12 +6,11 @@ const allowedOrigins = (): string[] => {
       const defaultOrigins: string[] = [
             "http://localhost:5173",
             "http://localhost:5174",
-            "http://localhost:3000"
+            "http://localhost:3000",
       ];
 
       const envOrigins: string[] = process.env.ALLOWED_ORIGINS
-            ? process.env.ALLOWED_ORIGINS
-                  .split(",")
+            ? process.env.ALLOWED_ORIGINS.split(",")
                   .map((o: string) => o.trim())
                   .filter(Boolean)
             : [];
@@ -48,10 +47,7 @@ export const initializeSocket = (server: http.Server) => {
                         return next(new Error("Unauthorized: No token"));
                   }
 
-                  const decoded = jwt.verify(
-                        token,
-                        process.env.JWT_SECRET!
-                  ) as any;
+                  const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
                   if (!decoded || !decoded._id) {
                         return next(new Error("Unauthorized!"));
@@ -97,8 +93,7 @@ export const initializeSocket = (server: http.Server) => {
                   }
             });
 
-            socket.on("disconnect", (_reason) => {
-            });
+            socket.on("disconnect", (_reason) => { });
       });
 
       return io;

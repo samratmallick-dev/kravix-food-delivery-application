@@ -12,11 +12,11 @@ export const publishPaymentSuccess = async (payload: {
             Buffer.from(
                   JSON.stringify({
                         type: "PAYMENT_SUCCESS",
-                        data: payload
-                  })
+                        data: payload,
+                  }),
             ),
             {
-                  persistent: true
-            }
+                  persistent: true,
+            },
       );
 };

@@ -5,39 +5,42 @@ export interface IAddresss extends Document {
       mobile: number;
       formatedAddress: string;
       location: {
-            type: "Point",
-            coordinates: [number, number]
+            type: "Point";
+            coordinates: [number, number];
       };
       createdAt: Date;
       updatedAt: Date;
-};
+}
 
-const addressSchema: Schema = new Schema({
-      userId: {
-            type: String,
-            require: true,
-      },
-      mobile: {
-            type: Number,
-            require: true,
-      },
-      formatedAddress: {
-            type: String,
-            require: true
-      },
-      location: {
-            type: {
+const addressSchema: Schema = new Schema(
+      {
+            userId: {
                   type: String,
-                  enum: ["Point"],
-                  default: "Point"
+                  require: true,
             },
-            coordinates: {
-                  type: [Number],
-                  require: true
-            }
-      }
-}, {timestamps: true});
+            mobile: {
+                  type: Number,
+                  require: true,
+            },
+            formatedAddress: {
+                  type: String,
+                  require: true,
+            },
+            location: {
+                  type: {
+                        type: String,
+                        enum: ["Point"],
+                        default: "Point",
+                  },
+                  coordinates: {
+                        type: [Number],
+                        require: true,
+                  },
+            },
+      },
+      { timestamps: true },
+);
 
-addressSchema.index({location : "2dsphere"});
+addressSchema.index({ location: "2dsphere" });
 
-export const Address = mongoose.model<IAddresss>("Address", addressSchema)
+export const Address = mongoose.model<IAddresss>("Address", addressSchema);

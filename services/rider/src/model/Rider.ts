@@ -26,84 +26,87 @@ export interface IRider extends Document {
 
       createdAt: Date;
       updatedAt: Date;
-};
+}
 
-const riderSchema: Schema = new Schema<IRider>({
-      userId: {
-            type: String,
-            unique: true,
-            required: true
-      },
-      picture: {
-            type: String,
-            required: false
-      },
-      phoneNumber: {
-            type: String,
-            required: true
-      },
-      aadhaarNumber: {
-            type: String,
-            required: true
-      },
-      drivingLicesce: {
-            type: String,
-            required: true
-      },
-      isVerified: {
-            type: Boolean,
-            required: true,
-            default: false
-      },
-
-      location: {
-            type: {
+const riderSchema: Schema = new Schema<IRider>(
+      {
+            userId: {
+                  type: String,
+                  unique: true,
+                  required: true,
+            },
+            picture: {
+                  type: String,
+                  required: false,
+            },
+            phoneNumber: {
                   type: String,
                   required: true,
-                  enum: ["Point"],
-                  default: "Point"
             },
-            coordinates: {
-                  type: [Number],
-                  require: true
-            }
-      },
+            aadhaarNumber: {
+                  type: String,
+                  required: true,
+            },
+            drivingLicesce: {
+                  type: String,
+                  required: true,
+            },
+            isVerified: {
+                  type: Boolean,
+                  required: true,
+                  default: false,
+            },
 
-      isAvailable: {
-            type: Boolean,
-            required: true,
-            default: false
+            location: {
+                  type: {
+                        type: String,
+                        required: true,
+                        enum: ["Point"],
+                        default: "Point",
+                  },
+                  coordinates: {
+                        type: [Number],
+                        require: true,
+                  },
+            },
+
+            isAvailable: {
+                  type: Boolean,
+                  required: true,
+                  default: false,
+            },
+            lastActiveAt: {
+                  type: Date,
+                  required: true,
+                  default: Date.now(),
+            },
+            totalEarnings: {
+                  type: Number,
+                  default: 0,
+            },
+            totalDeliveries: {
+                  type: Number,
+                  default: 0,
+            },
+            rating: {
+                  type: Number,
+                  default: 0,
+            },
+            ratingCount: {
+                  type: Number,
+                  default: 0,
+            },
+            deliveryOtp: {
+                  type: String,
+                  default: null,
+            },
+            deliveryOtpExpiry: {
+                  type: Date,
+                  default: null,
+            },
       },
-      lastActiveAt: {
-            type: Date,
-            required: true,
-            default: Date.now()
-      },
-      totalEarnings: {
-            type: Number,
-            default: 0
-      },
-      totalDeliveries: {
-            type: Number,
-            default: 0
-      },
-      rating: {
-            type: Number,
-            default: 0
-      },
-      ratingCount: {
-            type: Number,
-            default: 0
-      },
-      deliveryOtp: {
-            type: String,
-            default: null
-      },
-      deliveryOtpExpiry: {
-            type: Date,
-            default: null
-      }
-}, { timestamps: true });
+      { timestamps: true },
+);
 
 riderSchema.index({ location: "2dsphere" });
 

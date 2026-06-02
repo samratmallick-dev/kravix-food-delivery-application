@@ -6,22 +6,28 @@ export interface IAnalyticsSnapshot extends Document {
       data: any;
 }
 
-const analyticsSnapshotSchema: Schema = new Schema<IAnalyticsSnapshot>({
-      snapshotDate: {
-            type: Date,
-            required: true,
-            default: Date.now,
-            index: true
+const analyticsSnapshotSchema: Schema = new Schema<IAnalyticsSnapshot>(
+      {
+            snapshotDate: {
+                  type: Date,
+                  required: true,
+                  default: Date.now,
+                  index: true,
+            },
+            key: {
+                  type: String,
+                  required: true,
+                  index: true,
+            },
+            data: {
+                  type: Schema.Types.Mixed,
+                  required: true,
+            },
       },
-      key: {
-            type: String,
-            required: true,
-            index: true
-      },
-      data: {
-            type: Schema.Types.Mixed,
-            required: true
-      }
-}, { timestamps: true });
+      { timestamps: true },
+);
 
-export const AnalyticsSnapshot = mongoose.model<IAnalyticsSnapshot>("AnalyticsSnapshot", analyticsSnapshotSchema);
+export const AnalyticsSnapshot = mongoose.model<IAnalyticsSnapshot>(
+      "AnalyticsSnapshot",
+      analyticsSnapshotSchema,
+);

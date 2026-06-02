@@ -1,21 +1,55 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const STOPWORDS = new Set([
-      "ami", "amar", "amr", "amra", "chai", "khabo", "khabo", "debo", "dao", "ektu", "ekta",
-      "mujhe", "muje", "chahiye", "chahie", "mera", "mera", "ek", "do", "dena",
-      "please", "pls", "give", "want", "need", "order", "get", "some", "a", "an", "the"
+      "ami",
+      "amar",
+      "amr",
+      "amra",
+      "chai",
+      "khabo",
+      "khabo",
+      "debo",
+      "dao",
+      "ektu",
+      "ekta",
+      "mujhe",
+      "muje",
+      "chahiye",
+      "chahie",
+      "mera",
+      "mera",
+      "ek",
+      "do",
+      "dena",
+      "please",
+      "pls",
+      "give",
+      "want",
+      "need",
+      "order",
+      "get",
+      "some",
+      "a",
+      "an",
+      "the",
 ]);
 
-
 const SYNONYMS: Record<string, string> = {
-      vat: "rice", bhat: "rice", bhaat: "rice",
-      dal: "lentils", daal: "lentils",
+      vat: "rice",
+      bhat: "rice",
+      bhaat: "rice",
+      dal: "lentils",
+      daal: "lentils",
       ruti: "bread",
-      mach: "fish", maach: "fish",
-      mangsho: "mutton", mangshe: "mutton",
-      murgi: "chicken", murgh: "chicken",
-      dim: "egg", deem: "egg",
-      cha: "tea"
+      mach: "fish",
+      maach: "fish",
+      mangsho: "mutton",
+      mangshe: "mutton",
+      murgi: "chicken",
+      murgh: "chicken",
+      dim: "egg",
+      deem: "egg",
+      cha: "tea",
 };
 
 function resolveLocally(input: string): string | null {
@@ -47,15 +81,18 @@ export async function normalizeSearchQuery(input: string): Promise<string> {
 
             const result = await Promise.race([
                   model.generateContent(
-                        `Extract only the food item name from this query. Return a single English word or short phrase. No explanation.\nQuery: "${input}"`
+                        `Extract only the food item name from this query. Return a single English word or short phrase. No explanation.\nQuery: "${input}"`,
                   ),
                   new Promise<never>((_, reject) =>
-                        setTimeout(() => reject(new Error("timeout")), 3000)
-                  )
+                        setTimeout(() => reject(new Error("timeout")), 3000),
+                  ),
             ]);
 
-            const text = (result as Awaited<ReturnType<typeof model.generateContent>>)
-                  .response.text().trim();
+            const text = (
+                  result as Awaited<ReturnType<typeof model.generateContent>>
+            ).response
+                  .text()
+                  .trim();
 
             return text || input;
       } catch {

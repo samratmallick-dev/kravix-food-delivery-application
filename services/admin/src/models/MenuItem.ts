@@ -17,32 +17,34 @@ const menuItemSchema = new Schema<IMenuItem>(
                   type: Schema.Types.ObjectId,
                   ref: "Restaurant",
                   required: true,
-                  index: true
+                  index: true,
             },
             name: {
                   type: String,
                   trim: true,
-                  required: true
+                  required: true,
             },
             description: {
                   type: String,
-                  trim: true
+                  trim: true,
             },
             price: {
                   type: Number,
-                  required: true
+                  required: true,
             },
             imageUrl: {
                   type: String,
-                  required: false
+                  required: false,
             },
             isAvailable: {
                   type: Boolean,
                   required: true,
-                  default: true
+                  default: true,
             },
       },
-      { timestamps: true }
+      { timestamps: true },
 );
 
-export const MenuItem = (mongoose.models["MenuItem"] as mongoose.Model<IMenuItem>) || mongoose.model<IMenuItem>("MenuItem", menuItemSchema);
+export const MenuItem =
+      (mongoose.models["MenuItem"] as mongoose.Model<IMenuItem>) ||
+      mongoose.model<IMenuItem>("MenuItem", menuItemSchema);

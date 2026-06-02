@@ -6,22 +6,19 @@ import {
       updateCoupon,
       deleteCoupon,
       applyCoupon,
-      getCouponAnalytics
+      getCouponAnalytics,
 } from "../controllers/coupon.controllers.js";
 
 const router = Router();
 
-router.route("/")
-      .post(isAuthenticated, createCoupon)
-      .get(getCoupons);
+router.route("/").post(isAuthenticated, createCoupon).get(getCoupons);
 
-router.route("/apply")
-      .post(isAuthenticated, applyCoupon);
+router.route("/apply").post(isAuthenticated, applyCoupon);
 
-router.route("/analytics/:id")
-      .get(isAuthenticated, getCouponAnalytics);
+router.route("/analytics/:id").get(isAuthenticated, getCouponAnalytics);
 
-router.route("/:id")
+router
+      .route("/:id")
       .put(isAuthenticated, updateCoupon)
       .delete(isAuthenticated, deleteCoupon);
 

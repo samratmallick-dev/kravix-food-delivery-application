@@ -4,12 +4,11 @@ const allowedOrigins = (): string[] => {
       const defaultOrigins: string[] = [
             "http://localhost:5173",
             "http://localhost:5174",
-            "http://localhost:3000"
+            "http://localhost:3000",
       ];
 
       const envOrigins: string[] = process.env.ALLOWED_ORIGINS
-            ? process.env.ALLOWED_ORIGINS
-                  .split(",")
+            ? process.env.ALLOWED_ORIGINS.split(",")
                   .map((o: string) => o.trim())
                   .filter(Boolean)
             : [];
@@ -20,7 +19,7 @@ const allowedOrigins = (): string[] => {
 export const corsOptions: CorsOptions = {
       origin: (
             origin: string | undefined,
-            callback: (err: Error | null, allow?: boolean) => void
+            callback: (err: Error | null, allow?: boolean) => void,
       ) => {
             if (!origin) return callback(null, true);
 
@@ -41,7 +40,7 @@ export const corsOptions: CorsOptions = {
             "Expires",
             "Pragma",
             "X-Requested-With",
-            "x-internal-key"
+            "x-internal-key",
       ],
-      exposedHeaders: ["X-Cache"]
+      exposedHeaders: ["X-Cache"],
 };

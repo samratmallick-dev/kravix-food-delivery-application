@@ -13,7 +13,7 @@ export interface IOrder extends Document {
             itemId: string;
             name: string;
             price: number;
-            quantity: number
+            quantity: number;
       }[];
       subtotal: number;
       deliveryFee: number;
@@ -27,7 +27,17 @@ export interface IOrder extends Document {
             latitude: number;
             longitude: number;
       };
-      status: "placed" | "accepted" | "preparing" | "ready_for_rider" | "rider_assigned" | "picked_up" | "out_for_delivery" | "reached_delivery_location" | "delivered" | "cancelled";
+      status:
+      | "placed"
+      | "accepted"
+      | "preparing"
+      | "ready_for_rider"
+      | "rider_assigned"
+      | "picked_up"
+      | "out_for_delivery"
+      | "reached_delivery_location"
+      | "delivered"
+      | "cancelled";
       paymentMethod: "razorpay" | "stripe";
       paymentStatus: "pending" | "paid" | "failed";
       expiresAt: Date;
@@ -39,107 +49,122 @@ const orderSchema = new Schema<IOrder>(
       {
             userId: {
                   type: String,
-                  required: true
+                  required: true,
             },
             restaurantId: {
                   type: String,
-                  required: true
+                  required: true,
             },
             restaurantName: {
                   type: String,
-                  required: true
+                  required: true,
             },
             riderId: {
                   type: String,
-                  default: null
+                  default: null,
             },
             riderPhoneNumber: {
                   type: Number,
-                  default: null
+                  default: null,
             },
             riderName: {
                   type: String,
-                  default: null
+                  default: null,
             },
             distance: {
                   type: Number,
-                  required: true
+                  required: true,
             },
             riderAmount: {
                   type: Number,
-                  required: true
+                  required: true,
             },
-            items: [{
-                  itemId: {
-                        type: String,
-                        required: true
+            items: [
+                  {
+                        itemId: {
+                              type: String,
+                              required: true,
+                        },
+                        name: {
+                              type: String,
+                              required: true,
+                        },
+                        price: {
+                              type: Number,
+                              required: true,
+                        },
+                        quantity: {
+                              type: Number,
+                              required: true,
+                        },
                   },
-                  name: {
-                        type: String,
-                        required: true
-                  },
-                  price: {
-                        type: Number,
-                        required: true
-                  },
-                  quantity: {
-                        type: Number,
-                        required: true
-                  },
-            }],
+            ],
             subtotal: Number,
             deliveryFee: Number,
             platformFee: Number,
             totalAmount: Number,
             addressId: {
                   type: String,
-                  required: true
+                  required: true,
             },
             deliveryAddress: {
                   formatedAddress: {
                         type: String,
-                        required: true
+                        required: true,
                   },
                   mobile: {
                         type: Number,
-                        required: true
+                        required: true,
                   },
                   customerName: {
                         type: String,
-                        required: true
+                        required: true,
                   },
                   latitude: {
                         type: Number,
-                        required: true
+                        required: true,
                   },
                   longitude: {
                         type: Number,
-                        required: true
+                        required: true,
                   },
             },
             status: {
                   type: String,
-                  enum: ["placed", "accepted", "preparing", "ready_for_rider", "rider_assigned", "picked_up", "out_for_delivery", "reached_delivery_location", "delivered", "cancelled"],
+                  enum: [
+                        "placed",
+                        "accepted",
+                        "preparing",
+                        "ready_for_rider",
+                        "rider_assigned",
+                        "picked_up",
+                        "out_for_delivery",
+                        "reached_delivery_location",
+                        "delivered",
+                        "cancelled",
+                  ],
                   default: "placed",
             },
             paymentMethod: {
                   type: String,
                   enum: ["razorpay", "stripe"],
-                  required: true
+                  required: true,
             },
             paymentStatus: {
                   type: String,
                   enum: ["pending", "paid", "failed"],
-                  default: "pending"
+                  default: "pending",
             },
             expiresAt: {
                   type: Date,
                   index: {
-                        expireAfterSeconds: 0
-                  }
+                        expireAfterSeconds: 0,
+                  },
             },
       },
-      { timestamps: true }
+      { timestamps: true },
 );
 
-export const Order = (mongoose.models["Order"] as mongoose.Model<IOrder>) || mongoose.model<IOrder>("Order", orderSchema);
+export const Order =
+      (mongoose.models["Order"] as mongoose.Model<IOrder>) ||
+      mongoose.model<IOrder>("Order", orderSchema);

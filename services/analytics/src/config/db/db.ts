@@ -8,13 +8,18 @@ if (!(process.env.MONGO_URI && process.env.DB_NAME)) {
 const connectDb = async () => {
       if (mongoose.connection.readyState >= 1) return;
       try {
-            const connectionInstance = await mongoose.connect(process.env.MONGO_URI as string, {
-                  dbName: process.env.DB_NAME as string,
-                  serverSelectionTimeoutMS: 30000,
-                  socketTimeoutMS: 45000,
-                  connectTimeoutMS: 30000,
-            });
-            console.log(`MongoDB connected successfully in Analytics Service to host: ${connectionInstance.connection.host}`);
+            const connectionInstance = await mongoose.connect(
+                  process.env.MONGO_URI as string,
+                  {
+                        dbName: process.env.DB_NAME as string,
+                        serverSelectionTimeoutMS: 30000,
+                        socketTimeoutMS: 45000,
+                        connectTimeoutMS: 30000,
+                  },
+            );
+            console.log(
+                  `MongoDB connected successfully in Analytics Service to host: ${connectionInstance.connection.host}`,
+            );
       } catch (error) {
             console.error(`MongoDB Connection Failed in Analytics Service: ${error}`);
             throw new Error(`MongoDB Connection Failed in Analytics Service: ${error}`);

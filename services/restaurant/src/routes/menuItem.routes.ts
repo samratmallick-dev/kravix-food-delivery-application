@@ -5,7 +5,7 @@ import {
       getAllMenuItems,
       deleteMenuItem,
       toggleMenuItemAvailability,
-      searchByFood
+      searchByFood,
 } from "../controllers/menuItems.controllers.js";
 import { upload } from "../middleware/multer.js";
 
@@ -15,7 +15,8 @@ router.route("/").post(isAuthenticated, isSeller, upload, addMenuItems);
 router.route("/search").get(isAuthenticated, searchByFood);
 router.route("/:restaurantId").get(isAuthenticated, getAllMenuItems);
 router.route("/:itemId").delete(isAuthenticated, isSeller, deleteMenuItem);
-router.route("/:itemId/availability").patch(isAuthenticated, isSeller, toggleMenuItemAvailability);
-
+router
+      .route("/:itemId/availability")
+      .patch(isAuthenticated, isSeller, toggleMenuItemAvailability);
 
 export default router;

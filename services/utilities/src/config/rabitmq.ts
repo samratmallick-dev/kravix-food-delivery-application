@@ -12,10 +12,11 @@ export const connectRabbitMQ = async () => {
             });
 
             console.log("Connected RabitMQ in Utilities Service");
-
       } catch (error: unknown) {
             console.log("Error while connecting to RabbitMQ", error);
-            throw new Error(`Error while connecting to RabbitMQ in Utilities Service: ${error}`);
+            throw new Error(
+                  `Error while connecting to RabbitMQ in Utilities Service: ${error}`,
+            );
       }
 };
 

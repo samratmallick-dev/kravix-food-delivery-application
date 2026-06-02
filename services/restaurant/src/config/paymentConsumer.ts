@@ -22,18 +22,18 @@ export const startPayment = async () => {
                   const order = await Order.findOneAndUpdate(
                         {
                               _id: orderId,
-                              paymentStatus: { $ne: "paid" }
+                              paymentStatus: { $ne: "paid" },
                         },
                         {
                               $set: {
                                     paymentStatus: "paid",
-                                    status: "placed"
+                                    status: "placed",
                               },
                               $unset: {
-                                    expiresAt: 1
-                              }
+                                    expiresAt: 1,
+                              },
                         },
-                        { new: true }
+                        { new: true },
                   );
 
                   if (!order) {
@@ -42,19 +42,29 @@ export const startPayment = async () => {
                   }
 
                   // Record Coupon Usage
-                  if (order.couponCode && order.discountAmount && order.discountAmount > 0) {
+                  if (
+                        order.couponCode &&
+                        order.discountAmount &&
+                        order.discountAmount > 0
+                  ) {
                         try {
-                              const coupon = await Coupon.findOne({ code: order.couponCode.trim().toUpperCase() });
+                              const coupon = await Coupon.findOne({
+                                    code: order.couponCode.trim().toUpperCase(),
+                              });
                               if (coupon) {
-                                    await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } });
+                                    await Coupon.findByIdAndUpdate(coupon._id, {
+                                          $inc: { usedCount: 1 },
+                                    });
                                     await CouponUsage.create({
                                           couponId: coupon._id,
                                           userId: order.userId,
                                           orderId: order._id.toString(),
                                           discountApplied: order.discountAmount,
-                                          usedAt: new Date()
+                                          usedAt: new Date(),
                                     });
-                                    console.log(`✅ Coupon ${order.couponCode} applied and recorded for Order: ${order._id}`);
+                                    console.log(
+                                          `✅ Coupon ${order.couponCode} applied and recorded for Order: ${order._id}`,
+                                    );
                               }
                         } catch (err) {
                               console.error("❌ Failed to record coupon usage:", err);
@@ -63,15 +73,19 @@ export const startPayment = async () => {
 
                   channel.ack(msg);
 
-                  axios.post(
-                        `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
-                        {
-                              event: "order:new",
-                              room: `Restaurant:${order.restaurantId}`,
-                              payload: { orderId: order._id }
-                        },
-                        { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
-                  ).catch((err) => console.error("❌ Realtime socket emit failed:", err.message));
+                  axios
+                        .post(
+                              `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
+                              {
+                                    event: "order:new",
+                                    room: `Restaurant:${order.restaurantId}`,
+                                    payload: { orderId: order._id },
+                              },
+                              { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } },
+                        )
+                        .catch((err) =>
+                              console.error("❌ Realtime socket emit failed:", err.message),
+                        );
 
                   const adminPayload = JSON.stringify({
                         type: "ORDER_PLACED",
@@ -88,7 +102,7 @@ export const startPayment = async () => {
                   channel.sendToQueue(
                         process.env.ADMIN_EVENT_QUEUE!,
                         Buffer.from(adminPayload),
-                        { persistent: true }
+                        { persistent: true },
                   );
             } catch (error) {
                   console.error("❌ Error processing payment:", error);
