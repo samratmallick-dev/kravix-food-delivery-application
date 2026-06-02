@@ -155,14 +155,14 @@ const RiderCard = ({ order }: { order: IOrder }) => {
 };
 
 const OtpBanner = ({ otp }: { otp: string }) => (
-      <div className="bg-indigo-50/90 backdrop-blur-sm border border-indigo-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                  <KeyRound size={18} className="text-indigo-600" />
+      <div className="bg-primary/10 backdrop-blur-sm border border-primary/20 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <KeyRound size={18} className="text-primary" />
             </div>
             <div>
-                  <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide">Delivery OTP</p>
-                  <p className="text-2xl font-bold tracking-[0.3em] text-indigo-800 font-mono">{otp}</p>
-                  <p className="text-xs text-indigo-400 mt-0.5">Share this code with your rider to confirm delivery</p>
+                  <p className="text-xs font-semibold text-primary/70 uppercase tracking-wide">Delivery OTP</p>
+                  <p className="text-2xl font-bold tracking-[0.3em] text-primary font-mono">{otp}</p>
+                  <p className="text-xs text-primary/60 mt-0.5">Share this code with your rider to confirm delivery</p>
             </div>
       </div>
 );

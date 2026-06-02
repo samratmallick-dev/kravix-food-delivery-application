@@ -100,22 +100,22 @@ const CurrentOrderCard = ({
                   </div>
 
                   {needsOtp && (
-                        <div className="space-y-3 bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                        <div className="space-y-3 bg-primary/10 rounded-xl p-4 border border-primary/20">
                               <div className="flex items-center gap-2">
-                                    <KeyRound size={16} className="text-indigo-600 shrink-0" />
-                                    <p className="text-sm font-semibold text-indigo-800">Delivery OTP Verification</p>
+                                    <KeyRound size={16} className="text-primary shrink-0" />
+                                    <p className="text-sm font-semibold text-primary">Delivery OTP Verification</p>
                               </div>
                               {!otpSent ? (
                                     <button
                                           disabled={generatingOtp}
                                           onClick={handleGenerateOtp}
-                                          className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60 transition"
+                                          className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl bg-primary text-white hover:bg-red-700 disabled:opacity-60 transition"
                                     >
                                           {generatingOtp ? <Loader2 size={15} className="animate-spin" /> : "Send OTP to Customer"}
                                     </button>
                               ) : (
                                     <div className="space-y-2">
-                                          <p className="text-xs text-indigo-600">OTP sent to customer. Ask them for the code.</p>
+                                          <p className="text-xs text-primary">OTP sent to customer. Ask them for the code.</p>
                                           <input
                                                 type="text"
                                                 inputMode="numeric"
@@ -123,7 +123,7 @@ const CurrentOrderCard = ({
                                                 value={otp}
                                                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                                                 placeholder="Enter 6-digit OTP"
-                                                className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-sm text-center tracking-widest font-mono outline-none focus:border-indigo-500"
+                                                className="w-full border border-primary/30 rounded-lg px-3 py-2 text-sm text-center tracking-widest font-mono outline-none focus:border-primary"
                                           />
                                     </div>
                               )}
