@@ -8,9 +8,17 @@ const PORT = process.env.PORT || 6000;
 
 const start = async () => {
       try {
-            await Promise.all([connectDb(), connectRabbitMQ()]);
-
-            await startAdminOrderConsumer();
+            await connectDb();
+            try {
+                  await connectRabbitMQ();
+                  await startAdminOrderConsumer();
+                  console.log("✅ [Admin Service] RabbitMQ consumer started");
+            } catch (mqErr) {
+                  console.warn(
+                        "⚠️  [Admin Service] RabbitMQ unavailable — real-time events disabled.",
+                        mqErr instanceof Error ? mqErr.message : mqErr,
+                  );
+            }
 
             const server = app.listen(PORT, () => {
                   console.log(`✅ [Admin Service] Running at http://localhost:${PORT}`);
@@ -23,7 +31,6 @@ const start = async () => {
 
             process.on("unhandledRejection", (reason) => {
                   console.error("[Admin Service] Unhandled rejection:", reason);
-                  process.exit(1);
             });
 
             process.on("uncaughtException", (err) => {

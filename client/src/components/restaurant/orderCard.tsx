@@ -4,7 +4,7 @@ import { ORDER_ACTION } from "../../utils/orderFlow";
 import axios from "axios";
 import { orderBaseUrl } from "../common/constant";
 import toast from "react-hot-toast";
-import { MapPin, CreditCard, ChevronRight, Loader2, RefreshCw } from "lucide-react";
+import { MapPin, CreditCard, ChevronRight, Loader2, RefreshCw, Bike, Phone } from "lucide-react";
 import { storage } from "../../utils/secureStorage";
 
 interface props {
@@ -161,6 +161,20 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
                                     <span className="tabular-nums">₹{order.totalAmount.toFixed(2)}</span>
                               </div>
                         </div>
+
+                        {order.riderName && (
+                              <div className="flex items-center gap-2 bg-primary/10 rounded-xl px-3.5 py-2.5">
+                                    <Bike size={14} className="text-primary shrink-0" />
+                                    <div className="flex flex-col">
+                                          <span className="text-xs font-semibold text-primary">{order.riderName}</span>
+                                          {order.riderPhoneNumber && (
+                                                <span className="flex items-center gap-1 text-[11px] text-primary/70">
+                                                      <Phone size={10} />{order.riderPhoneNumber}
+                                                </span>
+                                          )}
+                                    </div>
+                              </div>
+                        )}
 
                         <div className="flex flex-col gap-2 pt-1">
                               <div className="flex items-start gap-1.5 text-xs text-gray-500">

@@ -7,7 +7,7 @@ import VerifyToggle from "../components/VerifyToggle";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
-interface User { _id: string; name: string; email: string; image: string; role: string | null; createdAt: string; isBlocked: boolean; blockedUntil: string | null; }
+interface User { _id: string; name: string; email: string; image: string; riderPicture?: string; role: string | null; createdAt: string; isBlocked: boolean; blockedUntil: string | null; }
 interface RiderProfile { _id: string; userId: string; isVerified: boolean; }
 
 const ROLES = ["all", "customer", "seller", "rider", "null"];
@@ -93,7 +93,7 @@ const AdminUsers = () => {
                   header: "User",
                   render: (u: User) => (
                         <div className="flex items-center gap-3">
-                              <img src={u.image} alt={u.name} referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                              <img src={u.riderPicture || u.image} alt={u.name} referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover shrink-0" />
                               <div className="min-w-0">
                                     <p className="text-sm font-medium text-gray-700 truncate">{u.name}</p>
                                     <p className="text-xs text-gray-400 truncate">{u.email}</p>
@@ -163,7 +163,7 @@ const AdminUsers = () => {
                                           <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"><X size={16} /></button>
                                     </div>
                                     <div className="flex flex-col items-center gap-3">
-                                          <img src={selected.image} alt={selected.name} className="w-20 h-20 rounded-full object-cover ring-4 ring-border" />
+                                          <img src={selected.riderPicture || selected.image} alt={selected.name} referrerPolicy="no-referrer" className="w-20 h-20 rounded-full object-cover ring-4 ring-border" />
                                           <div className="text-center">
                                                 <p className="font-bold text-gray-800">{selected.name}</p>
                                                 <p className="text-sm text-gray-400">{selected.email}</p>

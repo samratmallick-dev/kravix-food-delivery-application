@@ -52,8 +52,8 @@ export const addMenuItems = TryCatch(
 
             const fileBuffer = getBuffer(file);
             if (!fileBuffer) {
-                  return res.status(500).json({
-                        message: "Field to create file buffer.",
+                  return res.status(400).json({
+                        message: "Failed to process image file. Please upload a valid image.",
                         success: false,
                         error: true,
                   });

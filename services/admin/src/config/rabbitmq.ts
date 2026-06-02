@@ -17,12 +17,10 @@ export const connectRabbitMQ = async () => {
             console.log("✅ Connected to RabbitMQ in Admin Service");
 
             connection.on("error", (err) => {
-                  console.error("RabbitMQ connection error in Admin Service:", err.message);
-                  process.exit(1);
+                  console.warn("⚠️  RabbitMQ connection error in Admin Service:", err.message);
             });
             connection.on("close", () => {
-                  console.error("RabbitMQ connection closed in Admin Service — restarting");
-                  process.exit(1);
+                  console.warn("⚠️  RabbitMQ connection closed in Admin Service — real-time events disabled");
             });
       } catch (error) {
             console.error(

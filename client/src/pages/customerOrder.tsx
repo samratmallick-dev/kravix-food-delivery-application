@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import type { IOrder } from "../types/types";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
@@ -28,6 +28,11 @@ const CustomerOrder = () => {
       const [confirmCancelOrder, setConfirmCancelOrder] = useState<IOrder | null>(null);
       const [isCancelling, setIsCancelling] = useState(false);
 
+      const [delayedOrderPopup, setDelayedOrderPopup] = useState<IOrder | null>(null);
+      const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+      const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+      const trackedOrderIdRef = useRef<string | null>(null);
+
       const handleCancelOrder = async () => {
             if (!confirmCancelOrder) return;
             setIsCancelling(true);
@@ -51,6 +56,44 @@ const CustomerOrder = () => {
                   setIsCancelling(false);
             }
       };
+
+      useEffect(() => {
+            const DELAY_MS = 30 * 60 * 1000;
+            const REPEAT_MS = 60 * 1000;
+            const POPUP_STATUSES = ["accepted", "preparing", "ready_for_rider", "rider_assigned", "picked_up", "out_for_delivery", "reached_delivery_location"];
+
+            const qualifying = orders
+                  .filter((o) => POPUP_STATUSES.includes(o.status))
+                  .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0];
+
+            if (!qualifying) {
+                  delayTimerRef.current && clearTimeout(delayTimerRef.current);
+                  intervalRef.current && clearInterval(intervalRef.current);
+                  trackedOrderIdRef.current = null;
+                  return;
+            }
+
+            if (trackedOrderIdRef.current === qualifying._id) return;
+
+            delayTimerRef.current && clearTimeout(delayTimerRef.current);
+            intervalRef.current && clearInterval(intervalRef.current);
+            trackedOrderIdRef.current = qualifying._id;
+
+            const elapsed = Date.now() - new Date(qualifying.createdAt).getTime();
+            const remaining = Math.max(0, DELAY_MS - elapsed);
+
+            const startRepeating = () => {
+                  setDelayedOrderPopup(qualifying);
+                  intervalRef.current = setInterval(() => setDelayedOrderPopup(qualifying), REPEAT_MS);
+            };
+
+            delayTimerRef.current = setTimeout(startRepeating, remaining);
+
+            return () => {
+                  delayTimerRef.current && clearTimeout(delayTimerRef.current);
+                  intervalRef.current && clearInterval(intervalRef.current);
+            };
+      }, [orders]);
 
       const fetchOrders = useCallback(async () => {
             try {
@@ -171,6 +214,38 @@ const CustomerOrder = () => {
                                     />
                               ))}
                         </section>
+                  )}
+
+                  {delayedOrderPopup && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                              <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 space-y-4">
+                                    <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 mx-auto">
+                                          <Clock size={22} />
+                                    </div>
+                                    <div className="text-center space-y-1">
+                                          <h3 className="text-base font-bold text-gray-800">Order is taking longer than expected</h3>
+                                          <p className="text-xs text-gray-500">#{delayedOrderPopup._id.slice(-8).toUpperCase()} — Your order is taking longer than expected. Cancel or Keep Waiting?</p>
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                          <button
+                                                onClick={() => setDelayedOrderPopup(null)}
+                                                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 active:scale-95 transition cursor-pointer"
+                                          >
+                                                Keep Waiting
+                                          </button>
+                                          <button
+                                                onClick={() => {
+                                                      setDelayedOrderPopup(null);
+                                                      intervalRef.current && clearInterval(intervalRef.current);
+                                                      setConfirmCancelOrder(delayedOrderPopup);
+                                                }}
+                                                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold active:scale-95 transition cursor-pointer"
+                                          >
+                                                Cancel Order
+                                          </button>
+                                    </div>
+                              </div>
+                        </div>
                   )}
 
                   {confirmCancelOrder && (

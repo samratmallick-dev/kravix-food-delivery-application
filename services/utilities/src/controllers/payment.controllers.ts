@@ -125,9 +125,8 @@ export const verifyRazorpayPayment = async (req: Request, res: Response) => {
       }
 };
 
-const stript = new Stripe(process.env.STRIPE_SECRET_KEY! as string);
-
 export const payWithStripe = async (req: Request, res: Response) => {
+      const stript = new Stripe(process.env.STRIPE_SECRET_KEY! as string);
       try {
             const { orderId } = req.body;
 
@@ -205,6 +204,7 @@ export const payWithStripe = async (req: Request, res: Response) => {
 };
 
 export const verifyStripe = async (req: Request, res: Response) => {
+      const stript = new Stripe(process.env.STRIPE_SECRET_KEY! as string);
       try {
             const { sessionId } = req.body;
 

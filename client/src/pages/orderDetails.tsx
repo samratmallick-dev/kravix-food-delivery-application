@@ -179,6 +179,7 @@ const OrderDetails = () => {
       const [isReordering, setIsReordering] = useState(false);
       const [showCancelConfirm, setShowCancelConfirm] = useState(false);
       const [isCancelling, setIsCancelling] = useState(false);
+      const [showDeadlinePopup, setShowDeadlinePopup] = useState(false);
 
       const [ratings, setRatings] = useState<Record<string, { rating: number; comment: string; submitting: boolean; submitted: boolean }>>({});
 
@@ -384,6 +385,39 @@ const OrderDetails = () => {
                   </div>
             );
       };
+
+      const deadlineIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+      useEffect(() => {
+            if (!order) return;
+            const isActive = !["delivered", "cancelled"].includes(order.status);
+            if (!isActive) {
+                  if (deadlineIntervalRef.current) clearInterval(deadlineIntervalRef.current);
+                  return;
+            }
+
+            const placed = new Date(order.createdAt).getTime();
+            const deadline = placed + 30 * 60 * 1000;
+            const now = Date.now();
+
+            const startRepeating = () => {
+                  setShowDeadlinePopup(true);
+                  if (!deadlineIntervalRef.current) {
+                        deadlineIntervalRef.current = setInterval(() => setShowDeadlinePopup(true), 60_000);
+                  }
+            };
+
+            if (now >= deadline) {
+                  startRepeating();
+                  return () => { if (deadlineIntervalRef.current) clearInterval(deadlineIntervalRef.current); };
+            } else {
+                  const t = setTimeout(startRepeating, deadline - now);
+                  return () => {
+                        clearTimeout(t);
+                        if (deadlineIntervalRef.current) clearInterval(deadlineIntervalRef.current);
+                  };
+            }
+      }, [order?.createdAt, order?.status]);
 
       const prevStatusRef = useRef<string | null>(null);
       const confettiFiredRef = useRef(false);
@@ -679,6 +713,36 @@ const OrderDetails = () => {
                               }
                               {isReordering ? "Adding to Cart..." : "Reorder"}
                         </button>
+                  )}
+
+                  {showDeadlinePopup && (
+                        <div
+                              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        >
+                              <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 space-y-4">
+                                    <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 mx-auto">
+                                          <Clock size={22} />
+                                    </div>
+                                    <div className="text-center space-y-1">
+                                          <h3 className="text-base font-bold text-gray-800">Delivery taking too long?</h3>
+                                          <p className="text-xs text-gray-500">Your order has been pending for over 30 minutes. Would you like to cancel or continue waiting?</p>
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                          <button
+                                                onClick={() => setShowDeadlinePopup(false)}
+                                                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 active:scale-95 transition cursor-pointer"
+                                          >
+                                                Wait
+                                          </button>
+                                          <button
+                                                onClick={() => { setShowDeadlinePopup(false); setShowCancelConfirm(true); }}
+                                                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5"
+                                          >
+                                                <Ban size={14} /> Cancel Order
+                                          </button>
+                                    </div>
+                              </div>
+                        </div>
                   )}
 
                   {showCancelConfirm && (

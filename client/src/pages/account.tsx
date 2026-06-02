@@ -105,6 +105,7 @@ const Account = () => {
       };
 
       const displayImage = previewImage ?? user?.image;
+      const nameInitial = (user?.name ?? "U").charAt(0).toUpperCase();
 
       return (
             <div className="w-full h-full min-h-screen bg-white py-6 px-4">
@@ -112,12 +113,18 @@ const Account = () => {
 
                         <div className="flex items-center gap-4 border-b-2 border-gray-500 p-5">
                               <div className="relative shrink-0">
-                                    <img
-                                          src={displayImage}
-                                          alt="Profile"
-                                          className={`rounded-full object-cover ${isMobile ? "w-16 h-16" : "w-20 h-20"}`}
-                                          referrerPolicy="no-referrer"
-                                    />
+                                    {displayImage ? (
+                                          <img
+                                                src={displayImage}
+                                                alt="Profile"
+                                                className={`rounded-full object-cover ${isMobile ? "w-16 h-16" : "w-20 h-20"}`}
+                                                referrerPolicy="no-referrer"
+                                          />
+                                    ) : (
+                                          <div className={`rounded-full bg-primary text-white flex items-center justify-center font-bold ${isMobile ? "w-16 h-16 text-2xl" : "w-20 h-20 text-3xl"}`}>
+                                                {nameInitial}
+                                          </div>
+                                    )}
                                     {editing && (
                                           <>
                                                 <button

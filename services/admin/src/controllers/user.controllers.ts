@@ -3,6 +3,7 @@ import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { AdminRequest } from "../middleware/isAdminAuthenticated.js";
 import { User } from "../models/User.js";
 import { Restaurant } from "../models/Restaurant.js";
+import { Rider } from "../models/Rider.js";
 import { publishAdminEvent } from "../config/rabbitmq.js";
 
 export const getAllUsers = TryCatch(
@@ -23,6 +24,31 @@ export const getAllUsers = TryCatch(
                         .lean(),
                   User.countDocuments(filter),
             ]);
+
+            // Attach rider profile pictures for users with role "rider"
+            const riderUserIds = users
+                  .filter((u) => u.role === "rider")
+                  .map((u) => u._id.toString());
+
+            if (riderUserIds.length > 0) {
+                  const riderProfiles = await Rider.find(
+                        { userId: { $in: riderUserIds } },
+                        { userId: 1, picture: 1 },
+                  ).lean();
+
+                  const riderPictureMap = new Map(
+                        riderProfiles.map((r) => [r.userId, r.picture]),
+                  );
+
+                  for (const user of users) {
+                        if (user.role === "rider") {
+                              const riderPic = riderPictureMap.get(user._id.toString());
+                              if (riderPic) {
+                                    (user as any).riderPicture = riderPic;
+                              }
+                        }
+                  }
+            }
 
             return res.status(200).json({
                   success: true,
