@@ -45,7 +45,7 @@
 
 ## 🌟 Overview
 
-**Kravix** — meaning **"Let's Eat Again"** in Bengali — is a production-grade online food delivery application designed around a real-world business use case. The platform coordinates an event-driven food delivery ecosystem connecting three distinct roles: Customers, Restaurant Owners, and Delivery Riders, under the oversight of Platform Administrators. 
+**Kravix** — **"Be Smart, Eat Better"** in Bengali — is a production-grade online food delivery application designed around a real-world business use case. The platform coordinates an event-driven food delivery ecosystem connecting three distinct roles: Customers, Restaurant Owners, and Delivery Riders, under the oversight of Platform Administrators. 
 
 ### Real-World Business Use Case
 The platform operates as a multi-party marketplace where:
