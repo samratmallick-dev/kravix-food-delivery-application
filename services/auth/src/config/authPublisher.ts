@@ -31,7 +31,7 @@ export const publishAuthEvent = (
             )
             .then(() => {
                   console.log(
-                        `[Auth] 📤 Socket event "${socketEvent}" emitted to User:${userId}`,
+                        `[Auth] 📤 Socket event "${socketEvent}" forwarded to Realtime Service for User:${userId}`,
                   );
             })
             .catch((httpErr: unknown) => {

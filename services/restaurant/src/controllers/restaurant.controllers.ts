@@ -39,11 +39,11 @@ export const addRestaurant = TryCatch(
                   });
             }
 
-            const existingRestaurantSerller = await Restaurant.findOne({
+            const existingRestaurant = await Restaurant.findOne({
                   ownerId: user?._id,
             });
 
-            if (existingRestaurantSerller) {
+            if (existingRestaurant) {
                   return res.status(400).json({
                         message: "Seller already has a restaurant",
                         success: false,
@@ -76,7 +76,7 @@ export const addRestaurant = TryCatch(
             const fileBuffer = getBuffer(file);
             if (!fileBuffer) {
                   return res.status(500).json({
-                        message: "Field to create file buffer.",
+                        message: "Failed to create file buffer.",
                         success: false,
                         error: true,
                   });
