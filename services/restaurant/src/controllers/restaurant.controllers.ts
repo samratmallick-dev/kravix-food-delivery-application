@@ -377,9 +377,15 @@ export const getNearestRestaurant = TryCatch(
             ];
 
             let restaurants: any[] = [];
+            let correctedQuery: string | undefined;
 
             if (search && typeof search === "string") {
-                  const normalizedSearch = await normalizeSearchQuery(search);
+                  const { normalized: normalizedSearch, corrected } = await normalizeSearchQuery(search);
+                  if (corrected) correctedQuery = normalizedSearch;
+
+                  const tokens = normalizedSearch.trim().split(/\s+/).filter(Boolean);
+                  const nameRegex = new RegExp(tokens.join("|"), "i");
+
                   const byName = await Restaurant.aggregate([
                         {
                               ...geoNearStage,
@@ -387,17 +393,16 @@ export const getNearestRestaurant = TryCatch(
                                     ...geoNearStage.$geoNear,
                                     query: {
                                           isVerified: true,
-                                          name: {
-                                                $regex: normalizedSearch,
-                                                $options: "i",
-                                          },
+                                          name: { $regex: nameRegex },
+                                          ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}),
                                     },
                               },
                         },
                         ...sortAndProject,
                   ]);
+
                   const matchingItems = await MenuItem.find({
-                        name: { $regex: normalizedSearch, $options: "i" },
+                        name: { $regex: nameRegex },
                         isAvailable: true,
                   }).distinct("restaurantId");
 
@@ -415,6 +420,7 @@ export const getNearestRestaurant = TryCatch(
                                                                   (id: any) => new mongoose.Types.ObjectId(id.toString()),
                                                             ),
                                                       },
+                                                      ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}),
                                                 },
                                           },
                                     },
@@ -443,6 +449,7 @@ export const getNearestRestaurant = TryCatch(
                   error: false,
                   count: restaurants.length,
                   data: restaurants,
+                  ...(correctedQuery ? { correctedQuery } : {}),
             });
       },
 );

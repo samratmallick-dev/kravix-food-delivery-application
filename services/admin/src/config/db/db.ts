@@ -5,21 +5,39 @@ if (!(process.env.MONGO_URI && process.env.DB_NAME)) {
       throw new Error("MONGO_URI and DB_NAME must be defined");
 }
 
+const MONGO_OPTIONS = {
+      dbName: process.env.DB_NAME as string,
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 60000,
+      connectTimeoutMS: 30000,
+      heartbeatFrequencyMS: 10000,
+      maxPoolSize: 10,
+      retryWrites: true,
+      retryReads: true,
+};
+
 const connectDb = async () => {
-      if (mongoose.connection.readyState >= 1) return;
+      if (mongoose.connection.readyState === 1) return;
       try {
             const connectionInstance = await mongoose.connect(
                   process.env.MONGO_URI as string,
-                  {
-                        dbName: process.env.DB_NAME as string,
-                        serverSelectionTimeoutMS: 30000,
-                        socketTimeoutMS: 45000,
-                        connectTimeoutMS: 30000,
-                  },
+                  MONGO_OPTIONS,
             );
             console.log(
                   `MongoDB connected successfully to host: ${connectionInstance.connection.host}`,
             );
+
+            mongoose.connection.on("disconnected", () => {
+                  console.warn("[Admin Service] MongoDB disconnected — attempting reconnect...");
+                  setTimeout(() => {
+                        mongoose.connect(process.env.MONGO_URI as string, MONGO_OPTIONS)
+                              .catch((err) => console.error("[Admin Service] MongoDB reconnect failed:", err.message));
+                  }, 5000);
+            });
+
+            mongoose.connection.on("error", (err) => {
+                  console.error("[Admin Service] MongoDB connection error:", err.message);
+            });
       } catch (error) {
             console.error(`MongoDB Connection Failed: ${error}`);
             throw new Error(`MongoDB Connection Failed: ${error}`);

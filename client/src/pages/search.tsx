@@ -26,6 +26,7 @@ const SearchPage = () => {
       const [restaurants, setRestaurants] = useState<IRestaurant[]>([]);
       const [foodResults, setFoodResults] = useState<IFoodSearchResult[]>([]);
       const [loading, setLoading] = useState(false);
+      const [correctedQuery, setCorrectedQuery] = useState<string | null>(null);
       const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
       const [loadingAction, setLoadingAction] = useState<"inc" | "dec" | "add" | null>(null);
       const joinedRooms = useRef<Set<string>>(new Set());
@@ -105,6 +106,7 @@ const SearchPage = () => {
             if (!location?.latitude || !location.longitude) return;
             setRestaurants([]);
             setFoodResults([]);
+            setCorrectedQuery(null);
             setLoading(true);
             joinedRooms.current.clear();
             const headers = { Authorization: `Bearer ${storage.getToken()}` };
@@ -115,6 +117,7 @@ const SearchPage = () => {
                         headers
                   }).then(({ data }) => {
                         setRestaurants(data.data || []);
+                        if (data.correctedQuery) setCorrectedQuery(data.correctedQuery);
                   }).catch((error: any) => {
                         toast.error(error.response?.data?.message || "Failed to fetch restaurants");
                   }).finally(() => setLoading(false));
@@ -125,6 +128,7 @@ const SearchPage = () => {
                   }).then(({ data }) => {
                         const results: IFoodSearchResult[] = data.data || [];
                         setFoodResults(results);
+                        if (data.correctedQuery) setCorrectedQuery(data.correctedQuery);
                         if (socket) {
                               results.forEach(({ restaurant: r }) => {
                                     if (!joinedRooms.current.has(r._id)) {
@@ -150,26 +154,13 @@ const SearchPage = () => {
                   );
             });
 
-            return () => { socket.off("restaurant:status"); };
+            return () => {
+                  socket.off("restaurant:status");
+                  restaurants.forEach((r) => socket.emit("leave:restaurant", r._id));
+            };
       }, [socket, restaurants.length]);
 
-      useEffect(() => {
-            if (!socket || !location?.latitude || !location.longitude || searchType !== "food") return;
 
-            const headers = { Authorization: `Bearer ${storage.getToken()}` };
-            axios.get(`${restaurantBaseUrl}`, {
-                  params: { latitude: location.latitude, longitude: location.longitude },
-                  headers
-            }).then(({ data }) => {
-                  const nearby: IRestaurant[] = data.data || [];
-                  nearby.forEach(({ _id }) => {
-                        if (!joinedRooms.current.has(_id)) {
-                              socket.emit("join:restaurant", _id);
-                              joinedRooms.current.add(_id);
-                        }
-                  });
-            }).catch(() => { });
-      }, [socket, searchType, location]);
 
       useEffect(() => {
             if (!socket || searchType !== "food") return;
@@ -190,7 +181,10 @@ const SearchPage = () => {
                   }
             });
 
-            return () => { socket.off("menuitem:availability"); };
+            return () => {
+                  socket.off("menuitem:availability");
+                  joinedRooms.current.forEach((id) => socket.emit("leave:restaurant", id));
+            };
       }, [socket, searchType]);
 
       return (
@@ -218,6 +212,15 @@ const SearchPage = () => {
                               </button>
                         </div>
                   </div>
+
+                  {correctedQuery && (
+                        <p className="text-sm text-gray-500">
+                              Showing results for{" "}
+                              <span className="font-medium text-gray-800 italic">&ldquo;{correctedQuery}&rdquo;</span>
+                              {" instead of "}
+                              <span className="italic">&ldquo;{search}&rdquo;</span>
+                        </p>
+                  )}
 
                   {loading ? (
                         <AppSkeleton />

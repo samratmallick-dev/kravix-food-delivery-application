@@ -6,12 +6,14 @@ import {
       deleteMenuItem,
       toggleMenuItemAvailability,
       searchByFood,
+      autocomplete,
 } from "../controllers/menuItems.controllers.js";
 import { upload } from "../middleware/multer.js";
 
 const router = Router();
 
 router.route("/").post(isAuthenticated, isSeller, upload, addMenuItems);
+router.route("/autocomplete").get(isAuthenticated, autocomplete);
 router.route("/search").get(isAuthenticated, searchByFood);
 router.route("/:restaurantId").get(isAuthenticated, getAllMenuItems);
 router.route("/:itemId").delete(isAuthenticated, isSeller, deleteMenuItem);

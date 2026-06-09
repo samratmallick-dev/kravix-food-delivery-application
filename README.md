@@ -177,7 +177,9 @@ kravix/
 - **Account Security**: Comprehensive email verification, forgot password, and password reset flows powered by Gmail API.
 - **Location-Based Discovery**: Retrieve nearest open and verified restaurants using Mongoose geospatial queries (`$geoNear`).
 - **Geographic Address Management**: Register multiple delivery locations using an interactive inline Leaflet map modal.
-- **Smart Food Search**: Natural language query search normalized via Google Gemini 2.0 (interpreting regional terms like "bhat", "dal", "mach").
+- **Smart Food Search**: Natural language query search normalized via Google Gemini 2.0 (interpreting regional terms like "bhat", "dal", "mach") with multi-token AND-regex matching and OR-regex fallback for broader results.
+- **Autocomplete Suggestions**: Live proximity-aware autocomplete dropdown returning ranked Dish and Restaurant suggestions as the user types, with debounced fetching tied to geolocation coordinates and full keyboard navigation support.
+- **Typo Correction Hints**: Levenshtein-based fuzzy correction and prefix expansion run client-side without Gemini; the server returns a `correctedQuery` hint displayed as a "Did you mean …?" banner when applicable.
 - **Cart Management**: Add, increment, decrement, and clear cart items saved dynamically.
 - **Checkout & Promotions**: Apply flat, percentage-based, or free-delivery coupons with secure local persistence and automatic revalidation.
 - **Dual Payment Integration**: Secure checkout powered by Stripe or Razorpay.
@@ -470,7 +472,8 @@ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
 
 #### Menu Management (`/api/v1/menu`)
 - `POST /` - Adds a new food item (with name, price, description, and image) (Seller Only).
-- `GET /search` - Geospatially normalizes user query and retrieves matching active food items.
+- `GET /autocomplete` - Returns proximity-aware Dish and Restaurant suggestions ranked by geospatial distance. Accepts `query`, `lat`, and `lng` parameters.
+- `GET /search` - Normalizes user query via Gemini, executes multi-token AND-regex with OR-regex fallback, and returns matching active food items. Includes `correctedQuery` in the response when a typo correction was applied.
 - `GET /:restaurantId` - Fetches menu items belonging to a restaurant.
 - `DELETE /:itemId` - Deletes a menu item (Seller Only).
 - `PATCH /:itemId/availability` - Toggles menu item availability status (Seller Only).
@@ -556,7 +559,7 @@ The application utilizes Mongoose ODM to write schemas and interface with MongoD
 
 ### 2. Restaurant (`Restaurant` - Restaurant Service)
 - `ownerId`: String (references User)
-- `name`: String
+- `name`: String (text index)
 - `image`: String
 - `location`: GeoJSON Point (`{ type: "Point", coordinates: [lng, lat] }`)
 - `address`: String
@@ -566,7 +569,7 @@ The application utilizes Mongoose ODM to write schemas and interface with MongoD
 
 ### 3. MenuItem (`MenuItem` - Restaurant Service)
 - `restaurantId`: ObjectId (references Restaurant)
-- `name`: String
+- `name`: String (text index + single-field index)
 - `description`: String
 - `price`: Number
 - `imageUrl`: String

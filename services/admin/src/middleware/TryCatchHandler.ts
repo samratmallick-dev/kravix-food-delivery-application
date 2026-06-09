@@ -5,16 +5,20 @@ export const TryCatch = (handler: RequestHandler): RequestHandler => {
             try {
                   await handler(req, res, next);
             } catch (error: any) {
-                  const statusCode = error.response?.status || 500;
-                  const message = error.response?.data?.message || error.message || "Something went wrong";
+                  console.error("[Admin Service] Controller error:", error?.message ?? error);
+                  const statusCode = error?.response?.status || error?.statusCode || 500;
+                  const message =
+                        error?.response?.data?.message ||
+                        error?.message ||
+                        "Something went wrong";
                   const body: Record<string, unknown> = {
                         success: false,
                         message,
                         error: true,
-                        data: {}
+                        data: {},
                   };
-                  if (process.env.NODE_ENV === "development") body["stack"] = error.stack;
+                  if (process.env.NODE_ENV === "development") body["stack"] = error?.stack;
                   return res.status(statusCode).json(body);
             }
-      }
+      };
 };

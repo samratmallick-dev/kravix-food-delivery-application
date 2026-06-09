@@ -59,5 +59,8 @@
 
 button {
       @apply cursor-pointer disabled:cursor-not-allowed;
-      animation: subtle-zoom 20s ease-in-out infinite alternate !important;
+}
+
+.hero-btn {
+      animation: subtle-zoom 20s ease-in-out infinite alternate;
 }

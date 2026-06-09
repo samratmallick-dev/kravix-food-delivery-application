@@ -45,4 +45,7 @@ const menuItemSchema: Schema = new Schema<IMenuItem>(
       { timestamps: true },
 );
 
+menuItemSchema.index({ name: "text", description: "text" });
+menuItemSchema.index({ name: 1 });
+
 export const MenuItem = mongoose.model<IMenuItem>("MenuItem", menuItemSchema);

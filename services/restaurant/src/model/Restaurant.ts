@@ -65,6 +65,8 @@ const restaurantSchema: Schema = new Schema<IRestaurant>(
 );
 
 restaurantSchema.index({ autoLocation: "2dsphere" });
+restaurantSchema.index({ name: "text", description: "text" });
+restaurantSchema.index({ name: 1 });
 
 export const Restaurant = mongoose.model<IRestaurant>(
       "Restaurant",

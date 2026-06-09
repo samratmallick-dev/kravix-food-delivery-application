@@ -6,7 +6,7 @@ import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import { MenuItem } from "../model/MenuItems.js";
 import mongoose from "mongoose";
-import { normalizeSearchQuery } from "../utils/searchNormalizer.js";
+import { normalizeSearchQuery, prefixExpand } from "../utils/searchNormalizer.js";
 
 export const addMenuItems = TryCatch(
       async (req: AuthenticatedRequest, res: Response) => {
@@ -61,9 +61,7 @@ export const addMenuItems = TryCatch(
 
             const { data: updateResult } = await axios.post(
                   `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
-                  {
-                        image: fileBuffer,
-                  },
+                  { image: fileBuffer },
                   {
                         headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
                         maxContentLength: Infinity,
@@ -108,7 +106,7 @@ export const getAllMenuItems = TryCatch(
                   });
             }
 
-            const menuItems = await MenuItem.find({ restaurantId: restaurantId });
+            const menuItems = await MenuItem.find({ restaurantId });
             return res.status(200).json({
                   message: "Menu items fetched successfully",
                   success: true,
@@ -195,14 +193,28 @@ export const searchByFood = TryCatch(
                   });
             }
 
-            const normalizedSearch = await normalizeSearchQuery(search as string);
+            const { normalized: normalizedSearch, corrected } = await normalizeSearchQuery(search as string);
 
-            const matchingItems = await MenuItem.find({
-                  name: { $regex: normalizedSearch, $options: "i" },
+            const tokens = normalizedSearch.trim().split(/\s+/).filter(Boolean);
+            const regexPattern = tokens.map((t) => `(?=.*${t})`).join("");
+            const searchRegex = new RegExp(regexPattern, "i");
+
+            let matchingItems = await MenuItem.find({
+                  name: { $regex: searchRegex },
                   isAvailable: true,
             })
                   .select("restaurantId name price imageUrl description isAvailable")
                   .limit(50);
+
+            if (!matchingItems.length && tokens.length > 1) {
+                  const broadRegex = new RegExp(tokens.join("|"), "i");
+                  matchingItems = await MenuItem.find({
+                        name: { $regex: broadRegex },
+                        isAvailable: true,
+                  })
+                        .select("restaurantId name price imageUrl description isAvailable")
+                        .limit(50);
+            }
 
             if (!matchingItems.length) {
                   return res.status(200).json({
@@ -210,6 +222,7 @@ export const searchByFood = TryCatch(
                         success: true,
                         error: false,
                         data: [],
+                        correctedQuery: corrected ? normalizedSearch : undefined,
                   });
             }
 
@@ -267,7 +280,120 @@ export const searchByFood = TryCatch(
                   success: true,
                   error: false,
                   data: results,
+                  ...(corrected ? { correctedQuery: normalizedSearch } : {}),
             });
+      },
+);
+
+export const autocomplete = TryCatch(
+      async (req: AuthenticatedRequest, res: Response) => {
+            const { q = "", latitude, longitude, radius = 10000 } = req.query;
+            const query = (q as string).trim();
+
+            if (!query) return res.status(200).json({ success: true, data: [] });
+            if (!latitude || !longitude) {
+                  return res.status(400).json({ message: "Latitude and longitude are required", success: false, error: true });
+            }
+
+            const lower = query.toLowerCase();
+
+            const rawTokens = lower.split(/\s+/).filter(Boolean);
+            const expandedTokens = rawTokens.map((t) => prefixExpand(t) ?? t);
+
+            const allUnchanged = expandedTokens.every((t, i) => t === rawTokens[i]);
+            let finalTokens = expandedTokens;
+            if (allUnchanged && lower.length >= 5) {
+                  const { normalized } = await normalizeSearchQuery(lower);
+                  finalTokens = normalized.trim().split(/\s+/).filter(Boolean);
+            }
+
+            const expandedRegex = new RegExp(finalTokens.map((t) => `(?=.*${t})`).join(""), "i");
+            const rawRegex = new RegExp(lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+
+            let nearbyIds: any[] = await Restaurant.aggregate([
+                  {
+                        $geoNear: {
+                              near: { type: "Point", coordinates: [Number(longitude), Number(latitude)] },
+                              distanceField: "distance",
+                              maxDistance: Number(radius),
+                              spherical: true,
+                              query: { isVerified: true },
+                        },
+                  },
+                  { $project: { _id: 1 } },
+                  { $limit: 200 },
+            ]).then((rs: any[]) => rs.map((r) => r._id));
+
+            if (nearbyIds.length === 0) {
+                  nearbyIds = await Restaurant.aggregate([
+                        {
+                              $geoNear: {
+                                    near: { type: "Point", coordinates: [Number(longitude), Number(latitude)] },
+                                    distanceField: "distance",
+                                    maxDistance: 50000,
+                                    spherical: true,
+                                    query: { isVerified: true },
+                              },
+                        },
+                        { $project: { _id: 1 } },
+                        { $limit: 200 },
+                  ]).then((rs: any[]) => rs.map((r) => r._id));
+            }
+
+            const proximityFilter = nearbyIds.length > 0 ? { $in: nearbyIds } : { $exists: true };
+
+            const [foodByExpanded, restByExpanded, restByRaw] = await Promise.all([
+                  MenuItem.find({
+                        name: { $regex: expandedRegex },
+                        isAvailable: true,
+                        restaurantId: proximityFilter,
+                  }).select("name imageUrl restaurantId price").limit(5).lean(),
+
+                  Restaurant.find({
+                        $or: [{ name: { $regex: expandedRegex } }, { description: { $regex: expandedRegex } }],
+                        isVerified: true,
+                        _id: proximityFilter,
+                  }).select("name image").limit(4).lean(),
+
+                  Restaurant.find({
+                        $or: [{ name: { $regex: rawRegex } }, { description: { $regex: rawRegex } }],
+                        isVerified: true,
+                        _id: proximityFilter,
+                  }).select("name image").limit(4).lean(),
+            ]);
+
+            const finalFood = foodByExpanded.length > 0
+                  ? foodByExpanded
+                  : await MenuItem.find({
+                        name: { $regex: rawRegex },
+                        isAvailable: true,
+                        restaurantId: proximityFilter,
+                  }).select("name imageUrl restaurantId price").limit(5).lean();
+
+            const seenIds = new Set<string>();
+            const finalRestaurants: any[] = [];
+            for (const r of [...restByExpanded, ...restByRaw]) {
+                  const key = r._id.toString();
+                  if (!seenIds.has(key)) { seenIds.add(key); finalRestaurants.push(r); }
+            }
+
+            const suggestions = [
+                  ...finalRestaurants.slice(0, 4).map((r: any) => ({
+                        id: r._id.toString(),
+                        name: r.name,
+                        image: r.image || "",
+                        type: "Restaurant" as const,
+                  })),
+                  ...finalFood.slice(0, 5).map((f: any) => ({
+                        id: f._id.toString(),
+                        name: f.name,
+                        image: f.imageUrl || "",
+                        type: "Dish" as const,
+                        restaurantId: f.restaurantId.toString(),
+                  })),
+            ];
+
+            return res.status(200).json({ success: true, data: suggestions });
       },
 );
 
