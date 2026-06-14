@@ -2,11 +2,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAppData } from "../context/AppContext";
 import { useMemo, useState } from "react";
 import type { IMenuItem, IRestaurant } from "../types/types";
-import axios from "axios";
-import { cartBaseUrl } from "../components/common/constant";
+import { incrementCartQuantity, decrementCartQuantity, clearCart as apiClearCart } from "../utils/cart.api";
 import toast from "react-hot-toast";
 import { ArrowRight, ShoppingBag, Trash2 } from "lucide-react";
-import { storage } from "../utils/secureStorage";
 
 const Cart = () => {
 
@@ -61,14 +59,11 @@ const Cart = () => {
       const increaseItem = async (itemId: string) => {
             try {
                   setLoadingItemInc(itemId);
-                  await axios.patch(`${cartBaseUrl}/increment`, { itemId }, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                        withCredentials: true
-                  });
+                  await incrementCartQuantity({ itemId });
                   await fetchCart();
-            } catch (error: any) {
-                  console.log(error);
-                  toast(error.response.data.message);
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Failed to increase item");
             } finally {
                   setLoadingItemInc(null);
             }
@@ -77,14 +72,11 @@ const Cart = () => {
       const decreaseItem = async (itemId: string) => {
             try {
                   setLoadingItemDec(itemId);
-                  await axios.patch(`${cartBaseUrl}/decrement`, { itemId }, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                        withCredentials: true
-                  });
+                  await decrementCartQuantity({ itemId });
                   await fetchCart();
-            } catch (error: any) {
-                  console.log(error);
-                  toast(error.response.data.message);
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Failed to decrease item");
             } finally {
                   setLoadingItemDec(null);
             }
@@ -93,16 +85,12 @@ const Cart = () => {
       const clearCart = async () => {
 
             try {
-                  setClearingCart(true)
-                  await axios.delete(`${cartBaseUrl}`, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
-                  });
+                  setClearingCart(true);
+                  await apiClearCart();
                   await fetchCart();
-            } catch (error: any) {
-                  console.log(error);
-                  toast(error.response.data.message);
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Failed to clear cart");
             } finally {
                   setClearingCart(false);
             }

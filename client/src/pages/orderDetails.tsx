@@ -2,10 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
 import type { IOrder } from "../types/types";
 import { useEffect, useCallback, useState, useRef } from "react";
-import axios from "axios";
-import { orderBaseUrl, reviewBaseUrl } from "../components/common/constant";
+import { getSingleOrder, cancelMyOrder, reorderItems } from "../utils/order.api";
+import { createReview } from "../utils/review.api";
 import { useAppData } from "../context/AppContext";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import {
       MapPin, Phone, Store, CreditCard, Wallet,
       CheckCircle2, ChefHat, UtensilsCrossed, Bike, PackageCheck,
@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import CustomerTrackingMap from "../components/customer/CustomerTrackingMap";
 import confetti from "canvas-confetti";
-import { storage } from "../utils/secureStorage";
 
 const STEPS = [
       { key: "placed",           label: "Placed",       Icon: ClipboardList },
@@ -233,7 +232,7 @@ const OrderDetails = () => {
             }));
 
             try {
-                  const payload = {
+                  await createReview({
                         orderId: order._id,
                         restaurantId: order.restaurantId,
                         rating: state.rating,
@@ -241,11 +240,6 @@ const OrderDetails = () => {
                         type,
                         ...(type === "rider" ? { riderId: targetId } : {}),
                         ...(type === "menu_item" ? { menuItemId: targetId } : {})
-                  };
-
-                  await axios.post(`${reviewBaseUrl}/`, payload, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                        withCredentials: true
                   });
 
                   toast.success("Review submitted successfully!");
@@ -425,10 +419,7 @@ const OrderDetails = () => {
       const fetchOrder = useCallback(async () => {
             if (!id) return;
             try {
-                  const { data } = await axios.get(`${orderBaseUrl}/me/${id}`, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                        withCredentials: true,
-                  });
+                  const data = await getSingleOrder(id);
                   setOrder(data.data);
                   
                   if (data.data?.deliveryOtp && data.data?.status === "reached_delivery_location") {
@@ -447,16 +438,12 @@ const OrderDetails = () => {
             if (!order) return;
             setIsReordering(true);
             try {
-                  const { data } = await axios.post(
-                        `${orderBaseUrl}/reorder/${order._id}`,
-                        {},
-                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
-                  );
+                  const data = await reorderItems(order._id);
                   await fetchCart();
-                  toast.success(data.message);
+                  toast.success(data.message || "Reordered successfully!");
                   navigate("/cart");
             } catch (err: any) {
-                  toast.error(err?.response?.data?.message ?? "Failed to reorder. Please try again.");
+                  toast.error((err as Error).message || "Failed to reorder. Please try again.");
             } finally {
                   setIsReordering(false);
             }
@@ -466,19 +453,12 @@ const OrderDetails = () => {
             if (!order) return;
             setIsCancelling(true);
             try {
-                  const { data } = await axios.patch(
-                        `${orderBaseUrl}/me/${order._id}/cancel`,
-                        {},
-                        {
-                              headers: { Authorization: `Bearer ${storage.getToken()}` },
-                              withCredentials: true
-                        }
-                  );
+                  const data = await cancelMyOrder(order._id);
                   setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
                   toast.success(data.message || "Order cancelled successfully");
                   setShowCancelConfirm(false);
             } catch (err: any) {
-                  toast.error(err?.response?.data?.message ?? "Failed to cancel order");
+                  toast.error((err as Error).message || "Failed to cancel order");
             } finally {
                   setIsCancelling(false);
             }

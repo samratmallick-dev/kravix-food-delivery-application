@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Trash2, Eye, X } from "lucide-react";
-import { useAdminApi } from "../hooks/useAdminApi";
+import { getAllRestaurants, getRestaurantById, verifyRestaurant, deleteRestaurant } from "../../utils/admin.api";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import AdminTable from "../components/AdminTable";
 import VerifyToggle from "../components/VerifyToggle";
@@ -10,7 +10,7 @@ interface Restaurant { _id: string; name: string; ownerId: string; phone: number
 interface MenuItem { _id: string; name: string; price: number; isAvailable: boolean; description: string; }
 
 const AdminRestaurants = () => {
-      const api = useAdminApi();
+
       const { socket } = useAdminSocket();
       const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
       const [loading, setLoading] = useState(true);
@@ -28,13 +28,13 @@ const AdminRestaurants = () => {
             try {
                   const params: Record<string, string | number> = { page, limit: 20 };
                   if (filter !== "all") params["isVerified"] = filter;
-                  const { data } = await api.get("/restaurants", { params });
-                  setRestaurants(data.data.restaurants);
-                  setPages(data.data.pages);
-                  setTotal(data.data.total);
+                  const res = await getAllRestaurants(params);
+                  setRestaurants(res.data.restaurants);
+                  setPages(res.data.pages);
+                  setTotal(res.data.total);
             } catch { toast.error("Failed to load restaurants"); }
             finally { setLoading(false); }
-      }, [api, page, filter]);
+      }, [page, filter]);
 
       useEffect(() => { fetchRestaurants(); }, [fetchRestaurants]);
 
@@ -63,7 +63,7 @@ const AdminRestaurants = () => {
       const handleVerify = async (r: Restaurant) => {
             setVerifyLoading(r._id);
             try {
-                  await api.patch(`/restaurants/${r._id}/verify`, { isVerified: !r.isVerified });
+                  await verifyRestaurant(r._id);
                   setRestaurants((prev) => prev.map((x) => x._id === r._id ? { ...x, isVerified: !x.isVerified } : x));
                   toast.success(`Restaurant ${!r.isVerified ? "verified" : "unverified"}`);
             } catch { toast.error("Failed to update verification"); }
@@ -73,7 +73,7 @@ const AdminRestaurants = () => {
       const handleDelete = async (r: Restaurant) => {
             setDeleting(r._id);
             try {
-                  await api.delete(`/restaurants/${r._id}`);
+                  await deleteRestaurant(r._id);
                   setRestaurants((prev) => prev.filter((x) => x._id !== r._id));
                   setTotal((t) => t - 1);
                   toast.success("Restaurant deleted");
@@ -83,8 +83,8 @@ const AdminRestaurants = () => {
 
       const handleView = async (r: Restaurant) => {
             try {
-                  const { data } = await api.get(`/restaurants/${r._id}`);
-                  setSelected({ restaurant: data.data.restaurant, menuItems: data.data.menuItems });
+                  const res = await getRestaurantById(r._id);
+                  setSelected({ restaurant: res.data.restaurant, menuItems: res.data.menuItems });
             } catch { toast.error("Failed to load restaurant details"); }
       };
 

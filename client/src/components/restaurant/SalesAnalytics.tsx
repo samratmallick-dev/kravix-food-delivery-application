@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { orderBaseUrl } from "../common/constant";
+import { getRestaurantSalesStats } from "../../utils/order.api";
 import { TrendingUp, ShoppingBag, IndianRupee } from "lucide-react";
-import { storage } from "../../utils/secureStorage";
 import {
       ResponsiveContainer,
       AreaChart,
@@ -41,11 +39,8 @@ export default function SalesAnalytics({ restaurantId }: { restaurantId: string 
       useEffect(() => {
             const fetch = async () => {
                   try {
-                        const { data } = await axios.get(
-                              `${orderBaseUrl}/restaurants/${restaurantId}/sales-stats`,
-                              { headers: { Authorization: `Bearer ${storage.getToken()}` }, withCredentials: true }
-                        );
-                        setStats(data.data);
+                        const { data } = await getRestaurantSalesStats(restaurantId);
+                        setStats(data as any);
                   } catch {
                         setError(true);
                   } finally {

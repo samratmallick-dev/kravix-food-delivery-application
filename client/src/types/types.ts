@@ -159,3 +159,40 @@ export interface IRiderEarnings {
       weekEarnings: number;
       weeklyBreakdown: { date: string; amount: number }[];
 };
+
+export interface ICoupon {
+      _id: string;
+      code: string;
+      discountType: "percentage" | "flat" | "free_delivery";
+      discountValue: number;
+      maxDiscountAmount: number;
+      minOrderAmount: number;
+      expiryDate: Date;
+      usageLimit: number;
+      usedCount: number;
+      perUserLimit: number;
+      couponType: "global" | "restaurant";
+      restaurantId?: string;
+      isActive: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+}
+
+export interface IReview {
+      _id: string;
+      userId: string;
+      userName: string;
+      userImage: string;
+      orderId: string;
+      restaurantId: string;
+      menuItemId?: string;
+      riderId?: string;
+      rating: number;
+      comment: string;
+      type: "restaurant" | "menu_item" | "rider";
+      status: "approved" | "flagged" | "rejected";
+      isReported: boolean;
+      reportReason?: string;
+      createdAt: Date;
+      updatedAt: Date;
+}

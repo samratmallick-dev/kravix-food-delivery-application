@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { IMenuItem, IRestaurant } from "../types/types";
-import axios from "axios";
-import { menuBaseUrl, restaurantBaseUrl } from "../components/common/constant";
+import { fetchMyRestaurant as apiFetchMyRestaurant } from "../utils/restaurant.api";
+import { getAllMenuItems } from "../utils/menu.api";
 import AddRestaurant from "../components/restaurant/addRestaurant";
 import RestaurantProfile from "../components/restaurant/restaurantProfile";
 import Menuitems from "../components/restaurant/menuitems";
@@ -37,13 +37,7 @@ const Restaurant = () => {
 
       const fetchMyRestaurant = async () => {
             try {
-                  const token = storage.getToken();
-                  const { data } = await axios.get(`${restaurantBaseUrl}/me`, {
-                        headers: {
-                              Authorization: `Bearer ${token}`
-                        },
-                        withCredentials: true
-                  });
+                  const data = await apiFetchMyRestaurant();
 
                   if (data.token) {
                         storage.setToken(data.token);
@@ -88,12 +82,7 @@ const Restaurant = () => {
 
       const fetchMenuItem = async (restaurantId: string) => {
             try {
-                  const { data } = await axios.get(`${menuBaseUrl}/${restaurantId}`, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
-                  });
-
+                  const data = await getAllMenuItems(restaurantId);
                   setMenuItem(Array.isArray(data.data) ? data.data : []);
             } catch (error) {
                   console.log(error);

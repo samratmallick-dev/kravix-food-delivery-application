@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import type { IMenuItem } from "../../types/types";
 import { Eye, Loader, Minus, Plus, Trash2 } from "lucide-react";
 import { BsCartPlus, BsEyeSlash } from "react-icons/bs";
-import axios from "axios";
-import { cartBaseUrl, menuBaseUrl } from "../common/constant";
+import { addToCart as apiAddToCart, incrementCartQuantity, decrementCartQuantity } from "../../utils/cart.api";
+import { deleteMenuItem, toggleMenuItemAvailability as apiToggleMenuItemAvailability } from "../../utils/menu.api";
 import toast from "react-hot-toast";
 import { useAppData } from "../../context/AppContext";
 import { useSocket } from "../../context/SocketContext";
-import { storage } from "../../utils/secureStorage";
 
 interface MenuItemProps {
       items: IMenuItem[];
@@ -52,16 +51,12 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             if (!conform) return;
 
             try {
-                  const response = await axios.delete(`${menuBaseUrl}/${itemId}`, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
-                  });
-                  toast.success(response.data.message);
+                  const response = await deleteMenuItem(itemId);
+                  toast.success(response.message || "Item deleted");
                   onItemDelete();
             } catch (error: any) {
                   console.log(error);
-                  toast.error(error.response?.data?.message || "Failed to delete menu item");
+                  toast.error(error.message || "Failed to delete menu item");
             }
       };
 
@@ -70,17 +65,13 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   prev.map(i => i._id === itemId ? { ...i, isAvailable: !i.isAvailable } : i)
             );
             try {
-                  const response = await axios.patch(`${menuBaseUrl}/${itemId}/availability`, {}, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
-                  });
-                  toast.success(response.data.message);
+                  const response = await apiToggleMenuItemAvailability(itemId);
+                  toast.success(response.message || "Availability toggled");
             } catch (error: any) {
                   setLocalItems(prev =>
                         prev.map(i => i._id === itemId ? { ...i, isAvailable: !i.isAvailable } : i)
                   );
-                  toast.error(error.response?.data?.message || "Failed to toggle availability");
+                  toast.error(error.message || "Failed to toggle availability");
             }
       };
 
@@ -88,19 +79,12 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("add");
-                  const { data } = await axios.post(`${cartBaseUrl}`, {
-                        restaurantId, itemId
-                  }, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
-                  });
-
-                  toast.success(data.message);
+                  const res = await apiAddToCart({ restaurantId, itemId });
+                  toast.success(res.message || "Item added to cart");
                   await fetchCart();
             } catch (error: any) {
                   console.log(error);
-                  toast.error(error.response?.data?.message || "Failed to add item to cart");
+                  toast.error(error.message || "Failed to add item to cart");
             } finally {
                   setLoadingItemId(null);
                   setLoadingAction(null);
@@ -111,15 +95,11 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("inc");
-                  await axios.patch(`${cartBaseUrl}/increment`, { itemId }, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
-                  });
+                  await incrementCartQuantity({ itemId });
                   await fetchCart();
             } catch (error: any) {
                   console.log(error);
-                  toast.error(error.response?.data?.message || "Failed to update cart");
+                  toast.error(error.message || "Failed to update cart");
             } finally {
                   setLoadingItemId(null);
                   setLoadingAction(null);
@@ -130,15 +110,11 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("dec");
-                  await axios.patch(`${cartBaseUrl}/decrement`, { itemId }, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
-                  });
+                  await decrementCartQuantity({ itemId });
                   await fetchCart();
             } catch (error: any) {
                   console.log(error);
-                  toast.error(error.response?.data?.message || "Failed to update cart");
+                  toast.error(error.message || "Failed to update cart");
             } finally {
                   setLoadingItemId(null);
                   setLoadingAction(null);

@@ -4,13 +4,11 @@ import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { authBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import { useAppData } from "../context/AppContext";
 import { storage } from "../utils/secureStorage";
-import { registerWithEmail, resendVerificationEmail } from "../utils/auth.api";
+import { registerWithEmail, resendVerificationEmail, loginWithGoogle } from "../utils/auth.api";
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 
@@ -93,19 +91,14 @@ const RegisterPage = () => {
     if (!authResult?.code) return;
     setGoogleLoading(true);
     try {
-      const result = await axios.post(
-        `${authBaseUrl}/sessions`,
-        { code: authResult.code },
-        { withCredentials: true }
-      );
-      storage.setToken(result.data.token);
-      setUser(result.data.data);
+      const data = await loginWithGoogle(authResult.code);
+      if (data.token) storage.setToken(data.token);
+      if (data.user) setUser(data.user as any);
       setIsAuth(true);
-      toast.success(result.data.message || "Login Successful");
+      toast.success(data.message || "Login Successful");
       navigate("/");
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      toast.error(e.response?.data?.message || "Google sign-in failed.");
+      toast.error((err as Error).message || "Google sign-in failed.");
     } finally {
       setGoogleLoading(false);
     }

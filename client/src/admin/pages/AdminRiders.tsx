@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Trash2, Eye, X } from "lucide-react";
-import { useAdminApi } from "../hooks/useAdminApi";
+import { getAllRiders, verifyRider, deleteRider } from "../../utils/admin.api";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import AdminTable from "../components/AdminTable";
 import VerifyToggle from "../components/VerifyToggle";
@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 interface Rider { _id: string; userId: string; picture: string; phoneNumber: string; aadhaarNumber: string; drivingLicesce: string; isVerified: boolean; isAvailable: boolean; lastActiveAt: string; createdAt: string; }
 
 const AdminRiders = () => {
-      const api = useAdminApi();
+
       const { socket } = useAdminSocket();
       const [riders, setRiders] = useState<Rider[]>([]);
       const [loading, setLoading] = useState(true);
@@ -29,13 +29,13 @@ const AdminRiders = () => {
                   const params: Record<string, string | number> = { page, limit: 20 };
                   if (verifiedFilter !== "all") params["isVerified"] = verifiedFilter;
                   if (availableFilter !== "all") params["isAvailable"] = availableFilter;
-                  const { data } = await api.get("/riders", { params });
-                  setRiders(data.data.riders);
-                  setPages(data.data.pages);
-                  setTotal(data.data.total);
+                  const res = await getAllRiders(params);
+                  setRiders(res.data.riders);
+                  setPages(res.data.pages);
+                  setTotal(res.data.total);
             } catch { toast.error("Failed to load riders"); }
             finally { setLoading(false); }
-      }, [api, page, verifiedFilter, availableFilter]);
+      }, [page, verifiedFilter, availableFilter]);
 
       useEffect(() => { fetchRiders(); }, [fetchRiders]);
 
@@ -64,7 +64,7 @@ const AdminRiders = () => {
       const handleVerify = async (r: Rider) => {
             setVerifyLoading(r._id);
             try {
-                  await api.patch(`/riders/${r._id}/verify`, { isVerified: !r.isVerified });
+                  await verifyRider(r._id);
                   setRiders((prev) => prev.map((x) => x._id === r._id ? { ...x, isVerified: !x.isVerified } : x));
                   toast.success(`Rider ${!r.isVerified ? "verified" : "unverified"}`);
             } catch { toast.error("Failed to update verification"); }
@@ -74,7 +74,7 @@ const AdminRiders = () => {
       const handleDelete = async (r: Rider) => {
             setDeleting(r._id);
             try {
-                  await api.delete(`/riders/${r._id}`);
+                  await deleteRider(r._id);
                   setRiders((prev) => prev.filter((x) => x._id !== r._id));
                   setTotal((t) => t - 1);
                   toast.success("Rider deleted");

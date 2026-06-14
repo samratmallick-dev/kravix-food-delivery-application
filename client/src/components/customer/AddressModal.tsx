@@ -7,14 +7,13 @@ import {
       useMap,
 } from "react-leaflet";
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import { addAddress as apiAddAddress } from "../../utils/address.api";
 import toast from "react-hot-toast";
 import L from "leaflet";
 import { LuLocateFixed } from "react-icons/lu";
 import { BiLoader, BiPlus, BiMapPin, BiPhone, BiSearch } from "react-icons/bi";
 import { X } from "lucide-react";
-import { addressBaseUrl } from "../common/constant";
-import { storage } from "../../utils/secureStorage";
+
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -146,21 +145,12 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded }: AddressModalProps) =>
             }
             try {
                   setAdding(true);
-                  const token = storage.getToken();
-                  const { data } = await axios.post(
-                        addressBaseUrl,
-                        {
-                              formattedAddress,
-                              mobile: Number(mobile),
-                              latitude,
-                              longitude,
-                        },
-                        {
-                              headers: {
-                                    Authorization: `Bearer ${token}`,
-                              }
-                        }
-                  );
+                  const { data } = await apiAddAddress({
+                        formattedAddress,
+                        mobile: Number(mobile),
+                        latitude,
+                        longitude,
+                  });
                   toast.success(data.message || "Address added successfully");
                   setMobile("");
                   setFormattedAddress("");
@@ -169,7 +159,7 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded }: AddressModalProps) =>
                   setSearchQuery("");
                   onAddressAdded(data.data);
             } catch (error: any) {
-                  toast.error(error.response?.data?.message || "Failed to save address");
+                  toast.error(error.message || "Failed to save address");
             } finally {
                   setAdding(false);
             }

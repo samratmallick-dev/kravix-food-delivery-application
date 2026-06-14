@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useAppData } from "../../context/AppContext";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { restaurantBaseUrl } from "../common/constant";
 import { ImagePlus, Loader2, MapPin, Phone, Store, FileText } from "lucide-react";
 import { storage } from "../../utils/secureStorage";
+import { addRestaurant as apiAddRestaurant } from "../../utils/restaurant.api";
 
 interface props {
       fetchMyRestaurant: () => Promise<void>;
@@ -31,37 +30,28 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
                   return;
             }
 
-            const formData = new FormData();
-
-            formData.append("name", name);
-            formData.append("description", description);
-            formData.append("phone", phone);
-            if (image) formData.append("file", image);
-            formData.append("latitude", String(location.latitude));
-            formData.append("longitude", String(location.longitude));
-            formData.append("formattedAddress", String(location.formattedAddress));
-
             try {
                   setSubmitting(true);
-                  const token = storage.getToken();
-                  const response = await axios.post(`${restaurantBaseUrl}`, formData, {
-                        headers: {
-                              "Content-Type": "multipart/form-data",
-                              Authorization: `Bearer ${token}`
-                        },
-                        withCredentials: true
+                  const response = await apiAddRestaurant({
+                        name,
+                        description,
+                        phone,
+                        image: image as File,
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                        formattedAddress: location.formattedAddress
                   });
-                  if (response.data.success) {
-                        if (response.data.token) {
-                              storage.setToken(response.data.token);
+                  if (response.success) {
+                        if (response.token) {
+                              storage.setToken(response.token);
                         }
-                        toast.success(response.data.message || "Restaurant added successfully.");
+                        toast.success(response.message || "Restaurant added successfully.");
                         fetchMyRestaurant();
                   } else {
-                        toast.error(response.data.message || "Failed to add restaurant.");
+                        toast.error(response.message || "Failed to add restaurant.");
                   }
             } catch (error: any) {
-                  const message = error.response?.data?.message;
+                  const message = error.message;
                   console.log(message);
                   
                   toast.error(message || "An error occurred while adding the restaurant.");

@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { IOrder } from "../../types/types";
 import { ORDER_ACTION } from "../../utils/orderFlow";
-import axios from "axios";
-import { orderBaseUrl } from "../common/constant";
+import { updateOrderStatus } from "../../utils/order.api";
 import toast from "react-hot-toast";
 import { MapPin, CreditCard, ChevronRight, Loader2, RefreshCw, Bike, Phone } from "lucide-react";
-import { storage } from "../../utils/secureStorage";
 
 interface props {
       order: IOrder;
@@ -89,18 +87,14 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
                   setLoading(true);
                   setRetryVisible(false);
                   if (timerRef.current) clearTimeout(timerRef.current);
-                  const { data } = await axios.patch(
-                        `${orderBaseUrl}/${order._id}/status`,
-                        { status },
-                        { headers: { Authorization: `Bearer ${storage.getToken()}` }, withCredentials: true }
-                  );
-                  toast.success(data.message || "Order status updated successfully");
+                  const res = await updateOrderStatus(order._id, status);
+                  toast.success(res.message || "Order status updated successfully");
                   onStatusUpdate(order._id, status as IOrder["status"]);
                   if (status === "ready_for_rider") {
                         timerRef.current = setTimeout(() => setRetryVisible(true), 10000);
                   }
             } catch (error: any) {
-                  const message = error instanceof Error ? error.message : error.response?.data?.message;
+                  const message = error.message || "Failed to update order status";
                   toast.error(message);
             } finally {
                   setLoading(false);

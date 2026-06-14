@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppData } from "../context/AppContext";
-import axios from "axios";
-import { addressBaseUrl, orderBaseUrl, paymentBaseUrl, stripPublishableKey, couponBaseUrl } from "../components/common/constant";
+import { stripPublishableKey } from "../components/common/constant";
 import { useLocation, useNavigate } from "react-router-dom";
-import type { ICart, IMenuItem, IRestaurant } from "../types/types";
+import type { ICart, IMenuItem, IRestaurant, ICoupon } from "../types/types";
 import toast from "react-hot-toast";
 import { loadStripe } from "@stripe/stripe-js";
 import { storage } from "../utils/secureStorage";
 import AddressModal from "../components/customer/AddressModal";
 import { Trash2 } from "lucide-react";
+import { getCoupons, applyCoupon } from "../utils/coupon.api";
+import { createOrder as apiCreateOrder } from "../utils/order.api";
+import { createRazorpayOrder, verifyRazorpayPayment, payWithStripe as apiPayWithStripe } from "../utils/payment.api";
+import { getMyAddresses, deleteAddress } from "../utils/address.api";
 
 interface Address {
       _id: string;
@@ -18,19 +21,7 @@ interface Address {
       longitude: number;
 };
 
-interface ICoupon {
-      _id: string;
-      code: string;
-      discountType: "percentage" | "flat" | "free_delivery";
-      discountValue: number;
-      maxDiscountAmount: number;
-      minOrderAmount: number;
-      expiryDate: string;
-      couponType: "global" | "restaurant";
-      usageLimit: number;
-      usedCount: number;
-      perUserLimit: number;
-}
+
 
 const Checkout = () => {
       const { cart, subTotal, quantity, location: userLocation, user } = useAppData();
@@ -95,10 +86,7 @@ const Checkout = () => {
             const fetchCoupons = async () => {
                   setLoadingCoupons(true);
                   try {
-                        const { data } = await axios.get(`${couponBaseUrl}`, {
-                              params: { restaurantId: restaurant._id },
-                              headers: token ? { Authorization: `Bearer ${token}` } : {}
-                        });
+                        const data = await getCoupons(restaurant._id);
                         if (data.success) {
                               setAvailableCoupons(data.data || []);
                         }
@@ -120,24 +108,20 @@ const Checkout = () => {
             if (!restaurant) return;
             setApplyingCoupon(true);
             try {
-                  const res = await axios.post(
-                        `${couponBaseUrl}/apply`,
-                        {
-                              code: couponInput.trim(),
-                              restaurantId: restaurant._id,
-                              orderAmount: subTotal,
-                              deliveryFee: deliveryFee
-                        },
-                        { headers: { Authorization: `Bearer ${token}` } }
-                  );
-                  if (res.data && res.data.success) {
-                        setAppliedCoupon(res.data.data);
-                        storage.setAppliedCoupon(res.data.data.code);
-                        toast.success(`Coupon Applied! Saved ₹${res.data.data.discountAmount}`);
+                  const res = await applyCoupon({
+                        code: couponInput.trim(),
+                        restaurantId: restaurant._id,
+                        orderAmount: subTotal,
+                        deliveryFee: deliveryFee
+                  });
+                  if (res && res.success) {
+                        setAppliedCoupon(res.data);
+                        storage.setAppliedCoupon(res.data.code);
+                        toast.success(`Coupon Applied! Saved ₹${res.data.discountAmount}`);
                   }
-            } catch (error: any) {
-                  console.error(error);
-                  toast.error(error.response?.data?.message || "Invalid coupon code");
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Invalid coupon code");
             } finally {
                   setApplyingCoupon(false);
             }
@@ -155,24 +139,20 @@ const Checkout = () => {
             if (!restaurant) return;
             setApplyingCoupon(true);
             try {
-                  const res = await axios.post(
-                        `${couponBaseUrl}/apply`,
-                        {
-                              code: code.trim(),
-                              restaurantId: restaurant._id,
-                              orderAmount: subTotal,
-                              deliveryFee: deliveryFee
-                        },
-                        { headers: { Authorization: `Bearer ${token}` } }
-                  );
-                  if (res.data && res.data.success) {
-                        setAppliedCoupon(res.data.data);
-                        storage.setAppliedCoupon(res.data.data.code);
-                        toast.success(`🎉 Coupon Applied! Saved ₹${res.data.data.discountAmount}`);
+                  const res = await applyCoupon({
+                        code: code.trim(),
+                        restaurantId: restaurant._id,
+                        orderAmount: subTotal,
+                        deliveryFee: deliveryFee
+                  });
+                  if (res && res.success) {
+                        setAppliedCoupon(res.data);
+                        storage.setAppliedCoupon(res.data.code);
+                        toast.success(`🎉 Coupon Applied! Saved ₹${res.data.discountAmount}`);
                   }
-            } catch (error: any) {
-                  console.error(error);
-                  toast.error(error.response?.data?.message || "Coupon not applicable");
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Coupon not applicable");
             } finally {
                   setApplyingCoupon(false);
             }
@@ -194,14 +174,10 @@ const Checkout = () => {
             if (!selectedAddressId) return null;
             setCreatingOrder(true);
             try {
-                  const { data } = await axios.post(
-                        `${orderBaseUrl}`,
-                        { paymentMethod, addressId: selectedAddressId, couponCode: appliedCoupon?.code || undefined },
-                        { headers: { Authorization: `Bearer ${token}` } }
-                  );
+                  const data = await apiCreateOrder({ paymentMethod, addressId: selectedAddressId, couponCode: appliedCoupon?.code || undefined });
                   return data.data;
-            } catch (error: any) {
-                  toast.error(error.response?.data?.message || "Something went wrong while creating order!");
+            } catch (err: any) {
+                  toast.error(err.message || "Something went wrong while creating order!");
                   return null;
             } finally {
                   setCreatingOrder(false);
@@ -215,7 +191,7 @@ const Checkout = () => {
                   if (!order) return;
 
                   const { orderId, totalAmount } = order;
-                  const { data } = await axios.post(`${paymentBaseUrl}/razorpay`, { orderId });
+                  const data = await createRazorpayOrder(orderId);
                   const { razorpayOrderId, key_id } = data.data;
 
                   await new Promise<void>((resolve, reject) => {
@@ -236,7 +212,7 @@ const Checkout = () => {
                         order_id: razorpayOrderId,
                         handler: async (response: any) => {
                               try {
-                                    await axios.post(`${paymentBaseUrl}/razorpay/verify`, {
+                                    await verifyRazorpayPayment({
                                           razorpay_order_id: response.razorpay_order_id,
                                           razorpay_payment_id: response.razorpay_payment_id,
                                           razorpay_signature: response.razorpay_signature,
@@ -246,8 +222,8 @@ const Checkout = () => {
                                     storage.removeAppliedCoupon();
                                     navigate("/payment-success/" + response.razorpay_payment_id);
                                     window.scrollTo({ top: 0, behavior: "smooth" });
-                              } catch (error: any) {
-                                    toast.error(error.response?.data?.message || "Payment verification failed!");
+                              } catch (err: any) {
+                                    toast.error(err.message || "Payment verification failed!");
                               }
                         },
                         theme: { color: "#fff4f1" }
@@ -274,9 +250,7 @@ const Checkout = () => {
                         const stripe = await stripePromise;
                         if (!stripe) throw new Error("Stripe failed to load");
 
-                        const { data } = await axios.post(`${paymentBaseUrl}/stripe`, {
-                              orderId
-                        });
+                        const data = await apiPayWithStripe(orderId);
 
                         if (data.data.url) {
                               storage.removeAppliedCoupon();
@@ -301,10 +275,8 @@ const Checkout = () => {
                   return;
             }
             try {
-                  const { data } = await axios.get(`${addressBaseUrl}`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                  });
-                  setAddresses(data.data || []);
+                  const data = await getMyAddresses();
+                  setAddresses(data.data as any || []);
             } catch (error) {
                   console.log(error);
             } finally {
@@ -315,10 +287,8 @@ const Checkout = () => {
       const handleAddressAdded = async (newAddress: Address) => {
             if (!cart || cart.length === 0) return;
             try {
-                  const { data } = await axios.get(`${addressBaseUrl}`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                  });
-                  const list = data.data || [];
+                  const data = await getMyAddresses();
+                  const list = data.data as any || [];
                   setAddresses(list);
                   if (newAddress && newAddress._id) {
                         setSelectedAddressId(newAddress._id);
@@ -336,17 +306,15 @@ const Checkout = () => {
             if (deletingId) return;
             setDeletingId(id);
             try {
-                  const { data } = await axios.delete(`${addressBaseUrl}/${id}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
+                  const data = await deleteAddress(id);
                   toast.success(data.message || "Address deleted successfully");
                   setAddresses(prev => prev.filter(a => a._id !== id));
                   if (selectedAddressId === id) {
                         setSelectedAddressId(null);
                   }
-            } catch (error: any) {
-                  console.error(error);
-                  toast.error(error.response?.data?.message || "Failed to delete address");
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Failed to delete address");
             } finally {
                   setDeletingId(null);
             }
@@ -364,27 +332,23 @@ const Checkout = () => {
             let active = true;
             const revalidateCoupon = async () => {
                   try {
-                        const res = await axios.post(
-                              `${couponBaseUrl}/apply`,
-                              {
-                                    code: savedCouponCode,
-                                    restaurantId: restaurant._id,
-                                    orderAmount: subTotal,
-                                    deliveryFee: deliveryFee
-                              },
-                              { headers: { Authorization: `Bearer ${token}` } }
-                        );
-                        if (active && res.data && res.data.success) {
-                              setAppliedCoupon(res.data.data);
+                        const res = await applyCoupon({
+                              code: savedCouponCode,
+                              restaurantId: restaurant._id,
+                              orderAmount: subTotal,
+                              deliveryFee: deliveryFee
+                        });
+                        if (active && res && res.success) {
+                              setAppliedCoupon(res.data);
                               setCouponInput(savedCouponCode);
                         }
-                  } catch (error: any) {
+                  } catch (err: any) {
                         if (active) {
-                              console.error(error);
+                              console.error(err);
                               storage.removeAppliedCoupon();
                               setAppliedCoupon(null);
                               setCouponInput("");
-                              toast.error(error.response?.data?.message || "Applied coupon is no longer valid");
+                              toast.error(err.message || "Applied coupon is no longer valid");
                         }
                   }
             };

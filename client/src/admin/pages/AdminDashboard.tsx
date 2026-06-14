@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Users, Store, Bike, ShoppingBag, IndianRupee, CalendarDays } from "lucide-react";
-import { useAdminApi } from "../hooks/useAdminApi";
+import { getAdminDashboard, getAllOrders } from "../../utils/admin.api";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import StatCard from "../components/StatCard";
 import OrderStatusBadge from "../components/OrderStatusBadge";
@@ -29,7 +29,7 @@ interface LiveOrder {
 const ACTIVE_STATUSES = new Set(["placed", "accepted", "preparing", "ready_for_rider", "rider_assigned", "picked_up"]);
 
 const AdminDashboard = () => {
-      const api = useAdminApi();
+
       const { socket } = useAdminSocket();
       const [stats, setStats] = useState<DashboardData | null>(null);
       const [loading, setLoading] = useState(true);
@@ -37,9 +37,9 @@ const AdminDashboard = () => {
 
       const fetchStats = useCallback(async () => {
             try {
-                  const [{ data: dash }, { data: orders }] = await Promise.all([
-                        api.get("/dashboard"),
-                        api.get("/orders", { params: { page: 1, limit: 50, paymentStatus: "paid" } }),
+                  const [dash, orders] = await Promise.all([
+                        getAdminDashboard(),
+                        getAllOrders({ page: 1, limit: 50, paymentStatus: "paid" }),
                   ]);
                   setStats(dash.data);
                   setLiveOrders(
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
             } finally {
                   setLoading(false);
             }
-      }, [api]);
+      }, []);
 
       useEffect(() => {
             if (!storage.getAdminToken()) return;

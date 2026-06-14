@@ -3,8 +3,9 @@ import { useAppData } from "../context/AppContext";
 import type { IRestaurant, IFoodSearchResult } from "../types/types";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { restaurantBaseUrl, menuBaseUrl, cartBaseUrl } from "../components/common/constant";
+import { addToCart as apiAddToCart, incrementCartQuantity, decrementCartQuantity } from "../utils/cart.api";
+import { getNearestRestaurant } from "../utils/restaurant.api";
+import { searchByFood as apiSearchByFood } from "../utils/menu.api";
 import RestaurantsCard from "../components/restaurant/restaurantsCard";
 import SearchBar from "../components/navbar/SearchBar";
 import { BsCartPlus } from "react-icons/bs";
@@ -13,7 +14,6 @@ import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
 import { detectSearchType } from "../utils/searchIntent";
-import { storage } from "../utils/secureStorage";
 
 const SearchPage = () => {
       const { location, cart, fetchCart } = useAppData();
@@ -57,13 +57,11 @@ const SearchPage = () => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("add");
-                  const { data } = await axios.post(`${cartBaseUrl}`, { restaurantId, itemId }, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` }
-                  });
-                  toast.success(data.message);
+                  const data = await apiAddToCart({ restaurantId, itemId });
+                  toast.success(data.message || "Added to cart");
                   await fetchCart();
             } catch (error: any) {
-                  toast.error(error.response?.data?.message || "Failed to add to cart");
+                  toast.error(error.message || "Failed to add to cart");
             } finally {
                   setLoadingItemId(null);
                   setLoadingAction(null);
@@ -74,12 +72,10 @@ const SearchPage = () => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("inc");
-                  await axios.patch(`${cartBaseUrl}/increment`, { itemId }, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` }
-                  });
+                  await incrementCartQuantity({ itemId });
                   await fetchCart();
             } catch (error: any) {
-                  toast.error(error.response?.data?.message || "Failed to update cart");
+                  toast.error(error.message || "Failed to update cart");
             } finally {
                   setLoadingItemId(null);
                   setLoadingAction(null);
@@ -90,12 +86,10 @@ const SearchPage = () => {
             try {
                   setLoadingItemId(itemId);
                   setLoadingAction("dec");
-                  await axios.patch(`${cartBaseUrl}/decrement`, { itemId }, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` }
-                  });
+                  await decrementCartQuantity({ itemId });
                   await fetchCart();
             } catch (error: any) {
-                  toast.error(error.response?.data?.message || "Failed to update cart");
+                  toast.error(error.message || "Failed to update cart");
             } finally {
                   setLoadingItemId(null);
                   setLoadingAction(null);
@@ -109,37 +103,33 @@ const SearchPage = () => {
             setCorrectedQuery(null);
             setLoading(true);
             joinedRooms.current.clear();
-            const headers = { Authorization: `Bearer ${storage.getToken()}` };
+
 
             if (searchType === "restaurant") {
-                  axios.get(`${restaurantBaseUrl}`, {
-                        params: { latitude: location.latitude, longitude: location.longitude, search },
-                        headers
-                  }).then(({ data }) => {
-                        setRestaurants(data.data || []);
-                        if (data.correctedQuery) setCorrectedQuery(data.correctedQuery);
-                  }).catch((error: any) => {
-                        toast.error(error.response?.data?.message || "Failed to fetch restaurants");
-                  }).finally(() => setLoading(false));
+                  getNearestRestaurant({ latitude: location.latitude, longitude: location.longitude, search })
+                        .then((data) => {
+                              setRestaurants(data.data || []);
+                              if (data.correctedQuery) setCorrectedQuery(data.correctedQuery);
+                        }).catch((error: any) => {
+                              toast.error(error.message || "Failed to fetch restaurants");
+                        }).finally(() => setLoading(false));
             } else {
-                  axios.get(`${menuBaseUrl}/search`, {
-                        params: { latitude: location.latitude, longitude: location.longitude, search },
-                        headers
-                  }).then(({ data }) => {
-                        const results: IFoodSearchResult[] = data.data || [];
-                        setFoodResults(results);
-                        if (data.correctedQuery) setCorrectedQuery(data.correctedQuery);
-                        if (socket) {
-                              results.forEach(({ restaurant: r }) => {
-                                    if (!joinedRooms.current.has(r._id)) {
-                                          socket.emit("join:restaurant", r._id);
-                                          joinedRooms.current.add(r._id);
-                                    }
-                              });
-                        }
-                  }).catch((error: any) => {
-                        toast.error(error.response?.data?.message || "Failed to fetch food items");
-                  }).finally(() => setLoading(false));
+                  apiSearchByFood({ latitude: location.latitude, longitude: location.longitude, search })
+                        .then((data) => {
+                              const results: IFoodSearchResult[] = data.data || [];
+                              setFoodResults(results);
+                              if (data.correctedQuery) setCorrectedQuery(data.correctedQuery);
+                              if (socket) {
+                                    results.forEach(({ restaurant: r }) => {
+                                          if (!joinedRooms.current.has(r._id)) {
+                                                socket.emit("join:restaurant", r._id);
+                                                joinedRooms.current.add(r._id);
+                                          }
+                                    });
+                              }
+                        }).catch((error: any) => {
+                              toast.error(error.message || "Failed to fetch food items");
+                        }).finally(() => setLoading(false));
             }
       }, [location, search, searchType]);
 

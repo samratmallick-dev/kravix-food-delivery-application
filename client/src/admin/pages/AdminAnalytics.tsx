@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import { getAdminAnalytics, exportAdminAnalytics } from "../../utils/admin.api";
 import {
       ResponsiveContainer,
       AreaChart,
@@ -27,9 +27,8 @@ import {
       RefreshCw
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { analyticsBaseUrl } from "../../components/common/constant";
-import { storage } from "../../utils/secureStorage";
 import StatCard from "../components/StatCard";
+
 
 interface SummaryData {
       totalRevenue: number;
@@ -145,24 +144,19 @@ const AdminAnalytics = () => {
       const fetchAnalytics = async () => {
             setLoading(true);
             try {
-                  const token = storage.getAdminToken();
                   const params: any = { interval };
                   if (startDate) params.startDate = startDate;
                   if (endDate) params.endDate = endDate;
+                  const res = await getAdminAnalytics(params);
 
-                  const res = await axios.get(analyticsBaseUrl, {
-                        params,
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
-
-                  if (res.data && res.data.success) {
-                        setData(res.data.data);
+                  if (res && res.success) {
+                        setData(res.data);
                   } else {
-                        toast.error(res.data.message || "Failed to load analytics");
+                        toast.error(res.message || "Failed to load analytics");
                   }
             } catch (error: any) {
                   console.error("Analytics fetch error:", error);
-                  toast.error(error.response?.data?.message || "Error loading analytics from service");
+                  toast.error(error.message || "Error loading analytics from service");
             } finally {
                   setLoading(false);
             }
@@ -175,18 +169,10 @@ const AdminAnalytics = () => {
       const handleExportCSV = async () => {
             setExporting(true);
             try {
-                  const token = storage.getAdminToken();
                   const params: any = { interval };
                   if (startDate) params.startDate = startDate;
                   if (endDate) params.endDate = endDate;
-
-                  const res = await axios.get(`${analyticsBaseUrl}/export`, {
-                        params,
-                        headers: { Authorization: `Bearer ${token}` },
-                        responseType: "blob"
-                  });
-
-                  const blob = new Blob([res.data], { type: "text/csv" });
+                  const blob = await exportAdminAnalytics(params);
                   const url = window.URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.setAttribute("href", url);
@@ -211,7 +197,7 @@ const AdminAnalytics = () => {
                   fontSize: "12px"
             },
             itemStyle: { color: "#fff" },
-            labelStyle: { color: "#9ca3af", fontWeight: "bold" }
+            labelStyle: { color: "#9ca3af", fontWeight: "bold" as const }
       };
 
       return (

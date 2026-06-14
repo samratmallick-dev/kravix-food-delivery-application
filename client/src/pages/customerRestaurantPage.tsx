@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import type { IMenuItem, IRestaurant } from "../types/types";
 import { useEffect, useState } from "react";
-import { menuBaseUrl, restaurantBaseUrl, reviewBaseUrl } from "../components/common/constant";
-import axios from "axios";
+import { fetchSingleRestaurant } from "../utils/restaurant.api";
+import { getAllMenuItems } from "../utils/menu.api";
+import { getRestaurantReviews, reportReview } from "../utils/review.api";
 import RestaurantProfile from "../components/restaurant/restaurantProfile";
 import Menuitems from "../components/restaurant/menuitems";
 import { useAppData } from "../context/AppContext";
@@ -11,7 +12,6 @@ import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
 import toast from "react-hot-toast";
-import { storage } from "../utils/secureStorage";
 
 const CustomerRestaurantPage = () => {
       const { id } = useParams();
@@ -27,11 +27,7 @@ const CustomerRestaurantPage = () => {
 
       const fetchRestaurant = async () => {
             try {
-                  const { data } = await axios.get(`${restaurantBaseUrl}/${id}`, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
-                  });
+                  const data = await fetchSingleRestaurant(id!);
                   setRestaurant(data.data || null);
             } catch (error) {
                   console.log(error);
@@ -42,12 +38,7 @@ const CustomerRestaurantPage = () => {
 
       const fetchMenuItem = async () => {
             try {
-                  const { data } = await axios.get(`${menuBaseUrl}/${id}`, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
-                  });
-
+                  const data = await getAllMenuItems(id!);
                   setMenuItem(Array.isArray(data.data) ? data.data : []);
             } catch (error) {
                   console.log(error);
@@ -159,35 +150,12 @@ const CustomerRestaurantPage = () => {
       );
 }
 
-interface IReview {
-      _id: string;
-      userId: string;
-      userName: string;
-      userImage?: string;
-      orderId: string;
-      restaurantId: string;
-      menuItemId?: string;
-      rating: number;
-      comment: string;
-      type: "restaurant" | "menu_item" | "rider";
-      isReported: boolean;
-      status: "pending" | "approved" | "flagged";
-      createdAt: string;
-}
-
-interface IRatingsSummary {
-      averageRating: number;
-      totalReviews: number;
-      star1: number;
-      star2: number;
-      star3: number;
-      star4: number;
-      star5: number;
-}
+import type { IReview } from "../types/types";
+import type { ReviewRatingsSummary } from "../utils/review.api";
 
 const RestaurantReviewsSection = ({ restaurantId }: { restaurantId: string }) => {
       const [reviews, setReviews] = useState<IReview[]>([]);
-      const [summary, setSummary] = useState<IRatingsSummary | null>(null);
+      const [summary, setSummary] = useState<ReviewRatingsSummary | null>(null);
       const [loading, setLoading] = useState(true);
       const [selectedRatingFilter, setSelectedRatingFilter] = useState<number | null>(null);
       const [sortBy, setSortBy] = useState<"createdAt" | "rating">("createdAt");
@@ -205,15 +173,11 @@ const RestaurantReviewsSection = ({ restaurantId }: { restaurantId: string }) =>
                   params.sortBy = sortBy;
                   params.order = sortOrder;
 
-                  const { data } = await axios.get(`${reviewBaseUrl}/restaurant/${restaurantId}`, {
-                        params,
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                        withCredentials: true
-                  });
+                  const data = await getRestaurantReviews(restaurantId, params);
 
-                  if (data.success) {
-                        setReviews(data.data.reviews || []);
-                        setSummary(data.data.ratingsSummary || null);
+                  if (data) {
+                        setReviews(data.data?.reviews || []);
+                        setSummary(data.data?.ratingsSummary || null);
                   }
             } catch (error) {
                   console.error("Failed to fetch restaurant reviews:", error);
@@ -233,13 +197,7 @@ const RestaurantReviewsSection = ({ restaurantId }: { restaurantId: string }) =>
                   return;
             }
             try {
-                  await axios.post(`${reviewBaseUrl}/report`, {
-                        reviewId,
-                        reason: reportReason
-                  }, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                        withCredentials: true
-                  });
+                  await reportReview(reviewId, reportReason);
                   toast.success("Review reported and sent for moderation.");
                   setReportingId(null);
                   setReportReason("");
@@ -290,7 +248,7 @@ const RestaurantReviewsSection = ({ restaurantId }: { restaurantId: string }) =>
                                           
                                           <div className="flex-1 space-y-1">
                                                 {[5, 4, 3, 2, 1].map((stars) => {
-                                                      const starKey = `star${stars}` as keyof IRatingsSummary;
+                                                      const starKey = `star${stars}` as keyof ReviewRatingsSummary;
                                                       const count = (summary[starKey] as number) || 0;
                                                       const percent = getProgressPercent(count);
                                                       return (

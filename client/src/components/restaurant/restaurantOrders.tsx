@@ -2,12 +2,10 @@ import { useEffect, useCallback, useRef, useState } from "react";
 import type { IOrder } from "../../types/types";
 import { useSocket } from "../../context/SocketContext";
 import audio from "../../assets/restaurant_order_recived.mp3";
-import axios from "axios";
-import { orderBaseUrl } from "../common/constant";
+import { fetchRestaurantOrders } from "../../utils/order.api";
 import { ShoppingBag, VolumeX } from "lucide-react";
 import OrderCard from "./orderCard";
 import toast from "react-hot-toast";
-import { storage } from "../../utils/secureStorage";
 
 const ALLOWED_STATUSES = [
       "placed",
@@ -63,10 +61,8 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
 
       const fetchOrders = useCallback(async () => {
             try {
-                  const { data } = await axios.get(`${orderBaseUrl}/restaurants/${restaurantId}`, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                  });
-                  setOrders(data.data.orders || []);
+                  const { data } = await fetchRestaurantOrders(restaurantId);
+                  setOrders(data?.orders || []);
             } catch (error) {
                   console.log(error);
             } finally {

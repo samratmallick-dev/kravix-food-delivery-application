@@ -1,15 +1,14 @@
-import axios from "axios";
+
 import { Eye, EyeOff } from "lucide-react";
 import Logo from "../components/navbar/logo";
 import { useRef, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
-import { authBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useAppData } from "../context/AppContext";
 import { storage } from "../utils/secureStorage";
-import { loginWithEmail, resendVerificationEmail } from "../utils/auth.api";
+import { loginWithEmail, resendVerificationEmail, loginWithGoogle as apiLoginWithGoogle } from "../utils/auth.api";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -29,20 +28,14 @@ const Login = () => {
     isProcessing.current = true;
     setLoading(true);
 
-    const attemptLogin = async (code: string) =>
-      axios.post(
-        `${authBaseUrl}/sessions`,
-        { code },
-        { withCredentials: true },
-      );
+    const attemptLogin = async (code: string) => apiLoginWithGoogle(code);
 
     try {
-      let result;
+      let data;
       try {
-        result = await attemptLogin(authResult.code);
+        data = await attemptLogin(authResult.code);
       } catch (firstErr: unknown) {
-        const axiosErr = firstErr as { response?: unknown; message?: string };
-        if (axiosErr?.response || retryCount.current >= 1) {
+        if (retryCount.current >= 1) {
           retryCount.current = 0;
           throw firstErr;
         }
@@ -53,15 +46,14 @@ const Login = () => {
         return;
       }
       retryCount.current = 0;
-      storage.setToken(result.data.token);
-      setUser(result.data.data);
+      storage.setToken(data.token!);
+      setUser(data.user as any);
       setIsAuth(true);
-      toast.success(result.data.message || "Login Successful");
+      toast.success(data.message || "Login Successful");
       navigate("/");
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
       toast.error(
-        err.response?.data?.message ||
+        (error as Error).message ||
         "Server unreachable. Please try again later.",
       );
     } finally {

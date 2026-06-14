@@ -2,11 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BiSearch } from "react-icons/bi";
 import { X } from "lucide-react";
-import axios from "axios";
-import { menuBaseUrl } from "../common/constant";
 import { useAppData } from "../../context/AppContext";
 import { detectSearchType } from "../../utils/searchIntent";
-import { storage } from "../../utils/secureStorage";
+import { autocompleteMenu } from "../../utils/menu.api";
 
 interface Suggestion {
       id: string;
@@ -55,20 +53,19 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
 
             const timer = setTimeout(async () => {
                   try {
-                        const { data } = await axios.get(`${menuBaseUrl}/autocomplete`, {
-                              params: {
+                        const data = await autocompleteMenu(
+                              {
                                     q: value,
                                     latitude: location.latitude,
                                     longitude: location.longitude,
                                     radius: 10000,
                               },
-                              headers: { Authorization: `Bearer ${storage.getToken()}` },
-                              signal: controller.signal,
-                        });
+                              { signal: controller.signal }
+                        );
                         setSuggestions(data.data || []);
                         setActiveIndex(-1);
                   } catch (err: any) {
-                        if (axios.isCancel(err) || err?.name === "CanceledError") return;
+                        if (err.name === "AbortError" || err.message?.includes("aborted")) return;
                         setSuggestions([]);
                   } finally {
                         setLoading(false);

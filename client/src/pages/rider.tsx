@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useAppData } from "../context/AppContext";
 import { useSocket } from "../context/SocketContext";
 import type { IOrder, IRider } from "../types/types";
-import axios from "axios";
-import { riderBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
+import { fetchMyRiderProfile, fetchCurrentOrder as apiFetchCurrentOrder, fetchDeliveryHistory as apiFetchDeliveryHistory, updateRiderProfile, toggleRiderAvailability, updateOrderStatusByRider, generateDeliveryOtp, addRiderProfile, acceptOrder } from "../utils/rider.api";
 import {
       ImagePlus, Loader2, Phone, MapPin, CreditCard, FileText,
       Bike, VolumeX, History, LogOut, TrendingUp, Pencil, X
@@ -72,9 +71,7 @@ const RiderDashboard = () => {
 
       const fetchProfile = async () => {
             try {
-                  const { data } = await axios.get(`${riderBaseUrl}/me`, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                  });
+                  const data = await fetchMyRiderProfile();
                   setProfile(data.data || null);
             } catch {
                   setProfile(null);
@@ -97,21 +94,16 @@ const RiderDashboard = () => {
 
       const fetchCurrentOrder = async () => {
             try {
-                  const { data } = await axios.get(`${riderBaseUrl}/orders/current`, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                  });
+                  const data = await apiFetchCurrentOrder();
                   setCurrentOrder(data.data || null);
             } catch (error: any) {
-                  if (error?.response?.status !== 404) console.log(error?.response?.data?.message ?? error.message);
                   setCurrentOrder(null);
             }
       };
 
       const fetchDeliveryHistory = async () => {
             try {
-                  const { data } = await axios.get(`${riderBaseUrl}/orders/delivery-history`, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                  });
+                  const data = await apiFetchDeliveryHistory();
                   setDeliveryHistory(data.data?.orders || []);
             } catch {
                   setDeliveryHistory([]);
@@ -156,27 +148,21 @@ const RiderDashboard = () => {
       }, [user?._id, user?.role]);
 
       const handleProfileUpdate = async () => {
-            const formData = new FormData();
-            if (editPhone) formData.append("phoneNumber", editPhone);
-            if (editAadhaar) formData.append("aadhaarNumber", editAadhaar);
-            if (editLicense) formData.append("drivingLicesce", editLicense);
-            if (editImageFile) formData.append("file", editImageFile);
-            if (!formData.has("phoneNumber") && !formData.has("aadhaarNumber") && !formData.has("drivingLicesce") && !editImageFile) {
-                  setEditingProfile(false);
-                  return;
-            }
-            setSavingProfile(true);
             try {
-                  const { data } = await axios.patch(`${riderBaseUrl}/me`, formData, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                  });
+                  const payload: any = {};
+                  if (editPhone) payload.phoneNumber = editPhone;
+                  if (editAadhaar) payload.aadhaarNumber = editAadhaar;
+                  if (editLicense) payload.drivingLicesce = editLicense;
+                  if (editImageFile) payload.image = editImageFile;
+
+                  const data = await updateRiderProfile(payload);
                   setProfile(data.data);
                   toast.success(data.message || "Profile updated!");
                   setEditingProfile(false);
                   setEditImageFile(null);
                   setEditImagePreview(null);
             } catch (err: any) {
-                  toast.error(err?.response?.data?.message || "Failed to update profile");
+                  toast.error((err as Error).message || "Failed to verify payout setup");
             } finally {
                   setSavingProfile(false);
             }
@@ -185,10 +171,7 @@ const RiderDashboard = () => {
       const handleLogout = async () => {
             if (profile?.isAvailable) {
                   try {
-                        await axios.patch(`${riderBaseUrl}/me/availability`,
-                              { isAvailable: false, latitude: location?.latitude ?? 0, longitude: location?.longitude ?? 0 },
-                              { headers: { Authorization: `Bearer ${storage.getToken()}` } }
-                        );
+                        await toggleRiderAvailability({ isAvailable: false, latitude: location?.latitude ?? 0, longitude: location?.longitude ?? 0 });
                   } catch { }
             }
             storage.removeToken();
@@ -204,14 +187,11 @@ const RiderDashboard = () => {
             }
             setToggling(true);
             try {
-                  const { data } = await axios.patch(`${riderBaseUrl}/me/availability`,
-                        { isAvailable: !profile?.isAvailable, latitude: location.latitude, longitude: location.longitude },
-                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
-                  );
-                  toast.success(data.message);
+                  const data = await toggleRiderAvailability({ isAvailable: !profile?.isAvailable, latitude: location.latitude, longitude: location.longitude });
+                  toast.success(data.message || "Success");
                   setProfile((prev) => prev ? { ...prev, isAvailable: !prev.isAvailable } : prev);
             } catch (error: any) {
-                  toast.error(error.response?.data?.message || "Failed to update availability.");
+                  toast.error(error.message || "Failed to update availability.");
             } finally {
                   setToggling(false);
             }
@@ -230,10 +210,7 @@ const RiderDashboard = () => {
                         lng = fresh.coords.longitude;
                   } catch { }
 
-                  const { data } = await axios.patch(`${riderBaseUrl}/orders/status`,
-                        { orderId: currentOrder._id, latitude: lat, longitude: lng, ...(otp ? { otp } : {}) },
-                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
-                  );
+                  const data = await updateOrderStatusByRider(currentOrder._id, lat, lng, otp);
                   toast.success(data.message || "Status updated!");
 
                   const nextStatus = RIDER_ORDER_TRANSITIONS[currentOrder.status];
@@ -247,20 +224,17 @@ const RiderDashboard = () => {
                         fetchCurrentOrder();
                   }
             } catch (err: any) {
-                  toast.error(err?.response?.data?.message || "Failed to update status");
+                  toast.error(err.message || "Failed to update status");
             }
       };
 
       const handleGenerateOtp = async () => {
             if (!currentOrder) return;
             try {
-                  await axios.post(`${riderBaseUrl}/orders/otp/generate`,
-                        { orderId: currentOrder._id },
-                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
-                  );
+                  await generateDeliveryOtp(currentOrder._id);
                   toast.success("OTP sent to customer!");
             } catch (err: any) {
-                  toast.error(err?.response?.data?.message || "Failed to generate OTP");
+                  toast.error(err.message || "Failed to generate OTP");
                   throw err;
             }
       };
@@ -290,23 +264,20 @@ const RiderDashboard = () => {
       const handleSubmit = async () => {
             if (!location) { toast.error("Location data is required."); return; }
             if (!phoneNumber || !aadhaarNumber || !drivingLicesce || !image) { toast.error("Please fill in all required fields."); return; }
-            const formData = new FormData();
-            formData.append("phoneNumber", phoneNumber);
-            formData.append("aadhaarNumber", aadhaarNumber);
-            formData.append("drivingLicesce", drivingLicesce);
-            formData.append("file", image);
-            formData.append("latitude", String(location.latitude));
-            formData.append("longitude", String(location.longitude));
             try {
                   setSubmitting(true);
-                  const { data } = await axios.post(`${riderBaseUrl}`, formData, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                        withCredentials: true
+                  const data = await addRiderProfile({
+                        phoneNumber,
+                        aadhaarNumber,
+                        drivingLicesce,
+                        image,
+                        latitude: location.latitude,
+                        longitude: location.longitude,
                   });
-                  if (data.success) { toast.success(data.message || "Rider profile created successfully."); fetchProfile(); }
-                  else toast.error(data.message || "Failed to create profile.");
+                  if (data) { toast.success("Rider profile created successfully."); fetchProfile(); }
+                  else toast.error("Failed to create profile.");
             } catch (error: any) {
-                  toast.error(error.response?.data?.message || "An error occurred.");
+                  toast.error(error.message || "An error occurred.");
             } finally {
                   setSubmitting(false);
             }
@@ -599,17 +570,13 @@ const RiderDashboard = () => {
                                                       onExpire={() => setInCommingOrders((prev) => prev.filter((id) => id !== orderId))}
                                                       onAccept={isBlocked ? undefined : async () => {
                                                             try {
-                                                                  const { data } = await axios.post(
-                                                                        `${riderBaseUrl}/orders/${orderId}/accept`,
-                                                                        {},
-                                                                        { headers: { Authorization: `Bearer ${storage.getToken()}` } }
-                                                                  );
+                                                                  const data = await acceptOrder(orderId);
                                                                   toast.success(data.message || "Order accepted!");
                                                                   setInCommingOrders([]);
                                                                   setProfile((prev) => prev ? { ...prev, isAvailable: false } : prev);
                                                                   await fetchCurrentOrder();
                                                             } catch (err: any) {
-                                                                  toast.error(err?.response?.data?.message || "Failed to accept order");
+                                                                  toast.error(err.message || "Failed to accept order");
                                                             }
                                                       }}
                                                 />

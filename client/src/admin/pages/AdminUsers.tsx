@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Ban, Eye, X, ShieldCheck } from "lucide-react";
-import { useAdminApi } from "../hooks/useAdminApi";
+import { getAllUsers, blockUser, getAllRiders, verifyRider } from "../../utils/admin.api";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import AdminTable from "../components/AdminTable";
 import VerifyToggle from "../components/VerifyToggle";
@@ -13,7 +13,7 @@ interface RiderProfile { _id: string; userId: string; isVerified: boolean; }
 const ROLES = ["all", "customer", "seller", "rider", "null"];
 
 const AdminUsers = () => {
-      const api = useAdminApi();
+
       const { socket } = useAdminSocket();
       const [users, setUsers] = useState<User[]>([]);
       const [loading, setLoading] = useState(true);
@@ -33,8 +33,8 @@ const AdminUsers = () => {
             setRiderProfile(null);
             if (u.role === "rider") {
                   try {
-                        const { data } = await api.get("/riders", { params: { limit: 100 } });
-                        const found = data.data.riders.find((r: RiderProfile) => r.userId === u._id);
+                        const { data } = await getAllRiders({ limit: 100 });
+                        const found = data.riders.find((r: RiderProfile) => r.userId === u._id);
                         setRiderProfile(found ?? null);
                   } catch { /* non-critical */ }
             }
@@ -44,7 +44,7 @@ const AdminUsers = () => {
             if (!riderProfile) return;
             setVerifyLoading(riderProfile._id);
             try {
-                  await api.patch(`/riders/${riderProfile._id}/verify`, { isVerified: !riderProfile.isVerified });
+                  await verifyRider(riderProfile._id);
                   toast.success(`Rider ${!riderProfile.isVerified ? "verified" : "unverified"}`);
                   setRiderProfile((prev) => prev ? { ...prev, isVerified: !prev.isVerified } : prev);
             } catch { toast.error("Failed to update rider verification"); }
@@ -56,13 +56,13 @@ const AdminUsers = () => {
             try {
                   const params: Record<string, string | number> = { page, limit: 20 };
                   if (roleFilter !== "all") params["role"] = roleFilter;
-                  const { data } = await api.get("/users", { params });
-                  setUsers(data.data.users);
-                  setPages(data.data.pages);
-                  setTotal(data.data.total);
+                  const res = await getAllUsers(params);
+                  setUsers(res.data.users);
+                  setPages(res.data.pages);
+                  setTotal(res.data.total);
             } catch { toast.error("Failed to load users"); }
             finally { setLoading(false); }
-      }, [api, page, roleFilter]);
+      }, [page, roleFilter]);
 
       useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -79,11 +79,11 @@ const AdminUsers = () => {
       const handleBlock = async (user: User) => {
             setBlocking(user._id);
             try {
-                  const { data } = await api.patch(`/users/${user._id}/block`);
-                  const updated = { ...user, isBlocked: data.data.isBlocked, blockedUntil: data.data.blockedUntil };
+                  const res = await blockUser(user._id, !user.isBlocked);
+                  const updated = { ...user, isBlocked: res.data.isBlocked, blockedUntil: res.data.blockedUntil };
                   setUsers((prev) => prev.map((u) => u._id === user._id ? updated : u));
                   setSelected((prev) => prev?._id === user._id ? updated : prev);
-                  toast.success(data.message);
+                  toast.success(res.message || "Updated block status");
             } catch { toast.error("Failed to update block status"); }
             finally { setBlocking(null); setConfirmBlock(null); }
       };

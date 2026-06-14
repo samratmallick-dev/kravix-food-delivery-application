@@ -1,48 +1,50 @@
-import secureLocalStorage from "react-secure-storage";
+import CryptoJS from "crypto-js";
+
+const SECRET_KEY = "kravix_secure_key_v1";
+
+const secureLocalStorage = {
+    setItem: (key: string, value: string) => {
+        try {
+            const encrypted = CryptoJS.AES.encrypt(value, SECRET_KEY).toString();
+            localStorage.setItem(key, encrypted);
+        } catch (e) {
+            console.error("Encryption error", e);
+        }
+    },
+    getItem: (key: string): string | null => {
+        try {
+            const encrypted = localStorage.getItem(key);
+            if (!encrypted) return null;
+            const bytes = CryptoJS.AES.decrypt(encrypted, SECRET_KEY);
+            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+            return decrypted || null;
+        } catch (e) {
+            console.error("Decryption error", e);
+            return null;
+        }
+    },
+    removeItem: (key: string) => {
+        localStorage.removeItem(key);
+    }
+};
 
 const TOKEN_KEY = "token";
 const ADMIN_TOKEN_KEY = "adminToken";
 const RESTAURANT_TAB_KEY = "restaurantTab";
 
 export const storage = {
-    getToken: (): string | null => {
-        const val = secureLocalStorage.getItem(TOKEN_KEY);
-        return typeof val === "string" ? val : null;
-    },
-    setToken: (token: string): void => {
-        secureLocalStorage.setItem(TOKEN_KEY, token);
-    },
-    removeToken: (): void => {
-        secureLocalStorage.removeItem(TOKEN_KEY);
-    },
+    getToken: (): string | null => secureLocalStorage.getItem(TOKEN_KEY),
+    setToken: (token: string): void => secureLocalStorage.setItem(TOKEN_KEY, token),
+    removeToken: (): void => secureLocalStorage.removeItem(TOKEN_KEY),
 
-    getAdminToken: (): string | null => {
-        const val = secureLocalStorage.getItem(ADMIN_TOKEN_KEY);
-        return typeof val === "string" ? val : null;
-    },
-    setAdminToken: (token: string): void => {
-        secureLocalStorage.setItem(ADMIN_TOKEN_KEY, token);
-    },
-    removeAdminToken: (): void => {
-        secureLocalStorage.removeItem(ADMIN_TOKEN_KEY);
-    },
+    getAdminToken: (): string | null => secureLocalStorage.getItem(ADMIN_TOKEN_KEY),
+    setAdminToken: (token: string): void => secureLocalStorage.setItem(ADMIN_TOKEN_KEY, token),
+    removeAdminToken: (): void => secureLocalStorage.removeItem(ADMIN_TOKEN_KEY),
 
-    getRestaurantTab: (): string | null => {
-        const val = secureLocalStorage.getItem(RESTAURANT_TAB_KEY);
-        return typeof val === "string" ? val : null;
-    },
-    setRestaurantTab: (tab: string): void => {
-        secureLocalStorage.setItem(RESTAURANT_TAB_KEY, tab);
-    },
+    getRestaurantTab: (): string | null => secureLocalStorage.getItem(RESTAURANT_TAB_KEY),
+    setRestaurantTab: (tab: string): void => secureLocalStorage.setItem(RESTAURANT_TAB_KEY, tab),
 
-    getAppliedCoupon: (): string | null => {
-        const val = secureLocalStorage.getItem("appliedCouponCode");
-        return typeof val === "string" ? val : null;
-    },
-    setAppliedCoupon: (code: string): void => {
-        secureLocalStorage.setItem("appliedCouponCode", code);
-    },
-    removeAppliedCoupon: (): void => {
-        secureLocalStorage.removeItem("appliedCouponCode");
-    },
+    getAppliedCoupon: (): string | null => secureLocalStorage.getItem("appliedCouponCode"),
+    setAppliedCoupon: (code: string): void => secureLocalStorage.setItem("appliedCouponCode", code),
+    removeAppliedCoupon: (): void => secureLocalStorage.removeItem("appliedCouponCode"),
 };

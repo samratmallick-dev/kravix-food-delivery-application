@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Eye, X, Ban } from "lucide-react";
-import { useAdminApi } from "../hooks/useAdminApi";
+import { getAllOrders, cancelOrder } from "../../utils/admin.api";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import AdminTable from "../components/AdminTable";
 import OrderStatusBadge from "../components/OrderStatusBadge";
@@ -11,7 +11,7 @@ const STATUS_OPTIONS = ["", "placed", "accepted", "preparing", "ready_for_rider"
 const PAYMENT_OPTIONS = ["", "pending", "paid", "failed"];
 
 const AdminOrders = () => {
-      const api = useAdminApi();
+
       const { socket } = useAdminSocket();
       const [orders, setOrders] = useState<IOrder[]>([]);
       const [loading, setLoading] = useState(true);
@@ -34,13 +34,13 @@ const AdminOrders = () => {
                   if (paymentFilter) params["paymentStatus"] = paymentFilter;
                   if (fromDate) params["from"] = fromDate;
                   if (toDate) params["to"] = toDate;
-                  const { data } = await api.get("/orders", { params });
-                  setOrders(data.data.orders);
-                  setPages(data.data.pages);
-                  setTotal(data.data.total);
+                  const res = await getAllOrders(params);
+                  setOrders(res.data.orders);
+                  setPages(res.data.pages);
+                  setTotal(res.data.total);
             } catch { toast.error("Failed to load orders"); }
             finally { setLoading(false); }
-      }, [api, page, statusFilter, paymentFilter, fromDate, toDate]);
+      }, [page, statusFilter, paymentFilter, fromDate, toDate]);
 
       useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
@@ -57,7 +57,7 @@ const AdminOrders = () => {
       const handleCancel = async (order: IOrder) => {
             setCancelling(order._id);
             try {
-                  await api.patch(`/orders/${order._id}/cancel`);
+                  await cancelOrder(order._id);
                   setOrders((prev) => prev.map((o) => o._id === order._id ? { ...o, status: "cancelled" } : o));
                   toast.success("Order cancelled");
             } catch { toast.error("Failed to cancel order"); }

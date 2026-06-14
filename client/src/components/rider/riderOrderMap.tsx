@@ -4,11 +4,9 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
-import axios from "axios";
-import { riderBaseUrl } from "../common/constant";
+import { updateLiveLocation } from "../../utils/rider.api";
 import deliveryIconImage from "../../assets/Delivery_man.jpg";
 import homeIconImage from "../../assets/Home.jpg";
-import { storage } from "../../utils/secureStorage";
 
 declare module "leaflet" {
       namespace Routing {
@@ -68,11 +66,12 @@ const RiderOrderMap = ({ order }: { order: IOrder }) => {
 
                         if (movedEnough || timeElapsed) {
                               lastEmitRef.current = { lat: latitude, lng: longitude, time: now };
-                              axios.patch(
-                                    `${riderBaseUrl}/me/location`,
-                                    { latitude, longitude, orderId: order._id, customerUserId: order.userId },
-                                    { headers: { Authorization: `Bearer ${storage.getToken()}` } }
-                              ).catch((err) => console.error("Failed to emit rider location:", err));
+                              updateLiveLocation({
+                                    latitude,
+                                    longitude,
+                                    orderId: order._id,
+                                    customerUserId: order.userId
+                              }).catch((err) => console.error("Failed to emit rider location:", err));
                         }
                   },
                   (err) => console.error("Geolocation error:", err),

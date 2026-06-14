@@ -1,17 +1,7 @@
 import { authBaseUrl } from "../components/common/constant";
 
-async function request<T>(path: string, options: RequestInit, token?: string): Promise<T> {
-  const res = await fetch(`${authBaseUrl}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    ...options,
-  });
-  const data = (await res.json()) as T & { message?: string };
-  if (!res.ok) throw new Error((data as { message?: string }).message ?? "Request failed");
-  return data;
-}
+import { request } from "./request";
+import type { User } from "../types/types";
 
 export interface RegisterPayload {
   name: string;
@@ -59,26 +49,35 @@ export interface UpdateProfileResponse {
   };
 }
 
-export const updateProfile = (payload: UpdateProfilePayload, token: string): Promise<UpdateProfileResponse> =>
-  request<UpdateProfileResponse>("/me", { method: "PATCH", body: JSON.stringify(payload) }, token);
+export const updateProfile = (payload: UpdateProfilePayload, token?: string): Promise<UpdateProfileResponse> =>
+  request<UpdateProfileResponse>(`${authBaseUrl}/me`, { method: "PATCH", body: JSON.stringify(payload) }, token);
+
+export const getMyProfile = (token?: string): Promise<{ data: User }> =>
+  request<{ data: User }>(`${authBaseUrl}/me`, { method: "GET" }, token);
 
 export const registerWithEmail = (payload: RegisterPayload): Promise<MessageResponse> =>
-  request<MessageResponse>("/register", { method: "POST", body: JSON.stringify(payload) });
+  request<MessageResponse>(`${authBaseUrl}/register`, { method: "POST", body: JSON.stringify(payload) });
 
 export const loginWithEmail = (payload: LoginPayload): Promise<LoginResponse> =>
-  request<LoginResponse>("/login", { method: "POST", body: JSON.stringify(payload) });
+  request<LoginResponse>(`${authBaseUrl}/login`, { method: "POST", body: JSON.stringify(payload) });
 
 export const verifyEmail = (token: string): Promise<MessageResponse> =>
-  request<MessageResponse>(`/verify-email?token=${encodeURIComponent(token)}`, { method: "GET" });
+  request<MessageResponse>(`${authBaseUrl}/verify-email?token=${encodeURIComponent(token)}`, { method: "GET" });
 
 export const resendVerificationEmail = (email: string): Promise<MessageResponse> =>
-  request<MessageResponse>("/resend-verification", { method: "POST", body: JSON.stringify({ email }) });
+  request<MessageResponse>(`${authBaseUrl}/resend-verification`, { method: "POST", body: JSON.stringify({ email }) });
 
 export const forgotPassword = (email: string): Promise<MessageResponse> =>
-  request<MessageResponse>("/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
+  request<MessageResponse>(`${authBaseUrl}/forgot-password`, { method: "POST", body: JSON.stringify({ email }) });
 
 export const resetPassword = (payload: {
   token: string;
   newPassword: string;
 }): Promise<MessageResponse> =>
-  request<MessageResponse>("/reset-password", { method: "POST", body: JSON.stringify(payload) });
+  request<MessageResponse>(`${authBaseUrl}/reset-password`, { method: "POST", body: JSON.stringify(payload) });
+
+export const updateRole = (role: string): Promise<UpdateProfileResponse> =>
+  request<UpdateProfileResponse>(`${authBaseUrl}/me/role`, { method: "PATCH", body: JSON.stringify({ role }) });
+
+export const loginWithGoogle = (code: string): Promise<LoginResponse> =>
+  request<LoginResponse>(`${authBaseUrl}/sessions`, { method: "POST", body: JSON.stringify({ code }) });

@@ -1,18 +1,16 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { riderBaseUrl } from "../common/constant";
+import { fetchEarnings } from "../../utils/rider.api";
 import { TrendingUp, Star, Package, Loader2, IndianRupee } from "lucide-react";
 import type { IRiderEarnings } from "../../types/types";
-import { storage } from "../../utils/secureStorage";
+
 
 const EarningsDashboard = () => {
       const [earnings, setEarnings] = useState<IRiderEarnings | null>(null);
       const [loading, setLoading] = useState(true);
 
       useEffect(() => {
-            axios.get(`${riderBaseUrl}/me/earnings`, {
-                  headers: { Authorization: `Bearer ${storage.getToken()}` }
-            }).then(({ data }) => setEarnings(data.data))
+            fetchEarnings()
+                  .then((res) => setEarnings(res.data as any))
                   .catch(() => setEarnings(null))
                   .finally(() => setLoading(false));
       }, []);

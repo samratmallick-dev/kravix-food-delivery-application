@@ -2,10 +2,8 @@ import { useEffect, useCallback, useState, useRef } from "react";
 import type { IOrder } from "../types/types";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
-import axios from "axios";
-import { orderBaseUrl } from "../components/common/constant";
+import { cancelMyOrder, getMyOrders } from "../utils/order.api";
 import { ShoppingBag, MapPin, Clock, Ban } from "lucide-react";
-import { storage } from "../utils/secureStorage";
 import toast from "react-hot-toast";
 
 const ACTIVE_STATUSES = [
@@ -37,21 +35,14 @@ const CustomerOrder = () => {
             if (!confirmCancelOrder) return;
             setIsCancelling(true);
             try {
-                  const { data } = await axios.patch(
-                        `${orderBaseUrl}/me/${confirmCancelOrder._id}/cancel`,
-                        {},
-                        {
-                              headers: { Authorization: `Bearer ${storage.getToken()}` },
-                              withCredentials: true
-                        }
-                  );
+                  const data = await cancelMyOrder(confirmCancelOrder._id);
                   setOrders((prev) =>
                         prev.map((o) => o._id === confirmCancelOrder._id ? { ...o, status: "cancelled" } : o)
                   );
                   toast.success(data.message || "Order cancelled successfully");
                   setConfirmCancelOrder(null);
             } catch (err: any) {
-                  toast.error(err?.response?.data?.message ?? "Failed to cancel order");
+                  toast.error(err.message || "Failed to cancel order");
             } finally {
                   setIsCancelling(false);
             }
@@ -97,13 +88,10 @@ const CustomerOrder = () => {
 
       const fetchOrders = useCallback(async () => {
             try {
-                  const { data } = await axios.get(`${orderBaseUrl}/me`, {
-                        headers: { Authorization: `Bearer ${storage.getToken()}` },
-                        withCredentials: true
-                  });
+                  const data = await getMyOrders();
                   setOrders(data.data.orders || []);
             } catch (error) {
-                  console.log(error);
+                  console.error(error);
             } finally {
                   setLoading(false);
             }

@@ -7,13 +7,12 @@ import {
       useMap,
 } from "react-leaflet";
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import { getMyAddresses, addAddress as apiAddAddress, deleteAddress as apiDeleteAddress } from "../utils/address.api";
 import toast from "react-hot-toast";
 import L from "leaflet";
 import { LuLocateFixed } from "react-icons/lu";
 import { BiLoader, BiPlus, BiTrash, BiMapPin, BiPhone, BiSearch } from "react-icons/bi";
-import { addressBaseUrl } from "../components/common/constant";
-import { storage } from "../utils/secureStorage";
+
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -113,16 +112,11 @@ const AddAddressPage = () => {
       };
       const fetchAddresses = async () => {
             try {
-                  const { data } = await
-                        axios.get(`${addressBaseUrl}`, {
-                              headers: {
-                                    Authorization: `Bearer ${storage.getToken()}`,
-                              },
-                        });
-                  setAddresses(data.data || []);
-            } catch(error: any) {
-                  toast.error(error.response?.data?.message || "Failed");
-                  console.log(error);                  
+                  const data = await getMyAddresses();
+                  setAddresses(data.data as any || []);
+            } catch(err: any) {
+                  toast.error(err.message || "Failed");
+                  console.error(err);                  
             } finally {
                   setLoading(false);
             }
@@ -172,30 +166,22 @@ const AddAddressPage = () => {
             }
             try {
                   setAdding(true);
-                  const { data } = await axios.post(
-                        `${addressBaseUrl}`,
-                        {
-                              formattedAddress,
-                              mobile,
-                              latitude,
-                              longitude,
-                        },
-                        {
-                              headers: {
-                                    Authorization: `Bearer ${storage.getToken()}`,
-                              }
-                        }
-                  );
-                  toast.success(data.message);
+                  const data = await apiAddAddress({
+                        formattedAddress,
+                        mobile,
+                        latitude,
+                        longitude,
+                  });
+                  toast.success(data.message || "Address saved");
                   setMobile("");
                   setFormattedAddress("");
 
                   setLatitude(null);
                   setLongitude(null);
                   fetchAddresses();
-            } catch (error: any) {
-                  console.log(error);
-                  toast.error(error.response?.data?.message || "Failed");
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Failed");
             } finally {
                   setAdding(false);
             }
@@ -204,16 +190,12 @@ const AddAddressPage = () => {
             if (!window.confirm("Delete this address?")) return;
             try {
                   setDeletingId(id);
-                  const { data } = await axios.delete(`${addressBaseUrl}/${id}`, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`,
-                        },
-                  });
-                  toast.success(data.message);
+                  const data = await apiDeleteAddress(id);
+                  toast.success(data.message || "Address deleted");
                   fetchAddresses();
-            } catch (error: any) {
-                  console.log(error);
-                  toast.error(error.response.data.message || "Failed to delete your address");
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Failed to delete your address");
             } finally {
                   setDeletingId(null);
             }

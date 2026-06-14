@@ -4,14 +4,12 @@ import { useAppData } from "../context/AppContext";
 import type { IRestaurant } from "../types/types";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { restaurantBaseUrl } from "../components/common/constant";
+import { getNearestRestaurant } from "../utils/restaurant.api";
 import FeatureBanmner from "../components/home/featureBanner";
 import RestaurantsCard from "../components/restaurant/restaurantsCard";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
-import { storage } from "../utils/secureStorage";
 
 const Home = () => {
 
@@ -43,15 +41,10 @@ const Home = () => {
             try {
                   if (search) setSearching(true);
                   else setLoading(true);
-                  const { data } = await axios.get(`${restaurantBaseUrl}`, {
-                        params: {
-                              latitude: location.latitude,
-                              longitude: location.longitude,
-                              search
-                        },
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }
+                  const data = await getNearestRestaurant({
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                        search
                   });
                   setRestaurants(data.data || []);
                   setLoading(false);

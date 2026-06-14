@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { getAllCoupons, createCoupon, updateCoupon, deleteCoupon, getCouponAnalytics } from "../../utils/admin.api";
 import {
       Ticket,
       Plus,
@@ -9,8 +9,7 @@ import {
       Search,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { couponBaseUrl } from "../../components/common/constant";
-import { storage } from "../../utils/secureStorage";
+
 
 interface Coupon {
       _id: string;
@@ -68,16 +67,13 @@ const AdminCoupons = () => {
       const fetchCoupons = async () => {
             setLoading(true);
             try {
-                  const token = storage.getAdminToken();
-                  const res = await axios.get(couponBaseUrl, {
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
-                  if (res.data && res.data.success) {
-                        setCoupons(res.data.data);
+                  const res = await getAllCoupons();
+                  if (res && res.success) {
+                        setCoupons(res.data);
                   }
             } catch (error: any) {
                   console.error("Failed to load coupons:", error);
-                  toast.error(error.response?.data?.message || "Failed to load coupons");
+                  toast.error(error.message || "Failed to load coupons");
             } finally {
                   setLoading(false);
             }
@@ -95,7 +91,6 @@ const AdminCoupons = () => {
             }
 
             try {
-                  const token = storage.getAdminToken();
                   const payload = {
                         code,
                         discountType,
@@ -108,12 +103,9 @@ const AdminCoupons = () => {
                         couponType: couponTypeForm,
                         restaurantId: couponTypeForm === "restaurant" ? restaurantId : undefined
                   };
+                  const res = await createCoupon(payload);
 
-                  const res = await axios.post(couponBaseUrl, payload, {
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
-
-                  if (res.data && res.data.success) {
+                  if (res && res.success) {
                         toast.success("Coupon created successfully! 🎉");
                         setIsCreateOpen(false);
                         // Reset Form
@@ -131,20 +123,15 @@ const AdminCoupons = () => {
                   }
             } catch (error: any) {
                   console.error("Error creating coupon:", error);
-                  toast.error(error.response?.data?.message || "Error creating coupon");
+                  toast.error(error.message || "Error creating coupon");
             }
       };
 
       const handleToggleActive = async (id: string, currentStatus: boolean) => {
             try {
-                  const token = storage.getAdminToken();
-                  const res = await axios.put(`${couponBaseUrl}/${id}`, {
-                        isActive: !currentStatus
-                  }, {
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
+                  const res = await updateCoupon(id, { isActive: !currentStatus });
 
-                  if (res.data && res.data.success) {
+                  if (res && res.success) {
                         toast.success(`Coupon ${!currentStatus ? "activated" : "deactivated"}!`);
                         setCoupons(prev => prev.map(c => c._id === id ? { ...c, isActive: !currentStatus } : c));
                   }
@@ -157,12 +144,9 @@ const AdminCoupons = () => {
       const handleDeleteCoupon = async (id: string) => {
             if (!window.confirm("Are you sure you want to delete this coupon?")) return;
             try {
-                  const token = storage.getAdminToken();
-                  const res = await axios.delete(`${couponBaseUrl}/${id}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
+                  const res = await deleteCoupon(id);
 
-                  if (res.data && res.data.success) {
+                  if (res && res.success) {
                         toast.success("Coupon deleted successfully");
                         setCoupons(prev => prev.filter(c => c._id !== id));
                         if (selectedCouponAnalytics?.coupon._id === id) {
@@ -178,12 +162,9 @@ const AdminCoupons = () => {
       const fetchCouponAnalytics = async (id: string) => {
             setSelectedCouponAnalytics(null);
             try {
-                  const token = storage.getAdminToken();
-                  const res = await axios.get(`${couponBaseUrl}/analytics/${id}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
-                  if (res.data && res.data.success) {
-                        setSelectedCouponAnalytics(res.data.data);
+                  const res = await getCouponAnalytics(id);
+                  if (res && res.success) {
+                        setSelectedCouponAnalytics(res.data);
                   }
             } catch (error: any) {
                   console.error("Failed to load coupon analytics:", error);

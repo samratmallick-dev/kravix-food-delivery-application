@@ -1,9 +1,9 @@
-import axios from "axios";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { authBaseUrl, cartBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import type { ICart, AppContextType, LocationData, User } from "../types/types";
 import { storage } from "../utils/secureStorage";
+import { getMyProfile } from "../utils/auth.api";
+import { fetchCart as apiFetchCart } from "../utils/cart.api";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -50,14 +50,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
 
         Promise.allSettled([
-            withTimeout(axios.get(`${authBaseUrl}/me`, { headers: { Authorization: `Bearer ${token}` } }), 5000),
-            withTimeout(axios.get(`${cartBaseUrl}`, { headers: { Authorization: `Bearer ${token}` } }), 5000),
+            withTimeout(getMyProfile(token), 5000),
+            withTimeout(apiFetchCart(token), 5000),
         ]).then(([userResult, cartResult]) => {
             if (userResult.status === "fulfilled") {
-                setUser(userResult.value.data.data);
+                setUser(userResult.value.data);
                 setIsAuth(true);
             } else {
-                const status = userResult.reason?.response?.status;
+                const status = (userResult.reason as any)?.status;
                 if (status === 401 || status === 403) {
                     storage.removeToken();
                     setUser(null);
@@ -67,9 +67,9 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                 }
             }
             if (cartResult.status === "fulfilled") {
-                setCart(cartResult.value.data.data.cart || []);
-                setSubTotal(cartResult.value.data.data.subTotal || 0);
-                setQuantity(cartResult.value.data.data.cartLength || 0);
+                setCart(cartResult.value.data?.cart || []);
+                setSubTotal(cartResult.value.data?.subTotal || 0);
+                setQuantity(cartResult.value.data?.cartLength || 0);
             }
         }).finally(() => setLoading(false));
     }, []);
@@ -78,14 +78,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         const token = storage.getToken();
         if (!token) { setCart([]); setSubTotal(0); setQuantity(0); return; }
         try {
-            const { data } = await axios.get(`${cartBaseUrl}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setCart(data.data.cart || []);
-            setSubTotal(data.data.subTotal || 0);
-            setQuantity(data.data.cartLength || 0);
+            const res = await apiFetchCart(token);
+            setCart(res.data?.cart || []);
+            setSubTotal(res.data?.subTotal || 0);
+            setQuantity(res.data?.cartLength || 0);
         } catch (error: any) {
-            console.log(error);
+            console.error(error);
         }
     }, []);
 

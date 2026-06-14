@@ -1,10 +1,9 @@
-import axios from "axios";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { menuBaseUrl } from "../common/constant";
+import { addMenuItem } from "../../utils/menu.api";
 import { ImagePlus } from "lucide-react";
 import { VscLoading } from "react-icons/vsc";
-import { storage } from "../../utils/secureStorage";
+
 
 const AddMenuItems = (
       { onItemAdded }: { onItemAdded: () => void }
@@ -30,32 +29,25 @@ const AddMenuItems = (
                   return;
             }
 
-            const formData = new FormData();
-
-            formData.append("name", name);
-            formData.append("description", description);
-            formData.append("price", price);
-            formData.append("file", image!);
-
             try {
                   setLoading(true);
-                  const response = await axios.post(`${menuBaseUrl}`, formData, {
-                        headers: {
-                              "Content-Type": "multipart/form-data",
-                              Authorization: `Bearer ${storage.getToken()}`
-                        }, withCredentials: true
+                  const response = await addMenuItem({
+                        name,
+                        description,
+                        price,
+                        image: image as File
                   });
 
-                  if (response.data.success) {
-                        toast.success(response.data.message);
+                  if (response.success) {
+                        toast.success(response.message || "Item added");
                         resetForm();
                         onItemAdded();
                   } else {
-                        toast.error(response.data.message || "Failed to add menu item");
+                        toast.error(response.message || "Failed to add menu item");
                   }
             } catch (error: any) {
                   console.log(error);
-                  toast.error(error.response?.data?.message || "An error occurred while adding menu item");
+                  toast.error(error.message || "An error occurred while adding menu item");
             } finally {
                   setLoading(false);
             }

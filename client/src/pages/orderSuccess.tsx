@@ -1,7 +1,6 @@
-import axios from "axios";
+import { verifyStripePayment } from "../utils/payment.api";
 import { useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { paymentBaseUrl } from "../components/common/constant";
 import toast from "react-hot-toast";
 import { CheckCircle, Home, ShoppingBag } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
@@ -19,9 +18,7 @@ const OrderSuccess = () => {
 
             const verifyPayment = async () => {
                   try {
-                        await axios.post(`${paymentBaseUrl}/stripe/verify`, {
-                              sessionId
-                        });
+                        await verifyStripePayment(sessionId);
 
                         toast.success("Payment completed successfully! 🎉")
                   } catch (error) {

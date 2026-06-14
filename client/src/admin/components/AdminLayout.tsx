@@ -14,7 +14,6 @@ const AdminLayout = () => {
             <div className="flex h-screen overflow-hidden bg-background">
                   <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
                   <div className="flex-1 flex flex-col min-w-0 h-screen">
-                        {/* Mobile top bar */}
                         <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-gray-900 border-b border-gray-700 shrink-0">
                               <button onClick={() => setSidebarOpen(true)} className="text-gray-400 hover:text-white cursor-pointer">
                                     <Menu size={22} />

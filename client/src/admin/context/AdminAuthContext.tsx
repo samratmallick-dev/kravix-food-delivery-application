@@ -1,6 +1,5 @@
-import axios from "axios";
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { adminBaseUrl } from "../../components/common/constant";
+import { adminLogin as apiAdminLogin } from "../../utils/admin.api";
 import toast from "react-hot-toast";
 import { storage } from "../../utils/secureStorage";
 
@@ -22,12 +21,16 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
 
       const adminLogin = async (email: string, password: string): Promise<boolean> => {
             try {
-                  const { data } = await axios.post(`${adminBaseUrl}/login`, { email, password });
-                  storage.setAdminToken(data.data.token);
-                  setIsAdminAuth(true);
-                  return true;
+                  const res = await apiAdminLogin(email, password);
+                  if (res && res.success) {
+                        storage.setAdminToken(res.data.token);
+                        setIsAdminAuth(true);
+                        return true;
+                  }
+                  toast.error(res.message || "Login failed");
+                  return false;
             } catch (error: any) {
-                  toast.error(error.response?.data?.message || "Login failed");
+                  toast.error(error.message || "Login failed");
                   return false;
             }
       };

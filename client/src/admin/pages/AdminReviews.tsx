@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { getAllReviews, moderateReview } from "../../utils/admin.api";
 import {
       MessageSquare,
       Check,
@@ -12,8 +12,7 @@ import {
       Search
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { reviewBaseUrl } from "../../components/common/constant";
-import { storage } from "../../utils/secureStorage";
+
 
 interface Review {
       _id: string;
@@ -49,17 +48,13 @@ const AdminReviews = () => {
       const fetchReviews = async () => {
             setLoading(true);
             try {
-                  const token = storage.getAdminToken();
-                  const res = await axios.get(`${reviewBaseUrl}/admin`, {
-                        params: { reportedOnly: filterReported.toString() },
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
-                  if (res.data && res.data.success) {
-                        setReviews(res.data.data);
+                  const res = await getAllReviews({ reportedOnly: filterReported.toString() });
+                  if (res && res.success) {
+                        setReviews(res.data);
                   }
             } catch (error: any) {
                   console.error("Failed to load reviews:", error);
-                  toast.error(error.response?.data?.message || "Failed to fetch reviews");
+                  toast.error(error.message || "Failed to fetch reviews");
             } finally {
                   setLoading(false);
             }
@@ -71,15 +66,10 @@ const AdminReviews = () => {
 
       const handleModerateReview = async (id: string, action: "approve" | "reject" | "delete") => {
             try {
-                  const token = storage.getAdminToken();
-                  const res = await axios.put(`${reviewBaseUrl}/admin/moderate/${id}`, {
-                        action
-                  }, {
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
+                  const res = await moderateReview(id, { action } as any);
 
-                  if (res.data && res.data.success) {
-                        toast.success(res.data.message || `Review moderated successfully!`);
+                  if (res && res.success) {
+                        toast.success(res.message || `Review moderated successfully!`);
                         if (action === "delete") {
                               setReviews(prev => prev.filter(r => r._id !== id));
                         } else {
@@ -93,7 +83,7 @@ const AdminReviews = () => {
                   }
             } catch (error: any) {
                   console.error(`Error moderating review (${action}):`, error);
-                  toast.error(error.response?.data?.message || `Failed to perform ${action} action`);
+                  toast.error(error.message || `Failed to perform ${action} action`);
             }
       };
 

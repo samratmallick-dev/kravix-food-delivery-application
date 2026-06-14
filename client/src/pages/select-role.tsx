@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useAppData } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { authBaseUrl } from "../components/common/constant";
+import { updateRole } from "../utils/auth.api.ts";
 import toast from "react-hot-toast";
 import { storage } from "../utils/secureStorage";
 import Logo from "../components/navbar/logo";
@@ -19,24 +18,18 @@ const SelectRole = () => {
 
       const addRole = async () => {
             try {
-                  const token = storage.getToken();
-                  const { data } = await axios.patch(`${authBaseUrl}/me/role`, { role }, {
-                        headers: {
-                              Authorization: `Bearer ${token}`
-                        },
-                        withCredentials: true
-                  });
+                  const data = await updateRole(role as string);
 
-                  if (data.success) {
+                  if (data) {
                         storage.setToken(data.token);
-                        toast.success(data.message || "Role Updated Successfully");
-                        setUser(data.data);
+                        toast.success("Role Updated Successfully");
+                        setUser(data.data as any);
                         navigate("/", { replace: true });
                   } else {
-                        toast.error(data.message || "Failed to update role");
+                        toast.error("Failed to update role");
                   }
             } catch (error: any) {
-                  const message = error.response?.data?.message;
+                  const message = error.message;
                   toast.error(message || "Problem while updating role");
             }
       };

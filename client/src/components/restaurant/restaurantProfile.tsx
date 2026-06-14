@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { IRestaurant } from "../../types/types";
-import axios from "axios";
-import { restaurantBaseUrl } from "../common/constant";
+import { updateRestaurantStatus, updateRestaurant } from "../../utils/restaurant.api";
 import toast from "react-hot-toast";
 import { BiMapPin } from "react-icons/bi";
 import { Edit, SaveAll, ImagePlus } from "lucide-react";
@@ -33,45 +32,32 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
 
       const toggleOpenStatus = async () => {
             try {
-                  const { data } = await axios.patch(`${restaurantBaseUrl}/me/status`, { status: !isOpen },
-                        {
-                              headers: {
-                                    Authorization: `Bearer ${storage.getToken()}`
-                              },
-                              withCredentials: true
-                        }
-                  );
-                  toast.success(data.message);
+                  const data = await updateRestaurantStatus(!isOpen);
                   setIsOpen(data.data.isOpen);
+                  toast.success(data.message || "Status updated");
                   fetchMyRestaurant();
-            } catch (error: any) {
-                  console.log(error);
-                  toast.error(error instanceof Error ? error.message : error.response.data.message);
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Failed to update status");
             }
       };
 
       const saveChanges = async () => {
             try {
                   setLoading(true);
-                  const formData = new FormData();
-                  formData.append("name", name);
-                  formData.append("description", description);
-                  if (imageFile) formData.append("file", imageFile);
-                  const { data } = await axios.patch(`${restaurantBaseUrl}/me`, formData, {
-                        headers: {
-                              Authorization: `Bearer ${storage.getToken()}`,
-                              "Content-Type": "multipart/form-data",
-                        },
-                        withCredentials: true
+                  const data = await updateRestaurant({
+                        name: name,
+                        description: description,
+                        image: imageFile || undefined
                   });
                   onUpdate(data.data);
-                  toast.success(data.message);
+                  toast.success(data.message || "Profile updated");
                   setImageFile(null);
                   setImagePreview(null);
                   fetchMyRestaurant();
-            } catch (error: any) {
-                  console.log(error);
-                  toast.error(error instanceof Error ? error.message : (error.response.data.message || "Failed to update restaurant"));
+            } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || "Failed to update profile");
             } finally {
                   setLoading(false);
                   setEditMode(false);
@@ -82,11 +68,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
       const navigate = useNavigate();
 
       const logoutHandler = () => {
-            const token = storage.getToken();
-            axios.patch(`${restaurantBaseUrl}/me/status`, { status: false }, {
-                  headers: { Authorization: `Bearer ${token}` },
-                  withCredentials: true
-            }).catch(() => {});
+            updateRestaurantStatus(false).catch((err) => console.error("Failed to close restaurant", err));
             storage.removeToken();
             setIsAuth(false);
             setUser(null);
