@@ -8,6 +8,7 @@ import { useMobile } from "../components/common/useMobile";
 import { storage } from "../utils/secureStorage";
 import { updateProfile } from "../utils/auth.api";
 import { cloudinaryBaseUrl, internalKey } from "../components/common/constant";
+import { compressImage } from "../utils/imageCompressor";
 
 const Account = () => {
       const { user, setUser, setIsAuth } = useAppData();
@@ -42,13 +43,17 @@ const Account = () => {
             setImageFile(null);
       };
 
-      const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0] ?? null;
             if (!file) return;
             setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => setPreviewImage(reader.result as string);
-            reader.readAsDataURL(file);
+            try {
+                  const compressed = await compressImage(file, 800, 0.7);
+                  setPreviewImage(compressed);
+            } catch (err) {
+                  console.error("Failed to compress image", err);
+                  toast.error("Failed to process image");
+            }
       };
 
       const handleSave = async () => {
