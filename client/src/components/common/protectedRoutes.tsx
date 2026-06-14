@@ -10,12 +10,14 @@ const ProtectedRoutes = () => {
 
       if (!isAuth) return <Navigate to="/login" replace />;
 
-      if (user?.role === null && location.pathname !== "/select-role") return <Navigate to="/select-role" replace />;
+      if (!user) return <AppSkeleton />;
 
-      if (user?.role === "seller" && location.pathname !== "/seller") return <Navigate to="/seller" replace />;
-      if (user?.role === "rider" && location.pathname !== "/rider") return <Navigate to="/rider" replace />;
+      if (user.role === null && location.pathname !== "/select-role") return <Navigate to="/select-role" replace />;
 
-      if (user?.role !== null && location.pathname === "/select-role") return <Navigate to="/" replace />;
+      if (user.role === "seller" && location.pathname !== "/seller") return <Navigate to="/seller" replace />;
+      if (user.role === "rider" && location.pathname !== "/rider") return <Navigate to="/rider" replace />;
+
+      if (user.role !== null && location.pathname === "/select-role") return <Navigate to="/" replace />;
 
       return <Outlet />;
 };

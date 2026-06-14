@@ -28,7 +28,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
     const [user, setUser] = useState<User | null>(null);
     const [isAuth, setIsAuth] = useState(() => !!storage.getToken());
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const [location, setLocation] = useState<LocationData | null>(null);
     const [locationLoading, setLocationLoading] = useState(false);
@@ -57,9 +57,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                 setUser(userResult.value.data.data);
                 setIsAuth(true);
             } else {
-                console.error("auth fetch failed:", userResult.reason?.message);
-                setUser(null);
-                setIsAuth(false);
+                const status = userResult.reason?.response?.status;
+                if (status === 401 || status === 403) {
+                    storage.removeToken();
+                    setUser(null);
+                    setIsAuth(false);
+                } else {
+                    console.error("auth fetch failed:", userResult.reason?.message);
+                }
             }
             if (cartResult.status === "fulfilled") {
                 setCart(cartResult.value.data.data.cart || []);
