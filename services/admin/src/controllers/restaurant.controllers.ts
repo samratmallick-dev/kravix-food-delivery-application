@@ -61,16 +61,21 @@ export const getRestaurantById = TryCatch(
             });
       },
 );
-
 export const verifyRestaurant = TryCatch(
       async (req: AdminRequest, res: Response) => {
-            const { isVerified } = req.body as { isVerified: boolean };
-            if (typeof isVerified !== "boolean") {
-                  return res.status(400).json({
-                        success: false,
-                        message: "isVerified must be a boolean",
-                        error: true,
-                  });
+            let isVerified: boolean;
+            if (req.body && typeof req.body.isVerified === "boolean") {
+                  isVerified = req.body.isVerified;
+            } else {
+                  const existing = await Restaurant.findById(req.params["restaurantId"]);
+                  if (!existing) {
+                        return res.status(404).json({
+                              success: false,
+                              message: "Restaurant not found",
+                              error: true,
+                        });
+                  }
+                  isVerified = !existing.isVerified;
             }
 
             const restaurant = await Restaurant.findByIdAndUpdate(

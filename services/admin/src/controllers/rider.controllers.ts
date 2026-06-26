@@ -60,13 +60,19 @@ export const getRiderById = TryCatch(
 
 export const verifyRider = TryCatch(
       async (req: AdminRequest, res: Response) => {
-            const { isVerified } = req.body as { isVerified: boolean };
-            if (typeof isVerified !== "boolean") {
-                  return res.status(400).json({
-                        success: false,
-                        message: "isVerified must be a boolean",
-                        error: true,
-                  });
+            let isVerified: boolean;
+            if (req.body && typeof req.body.isVerified === "boolean") {
+                  isVerified = req.body.isVerified;
+            } else {
+                  const existing = await Rider.findById(req.params["riderId"]);
+                  if (!existing) {
+                        return res.status(404).json({
+                              success: false,
+                              message: "Rider not found",
+                              error: true,
+                        });
+                  }
+                  isVerified = !existing.isVerified;
             }
 
             const rider = await Rider.findByIdAndUpdate(
