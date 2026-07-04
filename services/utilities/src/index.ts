@@ -9,7 +9,7 @@ const Port = process.env.PORT || 8888;
 const app = express();
 
 app.use(cors(corsOptions));
-app.options("/{*path}", cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use((req, res, next) => {
       res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
       res.setHeader(

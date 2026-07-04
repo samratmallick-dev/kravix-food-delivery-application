@@ -4,16 +4,51 @@ import analyticsRouter from "./routes/analytics.routes.js";
 
 const app = express();
 
-const corsOptions = {
-      origin: process.env.ALLOWED_ORIGINS
+const allowedOrigins = (): string[] => {
+      const defaultOrigins = [
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:3000",
+      ];
+      const envOrigins = process.env.ALLOWED_ORIGINS
             ? process.env.ALLOWED_ORIGINS.split(",")
-            : ["http://localhost:5173"],
+                  .map((o: string) => o.trim())
+                  .filter(Boolean)
+            : [];
+      const clientUrl = process.env.CLIENT_URL;
+      if (clientUrl) {
+            envOrigins.push(clientUrl.trim());
+      }
+      return [...new Set([...defaultOrigins, ...envOrigins])];
+};
+
+const corsOptions = {
+      origin: (
+            origin: string | undefined,
+            callback: (err: Error | null, allow?: boolean) => void,
+      ) => {
+            if (!origin) return callback(null, true);
+
+            const origins = allowedOrigins().map((o) => o.toLowerCase().replace(/\/$/, ""));
+            const normalizedOrigin = origin.toLowerCase().replace(/\/$/, "");
+
+            const isAllowed =
+                  origins.includes(normalizedOrigin) ||
+                  normalizedOrigin.endsWith("vercel.app") ||
+                  normalizedOrigin.includes("vercel.app");
+
+            if (isAllowed) {
+                  return callback(null, true);
+            }
+
+            return callback(null, false);
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 };
 
 app.use(cors(corsOptions));
-app.options("/{*path}", cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use((req, res, next) => {
       res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
