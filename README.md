@@ -255,7 +255,7 @@ kravix/
 
 <p align="center">
   <a href="https://kravix-nu.vercel.app/" target="_blank">
-    <img src="https://img.shields.io/badge/🔗_Live_Demo?style=for-the-badge" alt="Live Demo" />
+    <img src="https://img.shields.io/badge/🔗_Live_Demo-kravix?style=for-the-badge" alt="Live Demo" />
   </a>
 </p>
 
