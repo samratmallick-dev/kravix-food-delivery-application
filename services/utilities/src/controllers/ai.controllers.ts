@@ -67,6 +67,13 @@ export const aiChat = async (req: Request, res: Response) => {
         return res.status(200).json(response.data);
     } catch (error: any) {
         console.error("AI Chat Error:", error.response?.data || error.message);
+        const isServiceDown = error.code === "ECONNREFUSED" || error.code === "ECONNRESET" || error.response?.status === 502;
+        if (isServiceDown) {
+            return res.status(200).json({
+                reply: "I'm currently unavailable. Please try again in a moment.",
+                intent_confidence: 0,
+            });
+        }
         return res.status(500).json({
             error: `Failed to communicate with AI Assistant: ${error.message}`,
         });
