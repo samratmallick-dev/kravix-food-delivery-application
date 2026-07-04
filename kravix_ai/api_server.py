@@ -122,29 +122,186 @@ async def chat_endpoint(req: ChatRequest):
                 reply = "Let me connect you with our support team."
         else:
             msg_lower = req.message.lower()
+            role = req.role
             menu_items = req.contextData.get('menu_items', []) if req.contextData else []
-            
-            if "hi" in msg_lower or "hello" in msg_lower:
-                reply = "Hello! Welcome to Kravix. How can I help you with your food order today?"
-            elif "suggest" in msg_lower or "food" in msg_lower or "menu" in msg_lower:
+            orders = req.contextData.get('orders', []) if req.contextData else []
+
+            BENGALI_MAP = {
+                "bhat": "rice", "dal": "lentils", "mach": "fish", "maach": "fish",
+                "roti": "bread", "tarkari": "vegetables", "mishti": "sweets",
+                "doi": "yogurt", "chingri": "prawns", "kosha": "dry curry",
+                "mangsho": "mutton", "murgi": "chicken", "aloo": "potato",
+                "begun": "eggplant", "shorshe": "mustard",
+            }
+            normalized = msg_lower
+            detected_bengali = []
+            for bn, en in BENGALI_MAP.items():
+                if bn in normalized:
+                    normalized = normalized.replace(bn, en)
+                    detected_bengali.append(f"{bn} -> {en}")
+
+            STATUS_MESSAGES = {
+                "placed": "Your order has been placed and is waiting for the restaurant to accept it. ⏳",
+                "accepted": "Great news! The restaurant has accepted your order. 👍",
+                "preparing": "Your food is being prepared right now! 🍳",
+                "ready_for_rider": "Your order is ready and waiting for a rider to pick it up. 🛵",
+                "picked_up": "A rider has picked up your order and is on the way! 🏍️",
+                "out_for_delivery": "Your order is out for delivery and almost there! 📍",
+                "delivered": "Your order has been delivered. Enjoy your meal! 🎉",
+                "cancelled": "This order was cancelled. You can reorder from 'My Orders'.",
+            }
+
+            if any(w in msg_lower for w in ["hi", "hello", "hey", "hola", "howdy"]):
+                reply = "Hello! Welcome to Kravix 🍛 How can I help you today?"
+            elif any(p in msg_lower for p in ["how are you", "how r you", "how are u", "how r u", "wassup", "what's up", "whats up"]):
+                reply = "I'm doing great, thanks for asking! Ready to help you find something delicious. What are you craving?"
+            elif any(w in msg_lower for w in ["thank", "thanks", "thx", "ty", "appreciate"]):
+                reply = "You're welcome! Let me know if there's anything else I can help you with. 😊"
+            elif any(w in msg_lower for w in ["bye", "goodbye", "see you", "later", "cya"]):
+                reply = "Goodbye! Enjoy your meal and come back soon! 🍛"
+            elif any(w in msg_lower for w in ["who are you", "what are you", "your name", "introduce"]):
+                reply = "I'm the Kravix AI Assistant! I can help you with orders, food recommendations, payments, delivery tracking, and more."
+            elif any(w in msg_lower for w in ["help", "what can you do", "capabilities"]):
+                reply = "I can help you with: 🔍 finding restaurants, 🍽️ menu suggestions, 📦 order tracking, ❌ cancellations, 💳 payment issues, 🏷️ coupons, and 🛵 delivery updates."
+
+            elif detected_bengali:
+                mapped = ", ".join(detected_bengali)
                 if menu_items:
-                    item_names = [f"{item['name']} (₹{item['price']})" for item in menu_items[:3]]
-                    reply = f"Here are some great options: {', '.join(item_names)}."
-                else:
-                    reply = "I'd love to suggest some food, but it looks like there are no restaurants or menu items available right now!"
-            elif "biriyani" in msg_lower or "biryani" in msg_lower:
-                reply = "Our Biryani is a customer favorite! It comes with raita and salad. Would you like to add it to your cart?"
-            elif "price" in msg_lower or "500" in msg_lower:
-                if menu_items:
-                    affordable = [item['name'] for item in menu_items if item.get('price', 1000) <= 500]
-                    if affordable:
-                        reply = f"Here are some items under ₹500: {', '.join(affordable)}."
+                    matches = [i for i in menu_items if any(en in i['name'].lower() for bn, en in BENGALI_MAP.items() if bn in msg_lower)]
+                    if matches:
+                        names = ", ".join(f"{i['name']} (₹{i['price']})" for i in matches[:3])
+                        reply = f"I recognized: {mapped}. Here are matching items: {names}."
                     else:
-                        reply = "We don't have items under ₹500 right now, sorry!"
+                        reply = f"I recognized: {mapped}. No exact matches on the current menu, but try searching for it!"
                 else:
-                    reply = "We have many delicious options under ₹500, but I need a restaurant menu selected first."
+                    reply = f"I recognized: {mapped}. Search for a restaurant to see if these are available near you!"
+
+            elif any(w in normalized for w in ["suggest", "recommend", "what should i eat", "what to eat", "what to order", "craving"]):
+                if menu_items:
+                    available = [i for i in menu_items if i.get('available', True)]
+                    names = ", ".join(f"{i['name']} (₹{i['price']})" for i in available[:4])
+                    reply = f"Here are some great options: {names}. Enjoy! 😋"
+                else:
+                    reply = "I'd love to suggest something! Search for a restaurant near you first and I'll show you what's available."
+            elif any(w in normalized for w in ["biryani", "biriyani"]):
+                reply = "Biryani is a crowd favorite! 🍚 It usually comes with raita and salad. Search 'biryani' on the home page to find the best options near you."
+            elif "pizza" in normalized:
+                reply = "Craving pizza? 🍕 Search 'pizza' on the home page to find nearby restaurants serving it."
+            elif "burger" in normalized:
+                reply = "Burgers are always a great choice! 🍔 Search 'burger' to find options near you."
+            elif any(w in normalized for w in ["dessert", "sweet", "ice cream", "cake", "sweets"]):
+                reply = "Got a sweet tooth? 🍰 Search for desserts or sweets on the home page to find nearby options."
+            elif any(w in normalized for w in ["veg", "vegetarian", "vegan"]):
+                if menu_items:
+                    veg = [i for i in menu_items if "veg" in i['name'].lower() and i.get('available', True)]
+                    reply = f"Vegetarian options: {', '.join(i['name'] for i in veg[:4])}." if veg else "I don't see specific veg tags on the current menu. Check the restaurant's menu page for details."
+                else:
+                    reply = "Search for a restaurant and I can help you find vegetarian options from their menu!"
+            elif any(w in normalized for w in ["available", "in stock", "out of stock"]):
+                if menu_items:
+                    avail = [i['name'] for i in menu_items if i.get('available', True)]
+                    unavail = [i['name'] for i in menu_items if not i.get('available', True)]
+                    parts = []
+                    if avail: parts.append(f"Available: {', '.join(avail[:4])}.")
+                    if unavail: parts.append(f"Out of stock: {', '.join(unavail[:4])}.")
+                    reply = " ".join(parts) if parts else "All items appear to be available right now!"
+                else:
+                    reply = "Open a restaurant's menu page and I can check item availability for you."
+            elif any(w in normalized for w in ["price", "cheap", "affordable", "budget", "under", "cost", "how much"]):
+                if menu_items:
+                    affordable = [i for i in menu_items if i.get('price', 9999) <= 500 and i.get('available', True)]
+                    reply = f"Items under ₹500: {', '.join(i['name'] for i in affordable)}." if affordable else "No items under ₹500 on the current menu right now."
+                else:
+                    reply = "Open a restaurant's menu and I can filter items by price for you!"
+
+            elif any(w in normalized for w in ["find restaurant", "nearby", "near me", "restaurants"]):
+                reply = "To find nearby restaurants, make sure your location is set on the home page. Kravix shows you the nearest open and verified restaurants automatically!"
+            elif any(w in normalized for w in ["verified", "trusted", "authentic"]):
+                reply = "All restaurants on Kravix go through an admin verification process before appearing on the map. Look for the verified badge on restaurant profiles!"
+            elif any(w in normalized for w in ["restaurant closed", "is it open", "opening time"]):
+                reply = "Restaurant availability is shown in real-time on the home page. If a restaurant is closed, you'll see it marked as 'Closed' and won't be able to order from it."
+
+            elif any(w in normalized for w in ["track", "where is my order", "order status", "my order"]):
+                if orders:
+                    latest = orders[0]
+                    status = latest.get('status', 'unknown')
+                    reply = STATUS_MESSAGES.get(status, f"Your latest order status is: {status}.")
+                else:
+                    reply = "I don't see any active orders right now. Place an order and I'll help you track it!"
+            elif any(w in normalized for w in ["cancel", "cancel order", "stop order"]):
+                if orders:
+                    status = orders[0].get('status', '')
+                    if status == "placed":
+                        reply = "Your order can still be cancelled! Go to 'My Orders', open the order, and tap the Cancel button."
+                    elif status in ["preparing", "accepted", "ready_for_rider", "picked_up", "out_for_delivery"]:
+                        reply = f"Sorry, your order is currently '{status}' and can no longer be cancelled. Contact support if there's an urgent issue."
+                    else:
+                        reply = "Orders can only be cancelled before the restaurant starts preparing them. Check 'My Orders' for the cancel option."
+                else:
+                    reply = "Orders can be cancelled before the restaurant starts preparing them. Go to 'My Orders' and tap Cancel if the option is available."
+            elif any(w in normalized for w in ["reorder", "order again", "same order", "repeat order"]):
+                reply = "You can reorder any past order! Go to 'My Orders', find the order you want to repeat, and tap 'Reorder'. It'll refill your cart instantly."
+
+            elif any(w in normalized for w in ["payment failed", "money deducted", "charged but", "debited", "deducted"]):
+                reply = "If money was deducted but your order wasn't placed, don't worry — refunds for failed transactions are processed automatically within 5–7 business days. Contact your bank if it takes longer."
+            elif any(w in normalized for w in ["refund", "money back", "return money"]):
+                reply = "Refunds are issued for cancelled orders where payment was already made. They typically reflect within 5–7 business days depending on your bank or payment provider."
+            elif any(w in normalized for w in ["payment", "pay", "stripe", "razorpay", "checkout"]):
+                reply = "Kravix supports Stripe and Razorpay for secure payments. 💳 If you faced an issue during checkout, please retry or contact our support team."
+            elif any(w in normalized for w in ["coupon", "discount", "promo", "offer", "voucher"]):
+                reply = "You can apply a coupon at checkout! 🏷️ Enter your code in the 'Apply Coupon' field. Coupons can be flat discounts, percentage-based, or free delivery."
+
+            elif any(w in normalized for w in ["otp", "one time password", "handoff", "verify delivery"]):
+                reply = "When your rider arrives, they'll ask for a delivery OTP. You can find your OTP in the active order details page. Share it only with your rider to confirm delivery."
+            elif any(w in normalized for w in ["delivery time", "how long", "eta", "when will", "arrive"]):
+                reply = "Delivery time depends on the restaurant's preparation time and your distance from it. You can track your rider's live location on the order tracking page!"
+            elif any(w in normalized for w in ["delivery fee", "delivery charge"]):
+                reply = "Delivery fees are calculated based on the distance between the restaurant and your delivery address. Apply a free-delivery coupon at checkout to waive it!"
+
+            elif any(w in normalized for w in ["blocked", "account blocked", "can't login", "cannot login", "banned"]):
+                reply = "If your account has been blocked, it may be due to a policy violation. Please contact Kravix support with your registered email for assistance."
+            elif any(w in normalized for w in ["switch role", "change role", "become seller", "become rider", "switch to"]):
+                reply = "You can switch your role from your profile settings. Go to your profile, tap 'Switch Role', and choose Customer, Seller, or Rider."
+            elif any(w in normalized for w in ["login", "sign in", "sign up", "register", "account"]):
+                reply = "You can sign in with Google One-Tap or with your email and password. New users can register directly from the login page!"
+            elif any(w in normalized for w in ["forgot password", "reset password", "password"]):
+                reply = "Click 'Forgot Password' on the login page and we'll send a reset link to your registered email address."
+            elif any(w in normalized for w in ["verify email", "email verification", "resend verification"]):
+                reply = "Check your inbox for a verification email from Kravix. If you didn't receive it, use the 'Resend Verification' option on the login page."
+            elif any(w in normalized for w in ["privacy", "data", "personal info"]):
+                reply = "Kravix takes your privacy seriously. Your data is used only to provide the service. Refer to our Privacy Policy on the website for full details."
+
+            elif role == "seller" and any(w in normalized for w in ["add item", "add menu", "new dish", "add food"]):
+                reply = "To add a menu item, go to your Seller Dashboard → Menu Management → click 'Add Item'. Fill in the name, price, description, and upload an image."
+            elif role == "seller" and any(w in normalized for w in ["revenue", "earnings", "sales", "analytics", "chart"]):
+                reply = "Your sales analytics are in the Seller Dashboard under 'Analytics'. View daily, weekly, and monthly revenue trends with interactive charts."
+            elif role == "seller" and any(w in normalized for w in ["toggle", "open restaurant", "close restaurant", "availability"]):
+                reply = "Toggle your restaurant's open/closed status from the Seller Dashboard. Customers won't be able to order when your restaurant is marked as closed."
+            elif role == "seller" and any(w in normalized for w in ["incoming order", "new order", "accept order"]):
+                reply = "New orders appear in your Seller Dashboard in real-time. Accept them and move through the pipeline: Accepted → Preparing → Ready for Rider."
+            elif role == "seller" and any(w in normalized for w in ["create coupon", "add coupon", "coupon"]):
+                reply = "Create restaurant-specific coupons from Seller Dashboard → Coupons. Set the discount type, value, minimum order amount, usage limit, and expiry date."
+
+            elif role == "rider" and any(w in normalized for w in ["online", "offline", "go online", "availability", "toggle"]):
+                reply = "Toggle your availability from your Rider Dashboard. When you're online, you'll receive delivery job offers for orders near your location."
+            elif role == "rider" and any(w in normalized for w in ["earning", "payout", "income", "money"]):
+                reply = "Your earnings are tracked in the Rider Dashboard under 'Earnings'. It shows your completed deliveries and total payout accumulated."
+            elif role == "rider" and any(w in normalized for w in ["otp", "deliver", "handoff", "complete delivery"]):
+                reply = "Ask the customer for their delivery OTP when you arrive. Enter it in the app to mark the order as delivered and complete the handoff."
+            elif role == "rider" and any(w in normalized for w in ["accept", "job", "delivery request"]):
+                reply = "When a new delivery job is available near you, you'll get a real-time notification. Open the Rider Dashboard to accept or view the delivery details."
+
+            elif role == "admin" and any(w in normalized for w in ["verify", "approve", "restaurant", "rider"]):
+                reply = "Go to Admin Dashboard → Verification Requests to review and approve or reject pending restaurant and rider registrations."
+            elif role == "admin" and any(w in normalized for w in ["block", "unblock", "user"]):
+                reply = "You can block or unblock any user, seller, or rider from Admin Dashboard → User Management."
+            elif role == "admin" and any(w in normalized for w in ["cancel order", "stuck order", "force cancel"]):
+                reply = "Admins can force-cancel stuck orders from Admin Dashboard → Orders. Use this for orders stuck in an unresolvable state."
+            elif role == "admin" and any(w in normalized for w in ["analytics", "export", "csv", "report"]):
+                reply = "Platform-wide analytics are in the Admin Dashboard. You can also export revenue trends and system logs as CSV files."
+
             else:
-                reply = f"Got it! You said: '{req.message}'. (This is a mock response since the AI model is disabled)"
+                reply = "I'm here to help with orders, food recommendations, payments, delivery, and account questions. What would you like to know? 😊"
 
 
         history.append({"role": "assistant", "content": reply})
