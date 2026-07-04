@@ -24,7 +24,7 @@ else:
             logger.info("CUDA is not available. 4-bit quantized models require a GPU. Running in MOCK mode.")
     except ImportError:
         ML_AVAILABLE = False
-        logger.info("ML libraries (torch, transformers) not found. Running in MOCK mode.")
+        logger.debug("ML libraries (torch, transformers) not found. Running in MOCK mode.")
 
 app = FastAPI(title="Kravix Local AI Microservice")
 
