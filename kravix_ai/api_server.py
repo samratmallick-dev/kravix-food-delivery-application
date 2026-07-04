@@ -3,19 +3,28 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import os
 import random
+import logging
 
-try:
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-    from peft import PeftModel
-    if torch.cuda.is_available():
-        ML_AVAILABLE = True
-    else:
-        ML_AVAILABLE = False
-        print("WARNING: CUDA is not available. 4-bit quantized models require a GPU. Running in MOCK mode.")
-except ImportError:
+logger = logging.getLogger("uvicorn.error")
+
+MOCK_MODE = os.environ.get("MOCK_MODE", "false").lower() in ("true", "1", "yes")
+
+if MOCK_MODE:
     ML_AVAILABLE = False
-    print("WARNING: ML libraries (torch, transformers) not found. Running in MOCK mode.")
+    logger.info("MOCK_MODE environment variable is set. Running in MOCK mode.")
+else:
+    try:
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from peft import PeftModel
+        if torch.cuda.is_available():
+            ML_AVAILABLE = True
+        else:
+            ML_AVAILABLE = False
+            logger.info("CUDA is not available. 4-bit quantized models require a GPU. Running in MOCK mode.")
+    except ImportError:
+        ML_AVAILABLE = False
+        logger.info("ML libraries (torch, transformers) not found. Running in MOCK mode.")
 
 app = FastAPI(title="Kravix Local AI Microservice")
 
@@ -23,22 +32,22 @@ BASE_MODEL_ID = "unsloth/llama-3-8b-bnb-4bit"
 LORA_MODEL_PATH = "./kravix_model_lora"
 
 if ML_AVAILABLE:
-    print("Loading Tokenizer...")
+    logger.info("Loading Tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID)
 
-    print("Loading Base Model...")
+    logger.info("Loading Base Model...")
     base_model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL_ID,
         device_map="cpu",
         torch_dtype=torch.float32
     )
 
-    print("Applying LoRA Weights...")
+    logger.info("Applying LoRA Weights...")
     try:
         model = PeftModel.from_pretrained(base_model, LORA_MODEL_PATH)
-        print("LoRA weights loaded successfully.")
+        logger.info("LoRA weights loaded successfully.")
     except Exception as e:
-        print(f"Warning: Could not load LoRA weights ({e}). Running base model only.")
+        logger.warning(f"Could not load LoRA weights ({e}). Running base model only.")
         model = base_model
 
 class ChatRequest(BaseModel):

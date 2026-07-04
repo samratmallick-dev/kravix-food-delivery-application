@@ -58,7 +58,7 @@ The platform operates as a multi-party marketplace where:
 
 ## 🏗️ Project Architecture
 
-Kravix is organized as a monorepo containing a **React SPA frontend** and **eight backend microservices** developed in Node.js with Express v5 and TypeScript. 
+Kravix is organized as a monorepo containing a **React SPA frontend** and **nine backend microservices** (eight developed in Node.js with Express v5 and TypeScript, and one local AI assistant service developed in Python with FastAPI).
 
 ```mermaid
 graph TB
@@ -75,6 +75,7 @@ graph TB
         UTIL["🔧 Utilities Service (Port 8888)"]
         RT["📡 Realtime Socket Service (Port 9999)"]
         EMAIL["📧 Email Service (Port 8500)"]
+        AI_SERV["🤖 Kravix AI Service (Port 5500 — LoRA / Mock Mode)"]
     end
 
     subgraph Infra["🗄️ Shared Infrastructure & Third-Party APIs"]
@@ -86,6 +87,7 @@ graph TB
         RAZORPAY["💳 Razorpay"]
         GEMINI["🤖 Google Gemini 2.0"]
         GMAIL["✉️ Gmail API"]
+        HF["🤗 Hugging Face (Llama 3 8B)"]
     end
 
     UI -- "REST API" --> AUTH
@@ -121,6 +123,9 @@ graph TB
     UTIL --> STRIPE
     UTIL --> RAZORPAY
     REST --> GEMINI
+
+    UTIL -- "REST API" --> AI_SERV
+    AI_SERV -- "Uses LoRA on" --> HF
 ```
 
 ### Architectural Flow
@@ -157,6 +162,13 @@ kravix/
  │    ├── tailwind.config.js
  │    ├── vite.config.ts
  │    └── package.json
+ ├── kravix_ai/                        # ── AI Microservice (FastAPI + LoRA / PyTorch) ──
+ │    ├── api_server.py                # Port 5500: FastAPI chat completions server (mock fallback)
+ │    ├── dataset_generator.py         # Script to auto-generate fine-tuning instruction datasets
+ │    ├── train_lora.py                # Script to run PEFT/LoRA training on Llama-3-8B-bnb-4bit
+ │    ├── kravix_training.jsonl        # Fine-tuning QA dataset containing specialized intents
+ │    ├── evaluation_test_cases.json   # Intent-specific validation tests for role/intent responses
+ │    └── taxonomy_and_entities.md     # Document detailing taxonomy, entities, and Bengali mapping
  └── services/                         # ── Backend Microservices ──
       ├── admin/                       # Port 6001: Moderation, verification, and oversight
       ├── analytics/                   # Port 6002: Analytics aggregation, CSV export, Redis
@@ -206,6 +218,13 @@ kravix/
 - **User & Merchant Moderation**: Instantly block or unblock users or merchants violating platform policies.
 - **Order Oversight**: Access system-wide order pipelines and manually trigger cancellations for stuck processes.
 
+### 🤖 AI Assistant Features
+- **Role-Aware Chatbot Context**: Customizes interactions based on the active session role (`customer`, `seller`, `rider`, or `admin`).
+- **Context Injection Pipeline**: Fetches recent orders and active menu listings dynamically to address context-sensitive queries.
+- **Intent Taxonomy Classification**: Recognizes key intents like order tracking, cancellation safety checks, payment failures, regional Bengali food terminology mappings (e.g., "bhat" -> rice, "mach" -> fish), and delivery/OTP instructions.
+- **Lightweight Mock Fallback**: Includes a robust heuristic-based mock fallback logic when running on standard CPUs or environments without CUDA GPU support.
+- **LoRA Fine-Tuning Pipeline**: Ships with tools for training datasets generation (`dataset_generator.py`), PyTorch training/fine-tuning scripts (`train_lora.py`) using PEFT/TRL on Llama 3 8B, and evaluation parameters.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -222,6 +241,7 @@ kravix/
 - **Caching**: Redis (`ioredis`)
 - **Authentication**: JWT, Google OAuth 2.0 (`googleapis`)
 - **AI Integrations**: Google Generative AI (`@google/generative-ai` — Gemini 2.0 Flash)
+- **AI & Fine-Tuning Stack**: Python 3.11, FastAPI, PyTorch, Transformers, PEFT, TRL, bitsandbytes, datasets
 - **Payment Gateways**: Stripe, Razorpay
 - **Image Storage**: Cloudinary SDK
 - **Scheduling**: `node-cron` (Analytics snapshots)
@@ -267,6 +287,27 @@ for service in admin analytics auth email realtime restaurant rider utilities; d
 done
 ```
 
+### Step 2.5: Install Python AI Dependencies (Optional / Mock Mode)
+To run the local AI assistant service, install the Python dependencies:
+```bash
+cd kravix_ai
+python -m venv venv
+
+# Activate Virtual Environment
+# On Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+# On Linux/macOS:
+source venv/bin/activate
+
+# Install requirements (mock-ready, standard FastAPI server):
+pip install -r requirements.prod.txt
+
+# Or for full ML training/inference (requires CUDA/GPU):
+# pip install -r requirements.txt
+
+cd ..
+```
+
 ### Step 3: Initial TypeScript Compilation
 Compile the backend TypeScript files before starting the development servers:
 ```bash
@@ -305,6 +346,13 @@ cd services/email && npm run dev
 cd services/analytics && npm run dev
 cd services/utilities && npm run dev
 cd services/realtime && npm run dev
+
+# Start local Kravix AI Service (FastAPI Server on Port 5500)
+cd kravix_ai
+# Ensure python virtual environment is active
+.\venv\Scripts\activate
+python api_server.py
+```
 ```
 
 ---
@@ -331,6 +379,7 @@ VITE_REVIEW_BASE_URL=http://localhost:9000/api/v1/reviews
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_yourstripekeyhere
 VITE_GOOGLE_CLIENT_ID=your-google-client-id-here.apps.googleusercontent.com
 VITE_INTERNAL_KEY=your-internal-service-key-here
+VITE_API_URL_AI=http://localhost:8888/api/v1/ai
 ```
 
 ### Microservices Shared configurations
@@ -437,6 +486,8 @@ STRIPE_SECRET_KEY=sk_test_yourstripesecretkey
 CLIENT_URL=http://localhost:5173
 RESTAURANT_BASE_URL=http://localhost:9000
 ALLOWED_ORIGINS=http://localhost:5173
+AI_MICROSERVICE_URL=http://localhost:5500
+```
 ```
 
 #### Realtime Service (`services/realtime/.env`)
@@ -539,6 +590,10 @@ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
 - `POST /payment/stripe/verify` - Confirms Stripe transaction session.
 - `POST /payment/razorpay` - Creates Razorpay order session.
 - `POST /payment/razorpay/verify` - Verifies Razorpay HMAC signature.
+- `POST /ai/chat` - Proxies chat completions to the Kravix AI Service while injecting order/menu context data.
+
+### Kravix AI Service (`:5500`)
+- `POST /chat` - Returns fine-tuned or mock chat completions matching user message, role, and context.
 
 ### Realtime Service (`:9999/api/v1/socket`)
 - `POST /events` - Emits a Socket.IO event to a room internally (Internal Microservice Key Authentication).
