@@ -251,10 +251,10 @@ kravix/
 
 ## 📸 Screenshots / Demo
 
-🚧 **Coming Soon** — Screenshots and a live demo link will be added here.
-
 <p align="center">
-  <img src="https://img.shields.io/badge/🔗_Live_Demo-Coming_Soon-gray?style=for-the-badge" alt="Live Demo" />
+  <a href="https://kravix-nu.vercel.app/" target="_blank">
+    <img src="https://img.shields.io/badge/🔗_Live_Demo-kravix--nu.vercel.app-22c55e?style=for-the-badge" alt="Live Demo" />
+  </a>
 </p>
 
 ---
