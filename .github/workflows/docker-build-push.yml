@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - "services/**"
+      - "kravix_ai/**"
       - ".github/workflows/**"
   pull_request:
     branches: [main]
     paths:
       - "services/**"
+      - "kravix_ai/**"
       - ".github/workflows/**"
   workflow_dispatch:
 
@@ -30,6 +32,7 @@ jobs:
       rider: ${{ steps.changes.outputs.rider }}
       analytics: ${{ steps.changes.outputs.analytics }}
       utilities: ${{ steps.changes.outputs.utilities }}
+      kravix_ai: ${{ steps.changes.outputs.kravix_ai }}
       workflow: ${{ steps.changes.outputs.workflow }}
 
     steps:
@@ -57,6 +60,8 @@ jobs:
               - 'services/analytics/**'
             utilities:
               - 'services/utilities/**'
+            kravix_ai:
+              - 'kravix_ai/**'
             workflow:
               - '.github/workflows/**'
 
@@ -255,6 +260,34 @@ jobs:
       - name: Push image
         if: github.event_name != 'pull_request'
         run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-rider:latest
+
+  # ─── Kravix AI Service ─────────────────────────────────────────
+  build-kravix-ai:
+    name: Build & Push — Kravix AI
+    needs: detect-changes
+    if: needs.detect-changes.outputs.kravix_ai == 'true' || needs.detect-changes.outputs.workflow == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t kravix-ai ./kravix_ai
+
+      - name: Tag image
+        if: github.event_name != 'pull_request'
+        run: docker tag kravix-ai ${{ env.DOCKERHUB_USERNAME }}/kravix-ai:latest
+
+      - name: Push image
+        if: github.event_name != 'pull_request'
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/kravix-ai:latest
 
   # ─── Utilities Service ──────────────────────────────────────────
   build-utilities:

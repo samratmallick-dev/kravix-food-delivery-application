@@ -26,8 +26,10 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 import cloudinaryRoutes from "./routes/cloudinary.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
 app.use("/api/v1/cloudinary", cloudinaryRoutes);
 app.use("/api/v1/payment", paymentRoutes);
+app.use("/api/v1/ai", aiRoutes);
 
 app.listen(Port, () => {
       console.log(

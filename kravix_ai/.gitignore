@@ -1,0 +1,38 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# ML / Training artifacts
+kravix_model_lora/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+
+# Training & evaluation data
+kravix_training.jsonl
+evaluation_test_cases.json
+
+# Logs
+*.log
+runs/
+wandb/
+
+# OS
+.DS_Store
+Thumbs.db

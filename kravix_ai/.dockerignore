@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+kravix_model_lora/
+kravix_training.jsonl
+dataset_generator.py
+train_lora.py
+evaluation_test_cases.json
+taxonomy_and_entities.md
+requirements.txt

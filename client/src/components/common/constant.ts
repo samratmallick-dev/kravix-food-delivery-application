@@ -12,6 +12,7 @@ export const couponBaseUrl = import.meta.env.VITE_COUPON_BASE_URL || "http://loc
 export const reviewBaseUrl = import.meta.env.VITE_REVIEW_BASE_URL || "http://localhost:9000/api/v1/reviews";
 export const analyticsBaseUrl = import.meta.env.VITE_API_URL_ANALYTICS || "http://localhost:6002/api/v1/analytics";
 export const cloudinaryBaseUrl = (import.meta.env.VITE_API_URL_PAYMENT as string)?.replace("/payment", "/cloudinary") || "http://localhost:8888/api/v1/cloudinary";
+export const aiBaseUrl = import.meta.env.VITE_API_URL_AI || "http://localhost:8888/api/v1/ai";
 export const internalKey = import.meta.env.VITE_INTERNAL_KEY as string;
 
 export const stripPublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;

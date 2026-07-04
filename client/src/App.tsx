@@ -6,6 +6,7 @@ import Navbar from "./components/navbar/navbar";
 import AppSkeleton from "./components/common/AppSkeleton";
 import { useAppData } from "./context/AppContext";
 import Footer from "./components/home/footer";
+import AiAssistant from "./components/common/AiAssistant";
 
 const Login = lazy(() => import("./pages/login"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
@@ -87,6 +88,7 @@ const App = () => {
                               </Route>
                         </Routes>
                   </Suspense>
+                  <AiAssistant />
             </BrowserRouter>
       );
 };
