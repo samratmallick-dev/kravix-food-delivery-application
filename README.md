@@ -251,9 +251,11 @@ kravix/
 
 ## 📸 Screenshots / Demo
 
+🚧 **Coming Soon** — Screenshots will be added here.
+
 <p align="center">
   <a href="https://kravix-nu.vercel.app/" target="_blank">
-    <img src="https://img.shields.io/badge/🔗_Live_Demo-kravix--nu.vercel.app-22c55e?style=for-the-badge" alt="Live Demo" />
+    <img src="https://img.shields.io/badge/🔗_Live_Demo-kravix - Be Smart, Eat Better?style=for-the-badge" alt="Live Demo" />
   </a>
 </p>
 
