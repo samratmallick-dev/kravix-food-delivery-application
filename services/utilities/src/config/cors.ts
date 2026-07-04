@@ -13,11 +13,6 @@ const allowedOrigins = (): string[] => {
                   .filter(Boolean)
             : [];
 
-      const clientUrl = process.env.CLIENT_URL;
-      if (clientUrl) {
-            envOrigins.push(clientUrl.trim());
-      }
-
       return [...new Set([...defaultOrigins, ...envOrigins])];
 };
 
@@ -28,19 +23,13 @@ export const corsOptions: CorsOptions = {
       ) => {
             if (!origin) return callback(null, true);
 
-            const origins = allowedOrigins().map((o) => o.toLowerCase().replace(/\/$/, ""));
-            const normalizedOrigin = origin.toLowerCase().replace(/\/$/, "");
+            const origins = allowedOrigins();
 
-            const isAllowed =
-                  origins.includes(normalizedOrigin) ||
-                  normalizedOrigin.endsWith("vercel.app") ||
-                  normalizedOrigin.includes("vercel.app");
-
-            if (isAllowed) {
+            if (origins.includes(origin)) {
                   return callback(null, true);
             }
 
-            return callback(null, false);
+            return callback(new Error(`CORS blocked: ${origin}`));
       },
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
