@@ -15,19 +15,30 @@ interface MenuItemProps {
 }
 
 type PriceFilter = "all" | "under100" | "100to300" | "above300";
+type DietFilter = "all" | "veg" | "nonveg";
+type SortOption = "default" | "price_asc" | "price_desc" | "name_asc";
 
 const PRICE_FILTERS: { label: string; value: PriceFilter }[] = [
-      { label: "All", value: "all" },
+      { label: "All Prices", value: "all" },
       { label: "Under ₹100", value: "under100" },
       { label: "₹100 – ₹300", value: "100to300" },
       { label: "Above ₹300", value: "above300" },
 ];
+
+const FoodTypeBadge = ({ isVeg }: { isVeg: boolean }) => (
+      <div className={`inline-flex items-center justify-center border-2 w-4 h-4 p-0.5 rounded flex-shrink-0 ${isVeg ? "border-green-600" : "border-red-600"}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isVeg ? "bg-green-600" : "bg-red-600"}`} />
+      </div>
+);
 
 const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
       const [localItems, setLocalItems] = useState<IMenuItem[]>(items);
       const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
       const [loadingAction, setLoadingAction] = useState<"inc" | "dec" | "add" | null>(null);
       const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
+      const [dietFilter, setDietFilter] = useState<DietFilter>("all");
+      const [onlyAvailable, setOnlyAvailable] = useState(false);
+      const [sortOption, setSortOption] = useState<SortOption>("default");
       const { fetchCart, cart } = useAppData();
       const { socket } = useSocket();
 
@@ -131,29 +142,113 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             }
       };
 
-      const filteredItems = localItems.filter((item) => {
-            if (priceFilter === "under100") return item.price < 100;
-            if (priceFilter === "100to300") return item.price >= 100 && item.price <= 300;
-            if (priceFilter === "above300") return item.price > 300;
-            return true;
-      });
+      const filteredItems = localItems
+            .filter((item) => {
+                  if (onlyAvailable && !item.isAvailable) return false;
+                  if (dietFilter === "veg" && !item.isVeg) return false;
+                  if (dietFilter === "nonveg" && item.isVeg) return false;
+                  if (priceFilter === "under100" && item.price >= 100) return false;
+                  if (priceFilter === "100to300" && (item.price < 100 || item.price > 300)) return false;
+                  if (priceFilter === "above300" && item.price <= 300) return false;
+                  return true;
+            })
+            .sort((a, b) => {
+                  if (sortOption === "price_asc") return a.price - b.price;
+                  if (sortOption === "price_desc") return b.price - a.price;
+                  if (sortOption === "name_asc") return a.name.localeCompare(b.name);
+                  return 0;
+            });
+
+      const activeFilterCount = [
+            dietFilter !== "all",
+            priceFilter !== "all",
+            onlyAvailable,
+            sortOption !== "default",
+      ].filter(Boolean).length;
 
       return (
             <div>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                        {PRICE_FILTERS.map((f) => (
-                              <button
-                                    key={f.value}
-                                    onClick={() => setPriceFilter(f.value)}
-                                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                                          priceFilter === f.value
-                                                ? "bg-primary text-white"
-                                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                    }`}
+                  {/* Filter Bar */}
+                  <div className="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl p-3 mb-5 shadow-sm space-y-3">
+                        {/* Row 1: Diet + Availability + Sort */}
+                        <div className="flex flex-wrap items-center gap-2 justify-between">
+                              <div className="flex items-center gap-2">
+                                    {/* Diet filter */}
+                                    {(["all", "veg", "nonveg"] as DietFilter[]).map((d) => (
+                                          <button
+                                                key={d}
+                                                onClick={() => setDietFilter(d)}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
+                                                      dietFilter === d
+                                                            ? d === "veg"
+                                                                  ? "bg-green-500 text-white border-green-500"
+                                                                  : d === "nonveg"
+                                                                        ? "bg-red-500 text-white border-red-500"
+                                                                        : "bg-primary text-white border-primary"
+                                                            : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
+                                                }`}
+                                          >
+                                                {d === "veg" && <span className="w-2 h-2 rounded-full bg-current" />}
+                                                {d === "nonveg" && <span className="w-2 h-2 rounded-full bg-current" />}
+                                                {d === "all" ? "All" : d === "veg" ? "Veg" : "Non-Veg"}
+                                          </button>
+                                    ))}
+
+                                    {/* Available only toggle */}
+                                    <button
+                                          onClick={() => setOnlyAvailable((p) => !p)}
+                                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
+                                                onlyAvailable
+                                                      ? "bg-emerald-500 text-white border-emerald-500"
+                                                      : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
+                                          }`}
+                                    >
+                                          Available Only
+                                    </button>
+                              </div>
+
+                              {/* Sort */}
+                              <select
+                                    value={sortOption}
+                                    onChange={(e) => setSortOption(e.target.value as SortOption)}
+                                    className="text-xs bg-gray-50 border border-gray-100 rounded-xl px-2.5 py-1.5 text-gray-600 font-semibold focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                               >
-                                    {f.label}
-                              </button>
-                        ))}
+                                    <option value="default">Sort: Default</option>
+                                    <option value="price_asc">Price: Low to High</option>
+                                    <option value="price_desc">Price: High to Low</option>
+                                    <option value="name_asc">Name: A – Z</option>
+                              </select>
+                        </div>
+
+                        {/* Row 2: Price range */}
+                        <div className="flex flex-wrap gap-2">
+                              {PRICE_FILTERS.map((f) => (
+                                    <button
+                                          key={f.value}
+                                          onClick={() => setPriceFilter(f.value)}
+                                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
+                                                priceFilter === f.value
+                                                      ? "bg-primary text-white border-primary"
+                                                      : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
+                                          }`}
+                                    >
+                                          {f.label}
+                                    </button>
+                              ))}
+                        </div>
+
+                        {/* Active filter count + reset */}
+                        {activeFilterCount > 0 && (
+                              <div className="flex items-center justify-between pt-1 border-t border-gray-50">
+                                    <span className="text-[11px] text-gray-400">{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active · {filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""} shown</span>
+                                    <button
+                                          onClick={() => { setDietFilter("all"); setPriceFilter("all"); setOnlyAvailable(false); setSortOption("default"); }}
+                                          className="text-[11px] text-primary font-semibold hover:underline"
+                                    >
+                                          Reset all
+                                    </button>
+                              </div>
+                        )}
                   </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {
@@ -178,8 +273,16 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                                       <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white bg-black/50">Unavailable</span>
                                                 )}
                                           </div>
-                                          <div className="flex flex-col flex-1 p-3 gap-1">
-                                                <h3 className="text-sm font-semibold leading-tight line-clamp-1">{item.name}</h3>
+                                          <div className="flex flex-col flex-1 p-3 gap-1.5">
+                                                <div className="flex items-center gap-2">
+                                                      <FoodTypeBadge isVeg={item.isVeg !== false} />
+                                                      <h3 className="text-sm font-semibold leading-tight line-clamp-1 flex-1">{item.name}</h3>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1">
+                                                      <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                                            {item.category || "Main Course"}
+                                                      </span>
+                                                </div>
                                                 {item.description && (
                                                       <p className="text-xs text-gray-500 line-clamp-2">{item.description}</p>
                                                 )}
@@ -239,7 +342,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                   }
             </div>
             {filteredItems.length === 0 && (
-                  <p className="text-center text-sm text-gray-400 py-10">No items found in this price range.</p>
+                  <p className="text-center text-sm text-gray-400 py-10">No items match the selected filters.</p>
             )}
             </div>
       );

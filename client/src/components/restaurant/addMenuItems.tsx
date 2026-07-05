@@ -13,6 +13,8 @@ const AddMenuItems = (
       const [description, setDescription] = useState("");
       const [price, setPrice] = useState("");
       const [image, setImage] = useState<File | null>(null);
+      const [isVeg, setIsVeg] = useState(true);
+      const [category, setCategory] = useState("Main Course");
       const [loading, setLoading] = useState(false);
       const [preview, setPreview] = useState<string | null>(null);
 
@@ -22,9 +24,11 @@ const AddMenuItems = (
             setPrice("");
             setPreview(null);
             setImage(null);
+            setIsVeg(true);
+            setCategory("Main Course");
       };
       const handleSubmit = async () => {
-            if ([name, price, image].some((field) => !field)) {
+            if ([name, price, image, category].some((field) => !field)) {
                   toast.error("Please fill the all required fields");
                   return;
             }
@@ -35,7 +39,9 @@ const AddMenuItems = (
                         name,
                         description,
                         price,
-                        image: image as File
+                        image: image as File,
+                        isVeg,
+                        category
                   });
 
                   if (response.success) {
@@ -116,6 +122,52 @@ const AddMenuItems = (
                                           min={0}
                                           className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm transition"
                                     />
+                              </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                    <label className="text-sm font-medium text-gray-700">Food Type <span className="text-red-500">*</span></label>
+                                    <div className="flex gap-2">
+                                          <button
+                                                type="button"
+                                                onClick={() => setIsVeg(true)}
+                                                className={`flex-1 py-2.5 px-3 rounded-xl border text-sm font-medium transition-all ${
+                                                      isVeg 
+                                                      ? "border-green-600 bg-green-50 text-green-700 ring-2 ring-green-600/20" 
+                                                      : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                                                }`}
+                                          >
+                                                <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-600 mr-2"></span>
+                                                Veg
+                                          </button>
+                                          <button
+                                                type="button"
+                                                onClick={() => setIsVeg(false)}
+                                                className={`flex-1 py-2.5 px-3 rounded-xl border text-sm font-medium transition-all ${
+                                                      !isVeg 
+                                                      ? "border-red-600 bg-red-50 text-red-700 ring-2 ring-red-600/20" 
+                                                      : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                                                }`}
+                                          >
+                                                <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-600 mr-2"></span>
+                                                Non-Veg
+                                          </button>
+                                    </div>
+                              </div>
+                              <div className="space-y-1.5">
+                                    <label className="text-sm font-medium text-gray-700">Category <span className="text-red-500">*</span></label>
+                                    <select
+                                          value={category}
+                                          onChange={(e) => setCategory(e.target.value)}
+                                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm transition bg-white cursor-pointer"
+                                    >
+                                          <option value="Starter">Starter</option>
+                                          <option value="Main Course">Main Course</option>
+                                          <option value="Dessert">Dessert</option>
+                                          <option value="Beverage">Beverage</option>
+                                          <option value="Bread">Bread</option>
+                                          <option value="Side Dish">Side Dish</option>
+                                    </select>
                               </div>
                         </div>
                         <button

@@ -5,6 +5,7 @@ export interface AIChatPayload {
     message: string;
     userId: string;
     role: string;
+    restaurantId?: string;
 }
 
 export interface AIChatResponse {

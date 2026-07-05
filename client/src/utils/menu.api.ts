@@ -9,6 +9,8 @@ export interface AddMenuItemPayload {
       description?: string;
       price: string | number;
       image: File;
+      isVeg: boolean;
+      category: string;
 }
 
 export interface AutocompleteParams {
@@ -39,6 +41,8 @@ export const addMenuItem = (payload: AddMenuItemPayload): Promise<ApiResponse<IM
       if (payload.description) formData.append("description", payload.description);
       formData.append("price", payload.price.toString());
       formData.append("image", payload.image);
+      formData.append("isVeg", payload.isVeg.toString());
+      formData.append("category", payload.category);
 
       return request<ApiResponse<IMenuItem>>(`${menuBaseUrl}/`, {
             method: "POST",

@@ -62,6 +62,8 @@ export interface IMenuItem {
       price: number;
       imageUrl?: string;
       isAvailable: boolean;
+      isVeg: boolean;
+      category: string;
       createdAt: Date;
       updatedAt: Date;
 };

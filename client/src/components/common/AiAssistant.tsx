@@ -50,7 +50,8 @@ const AiAssistant: React.FC = () => {
             const res = await aiApi.chat({
                 message: userMsg,
                 userId: user._id || "anonymous",
-                role
+                role,
+                restaurantId: user.restaurantId || undefined
             });
 
             const aiMsgId = (Date.now() + 1).toString();

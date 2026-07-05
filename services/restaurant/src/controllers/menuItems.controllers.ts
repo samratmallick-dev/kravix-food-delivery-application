@@ -31,11 +31,11 @@ export const addMenuItems = TryCatch(
                   });
             }
 
-            const { name, description, price } = req.body;
+            const { name, description, price, isVeg, category } = req.body;
 
-            if ([name, price].some((field) => !field || field.trim() === "")) {
+            if ([name, price, category].some((field) => !field || String(field).trim() === "")) {
                   return res.status(400).json({
-                        message: "Name and price are required fields",
+                        message: "Name, price and category are required fields",
                         success: false,
                         error: true,
                   });
@@ -75,6 +75,8 @@ export const addMenuItems = TryCatch(
                   description,
                   price,
                   imageUrl: updateResult.url,
+                  isVeg: isVeg === "true" || isVeg === true,
+                  category,
             });
 
             return res.status(201).json({
