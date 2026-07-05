@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Bot, X, Send, Loader2, ChevronDown } from "lucide-react";
+import { Bot, X, Send, ChevronDown } from "lucide-react";
 import { aiApi } from "../../utils/ai.api";
 import { useAppData } from "../../context/AppContext";
 
@@ -124,8 +124,10 @@ const AiAssistant: React.FC = () => {
                                 <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white shrink-0">
                                     <Bot size={12} />
                                 </div>
-                                <div className="bg-white border border-border px-3 py-2 rounded-2xl rounded-bl-sm shadow-sm">
-                                    <Loader2 size={14} className="animate-spin text-primary" />
+                                <div className="bg-white border border-border px-3.5 py-3 rounded-2xl rounded-bl-sm shadow-sm flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:0ms]" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:150ms]" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:300ms]" />
                                 </div>
                             </div>
                         )}
