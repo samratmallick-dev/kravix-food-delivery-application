@@ -14,10 +14,20 @@ interface MenuItemProps {
       isSeller: boolean;
 }
 
+type PriceFilter = "all" | "under100" | "100to300" | "above300";
+
+const PRICE_FILTERS: { label: string; value: PriceFilter }[] = [
+      { label: "All", value: "all" },
+      { label: "Under ₹100", value: "under100" },
+      { label: "₹100 – ₹300", value: "100to300" },
+      { label: "Above ₹300", value: "above300" },
+];
+
 const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
       const [localItems, setLocalItems] = useState<IMenuItem[]>(items);
       const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
       const [loadingAction, setLoadingAction] = useState<"inc" | "dec" | "add" | null>(null);
+      const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
       const { fetchCart, cart } = useAppData();
       const { socket } = useSocket();
 
@@ -121,10 +131,33 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             }
       };
 
+      const filteredItems = localItems.filter((item) => {
+            if (priceFilter === "under100") return item.price < 100;
+            if (priceFilter === "100to300") return item.price >= 100 && item.price <= 300;
+            if (priceFilter === "above300") return item.price > 300;
+            return true;
+      });
+
       return (
+            <div>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                        {PRICE_FILTERS.map((f) => (
+                              <button
+                                    key={f.value}
+                                    onClick={() => setPriceFilter(f.value)}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                                          priceFilter === f.value
+                                                ? "bg-primary text-white"
+                                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                    }`}
+                              >
+                                    {f.label}
+                              </button>
+                        ))}
+                  </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {
-                        localItems && localItems.map((item) => {
+                        filteredItems.map((item) => {
                               const isLoading = loadingItemId === item._id;
                               const isIncLoading = isLoading && loadingAction === "inc";
                               const isDecLoading = isLoading && loadingAction === "dec";
@@ -204,6 +237,10 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                               );
                         })
                   }
+            </div>
+            {filteredItems.length === 0 && (
+                  <p className="text-center text-sm text-gray-400 py-10">No items found in this price range.</p>
+            )}
             </div>
       );
 };
