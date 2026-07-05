@@ -94,6 +94,15 @@ def sanitize_input(text: str) -> str:
     sanitized = _INJECTION_PATTERN.sub("[removed]", text)
     return sanitized[:1000]
 
+def normalize_price(price) -> int:
+    """Clamp price to ₹1–₹10,000 range."""
+    try:
+        p = int(float(price))
+    except (TypeError, ValueError):
+        return 1
+    return max(1, min(p, 10000))
+
+
 def build_system_prompt(role: str, contextData: Dict[str, Any]) -> str:
     prompt = f"You are the Kravix Assistant, a friendly, concise, food-delivery domain expert. You are talking to a {role}.\n"
     
@@ -106,7 +115,7 @@ def build_system_prompt(role: str, contextData: Dict[str, Any]) -> str:
         if "menu_items" in contextData:
             prompt += "Relevant Menu Items Context:\n"
             for item in contextData["menu_items"]:
-                prompt += f"- {item['name']}: ₹{item['price']} ({'Available' if item['available'] else 'Out of Stock'})\n"
+                prompt += f"- {item['name']}: ₹{normalize_price(item['price'])} ({'Available' if item['available'] else 'Out of Stock'})\n"
                 
     prompt += "\nRules:\n- Never fabricate order IDs or names; use placeholders like [ORDER_ID] if not in context.\n- Keep responses under 150 words.\n"
     return prompt
@@ -251,17 +260,24 @@ async def chat_endpoint(req: ChatRequest):
                 if menu_items:
                     matches = [i for i in menu_items if any(en in i['name'].lower() for bn, en in BENGALI_MAP.items() if bn in msg_lower)]
                     if matches:
-                        names = ", ".join(f"{i['name']} (₹{i['price']})" for i in matches[:3])
+                        names = ", ".join(f"{i['name']} (₹{normalize_price(i['price'])})" for i in matches[:3])
                         reply = f"I recognized: {mapped}. Here are matching items: {names}."
                     else:
                         reply = f"I recognized: {mapped}. No exact matches on the current menu, but try searching for it!"
                 else:
                     reply = f"I recognized: {mapped}. Search for a restaurant to see if these are available near you!"
 
+            elif any(w in normalized for w in ["food name", "foods name", "food list", "list of food", "what food", "show food", "show me food", "available food", "menu items", "what's on the menu", "whats on the menu", "what do you have", "what do you serve"]):
+                if menu_items:
+                    available = [i for i in menu_items if i.get('available', True)]
+                    names = ", ".join(f"{i['name']} (₹{normalize_price(i['price'])})" for i in available[:6])
+                    reply = f"Here are some food items available: {names}. 🍽️"
+                else:
+                    reply = "Search for a restaurant near you on the home page to browse their full menu and available food items! 🍽️"
             elif any(w in normalized for w in ["suggest", "recommend", "what should i eat", "what to eat", "what to order", "craving"]):
                 if menu_items:
                     available = [i for i in menu_items if i.get('available', True)]
-                    names = ", ".join(f"{i['name']} (₹{i['price']})" for i in available[:4])
+                    names = ", ".join(f"{i['name']} (₹{normalize_price(i['price'])})" for i in available[:4])
                     reply = f"Here are some great options: {names}. Enjoy! 😋"
                 else:
                     reply = "I'd love to suggest something! Search for a restaurant near you first and I'll show you what's available."
@@ -291,8 +307,8 @@ async def chat_endpoint(req: ChatRequest):
                     reply = "Open a restaurant's menu page and I can check item availability for you."
             elif any(w in normalized for w in ["price", "cheap", "affordable", "budget", "under", "cost", "how much"]):
                 if menu_items:
-                    affordable = [i for i in menu_items if i.get('price', 9999) <= 500 and i.get('available', True)]
-                    reply = f"Items under ₹500: {', '.join(i['name'] for i in affordable)}." if affordable else "No items under ₹500 on the current menu right now."
+                    affordable = [i for i in menu_items if normalize_price(i.get('price', 10001)) <= 1000 and i.get('available', True)]
+                    reply = f"Items under ₹1,000: {', '.join(i['name'] for i in affordable)}." if affordable else "No items under ₹1,000 on the current menu right now."
                 else:
                     reply = "Open a restaurant's menu and I can filter items by price for you!"
 
