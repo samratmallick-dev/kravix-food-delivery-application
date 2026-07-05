@@ -629,12 +629,18 @@ async def chat_endpoint(req: ChatRequest):
                     reply = " ".join(parts) if parts else "All items appear to be available right now!"
                 else:
                     reply = "Open a restaurant's menu page and I can check item availability for you."
-            elif matches_normalized(["price", "cheap", "affordable", "budget", "under", "cost", "how much"]):
+            elif matches_normalized(["price", "cheap", "affordable", "budget", "under", "cost", "how much", "between", "rs"]):
                 if menu_items:
-                    price_match = re.search(r"(?:rs\.?|₹|inr|rupees?)\s*(\d+)", normalized)
-                    limit = normalize_price(int(price_match.group(1))) if price_match else 1000
-                    affordable = [i for i in menu_items if normalize_price(i.get('price', 10001)) <= limit and i.get('available', True)]
-                    reply = f"Items under ₹{limit}: {', '.join(i['name'] for i in affordable)}." if affordable else f"No items under ₹{limit} on the current menu right now."
+                    nums = [int(n) for n in re.findall(r"\d+", normalized)]
+                    
+                    if len(nums) >= 2 and ("between" in normalized or "to" in normalized.split()):
+                        min_p, max_p = min(nums[:2]), max(nums[:2])
+                        affordable = [i for i in menu_items if min_p <= normalize_price(i.get('price', 10001)) <= max_p and i.get('available', True)]
+                        reply = f"Items between ₹{min_p} and ₹{max_p}: {', '.join(i['name'] for i in affordable[:5])}." if affordable else f"No items between ₹{min_p} and ₹{max_p} on the current menu right now."
+                    else:
+                        limit = nums[-1] if nums else 1000
+                        affordable = [i for i in menu_items if normalize_price(i.get('price', 10001)) <= limit and i.get('available', True)]
+                        reply = f"Items under ₹{limit}: {', '.join(i['name'] for i in affordable[:5])}." if affordable else f"No items under ₹{limit} on the current menu right now."
                 else:
                     reply = "Open a restaurant's menu and I can filter items by price for you!"
 
