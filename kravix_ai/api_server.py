@@ -136,6 +136,11 @@ class FeedbackRequest(BaseModel):
     feedback: int 
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @app.post("/feedback", status_code=204)
 async def feedback_endpoint(req: FeedbackRequest):
     if not ENABLE_FEEDBACK or _feedback_col is None:
