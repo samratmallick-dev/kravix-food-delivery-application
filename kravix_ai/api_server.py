@@ -270,10 +270,10 @@ async def chat_endpoint(req: ChatRequest):
                 "piza": "pizza", "pizaa": "pizza",
                 "buger": "burger", "burgr": "burger",
             }
+            normalized = msg_lower
             for typo, correct in FOOD_TYPOS.items():
                 if typo in normalized:
                     normalized = normalized.replace(typo, correct)
-            normalized = msg_lower
             detected_bengali = []
             for bn, en in BENGALI_MAP.items():
                 if bn in normalized:
