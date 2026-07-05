@@ -37,6 +37,9 @@ app.listen(Port, () => {
       );
 });
 
+console.log(process.env.AI_MICROSERVICE_URL);
+
+
 connectRabbitMQ().catch((err) => {
       console.error("Failed to connect to RabbitMQ", err);
 });

@@ -1,4 +1,5 @@
 import json
+import os
 import random
 
 random.seed(42)
@@ -239,5 +240,55 @@ def generate_dataset(output_file="kravix_training.jsonl", num_per_category=50):
             
     print(f"Generated {len(dataset)} records in {output_file}")
 
+def export_feedback_to_jsonl(
+    mongo_uri: str,
+    output_file: str = "kravix_training.jsonl",
+    db_name: str = "kravix_db",
+    min_feedback: int = 1,
+):
+    """
+    Pull positively-rated feedback from MongoDB and append to the training JSONL.
+    Only runs when ENABLE_FEEDBACK=true and MONGODB_URI are set in the environment.
+    Does NOT retrain the model — run train_lora.py separately after this.
+    """
+    try:
+        from pymongo import MongoClient
+    except ImportError:
+        print("pymongo not installed. Run: pip install pymongo")
+        return
+
+    client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+    col = client[db_name]["ai_feedback"]
+    docs = list(col.find({"feedback": {"$gte": min_feedback}}))
+    if not docs:
+        print("No positive feedback records found.")
+        return
+
+    appended = 0
+    with open(output_file, "a", encoding="utf-8") as f:
+        for doc in docs:
+            record = {
+                "instruction": doc.get("message", "")[:500],
+                "output": doc.get("reply", "")[:500],
+                "category": "FeedbackLoop",
+                "userRole": doc.get("role", "customer"),
+                "intent": "feedback_derived",
+            }
+            if record["instruction"] and record["output"]:
+                f.write(json.dumps(record) + "\n")
+                appended += 1
+
+    print(f"Appended {appended} feedback records to {output_file}")
+    print("NOTE: Run train_lora.py manually (with GPU) to incorporate these into the model.")
+
+
 if __name__ == "__main__":
-    generate_dataset()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "--export-feedback":
+        mongo_uri = os.environ.get("MONGODB_URI", "")
+        if not mongo_uri:
+            print("MONGODB_URI environment variable is not set.")
+            sys.exit(1)
+        export_feedback_to_jsonl(mongo_uri)
+    else:
+        generate_dataset()

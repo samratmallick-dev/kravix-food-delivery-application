@@ -2,8 +2,14 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import os
-import random
+import time
 import logging
+import re
+from pymongo import MongoClient
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -60,7 +66,33 @@ class ChatResponse(BaseModel):
     reply: str
     intent_confidence: Optional[float] = 1.0
 
-session_memory = {}
+SESSION_TTL = int(os.environ.get("SESSION_TTL_SECONDS", "1800"))
+_session_store: Dict[str, Dict] = {}
+
+def _evict_expired():
+    now = time.time()
+    expired = [k for k, v in _session_store.items() if now - v["ts"] > SESSION_TTL]
+    for k in expired:
+        del _session_store[k]
+
+def get_history(user_id: str) -> List[Dict]:
+    _evict_expired()
+    if user_id not in _session_store:
+        _session_store[user_id] = {"history": [], "ts": time.time()}
+    return _session_store[user_id]["history"]
+
+def save_history(user_id: str, history: List[Dict]):
+    _session_store[user_id] = {"history": history, "ts": time.time()}
+
+_INJECTION_PATTERN = re.compile(
+    r"(###\s*(system|instruction|response)|ignore (previous|above|all)|forget (previous|instructions)|you are now|act as|jailbreak)",
+    re.IGNORECASE,
+)
+
+def sanitize_input(text: str) -> str:
+    """Strip prompt-injection attempts from user input."""
+    sanitized = _INJECTION_PATTERN.sub("[removed]", text)
+    return sanitized[:1000]
 
 def build_system_prompt(role: str, contextData: Dict[str, Any]) -> str:
     prompt = f"You are the Kravix Assistant, a friendly, concise, food-delivery domain expert. You are talking to a {role}.\n"
@@ -79,15 +111,58 @@ def build_system_prompt(role: str, contextData: Dict[str, Any]) -> str:
     prompt += "\nRules:\n- Never fabricate order IDs or names; use placeholders like [ORDER_ID] if not in context.\n- Keep responses under 150 words.\n"
     return prompt
 
+
+ENABLE_FEEDBACK = os.environ.get("ENABLE_FEEDBACK", "false").lower() in ("true", "1", "yes")
+_feedback_col = None
+
+if ENABLE_FEEDBACK:
+    _mongo_url = os.environ.get("MONGODB_URI", "")
+    if _mongo_url:
+        try:
+            _mongo_client = MongoClient(_mongo_url, serverSelectionTimeoutMS=3000)
+            _feedback_col = _mongo_client[os.environ.get("DB_NAME", "kravix_db")]["ai_feedback"]
+            logger.info("Feedback collection connected.")
+        except Exception as _e:
+            logger.warning("Could not connect to MongoDB for feedback: %s", _e)
+    else:
+        logger.warning("ENABLE_FEEDBACK=true but MONGODB_URI is not set — feedback disabled.")
+
+
+class FeedbackRequest(BaseModel):
+    messageId: str
+    message: str
+    reply: str
+    role: str
+    feedback: int 
+
+
+@app.post("/feedback", status_code=204)
+async def feedback_endpoint(req: FeedbackRequest):
+    if not ENABLE_FEEDBACK or _feedback_col is None:
+        return
+    if req.feedback not in (1, -1):
+        raise HTTPException(status_code=400, detail="feedback must be 1 or -1")
+    try:
+        _feedback_col.insert_one({
+            "messageId": req.messageId,
+            "message": req.message[:500],
+            "reply": req.reply[:500],
+            "role": req.role,
+            "feedback": req.feedback,
+            "timestamp": datetime.now(timezone.utc),
+        })
+    except Exception as e:
+        logger.error("feedback_endpoint DB error: %s", type(e).__name__)
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(req: ChatRequest):
     try:
-        if req.userId not in session_memory:
-            session_memory[req.userId] = []
-            
-        history = session_memory[req.userId]
-        history.append({"role": "user", "content": req.message})
-        
+        safe_message = sanitize_input(req.message)
+
+        history = get_history(req.userId)
+        history.append({"role": "user", "content": safe_message})
+
         if len(history) > 5:
             history = history[-5:]
 
@@ -96,7 +171,7 @@ async def chat_endpoint(req: ChatRequest):
         full_prompt = f"### System:\n{system_prompt}\n\n"
         for msg in history:
             prefix = "### Instruction:\n" if msg["role"] == "user" else "### Response:\n"
-            full_prompt += f"{prefix}{msg['content']}\n\n"
+            full_prompt += f"{prefix}{sanitize_input(msg['content'])}\n\n"
             
         full_prompt += "### Response:\n"
 
@@ -112,16 +187,18 @@ async def chat_endpoint(req: ChatRequest):
                 pad_token_id=tokenizer.eos_token_id
             )
 
-            # 4. Decode
             input_length = inputs.input_ids.shape[1]
             generated_tokens = outputs[0][input_length:]
             reply = tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
 
-            fallback_keywords = ["I don't know", "I am an AI"]
-            if any(keyword in reply for keyword in fallback_keywords) or len(reply) < 5:
+            fallback_keywords = [
+                "I don't know", "I am an AI", "As an AI", "I cannot",
+                "I'm not able", "I do not have", "I apologize",
+            ]
+            if any(kw.lower() in reply.lower() for kw in fallback_keywords) or len(reply) < 5:
                 reply = "Let me connect you with our support team."
         else:
-            msg_lower = req.message.lower()
+            msg_lower = safe_message.lower()
             role = req.role
             menu_items = req.contextData.get('menu_items', []) if req.contextData else []
             orders = req.contextData.get('orders', []) if req.contextData else []
@@ -305,12 +382,13 @@ async def chat_endpoint(req: ChatRequest):
 
 
         history.append({"role": "assistant", "content": reply})
-        session_memory[req.userId] = history
+        save_history(req.userId, history)
 
         return ChatResponse(reply=reply)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("chat_endpoint error: %s", type(e).__name__)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 if __name__ == "__main__":
     import uvicorn

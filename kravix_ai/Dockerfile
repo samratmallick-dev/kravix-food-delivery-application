@@ -19,4 +19,4 @@ USER appuser
 
 EXPOSE 5500
 
-ENTRYPOINT ["uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "5500"]
+CMD ["sh", "-c", "uvicorn api_server:app --host 0.0.0.0 --port ${PORT:-5500}"]

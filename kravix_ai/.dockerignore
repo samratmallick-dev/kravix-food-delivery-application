@@ -1,12 +1,45 @@
+# Environment
+.env
+*.env
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.env
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ML / Training artifacts (large — not needed at runtime)
 kravix_model_lora/
-kravix_training.jsonl
-dataset_generator.py
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+
+# Training scripts & data (not needed at runtime)
 train_lora.py
+dataset_generator.py
+retrain.sh
+kravix_training.jsonl
 evaluation_test_cases.json
 taxonomy_and_entities.md
 requirements.txt
+
+# Logs & runs
+*.log
+runs/
+wandb/
+
+# Git & IDE
+.git/
+.gitignore
+.github/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import axios from "axios";
 
-const AI_MICROSERVICE_URL = process.env.AI_MICROSERVICE_URL || "http://127.0.0.1:5500";
+const AI_MICROSERVICE_URL = process.env.AI_MICROSERVICE_URL || "http://0.0.0.0:5500";
 const RESTAURANT_BASE_URL = process.env.RESTAURANT_BASE_URL || "http://localhost:9000";
 
 async function fetchContextData(authToken: string, restaurantId?: string) {
@@ -67,7 +67,9 @@ export const aiChat = async (req: Request, res: Response) => {
         return res.status(200).json(response.data);
     } catch (error: any) {
         console.error("AI Chat Error:", error.response?.data || error.message);
-        const isServiceDown = error.code === "ECONNREFUSED" || error.code === "ECONNRESET" || error.response?.status === 502;
+        const isServiceDown =
+            ["ECONNREFUSED", "ECONNRESET", "ETIMEDOUT", "ENOTFOUND", "EAI_AGAIN"].includes(error.code) ||
+            (typeof error.response?.status === "number" && error.response.status >= 502);
         if (isServiceDown) {
             return res.status(200).json({
                 reply: "I'm currently unavailable. Please try again in a moment.",
@@ -75,7 +77,22 @@ export const aiChat = async (req: Request, res: Response) => {
             });
         }
         return res.status(500).json({
-            error: `Failed to communicate with AI Assistant: ${error.message}`,
+            error: "Failed to communicate with AI Assistant.",
         });
+    }
+};
+
+export const aiFeedback = async (req: Request, res: Response) => {
+    try {
+        const { messageId, message, reply, role, feedback } = req.body;
+        if (!messageId || !message || !reply || !role || ![1, -1].includes(feedback)) {
+            return res.status(400).json({ error: "Missing or invalid feedback fields" });
+        }
+        await axios.post(`${AI_MICROSERVICE_URL}/feedback`, { messageId, message, reply, role, feedback });
+        return res.status(204).send();
+    } catch (error: any) {
+        // Feedback failures are non-critical — don't surface errors to the client
+        console.error("AI Feedback Error:", error.message);
+        return res.status(204).send();
     }
 };
