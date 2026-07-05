@@ -1,60 +1,94 @@
-from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+import asyncio
+import gc
+import os
+import signal
+import time
+import re
+import uuid
+import logging
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-import os
-import time
-import logging
-import re
-from pymongo import MongoClient
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 load_dotenv()
 
-logger = logging.getLogger("uvicorn.error")
+from structured_logger import (
+    setup_structured_logging,
+    get_logger,
+    correlation_id_var,
+    request_id_var,
+)
 
-MOCK_MODE = os.environ.get("MOCK_MODE", "false").lower() in ("true", "1", "yes")
+setup_structured_logging(level=logging.INFO)
+logger = get_logger("api_server")
 
-if MOCK_MODE:
-    ML_AVAILABLE = False
-    logger.info("MOCK_MODE environment variable is set. Running in MOCK mode.")
-else:
-    try:
-        import torch
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-        from peft import PeftModel
-        if torch.cuda.is_available():
-            ML_AVAILABLE = True
-        else:
-            ML_AVAILABLE = False
-            logger.info("CUDA is not available. 4-bit quantized models require a GPU. Running in MOCK mode.")
-    except ImportError:
-        ML_AVAILABLE = False
-        logger.debug("ML libraries (torch, transformers) not found. Running in MOCK mode.")
+from startup_validator import validate_environment
 
-app = FastAPI(title="Kravix Local AI Microservice")
+validate_environment()
 
-BASE_MODEL_ID = "unsloth/llama-3-8b-bnb-4bit"
-LORA_MODEL_PATH = "./kravix_model_lora"
+from error_handling import (
+    register_exception_handlers,
+    KravixBaseError,
+    ModelInferenceError,
+    DatabaseError,
+    error_aggregator,
+)
+from circuit_breaker import CircuitBreaker
+from retry_manager import with_retry, get_default_budget
+from session_store import create_session_store
+from mongo_manager import MongoManager
+from model_manager import ModelManager
+from memory_watchdog import check_memory, memory_diagnostics, is_degraded, get_rss_mb
+from health_monitor import HealthMonitor
+from request_guard import (
+    ConcurrencyGuardMiddleware,
+    request_tracker,
+    setup_rate_limiter,
+)
+from timeout_middleware import TimeoutMiddleware
+from observability import request_metrics, build_metrics_payload
+from error_handling import (
+    register_exception_handlers,
+    KravixBaseError,
+    ModelInferenceError,
+    DatabaseError,
+    error_aggregator,
+)
+from circuit_breaker import CircuitBreaker
+from retry_manager import with_retry, get_default_budget
+from session_store import create_session_store
+from mongo_manager import MongoManager
+from model_manager import ModelManager
+from memory_watchdog import check_memory, memory_diagnostics, is_degraded, get_rss_mb
+from health_monitor import HealthMonitor
+from request_guard import (
+    ConcurrencyGuardMiddleware,
+    request_tracker,
+    setup_rate_limiter,
+)
+from timeout_middleware import TimeoutMiddleware
+from observability import request_metrics, build_metrics_payload
 
-if ML_AVAILABLE:
-    logger.info("Loading Tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID)
+SESSION_TTL = int(os.environ.get("SESSION_TTL_SECONDS", "1800"))
+MAX_SESSIONS = int(os.environ.get("MAX_SESSIONS", "500"))
+REDIS_URL = os.environ.get("REDIS_URL", "")
+ENABLE_FEEDBACK = os.environ.get("ENABLE_FEEDBACK", "false").lower() in ("true", "1", "yes")
+MONGO_URI = os.environ.get("MONGODB_URI", "")
+DB_NAME = os.environ.get("DB_NAME", "kravix_db")
 
-    logger.info("Loading Base Model...")
-    base_model = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL_ID,
-        device_map="cpu",
-        torch_dtype=torch.float32
-    )
 
-    logger.info("Applying LoRA Weights...")
-    try:
-        model = PeftModel.from_pretrained(base_model, LORA_MODEL_PATH)
-        logger.info("LoRA weights loaded successfully.")
-    except Exception as e:
-        logger.warning(f"Could not load LoRA weights ({e}). Running base model only.")
-        model = base_model
+_session_store = None
+_mongo_manager: Optional[MongoManager] = None
+_model_manager: Optional[ModelManager] = None
+_health_monitor: Optional[HealthMonitor] = None
+_background_tasks: List[asyncio.Task] = []
+_shutdown_event = asyncio.Event()
+
 
 class ChatRequest(BaseModel):
     message: str
@@ -62,37 +96,184 @@ class ChatRequest(BaseModel):
     role: str
     contextData: Optional[Dict[str, Any]] = None
 
+
 class ChatResponse(BaseModel):
     reply: str
     intent_confidence: Optional[float] = 1.0
 
-SESSION_TTL = int(os.environ.get("SESSION_TTL_SECONDS", "1800"))
-_session_store: Dict[str, Dict] = {}
 
-def _evict_expired():
-    now = time.time()
-    expired = [k for k, v in _session_store.items() if now - v["ts"] > SESSION_TTL]
-    for k in expired:
-        del _session_store[k]
+class FeedbackRequest(BaseModel):
+    messageId: str
+    message: str
+    reply: str
+    role: str
+    feedback: int
 
-def get_history(user_id: str) -> List[Dict]:
-    _evict_expired()
-    if user_id not in _session_store:
-        _session_store[user_id] = {"history": [], "ts": time.time()}
-    return _session_store[user_id]["history"]
 
-def save_history(user_id: str, history: List[Dict]):
-    _session_store[user_id] = {"history": history, "ts": time.time()}
+async def _session_cleanup_loop():
+    while not _shutdown_event.is_set():
+        try:
+            await asyncio.sleep(300)
+            if _session_store:
+                evicted = _session_store.cleanup()
+                if evicted:
+                    logger.info("Background cleanup: evicted %d sessions", evicted)
+        except asyncio.CancelledError:
+            break
+        except Exception as exc:
+            logger.error("Session cleanup error: %s", exc, exc_info=True)
+
+
+async def _memory_watchdog_loop():
+    while not _shutdown_event.is_set():
+        try:
+            await asyncio.sleep(60)
+            check_memory(
+                session_cleanup_fn=_session_store.cleanup if _session_store else None,
+                session_clear_fn=_session_store.clear_all if _session_store else None,
+            )
+        except asyncio.CancelledError:
+            break
+        except Exception as exc:
+            logger.error("Memory watchdog error: %s", exc, exc_info=True)
+
+
+async def _mongo_health_loop():
+    while not _shutdown_event.is_set():
+        try:
+            await asyncio.sleep(120)
+            if _mongo_manager and not _mongo_manager.ping():
+                logger.warning("MongoDB ping failed — attempting reconnection")
+                _mongo_manager.reconnect()
+        except asyncio.CancelledError:
+            break
+        except Exception as exc:
+            logger.error("Mongo health check error: %s", exc, exc_info=True)
+
+
+async def _diagnostics_loop():
+    while not _shutdown_event.is_set():
+        try:
+            await asyncio.sleep(1800)
+            session_count = _session_store.active_count() if _session_store else 0
+            active_reqs = request_tracker.active_count
+            memory_diagnostics(session_count=session_count, active_requests=active_reqs)
+        except asyncio.CancelledError:
+            break
+        except Exception as exc:
+            logger.error("Diagnostics loop error: %s", exc, exc_info=True)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global _session_store, _mongo_manager, _model_manager, _health_monitor
+
+    logger.info("=== Kravix AI Microservice starting ===")
+
+    _session_store = create_session_store(
+        redis_url=REDIS_URL or None,
+        ttl=SESSION_TTL,
+        max_sessions=MAX_SESSIONS,
+    )
+    logger.info("Session store: %s", type(_session_store).__name__)
+
+    if ENABLE_FEEDBACK and MONGO_URI:
+        try:
+            _mongo_manager = MongoManager(
+                uri=MONGO_URI,
+                db_name=DB_NAME,
+                circuit_breaker=CircuitBreaker("mongodb", failure_threshold=5, recovery_timeout=60),
+            )
+        except Exception as exc:
+            logger.error("MongoDB init failed: %s", exc, exc_info=True)
+
+    _model_manager = ModelManager(
+        circuit_breaker=CircuitBreaker("model", failure_threshold=3, recovery_timeout=60),
+    )
+    _health_monitor = HealthMonitor(
+        mongo_manager=_mongo_manager,
+        session_store=_session_store,
+        model_manager=_model_manager,
+        request_tracker=request_tracker,
+    )
+
+    _background_tasks.extend([
+        asyncio.create_task(_session_cleanup_loop(), name="session_cleanup"),
+        asyncio.create_task(_memory_watchdog_loop(), name="memory_watchdog"),
+        asyncio.create_task(_diagnostics_loop(), name="diagnostics"),
+    ])
+    if _mongo_manager:
+        _background_tasks.append(
+            asyncio.create_task(_mongo_health_loop(), name="mongo_health")
+        )
+
+    logger.info(
+        "Startup complete: %d background tasks, feedback=%s, model=%s, sessions=%s",
+        len(_background_tasks),
+        ENABLE_FEEDBACK,
+        "ML" if _model_manager.ml_available else "MOCK",
+        type(_session_store).__name__,
+    )
+
+    yield
+
+    logger.info("=== Kravix AI Microservice shutting down ===")
+    _shutdown_event.set()
+    for task in _background_tasks:
+        task.cancel()
+    if _background_tasks:
+        await asyncio.gather(*_background_tasks, return_exceptions=True)
+    logger.info("Background tasks cancelled")
+
+    if _mongo_manager:
+        _mongo_manager.close()
+    session_count = _session_store.active_count() if _session_store else 0
+    logger.info("Shutdown complete. Final sessions: %d, RSS: %.1f MB",
+                session_count, get_rss_mb())
+
+
+
+app = FastAPI(title="Kravix Local AI Microservice", lifespan=lifespan)
+
+register_exception_handlers(app)
+
+app.add_middleware(TimeoutMiddleware)
+app.add_middleware(ConcurrencyGuardMiddleware)
+
+
+@app.middleware("http")
+async def correlation_id_middleware(request: Request, call_next):
+    cid = request.headers.get("X-Correlation-ID", str(uuid.uuid4())[:8])
+    rid = str(uuid.uuid4())[:8]
+    correlation_id_var.set(cid)
+    request_id_var.set(rid)
+
+    start = time.monotonic()
+    response = await call_next(request)
+    elapsed_ms = (time.monotonic() - start) * 1000
+
+    response.headers["X-Correlation-ID"] = cid
+    response.headers["X-Request-ID"] = rid
+
+    if request.url.path not in {"/live", "/ready", "/health", "/metrics"}:
+        request_metrics.record(elapsed_ms, response.status_code, request.url.path)
+
+    return response
+
+
+_limiter = setup_rate_limiter(app)
 
 _INJECTION_PATTERN = re.compile(
     r"(###\s*(system|instruction|response)|ignore (previous|above|all)|forget (previous|instructions)|you are now|act as|jailbreak)",
     re.IGNORECASE,
 )
 
+
 def sanitize_input(text: str) -> str:
     """Strip prompt-injection attempts from user input."""
     sanitized = _INJECTION_PATTERN.sub("[removed]", text)
     return sanitized[:1000]
+
 
 def normalize_price(price) -> int:
     """Clamp price to ₹1–₹10,000 range."""
@@ -161,43 +342,53 @@ def build_system_prompt(role: str, contextData: Dict[str, Any]) -> str:
     return prompt
 
 
-ENABLE_FEEDBACK = os.environ.get("ENABLE_FEEDBACK", "false").lower() in ("true", "1", "yes")
-_feedback_col = None
 
-if ENABLE_FEEDBACK:
-    _mongo_url = os.environ.get("MONGODB_URI", "")
-    if _mongo_url:
-        try:
-            _mongo_client = MongoClient(_mongo_url, serverSelectionTimeoutMS=3000)
-            _feedback_col = _mongo_client[os.environ.get("DB_NAME", "kravix_db")]["ai_feedback"]
-            logger.info("Feedback collection connected.")
-        except Exception as _e:
-            logger.warning("Could not connect to MongoDB for feedback: %s", _e)
-    else:
-        logger.warning("ENABLE_FEEDBACK=true but MONGODB_URI is not set — feedback disabled.")
+@app.get("/live")
+async def liveness():
+    return _health_monitor.liveness() if _health_monitor else {"status": "alive"}
 
 
-class FeedbackRequest(BaseModel):
-    messageId: str
-    message: str
-    reply: str
-    role: str
-    feedback: int 
+@app.get("/ready")
+async def readiness():
+    if not _health_monitor:
+        return JSONResponse(status_code=503, content={"status": "not_ready"})
+    result = _health_monitor.readiness()
+    status_code = 200 if result["status"] == "ready" else 503
+    return JSONResponse(status_code=status_code, content=result)
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    if not _health_monitor:
+        return {"status": "ok"}
+    snapshot = _health_monitor.full_snapshot()
+    status_code = _health_monitor.http_status_code(snapshot)
+    return JSONResponse(status_code=status_code, content=snapshot)
 
+
+@app.get("/metrics")
+async def metrics():
+    return build_metrics_payload(
+        session_store=_session_store,
+        mongo_manager=_mongo_manager,
+        model_manager=_model_manager,
+        request_tracker=request_tracker,
+        retry_budget=get_default_budget(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Feedback endpoint
+# ---------------------------------------------------------------------------
 
 @app.post("/feedback", status_code=204)
 async def feedback_endpoint(req: FeedbackRequest):
-    if not ENABLE_FEEDBACK or _feedback_col is None:
+    if not ENABLE_FEEDBACK or _mongo_manager is None:
         return
     if req.feedback not in (1, -1):
         raise HTTPException(status_code=400, detail="feedback must be 1 or -1")
     try:
-        _feedback_col.insert_one({
+        _mongo_manager.insert_one("ai_feedback", {
             "messageId": req.messageId,
             "message": req.message[:500],
             "reply": req.reply[:500],
@@ -206,52 +397,51 @@ async def feedback_endpoint(req: FeedbackRequest):
             "timestamp": datetime.now(timezone.utc),
         })
     except Exception as e:
-        logger.error("feedback_endpoint DB error: %s", type(e).__name__)
+        logger.error("feedback_endpoint DB error: %s", e, exc_info=True)
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(req: ChatRequest):
+    cid = correlation_id_var.get()
+
+    if is_degraded():
+        logger.warning("Serving degraded response (memory pressure) cid=%s", cid)
+        return ChatResponse(
+            reply="We're experiencing high load right now. Please try again in a moment. 🙏",
+            intent_confidence=0.5,
+        )
+
     try:
         safe_message = sanitize_input(req.message)
 
-        history = get_history(req.userId)
+        history = _session_store.get_history(req.userId) if _session_store else []
         history.append({"role": "user", "content": safe_message})
 
         if len(history) > 5:
             history = history[-5:]
 
         system_prompt = build_system_prompt(req.role, req.contextData or {})
-        
+
         full_prompt = f"### System:\n{system_prompt}\n\n"
         for msg in history:
             prefix = "### Instruction:\n" if msg["role"] == "user" else "### Response:\n"
             full_prompt += f"{prefix}{sanitize_input(msg['content'])}\n\n"
-            
+
         full_prompt += "### Response:\n"
 
-        if ML_AVAILABLE:
-            inputs = tokenizer(full_prompt, return_tensors="pt").to(model.device)
-            
-            outputs = model.generate(
-                **inputs,
-                max_new_tokens=300,
-                temperature=0.4,
-                top_p=0.9,
-                do_sample=True,
-                pad_token_id=tokenizer.eos_token_id
-            )
+        reply = None
+        if _model_manager and _model_manager.ml_available:
+            reply = _model_manager.infer(full_prompt)
 
-            input_length = inputs.input_ids.shape[1]
-            generated_tokens = outputs[0][input_length:]
-            reply = tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+            if reply:
+                fallback_keywords = [
+                    "I don't know", "I am an AI", "As an AI", "I cannot",
+                    "I'm not able", "I do not have", "I apologize",
+                ]
+                if any(kw.lower() in reply.lower() for kw in fallback_keywords) or len(reply) < 5:
+                    reply = "Let me connect you with our support team."
 
-            fallback_keywords = [
-                "I don't know", "I am an AI", "As an AI", "I cannot",
-                "I'm not able", "I do not have", "I apologize",
-            ]
-            if any(kw.lower() in reply.lower() for kw in fallback_keywords) or len(reply) < 5:
-                reply = "Let me connect you with our support team."
-        else:
+        if reply is None:
             role = req.role.lower().strip() if req.role else "customer"
             if "seller" in role or "restaurant owner" in role:
                 role = "seller"
@@ -273,7 +463,7 @@ async def chat_endpoint(req: ChatRequest):
                 "mangsho": "mutton", "murgi": "chicken", "aloo": "potato",
                 "begun": "eggplant", "shorshe": "mustard",
             }
-            
+
             FOOD_TYPOS = {
                 "biriyani": "biryani", "beriyani": "biryani", "birani": "biryani",
                 "biri": "biryani", "biry": "biryani",
@@ -530,16 +720,33 @@ async def chat_endpoint(req: ChatRequest):
             else:
                 reply = "I'm here to help with orders, food recommendations, payments, delivery, and account questions. What would you like to know? 😊"
 
-
         history.append({"role": "assistant", "content": reply})
-        save_history(req.userId, history)
+        if _session_store:
+            _session_store.save_history(req.userId, history)
 
         return ChatResponse(reply=reply)
 
+    except KravixBaseError:
+        raise
     except Exception as e:
-        logger.error("chat_endpoint error: %s", type(e).__name__)
+        logger.error("chat_endpoint unhandled error cid=%s: %s", cid, e, exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+
+def _handle_sigterm(*args):
+    logger.info("SIGTERM received — initiating graceful shutdown")
+    _shutdown_event.set()
+
+
+signal.signal(signal.SIGTERM, _handle_sigterm)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("api_server:app", host="0.0.0.0", port=5500, reload=True)
+    uvicorn.run(
+        "api_server:app",
+        host="0.0.0.0",
+        port=5500,
+        reload=True,
+        timeout_keep_alive=65,
+    )

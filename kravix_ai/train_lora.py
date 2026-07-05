@@ -44,15 +44,18 @@ model.print_trainable_parameters()
 dataset = load_dataset("json", data_files=DATASET_PATH, split="train")
 
 def format_instruction(sample):
+    role = sample['userRole']
+    instruction = sample['instruction']
+    output = sample['output']
     return f"""### System:
 You are the Kravix Assistant, a friendly, concise, food-delivery domain expert for Kravix.
-Role interacting with: {sample['userRole']}
+Role interacting with: {role}
 
 ### Instruction:
-{sample['instruction']}
+{instruction}
 
 ### Response:
-{sample['output']}"""
+{output}"""
 
 training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,

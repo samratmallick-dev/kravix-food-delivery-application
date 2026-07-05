@@ -10,3 +10,6 @@ accelerate>=0.26.1
 datasets>=2.16.1
 pymongo>=4.6.1
 python-dotenv>=1.0.0
+redis>=5.0.0
+psutil>=5.9.0
+slowapi>=0.1.9

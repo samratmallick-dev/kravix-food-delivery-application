@@ -14,13 +14,13 @@ RUN pip install --no-cache-dir -r requirements.prod.txt
 
 RUN adduser -D appuser
 
-COPY --chown=appuser:appuser api_server.py ./
+COPY --chown=appuser:appuser *.py ./
 
 USER appuser
 
 EXPOSE 5500
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -qO- http://localhost:${PORT:-5500}/health || exit 1
+    CMD wget -qO- http://localhost:${PORT:-5500}/live || exit 1
 
-CMD ["sh", "-c", "uvicorn api_server:app --host 0.0.0.0 --port ${PORT:-5500}"]
+CMD ["sh", "-c", "uvicorn api_server:app --host 0.0.0.0 --port ${PORT:-5500} --timeout-keep-alive 65 --log-level info"]
