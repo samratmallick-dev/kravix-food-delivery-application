@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Bot, X, Send, Loader2, ChevronDown } from "lucide-react";
 import { aiApi } from "../../utils/ai.api";
 import { useAppData } from "../../context/AppContext";
-
-const FEEDBACK_ENABLED = import.meta.env.VITE_ENABLE_AI_FEEDBACK === "true";
 
 interface Message {
     id: string;
@@ -37,7 +36,7 @@ const AiAssistant: React.FC = () => {
         }
     }, [messages, isTyping]);
 
-    const handleSend = async () => {
+    const handleSend = useCallback(async () => {
         if (!inputValue.trim() || !user) return;
         
         const userMsg = inputValue.trim();
@@ -67,106 +66,92 @@ const AiAssistant: React.FC = () => {
         } finally {
             setIsTyping(false);
         }
-    };
+    }, [inputValue, user]);
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    }, [handleSend]);
+
+    if (!user) return null;
 
     return (
-        <div className="fixed bottom-6 right-6 z-9999 font-sans">
+        <>
+            <button
+                onClick={() => setIsOpen(o => !o)}
+                aria-label="Toggle AI Assistant"
+                className="fixed bottom-4 right-4 z-50 flex items-center justify-center w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-primary text-white shadow-xl hover:scale-105 active:scale-95 transition-transform sm:bottom-6 sm:right-6"
+            >
+                {isOpen ? <ChevronDown size={22} /> : <Bot size={22} />}
+            </button>
+
             {isOpen && (
-                <div className="w-87.5 h-125 bg-white rounded-[20px] shadow-[0_12px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden transition-all duration-300 ease-out transform translate-y-0 opacity-100">
-                    <div className="bg-linear-to-br from-[#FF6B6B] to-[#FF4757] text-white px-5 py-4 flex justify-between items-center">
-                        <div className="font-semibold text-base flex items-center gap-2.5">
-                            <span className="text-[20px] bg-white/20 p-1.5 rounded-full">🤖</span>
-                            Kravix Assistant
+                <div className="fixed z-40 inset-x-3 bottom-18 top-16 sm:inset-auto sm:bottom-22 sm:right-5 sm:w-85 md:w-97.5 sm:max-h-140 flex flex-col bg-white rounded-2xl shadow-2xl border border-border overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-primary text-white shrink-0">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20">
+                            <Bot size={18} />
                         </div>
-                        <button 
-                            className="bg-transparent border-none text-white text-[28px] leading-none cursor-pointer opacity-80 hover:opacity-100"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            &times;
+                        <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm leading-tight">Kravix Assistant</p>
+                            <p className="text-xs text-white/70 capitalize">{user.role ?? "customer"} mode</p>
+                        </div>
+                        <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-white/20 transition-colors" aria-label="Close">
+                            <X size={18} />
                         </button>
                     </div>
-                    
-                    <div className="flex-1 p-5 overflow-y-auto bg-[#F8F9FA] flex flex-col gap-3" ref={chatBodyRef}>
+
+                    <div ref={chatBodyRef} className="flex-1 overflow-y-auto px-3 py-2.5 sm:px-4 sm:py-3 space-y-2.5 bg-background">
                         {messages.map(msg => (
-                            <div key={msg.id} className="flex flex-col gap-1 items-start">
-                                <div
-                                    className={`max-w-[80%] px-4 py-3 rounded-[18px] text-sm leading-snug wrap-break-word ${
-                                        msg.sender === "user"
-                                            ? "bg-[#FF4757] text-white self-end rounded-br-sm"
-                                            : "bg-white text-[#333] self-start rounded-bl-sm shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
-                                    }`}
-                                >
-                                    {msg.text}
-                                </div>
-                                {FEEDBACK_ENABLED && msg.sender === "ai" && !msg.feedbackSent && (
-                                    <div className="flex gap-1 pl-1">
-                                        {([1, -1] as const).map(val => (
-                                            <button
-                                                key={val}
-                                                title={val === 1 ? "Helpful" : "Not helpful"}
-                                                className="text-xs opacity-50 hover:opacity-100 transition-opacity"
-                                                onClick={async () => {
-                                                    const m = msg as any;
-                                                    await aiApi.feedback({
-                                                        messageId: msg.id,
-                                                        message: m._rawMsg ?? "",
-                                                        reply: m._rawReply ?? msg.text,
-                                                        role: user?.role || "customer",
-                                                        feedback: val,
-                                                    }).catch(() => {});
-                                                    setMessages(prev => prev.map(m2 =>
-                                                        m2.id === msg.id ? { ...m2, feedbackSent: true } : m2
-                                                    ));
-                                                }}
-                                            >
-                                                {val === 1 ? "👍" : "👎"}
-                                            </button>
-                                        ))}
+                            <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
+                                {msg.sender === "ai" && (
+                                    <div className="flex items-end gap-2 max-w-[85%]">
+                                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white shrink-0 mb-0.5">
+                                            <Bot size={12} />
+                                        </div>
+                                        <div className="bg-white border border-border text-gray-800 text-sm px-3 py-2 rounded-2xl rounded-bl-sm shadow-sm">
+                                            {msg.text}
+                                        </div>
                                     </div>
                                 )}
-                                {FEEDBACK_ENABLED && msg.sender === "ai" && msg.feedbackSent && (
-                                    <span className="text-xs text-gray-400 pl-1">Thanks for the feedback!</span>
+                                {msg.sender === "user" && (
+                                    <div className="bg-primary text-white text-sm px-3 py-2 rounded-2xl rounded-br-sm max-w-[85%] shadow-sm">
+                                        {msg.text}
+                                    </div>
                                 )}
                             </div>
                         ))}
                         {isTyping && (
-                            <div className="max-w-[80%] px-4 py-3 rounded-[18px] text-sm leading-snug wrap-break-word bg-white text-[#333] self-start rounded-bl-sm shadow-[0_2px_8px_rgba(0,0,0,0.05)] flex items-center space-x-1">
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-100"></span>
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-200"></span>
+                            <div className="flex items-end gap-2">
+                                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white shrink-0">
+                                    <Bot size={12} />
+                                </div>
+                                <div className="bg-white border border-border px-3 py-2 rounded-2xl rounded-bl-sm shadow-sm">
+                                    <Loader2 size={14} className="animate-spin text-primary" />
+                                </div>
                             </div>
                         )}
                     </div>
-                    
-                    <div className="p-4 bg-white border-t border-[#EEEEEE] flex gap-2.5">
-                        <input 
-                            className="flex-1 px-4 py-3 border border-[#E0E0E0] rounded-full outline-none text-sm transition-colors duration-200 focus:border-[#FF4757]"
-                            type="text"
-                            placeholder="Ask me anything..."
+
+                    <div className="flex items-end gap-2 px-2.5 py-2.5 sm:px-3 sm:py-3 border-t border-border bg-white shrink-0">
+                        <textarea
+                            rows={1}
                             value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                            onChange={e => setInputValue(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Ask me anything…"
+                            className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary transition-colors max-h-28 leading-5"
                         />
-                        <button 
-                            className="bg-[#FF4757] text-white border-none px-5 rounded-full font-semibold cursor-pointer transition-colors duration-200 disabled:bg-[#FFB3BA] disabled:cursor-not-allowed hover:not-disabled:bg-[#E84150]"
-                            onClick={handleSend} 
-                            disabled={!inputValue.trim()}
+                        <button
+                            onClick={handleSend}
+                            disabled={!inputValue.trim() || isTyping}
+                            className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-white disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
+                            aria-label="Send"
                         >
-                            Send
+                            <Send size={15} />
                         </button>
                     </div>
                 </div>
             )}
-            
-            {!isOpen && (
-                <button 
-                    className="w-15 h-15 rounded-full bg-linear-to-br from-[#FF6B6B] to-[#FF4757] border-none text-white text-[28px] cursor-pointer shadow-[0_8px_24px_rgba(255,71,87,0.4)] transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-[0_12px_28px_rgba(255,71,87,0.5)] flex items-center justify-center"
-                    onClick={() => setIsOpen(true)}
-                >
-                    <span>💬</span>
-                </button>
-            )}
-        </div>
+        </>
     );
 };
 
