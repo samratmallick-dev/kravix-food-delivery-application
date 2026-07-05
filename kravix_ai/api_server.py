@@ -268,12 +268,27 @@ async def chat_endpoint(req: ChatRequest):
                     reply = f"I recognized: {mapped}. Search for a restaurant to see if these are available near you!"
 
             elif any(w in normalized for w in ["food name", "foods name", "food list", "list of food", "what food", "show food", "show me food", "available food", "menu items", "what's on the menu", "whats on the menu", "what do you have", "what do you serve"]):
+                price_limit = None
+                price_match = re.search(r"(?:rs\.?|₹|inr|rupees?)\s*(\d+)", normalized)
+                if price_match:
+                    price_limit = normalize_price(int(price_match.group(1)))
                 if menu_items:
                     available = [i for i in menu_items if i.get('available', True)]
-                    names = ", ".join(f"{i['name']} (₹{normalize_price(i['price'])})" for i in available[:6])
-                    reply = f"Here are some food items available: {names}. 🍽️"
+                    if price_limit:
+                        available = [i for i in available if normalize_price(i.get('price', 10001)) <= price_limit]
+                        if available:
+                            names = ", ".join(f"{i['name']} (₹{normalize_price(i['price'])})" for i in available[:6])
+                            reply = f"Food items under ₹{price_limit}: {names}. 🍽️"
+                        else:
+                            reply = f"No available items under ₹{price_limit} on the current menu."
+                    else:
+                        names = ", ".join(f"{i['name']} (₹{normalize_price(i['price'])})" for i in available[:6])
+                        reply = f"Here are some food items available: {names}. 🍽️"
                 else:
-                    reply = "Search for a restaurant near you on the home page to browse their full menu and available food items! 🍽️"
+                    if price_limit:
+                        reply = f"Search for a restaurant near you to find food items under ₹{price_limit}! 🍽️"
+                    else:
+                        reply = "Search for a restaurant near you on the home page to browse their full menu and available food items! 🍽️"
             elif any(w in normalized for w in ["suggest", "recommend", "what should i eat", "what to eat", "what to order", "craving"]):
                 if menu_items:
                     available = [i for i in menu_items if i.get('available', True)]
@@ -307,8 +322,10 @@ async def chat_endpoint(req: ChatRequest):
                     reply = "Open a restaurant's menu page and I can check item availability for you."
             elif any(w in normalized for w in ["price", "cheap", "affordable", "budget", "under", "cost", "how much"]):
                 if menu_items:
-                    affordable = [i for i in menu_items if normalize_price(i.get('price', 10001)) <= 1000 and i.get('available', True)]
-                    reply = f"Items under ₹1,000: {', '.join(i['name'] for i in affordable)}." if affordable else "No items under ₹1,000 on the current menu right now."
+                    price_match = re.search(r"(?:rs\.?|₹|inr|rupees?)\s*(\d+)", normalized)
+                    limit = normalize_price(int(price_match.group(1))) if price_match else 1000
+                    affordable = [i for i in menu_items if normalize_price(i.get('price', 10001)) <= limit and i.get('available', True)]
+                    reply = f"Items under ₹{limit}: {', '.join(i['name'] for i in affordable)}." if affordable else f"No items under ₹{limit} on the current menu right now."
                 else:
                     reply = "Open a restaurant's menu and I can filter items by price for you!"
 
