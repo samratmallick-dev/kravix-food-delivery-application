@@ -13,7 +13,6 @@ import { Loader, Minus, Plus } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
-import { detectSearchType } from "../utils/searchIntent";
 
 const SearchPage = () => {
       const { location, cart, fetchCart } = useAppData();
@@ -41,8 +40,7 @@ const SearchPage = () => {
       };
 
       const handleSearch = (value: string) => {
-            const type = value ? detectSearchType(value) : searchType;
-            const params: Record<string, string> = { type };
+            const params: Record<string, string> = { type: searchType };
             if (value) params.search = value;
             setSearchParams(params);
       };
@@ -106,7 +104,7 @@ const SearchPage = () => {
 
 
             if (searchType === "restaurant") {
-                  getNearestRestaurant({ latitude: location.latitude, longitude: location.longitude, search })
+                  getNearestRestaurant({ latitude: location.latitude, longitude: location.longitude, search, radius: 10000 })
                         .then((data) => {
                               setRestaurants(data.data || []);
                               if (data.correctedQuery) setCorrectedQuery(data.correctedQuery);
@@ -114,7 +112,7 @@ const SearchPage = () => {
                               toast.error(error.message || "Failed to fetch restaurants");
                         }).finally(() => setLoading(false));
             } else {
-                  apiSearchByFood({ latitude: location.latitude, longitude: location.longitude, search })
+                  apiSearchByFood({ latitude: location.latitude, longitude: location.longitude, search, radius: 10000 })
                         .then((data) => {
                               const results: IFoodSearchResult[] = data.data || [];
                               setFoodResults(results);

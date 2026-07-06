@@ -195,27 +195,41 @@ export const searchByFood = TryCatch(
                   });
             }
 
-            const { normalized: normalizedSearch, corrected } = await normalizeSearchQuery(search as string);
+            const rawSearch = (search as string).trim();
+            const { normalized: normalizedSearch, corrected } = await normalizeSearchQuery(rawSearch);
 
-            const tokens = normalizedSearch.trim().split(/\s+/).filter(Boolean);
-            const regexPattern = tokens.map((t) => `(?=.*${t})`).join("");
-            const searchRegex = new RegExp(regexPattern, "i");
+            const buildAndRegex = (q: string) => {
+                  const tokens = q.trim().split(/\s+/).filter(Boolean);
+                  return { regex: new RegExp(tokens.map((t) => `(?=.*${t})`).join(""), "i"), tokens };
+            };
 
-            let matchingItems = await MenuItem.find({
-                  name: { $regex: searchRegex },
-                  isAvailable: true,
-            })
-                  .select("restaurantId name price imageUrl description isAvailable")
-                  .limit(50);
-
-            if (!matchingItems.length && tokens.length > 1) {
-                  const broadRegex = new RegExp(tokens.join("|"), "i");
-                  matchingItems = await MenuItem.find({
-                        name: { $regex: broadRegex },
-                        isAvailable: true,
-                  })
+            const findByRegex = (regex: RegExp) =>
+                  MenuItem.find({ name: { $regex: regex }, isAvailable: true })
                         .select("restaurantId name price imageUrl description isAvailable")
                         .limit(50);
+
+            // Always try the exact literal text the user typed FIRST. A query like "Mach vat"
+            // might just be a restaurant/dish's actual (Benglish) name rather than something that
+            // needs translating — and an exact match on real data should always win over a broad
+            // synonym match on unrelated items. Only fall back to the normalized/translated query
+            // if the literal text truly matches nothing.
+            const { regex: rawRegex, tokens: rawTokens } = buildAndRegex(rawSearch);
+            let matchingItems = await findByRegex(rawRegex);
+
+            if (!matchingItems.length && rawTokens.length > 1) {
+                  matchingItems = await findByRegex(new RegExp(rawTokens.join("|"), "i"));
+            }
+
+            let usedRawFallback = matchingItems.length > 0;
+
+            if (!matchingItems.length && corrected && rawSearch.toLowerCase() !== normalizedSearch.toLowerCase()) {
+                  const { regex: searchRegex, tokens } = buildAndRegex(normalizedSearch);
+                  matchingItems = await findByRegex(searchRegex);
+
+                  if (!matchingItems.length && tokens.length > 1) {
+                        matchingItems = await findByRegex(new RegExp(tokens.join("|"), "i"));
+                  }
+                  usedRawFallback = false;
             }
 
             if (!matchingItems.length) {
@@ -224,7 +238,6 @@ export const searchByFood = TryCatch(
                         success: true,
                         error: false,
                         data: [],
-                        correctedQuery: corrected ? normalizedSearch : undefined,
                   });
             }
 
@@ -232,31 +245,40 @@ export const searchByFood = TryCatch(
                   ...new Set(matchingItems.map((item) => item.restaurantId.toString())),
             ];
 
-            const restaurants = await Restaurant.aggregate([
-                  {
-                        $geoNear: {
-                              near: {
-                                    type: "Point",
-                                    coordinates: [Number(longitude), Number(latitude)],
-                              },
-                              distanceField: "distance",
-                              maxDistance: Number(radius),
-                              spherical: true,
-                              query: {
-                                    _id: {
-                                          $in: restaurantIds.map((id) => new mongoose.Types.ObjectId(id)),
+            const runRestaurantGeoNear = (maxDistance: number) =>
+                  Restaurant.aggregate([
+                        {
+                              $geoNear: {
+                                    near: {
+                                          type: "Point",
+                                          coordinates: [Number(longitude), Number(latitude)],
                                     },
-                                    isVerified: true,
+                                    distanceField: "distance",
+                                    maxDistance,
+                                    spherical: true,
+                                    query: {
+                                          _id: {
+                                                $in: restaurantIds.map((id) => new mongoose.Types.ObjectId(id)),
+                                          },
+                                          isVerified: true,
+                                    },
                               },
                         },
-                  },
-                  { $sort: { distance: 1, isOpen: -1 } },
-                  {
-                        $addFields: {
-                              distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
+                        { $sort: { distance: 1, isOpen: -1 } },
+                        {
+                              $addFields: {
+                                    distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
+                              },
                         },
-                  },
-            ]);
+                  ]);
+
+            // A matching item can exist further away than the requested radius. Rather than
+            // silently dropping it (which produces a confusing "no results" + "corrected query"
+            // combo), widen the search once before giving up, mirroring the autocomplete endpoint.
+            let restaurants = await runRestaurantGeoNear(Number(radius));
+            if (restaurants.length === 0 && Number(radius) < 50000) {
+                  restaurants = await runRestaurantGeoNear(50000);
+            }
 
             const restaurantMap = new Map(
                   restaurants.map((r: any) => [r._id.toString(), r]),
@@ -282,7 +304,7 @@ export const searchByFood = TryCatch(
                   success: true,
                   error: false,
                   data: results,
-                  ...(corrected ? { correctedQuery: normalizedSearch } : {}),
+                  ...(corrected && !usedRawFallback ? { correctedQuery: normalizedSearch } : {}),
             });
       },
 );

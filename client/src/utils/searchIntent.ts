@@ -4,7 +4,6 @@ const STOPWORDS = new Set([
       "please", "pls", "give", "want", "need", "order", "get", "some", "a", "an", "the"
 ]);
 
-// Includes common misspellings so tab classification stays correct pre-server-correction
 const FOOD_TOKENS = new Set([
       "vat", "bhat", "bhaat", "rice",
       "dal", "daal", "lentils",
@@ -40,7 +39,6 @@ function levenshtein(a: string, b: string): number {
 function isFoodToken(token: string): boolean {
       if (FOOD_TOKENS.has(token)) return true;
       if (token.length < 4) return false;
-      // Fuzzy check against food tokens (edit distance ≤ 2)
       const maxDist = token.length <= 5 ? 1 : 2;
       for (const food of FOOD_TOKENS) {
             if (Math.abs(food.length - token.length) > maxDist) continue;

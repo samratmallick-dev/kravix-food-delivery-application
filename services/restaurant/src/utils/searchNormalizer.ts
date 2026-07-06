@@ -81,6 +81,9 @@ function resolveLocally(input: string): string | null {
       const meaningful = tokens.filter((t) => !STOPWORDS.has(t));
       if (meaningful.length === 0) return null;
 
+      if (meaningful.length > 1) return null;
+
+
       const corrected = meaningful.map((t) => {
             if (SYNONYMS[t]) return SYNONYMS[t];
             if (VOCABULARY.includes(t)) return t;
@@ -94,10 +97,13 @@ export async function normalizeSearchQuery(input: string): Promise<{ normalized:
       if (!input || !input.trim()) return { normalized: input, corrected: false };
 
       const raw = input.trim().toLowerCase();
+      const tokens = raw.split(/\s+/).filter(Boolean);
       const local = resolveLocally(raw);
 
       if (local !== null && local !== raw) return { normalized: local, corrected: true };
       if (local !== null) return { normalized: local, corrected: false };
+
+      if (tokens.length > 1) return { normalized: input, corrected: false };
 
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) return { normalized: input, corrected: false };

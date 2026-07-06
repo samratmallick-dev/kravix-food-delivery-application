@@ -380,60 +380,90 @@ export const getNearestRestaurant = TryCatch(
             let correctedQuery: string | undefined;
 
             if (search && typeof search === "string") {
-                  const { normalized: normalizedSearch, corrected } = await normalizeSearchQuery(search);
+                  const rawSearch = search.trim();
+                  const { normalized: normalizedSearch, corrected } = await normalizeSearchQuery(rawSearch);
                   if (corrected) correctedQuery = normalizedSearch;
 
-                  const tokens = normalizedSearch.trim().split(/\s+/).filter(Boolean);
-                  const nameRegex = new RegExp(tokens.join("|"), "i");
+                  const buildRestaurantResults = async (query: string, maxDistance: number) => {
+                        const tokens = query.trim().split(/\s+/).filter(Boolean);
+                        const nameRegex = new RegExp(tokens.join("|"), "i");
 
-                  const byName = await Restaurant.aggregate([
-                        {
-                              ...geoNearStage,
-                              $geoNear: {
-                                    ...geoNearStage.$geoNear,
-                                    query: {
-                                          isVerified: true,
-                                          name: { $regex: nameRegex },
-                                          ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}),
-                                    },
-                              },
-                        },
-                        ...sortAndProject,
-                  ]);
-
-                  const matchingItems = await MenuItem.find({
-                        name: { $regex: nameRegex },
-                        isAvailable: true,
-                  }).distinct("restaurantId");
-
-                  const byMenuItems =
-                        matchingItems.length > 0
-                              ? await Restaurant.aggregate([
-                                    {
-                                          ...geoNearStage,
-                                          $geoNear: {
-                                                ...geoNearStage.$geoNear,
-                                                query: {
-                                                      isVerified: true,
-                                                      _id: {
-                                                            $in: matchingItems.map(
-                                                                  (id: any) => new mongoose.Types.ObjectId(id.toString()),
-                                                            ),
-                                                      },
-                                                      ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}),
-                                                },
+                        const byName = await Restaurant.aggregate([
+                              {
+                                    ...geoNearStage,
+                                    $geoNear: {
+                                          ...geoNearStage.$geoNear,
+                                          maxDistance,
+                                          query: {
+                                                isVerified: true,
+                                                name: { $regex: nameRegex },
+                                                ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}),
                                           },
                                     },
-                                    ...sortAndProject,
-                              ])
-                              : [];
+                              },
+                              ...sortAndProject,
+                        ]);
 
-                  const seen = new Set<string>();
-                  for (const r of [...byName, ...byMenuItems]) {
-                        const key = r._id.toString();
-                        if (!seen.has(key)) {
-                              seen.add(key);
-                              restaurants.push(r);
+                        const matchingItems = await MenuItem.find({
+                              name: { $regex: nameRegex },
+                              isAvailable: true,
+                        }).distinct("restaurantId");
+
+                        const byMenuItems =
+                              matchingItems.length > 0
+                                    ? await Restaurant.aggregate([
+                                          {
+                                                ...geoNearStage,
+                                                $geoNear: {
+                                                      ...geoNearStage.$geoNear,
+                                                      maxDistance,
+                                                      query: {
+                                                            isVerified: true,
+                                                            _id: {
+                                                                  $in: matchingItems.map(
+                                                                        (id: any) => new mongoose.Types.ObjectId(id.toString()),
+                                                                  ),
+                                                            },
+                                                            ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}),
+                                                      },
+                                                },
+                                          },
+                                          ...sortAndProject,
+                                    ])
+                                    : [];
+
+                        const seen = new Set<string>();
+                        const results: any[] = [];
+                        for (const r of [...byName, ...byMenuItems]) {
+                              const key = r._id.toString();
+                              if (!seen.has(key)) { seen.add(key); results.push(r); }
+                        }
+                        return results;
+                  };
+
+                  const requestedRadius = Number(radius);
+
+                  // Always try the exact literal text the user typed FIRST. A query like "Mach vat"
+                  // might just be a restaurant/dish's actual (Benglish) name rather than something
+                  // that needs translating — an exact match on real data should always win over a
+                  // broad synonym match on unrelated restaurants. Only fall back to the
+                  // normalized/translated query if the literal text truly matches nothing.
+                  restaurants = await buildRestaurantResults(rawSearch, requestedRadius);
+                  if (restaurants.length > 0) correctedQuery = undefined;
+
+                  if (restaurants.length === 0 && corrected && normalizedSearch.toLowerCase() !== rawSearch.toLowerCase()) {
+                        restaurants = await buildRestaurantResults(normalizedSearch, requestedRadius);
+                  }
+
+                  // A text match can exist further away than the requested radius. Rather than
+                  // silently reporting "no results" (while still showing a stale correction banner),
+                  // widen the search once before giving up, mirroring the autocomplete endpoint's
+                  // "expand to 50km if nothing nearby" behavior.
+                  if (restaurants.length === 0 && requestedRadius < 50000) {
+                        restaurants = await buildRestaurantResults(rawSearch, 50000);
+                        if (restaurants.length > 0) correctedQuery = undefined;
+                        if (restaurants.length === 0 && corrected && normalizedSearch.toLowerCase() !== rawSearch.toLowerCase()) {
+                              restaurants = await buildRestaurantResults(normalizedSearch, 50000);
                         }
                   }
             } else {
