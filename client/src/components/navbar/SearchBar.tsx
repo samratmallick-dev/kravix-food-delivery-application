@@ -145,9 +145,12 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
             }
             if (e.key === "Enter" && value.trim()) {
                   setShowDropdown(false);
-                  const type = detectSearchType(value);
-                  navigate(`/search?search=${encodeURIComponent(value)}&type=${type}`);
-                  onSearch?.(value);
+                  if (onSearch) {
+                        onSearch(value);
+                  } else {
+                        const type = detectSearchType(value);
+                        navigate(`/search?search=${encodeURIComponent(value)}&type=${type}`);
+                  }
             }
       };
 
@@ -255,8 +258,12 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
                                                 <button
                                                       onMouseDown={() => {
                                                             setShowDropdown(false);
-                                                            const type = detectSearchType(value);
-                                                            navigate(`/search?search=${encodeURIComponent(value)}&type=${type}`);
+                                                            if (onSearch) {
+                                                                  onSearch(value);
+                                                            } else {
+                                                                  const type = detectSearchType(value);
+                                                                  navigate(`/search?search=${encodeURIComponent(value)}&type=${type}`);
+                                                            }
                                                       }}
                                                       className="text-xs text-primary hover:underline"
                                                 >

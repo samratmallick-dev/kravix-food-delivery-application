@@ -13,6 +13,7 @@ import { Loader, Minus, Plus } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
+import { detectSearchType } from "../utils/searchIntent";
 
 const SearchPage = () => {
       const { location, cart, fetchCart } = useAppData();
@@ -40,7 +41,9 @@ const SearchPage = () => {
       };
 
       const handleSearch = (value: string) => {
-            const params: Record<string, string> = { type: searchType };
+            const hasExplicitType = searchParams.get("type") !== null;
+            const type = hasExplicitType ? searchType : (value ? detectSearchType(value) : searchType);
+            const params: Record<string, string> = { type };
             if (value) params.search = value;
             setSearchParams(params);
       };
