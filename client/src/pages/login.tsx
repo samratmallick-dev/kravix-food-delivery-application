@@ -1,4 +1,3 @@
-
 import { Eye, EyeOff } from "lucide-react";
 import Logo from "../components/navbar/logo";
 import { useRef, useState } from "react";
@@ -19,7 +18,7 @@ const Login = () => {
   const [notVerified, setNotVerified] = useState(false);
   const [resendMsg, setResendMsg] = useState("");
   const navigate = useNavigate();
-  const { setUser, setIsAuth } = useAppData();
+  const { fetchCurrentUser, fetchCart } = useAppData();
   const isProcessing = useRef(false);
   const retryCount = useRef(0);
 
@@ -47,8 +46,8 @@ const Login = () => {
       }
       retryCount.current = 0;
       storage.setToken(data.token!);
-      setUser(data.user as any);
-      setIsAuth(true);
+      await fetchCurrentUser();
+      await fetchCart();
       toast.success(data.message || "Login Successful");
       navigate("/");
     } catch (error: unknown) {
@@ -80,16 +79,8 @@ const Login = () => {
 
       if (data.token && data.user) {
         storage.setToken(data.token);
-        setUser({
-          _id: data.user._id,
-          name: data.user.name,
-          email: data.user.email,
-          image: data.user.profileImage,
-          role: data.user.role,
-          isEmailVerified: data.user.isEmailVerified,
-          authProvider: data.user.authProvider,
-        });
-        setIsAuth(true);
+        await fetchCurrentUser();
+        await fetchCart();
 
         if (data.needsRoleSelection) {
           toast.success("Please select your role to continue.");

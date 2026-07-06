@@ -38,40 +38,27 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     const [subTotal, setSubTotal] = useState(0);
     const [quantity, setQuantity] = useState(0);
 
-    useEffect(() => {
+    const fetchCurrentUser = useCallback(async () => {
         const token = storage.getToken();
         if (!token) {
             setUser(null);
             setIsAuth(false);
-            setLoading(false);
             return;
         }
-        const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
-            Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
-
-        Promise.allSettled([
-            withTimeout(getMyProfile(token), 5000),
-            withTimeout(apiFetchCart(token), 5000),
-        ]).then(([userResult, cartResult]) => {
-            if (userResult.status === "fulfilled") {
-                setUser(userResult.value.data);
-                setIsAuth(true);
+        try {
+            const res = await getMyProfile(token);
+            setUser(res.data);
+            setIsAuth(true);
+        } catch (error: any) {
+            const status = error.status;
+            if (status === 401 || status === 403) {
+                storage.removeToken();
+                setUser(null);
+                setIsAuth(false);
             } else {
-                const status = (userResult.reason as any)?.status;
-                if (status === 401 || status === 403) {
-                    storage.removeToken();
-                    setUser(null);
-                    setIsAuth(false);
-                } else {
-                    console.error("auth fetch failed:", userResult.reason?.message);
-                }
+                console.error("auth fetch failed:", error.message);
             }
-            if (cartResult.status === "fulfilled") {
-                setCart(cartResult.value.data?.cart || []);
-                setSubTotal(cartResult.value.data?.subTotal || 0);
-                setQuantity(cartResult.value.data?.cartLength || 0);
-            }
-        }).finally(() => setLoading(false));
+        }
     }, []);
 
     const fetchCart = useCallback(async () => {
@@ -86,6 +73,23 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             console.error(error);
         }
     }, []);
+
+    useEffect(() => {
+        const token = storage.getToken();
+        if (!token) {
+            setUser(null);
+            setIsAuth(false);
+            setLoading(false);
+            return;
+        }
+        const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
+            Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
+
+        Promise.allSettled([
+            withTimeout(fetchCurrentUser(), 15000),
+            withTimeout(fetchCart(), 15000),
+        ]).finally(() => setLoading(false));
+    }, [fetchCurrentUser, fetchCart]);
 
     useEffect(() => {
         if (!navigator.geolocation) {
@@ -198,6 +202,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                 city,
                 cart,
                 fetchCart,
+                fetchCurrentUser,
                 quantity,
                 subTotal
             }}

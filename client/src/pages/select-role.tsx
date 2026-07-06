@@ -13,7 +13,7 @@ const SelectRole = () => {
 
       const roles: Role[] = ["customer", "rider", "seller"];
 
-      const { setUser } = useAppData();
+      const { fetchCurrentUser, fetchCart } = useAppData();
       const navigate = useNavigate();
 
       const addRole = async () => {
@@ -22,8 +22,9 @@ const SelectRole = () => {
 
                   if (data) {
                         storage.setToken(data.token);
+                        await fetchCurrentUser();
+                        await fetchCart();
                         toast.success("Role Updated Successfully");
-                        setUser(data.data as any);
                         navigate("/", { replace: true });
                   } else {
                         toast.error("Failed to update role");

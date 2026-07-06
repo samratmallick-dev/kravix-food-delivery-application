@@ -43,7 +43,7 @@ const RegisterPage = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { setUser, setIsAuth } = useAppData();
+  const { fetchCurrentUser, fetchCart } = useAppData();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,9 +92,11 @@ const RegisterPage = () => {
     setGoogleLoading(true);
     try {
       const data = await loginWithGoogle(authResult.code);
-      if (data.token) storage.setToken(data.token);
-      if (data.user) setUser(data.user as any);
-      setIsAuth(true);
+      if (data.token) {
+        storage.setToken(data.token);
+        await fetchCurrentUser();
+        await fetchCart();
+      }
       toast.success(data.message || "Login Successful");
       navigate("/");
     } catch (err: unknown) {

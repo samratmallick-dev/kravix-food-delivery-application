@@ -32,6 +32,7 @@ export interface AppContextType {
       locationLoading: boolean;
       cart: ICart[] | [];
       fetchCart: () => Promise<void>;
+      fetchCurrentUser: () => Promise<void>;
       subTotal: number;
       quantity: number;
 };
@@ -197,4 +198,4 @@ export interface IReview {
       reportReason?: string;
       createdAt: Date;
       updatedAt: Date;
-}
+}
