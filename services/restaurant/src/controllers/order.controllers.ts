@@ -32,6 +32,14 @@ export const createOrder = TryCatch(
                   });
             }
 
+            if (!paymentMethod || !["razorpay", "stripe", "cod"].includes(paymentMethod)) {
+                  return res.status(400).json({
+                        success: false,
+                        message: "Invalid payment method",
+                        error: true,
+                  });
+            }
+
             const address = await Address.findOne({
                   _id: addressId,
                   userId: user._id,
@@ -133,6 +141,7 @@ export const createOrder = TryCatch(
             const platformFee = 7;
 
             let discountAmount = 0;
+            let validCoupon: any = null;
             if (couponCode) {
                   const coupon = await Coupon.findOne({
                         code: couponCode.trim().toUpperCase(),
@@ -176,6 +185,7 @@ export const createOrder = TryCatch(
                                           }
                                           discountAmount = Math.round(discountAmount * 100) / 100;
                                           discountAmount = Math.min(discountAmount, subTotal);
+                                          validCoupon = coupon;
                                     }
                               }
                         }
@@ -193,8 +203,6 @@ export const createOrder = TryCatch(
                   totalGST
             ).toFixed(2);
 
-            const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-
             const BASE_PAY = 35;
             const BASE_KM = 3;
             const PER_KM_RATE = 9;
@@ -203,6 +211,71 @@ export const createOrder = TryCatch(
                         ? BASE_PAY
                         : BASE_PAY + (distance - BASE_KM) * PER_KM_RATE,
             );
+
+            if (paymentMethod === "cod") {
+                  const order = await Order.create({
+                        userId: user._id.toString(),
+                        restaurantId: restaurantId.toString(),
+                        restaurantName: restaurant.name,
+                        riderId: null,
+                        riderPhoneNumber: null,
+                        riderName: null,
+                        distance: distance,
+                        riderAmount: riderAmount,
+                        items: orderItems,
+                        subtotal: subTotal,
+                        deliveryFee: deliveryFee,
+                        platformFee: platformFee,
+                        discountAmount: discountAmount,
+                        couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
+                        totalAmount: totalAmount,
+                        addressId: addressId.toString(),
+                        deliveryAddress: {
+                              formatedAddress: address.formatedAddress,
+                              mobile: address.mobile,
+                              customerName: user.name,
+                              latitude: latitude,
+                              longitude: longitude,
+                        },
+                        paymentMethod: "cod",
+                        paymentStatus: "cod_pending",
+                        status: "placed",
+                  });
+
+                  await Cart.deleteMany({ userId: user._id });
+
+                  if (validCoupon) {
+                        await Promise.all([
+                              CouponUsage.create({ couponId: validCoupon._id.toString(), userId: user._id.toString(), orderId: order._id.toString() }),
+                              Coupon.findByIdAndUpdate(validCoupon._id, { $inc: { usedCount: 1 } }),
+                        ]);
+                  }
+
+                  const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI!}/api/v1/socket/events`;
+                  const emitHeaders = { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! };
+
+                  axios.post(
+                        emitUrl,
+                        {
+                              event: "order:new",
+                              room: `Restaurant:${restaurantId.toString()}`,
+                              payload: { orderId: order._id.toString() },
+                        },
+                        { headers: emitHeaders },
+                  ).catch(() => {});
+
+                  return res.status(201).json({
+                        success: true,
+                        message: "Order placed successfully",
+                        data: {
+                              orderId: order._id.toString(),
+                              totalAmount: totalAmount,
+                              paymentMethod: "cod",
+                        },
+                  });
+            }
+
+            const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
             const order = await Order.create({
                   userId: user._id.toString(),
@@ -312,7 +385,7 @@ export const fetchRestaurantOrders = TryCatch(
 
             const orders = await Order.find({
                   restaurantId: restaurantId,
-                  paymentStatus: "paid",
+                  paymentStatus: { $in: ["paid", "cod_pending", "cod_paid"] },
             })
                   .sort({ createdAt: -1 })
                   .limit(limit);
@@ -360,10 +433,11 @@ export const updateOrderStatus = TryCatch(
                   });
             }
 
-            if (order.paymentStatus !== "paid") {
+            const isPaymentConfirmed = ["paid", "cod_pending", "cod_paid"].includes(order.paymentStatus);
+            if (!isPaymentConfirmed) {
                   return res.status(400).json({
                         success: false,
-                        message: "Order not completed",
+                        message: "Order payment not confirmed",
                         error: true,
                   });
             }
@@ -433,7 +507,7 @@ export const getMyOrders = TryCatch(
 
             const orders = await Order.find({
                   userId: user._id.toString(),
-                  paymentStatus: "paid",
+                  paymentStatus: { $in: ["paid", "cod_pending", "cod_paid"] },
             }).sort({ createdAt: -1 });
 
             return res.status(200).json({
@@ -598,7 +672,7 @@ export const getCurrentOrdersForRiders = TryCatch(async (req, res) => {
       const order = await Order.findOne({
             riderId: riderId as string,
             status: { $ne: "delivered" },
-            paymentStatus: "paid",
+            paymentStatus: { $in: ["paid", "cod_pending", "cod_paid"] },
       }).populate("restaurantId");
 
       if (!order) {
@@ -813,7 +887,7 @@ export const getRestaurantSalesStats = TryCatch(
             const baseMatch = {
                   restaurantId,
                   status: "delivered",
-                  paymentStatus: "paid",
+                  paymentStatus: { $in: ["paid", "cod_paid"] },
             };
 
             const [summary, salesTrend, topItems, orderDistribution] =
@@ -867,7 +941,7 @@ export const getRestaurantSalesStats = TryCatch(
                               },
                         ]),
                         Order.aggregate([
-                              { $match: { restaurantId, paymentStatus: "paid" } },
+                              { $match: { restaurantId, paymentStatus: { $in: ["paid", "cod_pending", "cod_paid"] } } },
                               { $group: { _id: "$status", count: { $sum: 1 } } },
                               { $project: { _id: 0, status: "$_id", count: 1 } },
                         ]),
@@ -913,7 +987,7 @@ export const getDeliveredOrdersByRider = TryCatch(async (req, res) => {
       const orders = await Order.find({
             riderId: riderId as string,
             status: "delivered",
-            paymentStatus: "paid",
+            paymentStatus: { $in: ["paid", "cod_paid"] },
       }).sort({ createdAt: -1 });
 
       return res.status(200).json({
@@ -1134,3 +1208,67 @@ export const cancelMyOrder = TryCatch(
             });
       },
 );
+
+export const confirmCodPayment = TryCatch(async (req, res) => {
+      if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({
+                  success: false,
+                  message: "Forbidden: Invalid or missing internal key",
+                  error: true,
+            });
+      }
+
+      const { orderId, codPaymentMode } = req.body;
+
+      if (!orderId) {
+            return res.status(400).json({
+                  success: false,
+                  message: "Order ID is required",
+                  error: true,
+            });
+      }
+
+      if (!codPaymentMode || !["cash", "upi", "card", "wallet"].includes(codPaymentMode)) {
+            return res.status(400).json({
+                  success: false,
+                  message: "Invalid payment mode. Must be: cash, upi, card, or wallet",
+                  error: true,
+            });
+      }
+
+      const order = await Order.findById(orderId);
+      if (!order) {
+            return res.status(404).json({
+                  success: false,
+                  message: "Order not found",
+                  error: true,
+            });
+      }
+
+      if (order.paymentMethod !== "cod") {
+            return res.status(400).json({
+                  success: false,
+                  message: "This order is not a COD order",
+                  error: true,
+            });
+      }
+
+      if (order.paymentStatus !== "cod_pending") {
+            return res.status(400).json({
+                  success: false,
+                  message: "COD payment already processed for this order",
+                  error: true,
+            });
+      }
+
+      order.paymentStatus = "cod_paid";
+      order.codPaymentMode = codPaymentMode;
+      await order.save();
+
+      return res.status(200).json({
+            success: true,
+            error: false,
+            message: "COD payment confirmed successfully",
+            data: order,
+      });
+});

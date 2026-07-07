@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, MapPin, Phone, KeyRound } from "lucide-react";
+import { Loader2, MapPin, Phone, KeyRound, Wallet } from "lucide-react";
 import type { IOrder } from "../../types/types";
 
 const RIDER_STATUS_LABEL: Record<string, string> = {
@@ -20,23 +20,33 @@ const RIDER_NEXT_ACTION: Record<string, string | null> = {
       delivered: null,
 };
 
+const COD_PAYMENT_OPTIONS = [
+      { value: "cash", label: "Cash", emoji: "💵" },
+      { value: "upi", label: "UPI", emoji: "📱" },
+      { value: "card", label: "Card", emoji: "💳" },
+      { value: "wallet", label: "Wallet", emoji: "👛" },
+];
+
 const CurrentOrderCard = ({
       order,
       onStatusUpdate,
       onGenerateOtp,
 }: {
       order: IOrder;
-      onStatusUpdate: (otp?: string) => Promise<void>;
+      onStatusUpdate: (otp?: string, codPaymentMode?: string) => Promise<void>;
       onGenerateOtp: () => Promise<void>;
 }) => {
       const [updating, setUpdating] = useState(false);
       const [generatingOtp, setGeneratingOtp] = useState(false);
       const [otp, setOtp] = useState("");
       const [otpSent, setOtpSent] = useState(false);
+      const [selectedCodMode, setSelectedCodMode] = useState<string | null>(null);
 
       const label = RIDER_STATUS_LABEL[order.status] ?? order.status.replace(/_/g, " ");
       const actionLabel = RIDER_NEXT_ACTION[order.status] ?? null;
       const needsOtp = order.status === "reached_delivery_location";
+      const isCod = order.paymentMethod === "cod";
+      const needsCodPayment = needsOtp && isCod;
 
       const handleGenerateOtp = async () => {
             setGeneratingOtp(true);
@@ -48,6 +58,12 @@ const CurrentOrderCard = ({
             }
       };
 
+      const isConfirmDisabled =
+            updating ||
+            (needsOtp && otpSent && otp.length !== 6) ||
+            (needsOtp && !otpSent) ||
+            (needsCodPayment && !selectedCodMode);
+
       return (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-5 space-y-4">
                   <div className="flex items-start justify-between gap-3">
@@ -55,12 +71,19 @@ const CurrentOrderCard = ({
                               <p className="font-bold text-gray-800">{order.restaurantName}</p>
                               <p className="text-xs text-gray-400 font-mono mt-0.5">#{order._id.slice(-8).toUpperCase()}</p>
                         </div>
-                        <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ring-1 text-center max-w-35 sm:max-w-none ${order.status === "rider_assigned"
-                              ? "bg-amber-50 text-amber-700 ring-amber-200"
-                              : "bg-indigo-50 text-indigo-700 ring-indigo-200"
-                              }`}>
-                              {label}
-                        </span>
+                        <div className="flex flex-col items-end gap-1.5">
+                              <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ring-1 text-center max-w-35 sm:max-w-none ${order.status === "rider_assigned"
+                                    ? "bg-amber-50 text-amber-700 ring-amber-200"
+                                    : "bg-indigo-50 text-indigo-700 ring-indigo-200"
+                                    }`}>
+                                    {label}
+                              </span>
+                              {isCod && (
+                                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                                          COD
+                                    </span>
+                              )}
+                        </div>
                   </div>
 
                   <div className="bg-gray-50 rounded-xl p-3 space-y-1.5 text-sm">
@@ -99,6 +122,16 @@ const CurrentOrderCard = ({
                         <span>₹{order.riderAmount}</span>
                   </div>
 
+                  {isCod && (
+                        <div className="flex justify-between text-sm text-gray-700 bg-orange-50 rounded-xl px-3 py-2.5 border border-orange-100">
+                              <div className="flex items-center gap-2">
+                                    <Wallet size={14} className="text-orange-500 shrink-0" />
+                                    <span>COD Amount to Collect</span>
+                              </div>
+                              <span className="font-bold text-orange-700">₹{order.totalAmount}</span>
+                        </div>
+                  )}
+
                   {needsOtp && (
                         <div className="space-y-3 bg-primary/10 rounded-xl p-4 border border-primary/20">
                               <div className="flex items-center gap-2">
@@ -130,15 +163,43 @@ const CurrentOrderCard = ({
                         </div>
                   )}
 
+                  {needsCodPayment && (
+                        <div className="space-y-2 bg-orange-50 rounded-xl p-4 border border-orange-200">
+                              <p className="text-sm font-semibold text-orange-700 flex items-center gap-2">
+                                    <Wallet size={15} className="shrink-0" />
+                                    How did the customer pay?
+                              </p>
+                              <div className="grid grid-cols-2 gap-2">
+                                    {COD_PAYMENT_OPTIONS.map((opt) => (
+                                          <button
+                                                key={opt.value}
+                                                onClick={() => setSelectedCodMode(opt.value)}
+                                                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition ${selectedCodMode === opt.value
+                                                      ? "bg-orange-500 text-white border-orange-500"
+                                                      : "bg-white text-gray-700 border-gray-200 hover:border-orange-300"
+                                                      }`}
+                                          >
+                                                <span>{opt.emoji}</span>
+                                                {opt.label}
+                                          </button>
+                                    ))}
+                              </div>
+                        </div>
+                  )}
+
                   {actionLabel && (
                         <button
-                              disabled={updating || (needsOtp && otpSent && otp.length !== 6) || (needsOtp && !otpSent)}
+                              disabled={isConfirmDisabled}
                               onClick={async () => {
                                     setUpdating(true);
                                     try {
-                                          await onStatusUpdate(needsOtp && otpSent ? otp : undefined);
+                                          await onStatusUpdate(
+                                                needsOtp && otpSent ? otp : undefined,
+                                                needsCodPayment && selectedCodMode ? selectedCodMode : undefined,
+                                          );
                                           setOtp("");
                                           setOtpSent(false);
+                                          setSelectedCodMode(null);
                                     } finally {
                                           setUpdating(false);
                                     }

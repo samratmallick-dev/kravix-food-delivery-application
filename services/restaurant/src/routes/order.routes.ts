@@ -7,6 +7,7 @@ import {
 import {
       assignRiderToOrder,
       cancelMyOrder,
+      confirmCodPayment,
       createOrder,
       fetchOrderForPayment,
       fetchRestaurantOrders,
@@ -39,6 +40,7 @@ router.route("/internal/current").get(getCurrentOrdersForRiders);
 router.route("/internal/status").patch(updateOrderStatusByRider);
 router.route("/internal/delivery-history").get(getDeliveredOrdersByRider);
 router.route("/internal/set-otp").patch(setOrderOtp);
+router.route("/internal/cod-payment").patch(confirmCodPayment);
 router.route("/internal/:orderId").get(getOrderByIdInternal);
 
 router

@@ -444,7 +444,7 @@ export const updateOrderStatus = TryCatch(
                         error: true,
                   });
 
-            const { orderId, latitude, longitude, otp } = req.body;
+            const { orderId, latitude, longitude, otp, codPaymentMode } = req.body;
 
             const [riderLng, riderLat] = rider.location.coordinates;
             const effectiveLat = latitude !== undefined ? Number(latitude) : riderLat;
@@ -485,6 +485,24 @@ export const updateOrderStatus = TryCatch(
                   );
 
                   if (data.data?.status === "delivered") {
+                        if (
+                              data.data?.paymentMethod === "cod" &&
+                              data.data?.paymentStatus === "cod_pending"
+                        ) {
+                              if (!codPaymentMode || !["cash", "upi", "card", "wallet"].includes(codPaymentMode)) {
+                                    return res.status(400).json({
+                                          success: false,
+                                          message: "Payment mode is required for COD orders",
+                                          error: true,
+                                    });
+                              }
+                              await axios.patch(
+                                    `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/cod-payment`,
+                                    { orderId, codPaymentMode },
+                                    { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } },
+                              );
+                        }
+
                         await Rider.findOneAndUpdate(
                               { _id: rider._id },
                               {

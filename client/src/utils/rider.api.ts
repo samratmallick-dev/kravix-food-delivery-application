@@ -96,10 +96,10 @@ export const fetchCurrentOrder = (): Promise<ApiResponse<any>> =>
             method: "GET",
       });
 
-export const updateOrderStatusByRider = (orderId: string, latitude?: number, longitude?: number, otp?: string): Promise<ApiResponse<any>> =>
+export const updateOrderStatusByRider = (orderId: string, latitude?: number, longitude?: number, otp?: string, codPaymentMode?: string): Promise<ApiResponse<any>> =>
       request<ApiResponse<any>>(`${riderBaseUrl}/orders/status`, {
             method: "PATCH",
-            body: JSON.stringify({ orderId, latitude, longitude, otp }),
+            body: JSON.stringify({ orderId, latitude, longitude, otp, codPaymentMode }),
       });
 
 export const fetchDeliveryHistory = (): Promise<ApiResponse<any>> =>

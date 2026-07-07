@@ -32,7 +32,7 @@ const Checkout = () => {
       const [loadingRazorpay, setLoadingRazorpay] = useState(false);
       const [loadingStripe, setLoadingStripe] = useState(false);
       const [creatingOrders, setCreatingOrder] = useState(false);
-      const [selectedPayment, setSelectedPayment] = useState<"razorpay" | "stripe" | null>(null);
+      const [selectedPayment, setSelectedPayment] = useState<"razorpay" | "stripe" | "cod" | null>(null);
       const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
       const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -266,6 +266,25 @@ const Checkout = () => {
                   toast.error("Something went wrong! Please refresh the page.");
             } finally {
                   setLoadingStripe(false);
+            }
+      };
+
+      const payWithCOD = async () => {
+            if (!selectedAddressId) return;
+            setCreatingOrder(true);
+            try {
+                  const data = await apiCreateOrder({
+                        paymentMethod: "cod",
+                        addressId: selectedAddressId,
+                        couponCode: appliedCoupon?.code || undefined,
+                  });
+                  storage.removeAppliedCoupon();
+                  navigate("/order-success/" + data.data.orderId);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+            } catch (err: any) {
+                  toast.error(err.message || "Failed to place COD order");
+            } finally {
+                  setCreatingOrder(false);
             }
       };
 
@@ -723,10 +742,30 @@ const Checkout = () => {
                                                       </div>
                                                 </div>
                                           </div>
+
+                                          <div
+                                                onClick={() => setSelectedPayment("cod")}
+                                                className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition ${selectedPayment === "cod" ? "border-primary bg-primary/5" : "border-border hover:border-gray-300"}`}
+                                          >
+                                                <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0">
+                                                      {selectedPayment === "cod" && <span className="w-2 h-2 rounded-full bg-primary" />}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                      <span className="text-lg">💵</span>
+                                                      <div>
+                                                            <p className="text-sm font-medium text-gray-800">Cash on Delivery</p>
+                                                            <p className="text-xs text-gray-400">Pay cash upon arrival</p>
+                                                      </div>
+                                                </div>
+                                          </div>
                                     </div>
 
                                     <button
-                                          onClick={() => { selectedPayment === "razorpay" ? payWithRazorpay() : payWithStripe() }}
+                                          onClick={() => {
+                                                if (selectedPayment === "razorpay") payWithRazorpay();
+                                                else if (selectedPayment === "stripe") payWithStripe();
+                                                else if (selectedPayment === "cod") payWithCOD();
+                                          }}
                                           disabled={isBlocked || !selectedAddressId || !selectedPayment || loadingRazorpay || loadingStripe || creatingOrders}
                                           className="mt-4 w-full py-3 rounded-xl font-semibold text-white transition bg-primary hover:bg-primary/90 disabled:bg-gray-300 disabled:cursor-not-allowed active:scale-95"
                                     >
@@ -738,7 +777,9 @@ const Checkout = () => {
                                           ) : isBlocked ? "Account blocked — cannot place orders"
                                                 : !selectedAddressId ? "Select a delivery address"
                                                       : !selectedPayment ? "Select a payment method"
-                                                            : `Pay ₹${total} via ${selectedPayment === "razorpay" ? "Razorpay" : "Stripe"}`}
+                                                            : selectedPayment === "cod"
+                                                                  ? `Place Order ₹${total} (Pay on Delivery)`
+                                                                  : `Pay ₹${total} via ${selectedPayment === "razorpay" ? "Razorpay" : "Stripe"}`}
                                     </button>
                               </div>
                         </div>

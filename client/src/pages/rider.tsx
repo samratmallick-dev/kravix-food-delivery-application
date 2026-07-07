@@ -197,7 +197,7 @@ const RiderDashboard = () => {
             }
       };
 
-      const handleStatusUpdate = async (otp?: string) => {
+      const handleStatusUpdate = async (otp?: string, codPaymentMode?: string) => {
             if (!currentOrder) return;
             try {
                   let lat = location?.latitude;
@@ -210,7 +210,7 @@ const RiderDashboard = () => {
                         lng = fresh.coords.longitude;
                   } catch { }
 
-                  const data = await updateOrderStatusByRider(currentOrder._id, lat, lng, otp);
+                  const data = await updateOrderStatusByRider(currentOrder._id, lat, lng, otp, codPaymentMode);
                   toast.success(data.message || "Status updated!");
 
                   const nextStatus = RIDER_ORDER_TRANSITIONS[currentOrder.status];

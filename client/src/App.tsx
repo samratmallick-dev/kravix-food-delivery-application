@@ -27,6 +27,7 @@ const OrderSuccess = lazy(() => import("./pages/orderSuccess"));
 const CustomerOrder = lazy(() => import("./pages/customerOrder"));
 const OrderDetails = lazy(() => import("./pages/orderDetails"));
 const RiderDashboard = lazy(() => import("./pages/rider"));
+const CodOrderSuccess = lazy(() => import("./pages/codOrderSuccess"));
 const AdminLayout = lazy(() => import("./admin/components/AdminLayout"));
 const AdminLogin = lazy(() => import("./admin/pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./admin/pages/AdminDashboard"));
@@ -79,6 +80,7 @@ const App = () => {
                                           <Route path="/checkout" element={<Checkout />} />
                                           <Route path="/payment-success/:paymentId" element={<PaymentSuccess />} />
                                           <Route path="/ordersuccess" element={<OrderSuccess />} />
+                                          <Route path="/order-success/:orderId" element={<CodOrderSuccess />} />
                                           <Route path="/orders" element={<CustomerOrder />} />
                                           <Route path="/orders/:id" element={<OrderDetails />} />
                                           <Route path="/select-role" element={<SelectRole />} />

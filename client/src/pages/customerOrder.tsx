@@ -312,6 +312,17 @@ const OrderRow = ({ order, onClick, onCancel }: { order: IOrder; onClick: () => 
 
                   <p className="mt-2 text-xs text-gray-400 truncate">{order.items.map(i => i.name).join(", ")}</p>
 
+                  {order.paymentMethod === "cod" && (
+                        <div className="mt-2">
+                              {order.paymentStatus === "cod_paid"
+                                    ? <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">COD — Paid</span>
+                                    : order.paymentStatus === "cod_failed"
+                                          ? <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">COD — Failed</span>
+                                          : <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">COD — Pay on Delivery</span>
+                              }
+                        </div>
+                  )}
+
                   <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
                         <div className="flex items-center gap-3 text-xs text-gray-500">
                               <span className="flex items-center gap-1">

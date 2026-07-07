@@ -4,7 +4,7 @@ import type { ApiResponse, SuccessResponse } from "../types/api.types";
 import type { IOrder } from "../types/types";
 
 export interface CreateOrderPayload {
-      paymentMethod: string;
+      paymentMethod: "razorpay" | "stripe" | "cod";
       addressId: string;
       couponCode?: string;
 }

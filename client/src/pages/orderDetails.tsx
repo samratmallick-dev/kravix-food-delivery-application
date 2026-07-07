@@ -561,9 +561,16 @@ const OrderDetails = () => {
                               <h1 className="text-lg font-bold text-gray-800 truncate">{order.restaurantName}</h1>
                               <p className="text-xs text-gray-400 mt-0.5">#{order._id.slice(-8).toUpperCase()} · {date}</p>
                         </div>
-                        <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${order.paymentStatus === "paid" ? "bg-green-100 text-green-700" : order.paymentStatus === "failed" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
-                              {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
-                        </span>
+                        {(() => {
+                              if (order.paymentMethod === "cod") {
+                                    if (order.paymentStatus === "cod_paid") return <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-700">COD — Paid</span>;
+                                    if (order.paymentStatus === "cod_failed") return <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700">COD — Failed</span>;
+                                    return <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-100 text-orange-700">COD — Pay on Delivery</span>;
+                              }
+                              if (order.paymentStatus === "paid") return <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Paid</span>;
+                              if (order.paymentStatus === "failed") return <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700">Payment Failed</span>;
+                              return <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700">Payment Pending</span>;
+                        })()}
                   </div>
 
                   <StatusStepper status={order.status} />
@@ -645,11 +652,18 @@ const OrderDetails = () => {
                         <div className="bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 shadow-sm flex items-center gap-3">
                               {order.paymentMethod === "razorpay"
                                     ? <Wallet size={18} className="text-gray-400 shrink-0" />
-                                    : <CreditCard size={18} className="text-gray-400 shrink-0" />
+                                    : order.paymentMethod === "stripe"
+                                          ? <CreditCard size={18} className="text-gray-400 shrink-0" />
+                                          : <span className="text-lg shrink-0">💵</span>
                               }
                               <div className="min-w-0">
                                     <p className="text-xs text-gray-400">Payment</p>
-                                    <p className="text-sm font-semibold text-gray-700 capitalize truncate">{order.paymentMethod}</p>
+                                    <p className="text-sm font-semibold text-gray-700 capitalize truncate">
+                                          {order.paymentMethod === "cod" ? "Cash on Delivery" : order.paymentMethod}
+                                    </p>
+                                    {order.paymentMethod === "cod" && order.codPaymentMode && (
+                                          <p className="text-xs text-gray-400 capitalize">Collected via {order.codPaymentMode}</p>
+                                    )}
                               </div>
                         </div>
                         <div className="bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 shadow-sm flex items-center gap-3">

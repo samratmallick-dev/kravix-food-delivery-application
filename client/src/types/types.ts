@@ -127,13 +127,15 @@ export interface IOrder {
 
       status: | "placed" | "accepted" | "preparing" | "ready_for_rider" | "rider_assigned" | "picked_up" | "out_for_delivery" | "reached_delivery_location" | "delivered" | "cancelled";
 
-      paymentMethod: "razorpay" | "stripe";
+      paymentMethod: "razorpay" | "stripe" | "cod";
 
-      paymentStatus: "pending" | "paid" | "failed";
+      paymentStatus: "pending" | "paid" | "failed" | "cod_pending" | "cod_paid" | "cod_failed";
+
+      codPaymentMode?: "cash" | "upi" | "card" | "wallet" | null;
 
       deliveryOtp?: string | null;
 
-      expiresAt: Date;
+      expiresAt?: Date;
 
       createdAt: Date;
       updatedAt: Date;
