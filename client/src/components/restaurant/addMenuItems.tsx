@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { addMenuItem } from "../../utils/menu.api";
+import { compressImage } from "../../utils/compressImage";
 import { ImagePlus } from "lucide-react";
 import { VscLoading } from "react-icons/vsc";
 
@@ -39,7 +40,7 @@ const AddMenuItems = (
                         name,
                         description,
                         price,
-                        image: image as File,
+                        image: await compressImage(image as File),
                         isVeg,
                         category
                   });

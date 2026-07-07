@@ -7,6 +7,7 @@ import { Edit, SaveAll, ImagePlus } from "lucide-react";
 import { useAppData } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import { storage } from "../../utils/secureStorage";
+import { compressImage } from "../../utils/compressImage";
 
 interface props {
       restaurant: IRestaurant;
@@ -48,7 +49,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
                   const data = await updateRestaurant({
                         name: name,
                         description: description,
-                        image: imageFile || undefined
+                        image: imageFile ? await compressImage(imageFile) : undefined
                   });
                   onUpdate(data.data);
                   toast.success(data.message || "Profile updated");

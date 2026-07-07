@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { ImagePlus, Loader2, MapPin, Phone, Store, FileText } from "lucide-react";
 import { storage } from "../../utils/secureStorage";
 import { addRestaurant as apiAddRestaurant } from "../../utils/restaurant.api";
+import { compressImage } from "../../utils/compressImage";
 
 interface props {
       fetchMyRestaurant: () => Promise<void>;
@@ -36,7 +37,7 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
                         name,
                         description,
                         phone,
-                        image: image as File,
+                        image: await compressImage(image as File),
                         latitude: location.latitude,
                         longitude: location.longitude,
                         formattedAddress: location.formattedAddress
