@@ -60,6 +60,7 @@ export const updateRiderProfile = TryCatch(
                               headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
                               maxContentLength: Infinity,
                               maxBodyLength: Infinity,
+                              timeout: 120000,
                         },
                   );
                   updates.picture = uploadResult.url;
@@ -142,7 +143,7 @@ export const addRiderProfile = TryCatch(
                         headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
                         maxContentLength: Infinity,
                         maxBodyLength: Infinity,
-                        timeout: 25000,
+                        timeout: 120000,
                   },
             );
 
