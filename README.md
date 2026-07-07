@@ -1,4 +1,4 @@
-<p align="center">
+﻿<p align="center">
   <img src="./client/public/apple-touch-icon.png" width="20%" alt="Kravix Logo" />
 </p>
 
@@ -163,11 +163,30 @@ kravix/
  │    ├── vite.config.ts
  │    └── package.json
  ├── kravix_ai/                        # ── AI Microservice (FastAPI + LoRA / PyTorch) ──
- │    ├── api_server.py                # Port 5500: FastAPI chat completions server (mock fallback)
+ │    ├── api_server.py                # Port 5500: FastAPI server — intent engine, session mgmt, ML/mock routing
+ │    ├── model_manager.py             # LoRA model loader and inference wrapper (ML / mock toggle)
+ │    ├── session_store.py             # Redis + LRU session stores with automatic fallback
+ │    ├── circuit_breaker.py           # Thread-safe circuit breaker for model and MongoDB calls
+ │    ├── retry_manager.py             # Token-budget retry logic with exponential backoff
+ │    ├── mongo_manager.py             # MongoDB feedback persistence manager
+ │    ├── health_monitor.py            # /live, /ready, /health endpoint logic
+ │    ├── observability.py             # Request metrics aggregation and /metrics payload builder
+ │    ├── memory_watchdog.py           # RSS memory thresholds, degraded-mode trigger, diagnostics
+ │    ├── request_guard.py             # Concurrency limiter middleware and rate limiter setup
+ │    ├── timeout_middleware.py        # Per-request configurable timeout middleware
+ │    ├── startup_validator.py         # Environment variable validation on startup
+ │    ├── structured_logger.py         # JSON structured logging with correlation ID context vars
+ │    ├── error_handling.py            # Custom exception hierarchy and FastAPI exception handlers
+ │    ├── export_feedback_to_jsonl.py  # Script to export MongoDB feedback into training JSONL
  │    ├── dataset_generator.py         # Script to auto-generate fine-tuning instruction datasets
  │    ├── train_lora.py                # Script to run PEFT/LoRA training on Llama-3-8B-bnb-4bit
+ │    ├── retrain.sh                   # Shell script orchestrating the full feedback → retrain pipeline
+ │    ├── RETRAINING.md                # Guide explaining the offline retraining pipeline
  │    ├── kravix_training.jsonl        # Fine-tuning QA dataset containing specialized intents
  │    ├── evaluation_test_cases.json   # Intent-specific validation tests for role/intent responses
+ │    ├── requirements.prod.txt        # Minimal CPU-safe dependencies (FastAPI, Redis, pymongo, psutil)
+ │    ├── requirements.txt             # Full ML stack (PyTorch, PEFT, TRL, bitsandbytes)
+ │    ├── Dockerfile                   # Multi-stage Docker image for the AI service
  │    └── taxonomy_and_entities.md     # Document detailing taxonomy, entities, and Bengali mapping
  └── services/                         # ── Backend Microservices ──
       ├── admin/                       # Port 6001: Moderation, verification, and oversight
@@ -221,9 +240,17 @@ kravix/
 ### 🤖 AI Assistant Features
 - **Role-Aware Chatbot Context**: Customizes interactions based on the active session role (`customer`, `seller`, `rider`, or `admin`).
 - **Context Injection Pipeline**: Fetches recent orders and active menu listings dynamically to address context-sensitive queries.
-- **Intent Taxonomy Classification**: Recognizes key intents like order tracking, cancellation safety checks, payment failures, regional Bengali food terminology mappings (e.g., "bhat" -> rice, "mach" -> fish), and delivery/OTP instructions.
-- **Lightweight Mock Fallback**: Includes a robust heuristic-based mock fallback logic when running on standard CPUs or environments without CUDA GPU support.
-- **LoRA Fine-Tuning Pipeline**: Ships with tools for training datasets generation (`dataset_generator.py`), PyTorch training/fine-tuning scripts (`train_lora.py`) using PEFT/TRL on Llama 3 8B, and evaluation parameters.
+- **Intent Taxonomy Classification**: Recognizes 20 intent classes including order tracking, cancellation safety checks, payment failures, regional Bengali food terminology (e.g., "bhat" → rice, "mach" → fish), and delivery/OTP instructions.
+- **Persistent Conversation Sessions**: Multi-turn conversation history stored in Redis (with LRU in-memory fallback) with configurable TTL and automatic session eviction.
+- **Redis + LRU Fallback Session Store**: Automatically switches to an in-process LRU store when Redis is unavailable, with health-check-based recovery back to Redis.
+- **Circuit Breaker Protection**: Thread-safe circuit breakers guard both the ML model and MongoDB connections, preventing cascading failures.
+- **Rate Limiting & Concurrency Guards**: Per-endpoint rate limits (`slowapi`) and a configurable max-concurrent-requests middleware prevent overload.
+- **Memory Watchdog**: Monitors RSS memory against configurable warn/degraded/critical thresholds; triggers session cleanup or degraded-mode responses under pressure.
+- **Structured Observability**: JSON structured logging with per-request correlation IDs, a `/metrics` endpoint, and `/live` + `/ready` + `/health` probes.
+- **User Feedback Collection**: Optional `/feedback` endpoint (thumbs up/down) persists rated exchanges to MongoDB `ai_feedback` collection for offline retraining.
+- **Offline Retraining Pipeline**: `retrain.sh` orchestrates exporting positive feedback → appending to `kravix_training.jsonl` → running `train_lora.py` on a GPU machine to produce a new LoRA checkpoint.
+- **Lightweight Mock Fallback**: Heuristic-based dispatcher handles all 20 intents on CPU-only environments without any ML dependencies.
+- **LoRA Fine-Tuning Pipeline**: Ships with `dataset_generator.py`, `train_lora.py` (PEFT/TRL on Llama 3 8B 4-bit), and `evaluation_test_cases.json` for validation.
 
 ---
 
@@ -242,6 +269,7 @@ kravix/
 - **Authentication**: JWT, Google OAuth 2.0 (`googleapis`)
 - **AI Integrations**: Google Generative AI (`@google/generative-ai` — Gemini 2.0 Flash)
 - **AI & Fine-Tuning Stack**: Python 3.11, FastAPI, PyTorch, Transformers, PEFT, TRL, bitsandbytes, datasets
+- **AI Resilience**: Circuit breakers, Redis + LRU session stores with auto-fallback, `slowapi` rate limiting, `psutil` memory watchdog, structured JSON logging
 - **Payment Gateways**: Stripe, Razorpay
 - **Image Storage**: Cloudinary SDK
 - **Scheduling**: `node-cron` (Analytics snapshots)
@@ -301,10 +329,10 @@ python -m venv venv
 # On Linux/macOS:
 source venv/bin/activate
 
-# Install requirements (mock-ready, standard FastAPI server):
+# Install requirements (mock-ready, CPU-safe — FastAPI, Redis, pymongo, psutil, slowapi):
 pip install -r requirements.prod.txt
 
-# Or for full ML training/inference (requires CUDA/GPU):
+# Or for full ML training/inference (requires CUDA GPU, ≥24 GB VRAM):
 # pip install -r requirements.txt
 
 cd ..
@@ -325,8 +353,8 @@ Start the message broker (RabbitMQ) and cache (Redis):
 # Start RabbitMQ container with management UI
 docker run -d --name kravix-rabbitmq \
   -p 5672:5672 -p 15672:15672 \
-  -e RABBITMQ_DEFAULT_USER=admin \
-  -e RABBITMQ_DEFAULT_PASS=admin123 \
+  -e RABBITMQ_DEFAULT_USER=<rabbitmq-user> \
+  -e RABBITMQ_DEFAULT_PASS=<rabbitmq-password> \
   rabbitmq:3-management
 
 # Start Redis container
@@ -355,7 +383,6 @@ cd kravix_ai
 .\venv\Scripts\activate
 python api_server.py
 ```
-```
 
 ---
 
@@ -378,7 +405,7 @@ VITE_API_URL_ADMIN=http://localhost:6001/api/v1/admin
 VITE_API_URL_ANALYTICS=http://localhost:6002/api/v1/analytics
 VITE_COUPON_BASE_URL=http://localhost:9000/api/v1/coupons
 VITE_REVIEW_BASE_URL=http://localhost:9000/api/v1/reviews
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_yourstripekeyhere
+VITE_STRIPE_PUBLISHABLE_KEY=<your-stripe-publishable-key>
 VITE_GOOGLE_CLIENT_ID=your-google-client-id-here.apps.googleusercontent.com
 VITE_INTERNAL_KEY=your-internal-service-key-here
 VITE_API_URL_AI=http://localhost:8888/api/v1/ai
@@ -396,7 +423,7 @@ JWT_SECRET=your-shared-jwt-secret-string
 INTERNAL_SERVICE_KEY=your-internal-service-key-here
 GOOGLE_CLIENT_ID=your-google-client-id-here.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret-here
-RABITMQ_URL=amqp://admin:admin123@localhost:5672
+RABITMQ_URL=amqp://<rabbitmq-user>:<rabbitmq-password>@localhost:5672
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
 ```
 
@@ -407,7 +434,7 @@ MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
 DB_NAME=kravix_db
 JWT_SECRET=your-shared-jwt-secret-string
 INTERNAL_SERVICE_KEY=your-internal-service-key-here
-RABITMQ_URL=amqp://admin:admin123@localhost:5672
+RABITMQ_URL=amqp://<rabbitmq-user>:<rabbitmq-password>@localhost:5672
 UTILS_SERVICE_URI=http://localhost:8888
 REALTIME_SOCKET_SERVICE_URI=http://localhost:9999
 PAYMENT_QUEUE=payment_event
@@ -425,7 +452,7 @@ MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
 DB_NAME=kravix_db
 JWT_SECRET=your-shared-jwt-secret-string
 INTERNAL_SERVICE_KEY=your-internal-service-key-here
-RABITMQ_URL=amqp://admin:admin123@localhost:5672
+RABITMQ_URL=amqp://<rabbitmq-user>:<rabbitmq-password>@localhost:5672
 REALTIME_SOCKET_SERVICE_URI=http://localhost:9999
 ORDER_READY_QUEUE=order_ready_queue
 RIDER_QUEUE=rider_queue
@@ -440,9 +467,9 @@ MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
 DB_NAME=kravix_db
 JWT_SECRET=your-shared-jwt-secret-string
 INTERNAL_SERVICE_KEY=your-internal-service-key-here
-ADMIN_EMAIL=admin@kravix.com
-ADMIN_PASSWORD=your-secure-admin-password
-RABITMQ_URL=amqp://admin:admin123@localhost:5672
+ADMIN_EMAIL=<admin-email>
+ADMIN_PASSWORD=<admin-password>
+RABITMQ_URL=amqp://<rabbitmq-user>:<rabbitmq-password>@localhost:5672
 ADMIN_EVENT_QUEUE=admin_event_queue
 ALLOWED_ORIGINS=http://localhost:5173
 ```
@@ -454,7 +481,7 @@ MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
 DB_NAME=kravix_db
 JWT_SECRET=your-shared-jwt-secret-string
 INTERNAL_SERVICE_KEY=your-internal-service-key-here
-RABITMQ_URL=amqp://admin:admin123@localhost:5672
+RABITMQ_URL=amqp://<rabbitmq-user>:<rabbitmq-password>@localhost:5672
 REDIS_URL=redis://localhost:6379
 ALLOWED_ORIGINS=http://localhost:5173
 ```
@@ -462,7 +489,7 @@ ALLOWED_ORIGINS=http://localhost:5173
 #### Email Service (`services/email/.env`)
 ```env
 PORT=8500
-RABBITMQ_URL=amqp://admin:admin123@localhost:5672
+RABBITMQ_URL=amqp://<rabbitmq-user>:<rabbitmq-password>@localhost:5672
 EMAIL_QUEUE=email_queue
 GMAIL_CLIENT_ID=your-gmail-client-id
 GMAIL_CLIENT_SECRET=your-gmail-client-secret
@@ -477,14 +504,14 @@ CLIENT_URL=http://localhost:5173
 ```env
 PORT=8888
 INTERNAL_SERVICE_KEY=your-internal-service-key-here
-RABITMQ_URL=amqp://admin:admin123@localhost:5672
+RABITMQ_URL=amqp://<rabbitmq-user>:<rabbitmq-password>@localhost:5672
 PAYMENT_QUEUE=payment_event
 CLOUD_NAME=your-cloudinary-cloud-name
 CLOUD_API_KEY=your-cloudinary-api-key
 CLOUD_API_SECRET=your-cloudinary-api-secret
-RAZORPAY_API_KEY=rzp_test_yourrazorpaykeyid
-RAZORPAY_API_KEY_SECRET=yourrazorpaysecret
-STRIPE_SECRET_KEY=sk_test_yourstripesecretkey
+RAZORPAY_API_KEY=<your-razorpay-key-id>
+RAZORPAY_API_KEY_SECRET=<your-razorpay-key-secret>
+STRIPE_SECRET_KEY=<your-stripe-secret-key>
 CLIENT_URL=http://localhost:5173
 RESTAURANT_BASE_URL=http://localhost:9000
 ALLOWED_ORIGINS=http://localhost:5173
@@ -497,6 +524,26 @@ AI_MICROSERVICE_URL=http://localhost:5500
 PORT=9999
 JWT_SECRET=your-shared-jwt-secret-string
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+```
+
+#### Kravix AI Service (`kravix_ai/.env`)
+```env
+MOCK_MODE=false
+ENABLE_FEEDBACK=true
+MONGODB_URI=<mongodb-connection-string>
+DB_NAME=kravix_db
+REDIS_URL=redis://localhost:6379
+SESSION_TTL_SECONDS=1800
+MAX_SESSIONS=500
+MAX_CONCURRENT_REQUESTS=20
+REQUEST_TIMEOUT_SECONDS=15
+MEMORY_WARN_MB=350
+MEMORY_DEGRADED_MB=420
+MEMORY_CRITICAL_MB=470
+RATE_LIMIT_CHAT=20/minute
+RATE_LIMIT_FEEDBACK=60/minute
+RETRY_BUDGET_PER_MINUTE=50
+APP_VERSION=1.0.0
 ```
 
 ---
@@ -595,7 +642,12 @@ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
 - `POST /ai/chat` - Proxies chat completions to the Kravix AI Service while injecting order/menu context data.
 
 ### Kravix AI Service (`:5500`)
-- `POST /chat` - Returns fine-tuned or mock chat completions matching user message, role, and context.
+- `POST /chat` - Returns fine-tuned or mock chat completions. Accepts `message`, `userId`, `role`, and optional `contextData` (orders, menu items). Maintains multi-turn session history per user.
+- `POST /feedback` - Stores a thumbs-up (`1`) or thumbs-down (`-1`) rating for a message/reply pair into MongoDB. Requires `ENABLE_FEEDBACK=true` and `MONGODB_URI`.
+- `GET /health` - Full health snapshot including model mode, session store type, MongoDB status, memory usage, and circuit breaker states.
+- `GET /ready` - Kubernetes-style readiness probe; runs a live inference probe when ML mode is active.
+- `GET /live` - Lightweight liveness probe.
+- `GET /metrics` - Aggregated request metrics (latency percentiles, error rates, active sessions, retry budget).
 
 ### Realtime Service (`:9999/api/v1/socket`)
 - `POST /events` - Emits a Socket.IO event to a room internally (Internal Microservice Key Authentication).

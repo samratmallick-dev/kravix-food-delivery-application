@@ -391,7 +391,7 @@ class IntentClassifier:
         Intent.GREETING: [r"\b(hi|hello|hey|hola|howdy|wassup|what's up)\b", r"\b(how are you)\b"],
         Intent.FOOD_SEARCH: [r"\b(food|hungry|spicy|healthy|diet|suggest|recommend|craving|biryani|pizza|burger|dessert|sweet|veg|vegetarian|price|cheap|affordable|menu)\b"],
         Intent.RESTAURANT_SEARCH: [r"\b(find restaurant|nearby|near me|restaurants|verified|closed|open)\b"],
-        Intent.ORDER_TRACKING: [r"\b(track|where is my order|order status|my order|status)\b"],
+        Intent.ORDER_TRACKING: [r"\b(where is my order|order status|my order|status)\b", r"\btrack(?!.*\bearning\b)(?!.*\bpayout\b)\b"],
         Intent.ORDER_CANCELLATION: [r"\b(cancel|stop order)\b"],
         Intent.REORDER: [r"\b(reorder|order again|same order|repeat order)\b"],
         Intent.PAYMENT: [r"\b(payment|pay|stripe|razorpay|checkout|deducted|charged)\b"],
@@ -399,13 +399,13 @@ class IntentClassifier:
         Intent.COUPON: [r"\b(coupon|discount|promo|offer|voucher)\b"],
         Intent.DELIVERY: [r"\b(otp|one time password|handoff|delivery time|how long|eta|arrive|delivery fee|delivery charge)\b"],
         Intent.PROFILE: [r"\b(login|sign in|sign up|register|account|password|email verification|blocked|banned|switch role)\b"],
-        Intent.SELLER_DASHBOARD: [r"\b(revenue|earnings|sales|analytics|chart|open restaurant|close restaurant|accept order|create coupon)\b"],
+        Intent.SELLER_DASHBOARD: [r"\b(revenue|sales|analytics|chart|open restaurant|close restaurant|accept order|create coupon)\b"],
         Intent.SELLER_MENU: [r"\b(add item|add menu|new dish|add food)\b"],
-        Intent.RIDER_DASHBOARD: [r"\b(online|offline|go online|availability|accept|job|delivery request)\b"],
+        Intent.RIDER_DASHBOARD: [r"\b(online|offline|go online|availability|accept|job|delivery request|riding)\b"],
         Intent.RIDER_EARNINGS: [r"\b(earning|payout|income|money)\b"],
         Intent.ADMIN_DASHBOARD: [r"\b(verify|approve|analytics|export|csv|report|cancel order|stuck order)\b"],
         Intent.ADMIN_USERS: [r"\b(block|unblock|user)\b"],
-        Intent.HELP: [r"\b(help|what can you do|who are you|capabilities)\b"],
+        Intent.HELP: [r"\b(help|what can you do|who are you|capabilities|tip|tips)\b"],
         Intent.OFF_TOPIC: [r"\b(history|science|politics|weather|president|capital of|movie|actor)\b"]
     }
 
@@ -635,7 +635,6 @@ async def chat_endpoint(req: ChatRequest):
             logger.warning("Session read failed for %s: %s — starting fresh", req.userId, exc)
             history = []
             
-        # Optional: Apply conversation resolver on the message using history
         safe_message = ConversationResolver.resolve(history, safe_message)
         
         history.append({"role": "user", "content": safe_message})
