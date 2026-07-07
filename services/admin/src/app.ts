@@ -1,5 +1,4 @@
-import "dotenv/config";
-import express from "express";
+import express, { ErrorRequestHandler } from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors/cors.js";
 
@@ -24,5 +23,14 @@ import adminRouter from "./routes/admin.routes.js";
 app.use("/api/v1/admin", adminRouter);
 
 app.get("/", (_req, res) => res.send("Admin service running"));
+
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+      res.status(err.status ?? 500).json({
+            success: false,
+            message: err.message ?? "Internal server error",
+            error: true,
+      });
+};
+app.use(errorHandler);
 
 export { app };

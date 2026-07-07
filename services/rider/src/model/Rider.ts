@@ -78,7 +78,7 @@ const riderSchema: Schema = new Schema<IRider>(
             lastActiveAt: {
                   type: Date,
                   required: true,
-                  default: Date.now(),
+                  default: Date.now,
             },
             totalEarnings: {
                   type: Number,

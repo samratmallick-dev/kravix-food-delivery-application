@@ -58,9 +58,6 @@ export const updateRiderProfile = TryCatch(
                         { image: fileBuffer },
                         {
                               headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
-                              maxContentLength: Infinity,
-                              maxBodyLength: Infinity,
-                              timeout: 120000,
                         },
                   );
                   updates.picture = uploadResult.url;
@@ -147,12 +144,7 @@ export const addRiderProfile = TryCatch(
                   const { data: uploadResult } = await axios.post(
                         `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
                         { image: fileBuffer },
-                        {
-                              headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
-                              maxContentLength: Infinity,
-                              maxBodyLength: Infinity,
-                              timeout: 120000,
-                        },
+                        { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } },
                   );
                   resolvedPictureUrl = uploadResult.url;
             }
@@ -529,9 +521,7 @@ export const updateOrderStatus = TryCatch(
                               .patch(
                                     `${process.env.RESTAURANT_SERVICE_URI}/api/v1/orders/internal/set-otp`,
                                     { orderId, otp: null },
-                                    {
-                                          headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
-                                    },
+                                    { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } },
                               )
                               .catch(() => { });
                   }

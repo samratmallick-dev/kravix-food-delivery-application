@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express from "express";
+import express, {ErrorRequestHandler} from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors.js";
 import { connectRabbitMQ } from "./config/rabitmq.js";
@@ -30,6 +30,15 @@ import aiRoutes from "./routes/ai.routes.js";
 app.use("/api/v1/cloudinary", cloudinaryRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/ai", aiRoutes);
+
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+      res.status(err.status ?? 500).json({
+            success: false,
+            message: err.message ?? "Internal server error",
+            error: true,
+      });
+};
+app.use(errorHandler);
 
 app.listen(Port, () => {
       console.log(

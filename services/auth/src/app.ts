@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express from "express";
+import express, {ErrorRequestHandler} from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors/cors.js";
 
@@ -26,5 +26,14 @@ app.use("/api/v1/auth", authRouter);
 app.get("/", (req, res) => {
       res.send("Hello World!");
 });
+
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+      res.status(err.status ?? 500).json({
+            success: false,
+            message: err.message ?? "Internal server error",
+            error: true,
+      });
+};
+app.use(errorHandler);
 
 export { app };

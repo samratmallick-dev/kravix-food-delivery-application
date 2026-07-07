@@ -1,4 +1,4 @@
-import express from "express";
+import express, { ErrorRequestHandler } from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors.js";
 
@@ -22,5 +22,14 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 import socketInternalRoute from "./routes/internal.routes.js";
 app.use("/api/v1/socket", socketInternalRoute);
+
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+      res.status(err.status ?? 500).json({
+            success: false,
+            message: err.message ?? "Internal server error",
+            error: true,
+      });
+};
+app.use(errorHandler);
 
 export { app };
