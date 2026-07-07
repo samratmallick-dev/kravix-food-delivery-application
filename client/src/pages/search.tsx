@@ -261,13 +261,13 @@ const SearchPage = () => {
                                                             {item.description && (
                                                                   <p className="text-xs text-gray-500 line-clamp-2">{item.description}</p>
                                                             )}
-                                                            <div className="flex items-center justify-between mt-auto pt-2">
-                                                                  <div>
+                                                            <div className="flex items-center justify-between gap-2 mt-auto pt-2">
+                                                                  <div className="min-w-0 flex-1">
                                                                         <p className="text-primary font-bold">₹ {item.price}</p>
                                                                         <p className="text-xs text-gray-400 truncate">📍 {restaurant.name} · {restaurant.distanceKm} km</p>
                                                                   </div>
                                                                   {cartItem ? (
-                                                                        <div className="flex items-center border border-green-500 rounded-full overflow-hidden">
+                                                                        <div className="flex items-center border border-green-500 rounded-full shrink-0">
                                                                               <button
                                                                                     disabled={isLoading}
                                                                                     onClick={() => decreaseItem(item._id)}
