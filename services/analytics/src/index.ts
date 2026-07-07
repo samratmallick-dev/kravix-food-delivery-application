@@ -7,7 +7,8 @@ const PORT = process.env.PORT || 6002;
 
 const start = async () => {
       try {
-            await Promise.all([connectDb(), connectRabbitMQ()]);
+            await connectDb();
+            connectRabbitMQ();
 
             const server = app.listen(PORT, () => {
                   console.log(`✅ [Analytics Service] Running at http://localhost:${PORT}`);
@@ -15,16 +16,6 @@ const start = async () => {
 
             server.on("error", (err) => {
                   console.error("[Analytics Service] HTTP server error:", err);
-                  process.exit(1);
-            });
-
-            process.on("unhandledRejection", (reason) => {
-                  console.error("[Analytics Service] Unhandled rejection:", reason);
-                  process.exit(1);
-            });
-
-            process.on("uncaughtException", (err) => {
-                  console.error("[Analytics Service] Uncaught exception:", err);
                   process.exit(1);
             });
       } catch (err) {

@@ -2,6 +2,8 @@ import { request } from "./request";
 import { riderBaseUrl } from "../components/common/constant";
 import type { ApiResponse, SuccessResponse } from "../types/api.types";
 import type { IRider } from "../types/types";
+import { compressImage } from "./compressImage";
+import { uploadImage } from "./uploadImage";
 
 export interface AddRiderProfilePayload {
       phoneNumber: string;
@@ -41,18 +43,20 @@ export interface RiderEarningsResponse {
       weeklyBreakdown: { date: string; amount: number }[];
 }
 
-export const addRiderProfile = (payload: AddRiderProfilePayload): Promise<ApiResponse<IRider>> => {
-      const formData = new FormData();
-      formData.append("phoneNumber", payload.phoneNumber);
-      formData.append("aadhaarNumber", payload.aadhaarNumber);
-      formData.append("drivingLicesce", payload.drivingLicesce);
-      formData.append("latitude", payload.latitude.toString());
-      formData.append("longitude", payload.longitude.toString());
-      formData.append("image", payload.image);
+export const addRiderProfile = async (payload: AddRiderProfilePayload): Promise<ApiResponse<IRider>> => {
+      const compressed = await compressImage(payload.image);
+      const pictureUrl = await uploadImage(compressed);
 
       return request<ApiResponse<IRider>>(`${riderBaseUrl}/`, {
             method: "POST",
-            body: formData,
+            body: JSON.stringify({
+                  phoneNumber: payload.phoneNumber,
+                  aadhaarNumber: payload.aadhaarNumber,
+                  drivingLicesce: payload.drivingLicesce,
+                  latitude: payload.latitude,
+                  longitude: payload.longitude,
+                  pictureUrl,
+            }),
       });
 };
 
@@ -61,16 +65,19 @@ export const fetchMyRiderProfile = (): Promise<ApiResponse<IRider>> =>
             method: "GET",
       });
 
-export const updateRiderProfile = (payload: UpdateRiderProfilePayload): Promise<ApiResponse<IRider>> => {
-      const formData = new FormData();
-      if (payload.phoneNumber) formData.append("phoneNumber", payload.phoneNumber);
-      if (payload.aadhaarNumber) formData.append("aadhaarNumber", payload.aadhaarNumber);
-      if (payload.drivingLicesce) formData.append("drivingLicesce", payload.drivingLicesce);
-      if (payload.image) formData.append("image", payload.image);
+export const updateRiderProfile = async (payload: UpdateRiderProfilePayload): Promise<ApiResponse<IRider>> => {
+      const body: Record<string, string> = {};
+      if (payload.phoneNumber) body.phoneNumber = payload.phoneNumber;
+      if (payload.aadhaarNumber) body.aadhaarNumber = payload.aadhaarNumber;
+      if (payload.drivingLicesce) body.drivingLicesce = payload.drivingLicesce;
+      if (payload.image) {
+            const compressed = await compressImage(payload.image);
+            body.pictureUrl = await uploadImage(compressed);
+      }
 
       return request<ApiResponse<IRider>>(`${riderBaseUrl}/me`, {
             method: "PATCH",
-            body: formData,
+            body: JSON.stringify(body),
       });
 };
 

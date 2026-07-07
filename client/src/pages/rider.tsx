@@ -16,7 +16,6 @@ import DeliveryHistoryCard from "../components/rider/DeliveryHistoryCard";
 import RiderOrderMap from "../components/rider/riderOrderMap";
 import EarningsDashboard from "../components/rider/EarningsDashboard";
 import { storage } from "../utils/secureStorage";
-import { compressImage } from "../utils/compressImage";
 
 type Tab = "orders" | "earnings";
 
@@ -154,7 +153,7 @@ const RiderDashboard = () => {
                   if (editPhone) payload.phoneNumber = editPhone;
                   if (editAadhaar) payload.aadhaarNumber = editAadhaar;
                   if (editLicense) payload.drivingLicesce = editLicense;
-                  if (editImageFile) payload.image = await compressImage(editImageFile);
+                  if (editImageFile) payload.image = editImageFile;
 
                   const data = await updateRiderProfile(payload);
                   setProfile(data.data);
@@ -267,12 +266,11 @@ const RiderDashboard = () => {
             if (!phoneNumber || !aadhaarNumber || !drivingLicesce || !image) { toast.error("Please fill in all required fields."); return; }
             try {
                   setSubmitting(true);
-                  const compressedImage = await compressImage(image);
                   const data = await addRiderProfile({
                         phoneNumber,
                         aadhaarNumber,
                         drivingLicesce,
-                        image: compressedImage,
+                        image,
                         latitude: location.latitude,
                         longitude: location.longitude,
                   });

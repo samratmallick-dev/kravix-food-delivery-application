@@ -64,6 +64,8 @@ export const updateRiderProfile = TryCatch(
                         },
                   );
                   updates.picture = uploadResult.url;
+            } else if (req.body.pictureUrl) {
+                  updates.picture = req.body.pictureUrl;
             }
 
             if (Object.keys(updates).length === 0) {
@@ -120,32 +122,40 @@ export const addRiderProfile = TryCatch(
                   });
             }
 
-            const file = req.file;
-            if (!file)
-                  return res.status(400).json({
-                        success: false,
-                        message: "Rider Profile image is required",
-                        error: true,
-                  });
+            const { pictureUrl } = req.body;
+            let resolvedPictureUrl: string;
 
-            const fileBuffer = getBuffer(file);
-            if (!fileBuffer)
-                  return res.status(500).json({
-                        success: false,
-                        message: "Error processing the image file",
-                        error: true,
-                  });
+            if (pictureUrl) {
+                  resolvedPictureUrl = pictureUrl;
+            } else {
+                  const file = req.file;
+                  if (!file)
+                        return res.status(400).json({
+                              success: false,
+                              message: "Rider Profile image is required",
+                              error: true,
+                        });
 
-            const { data: uploadResult } = await axios.post(
-                  `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
-                  { image: fileBuffer },
-                  {
-                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
-                        maxContentLength: Infinity,
-                        maxBodyLength: Infinity,
-                        timeout: 120000,
-                  },
-            );
+                  const fileBuffer = getBuffer(file);
+                  if (!fileBuffer)
+                        return res.status(500).json({
+                              success: false,
+                              message: "Error processing the image file",
+                              error: true,
+                        });
+
+                  const { data: uploadResult } = await axios.post(
+                        `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+                        { image: fileBuffer },
+                        {
+                              headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
+                              maxContentLength: Infinity,
+                              maxBodyLength: Infinity,
+                              timeout: 120000,
+                        },
+                  );
+                  resolvedPictureUrl = uploadResult.url;
+            }
 
             const lat = Number(latitude);
             const lng = Number(longitude);
@@ -166,7 +176,7 @@ export const addRiderProfile = TryCatch(
 
             const riderProfile = await Rider.create({
                   userId: user._id,
-                  picture: uploadResult.url,
+                  picture: resolvedPictureUrl,
                   phoneNumber,
                   aadhaarNumber,
                   drivingLicesce,
