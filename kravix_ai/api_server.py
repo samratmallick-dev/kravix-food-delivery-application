@@ -81,7 +81,6 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     intent_confidence: Optional[float] = 1.0
-    intent: Optional[str] = None
 
 
 class FeedbackRequest(BaseModel):
@@ -292,19 +291,27 @@ def _normalize_role(role: str) -> str:
     return "customer"
 
 def _count_tokens(text: str) -> int:
+    # If ML is loaded, we ideally use the real tokenizer.
+    # For now, we use a simple fast estimator: words * 1.3
     if not text:
         return 0
     return int(len(text.split()) * 1.3)
 
 def _trim_prompt(system_prompt: str, history: List[Dict[str, str]], max_tokens: int) -> tuple[str, List[Dict[str, str]]]:
+    # Calculate tokens
     sys_tokens = _count_tokens(system_prompt)
-    overhead = 10  
+    
+    # We want to fit system + (history) + Response prefix
+    overhead = 10  # For "### System:\n" and "### Response:\n"
     available = max_tokens - sys_tokens - overhead
     
+    # Keep oldest-pair-first logic to remove, so we pop from index 0 until fits
     while history and available < 0:
         if len(history) > 1:
+            # Drop a pair (user, assistant) or at least oldest 2 messages
             msg1 = history.pop(0)
             msg2 = history.pop(0) if history else None
+            # Not recalculating exactly, just roughly continuing the loop
             sys_tokens = _count_tokens(system_prompt)
             current_hist_tokens = sum(_count_tokens(m['content']) + 10 for m in history)
             available = max_tokens - sys_tokens - overhead - current_hist_tokens
@@ -312,6 +319,7 @@ def _trim_prompt(system_prompt: str, history: List[Dict[str, str]], max_tokens: 
             history.pop(0)
             break
             
+    # Calculate current usage
     current_hist_tokens = sum(_count_tokens(m['content']) + 10 for m in history)
     while history and (sys_tokens + current_hist_tokens + overhead > max_tokens):
         if len(history) > 1:
@@ -350,9 +358,8 @@ Response Rules:
 - Prefer short, actionable answers
 """
 
-def build_system_prompt(role: str, contextData: Dict[str, Any], intent_name: str = "UNKNOWN") -> str:
+def build_system_prompt(role: str, contextData: Dict[str, Any]) -> str:
     prompt = SYSTEM_PROMPT_TEMPLATE.format(role=role)
-    prompt += f"\nDetected Intent: {intent_name}\n"
     if contextData:
         if "orders" in contextData and contextData["orders"]:
             prompt += "\nRecent Orders Context:\n"
@@ -391,7 +398,7 @@ class IntentClassifier:
         Intent.GREETING: [r"\b(hi|hello|hey|hola|howdy|wassup|what's up)\b", r"\b(how are you)\b"],
         Intent.FOOD_SEARCH: [r"\b(food|hungry|spicy|healthy|diet|suggest|recommend|craving|biryani|pizza|burger|dessert|sweet|veg|vegetarian|price|cheap|affordable|menu)\b"],
         Intent.RESTAURANT_SEARCH: [r"\b(find restaurant|nearby|near me|restaurants|verified|closed|open)\b"],
-        Intent.ORDER_TRACKING: [r"\b(where is my order|order status|my order|status)\b", r"\btrack(?!.*\bearning\b)(?!.*\bpayout\b)\b"],
+        Intent.ORDER_TRACKING: [r"\b(track|where is my order|order status|my order|status)\b"],
         Intent.ORDER_CANCELLATION: [r"\b(cancel|stop order)\b"],
         Intent.REORDER: [r"\b(reorder|order again|same order|repeat order)\b"],
         Intent.PAYMENT: [r"\b(payment|pay|stripe|razorpay|checkout|deducted|charged)\b"],
@@ -399,13 +406,13 @@ class IntentClassifier:
         Intent.COUPON: [r"\b(coupon|discount|promo|offer|voucher)\b"],
         Intent.DELIVERY: [r"\b(otp|one time password|handoff|delivery time|how long|eta|arrive|delivery fee|delivery charge)\b"],
         Intent.PROFILE: [r"\b(login|sign in|sign up|register|account|password|email verification|blocked|banned|switch role)\b"],
-        Intent.SELLER_DASHBOARD: [r"\b(revenue|sales|analytics|chart|open restaurant|close restaurant|accept order|create coupon)\b"],
+        Intent.SELLER_DASHBOARD: [r"\b(revenue|earnings|sales|analytics|chart|open restaurant|close restaurant|accept order|create coupon)\b"],
         Intent.SELLER_MENU: [r"\b(add item|add menu|new dish|add food)\b"],
-        Intent.RIDER_DASHBOARD: [r"\b(online|offline|go online|availability|accept|job|delivery request|riding)\b"],
+        Intent.RIDER_DASHBOARD: [r"\b(online|offline|go online|availability|accept|job|delivery request)\b"],
         Intent.RIDER_EARNINGS: [r"\b(earning|payout|income|money)\b"],
         Intent.ADMIN_DASHBOARD: [r"\b(verify|approve|analytics|export|csv|report|cancel order|stuck order)\b"],
         Intent.ADMIN_USERS: [r"\b(block|unblock|user)\b"],
-        Intent.HELP: [r"\b(help|what can you do|who are you|capabilities|tip|tips)\b"],
+        Intent.HELP: [r"\b(help|what can you do|who are you|capabilities)\b"],
         Intent.OFF_TOPIC: [r"\b(history|science|politics|weather|president|capital of|movie|actor)\b"]
     }
 
@@ -421,9 +428,11 @@ class IntentClassifier:
 class ConversationResolver:
     @staticmethod
     def resolve(history: List[Dict[str, str]], current_message: str) -> str:
+        # Simplistic ordinal/anaphoric resolution
         if re.search(r"\b(it|that|the first one|the second one|cancel it|track it)\b", current_message.lower()):
             if history and len(history) > 1:
-                pass 
+                # Look at the last assistant response or previous user intent to carry context
+                pass # Currently keeping it lightweight. Will rely on contextData['orders'] which is passed in request.
         return current_message
 
 class PermissionChecker:
@@ -441,14 +450,12 @@ class RoleDispatcher:
     def __init__(self, context: Dict[str, Any]):
         self.context = context
 
-    def handle(self, intent: Intent, message: str) -> Optional[str]:
+    def handle(self, intent: Intent, message: str) -> str:
         raise NotImplementedError
-        
-    def fallback(self, intent: Intent) -> str:
-        return "I'm here to help with Kravix platform features. Could you provide more details?"
 
 class CustomerDispatcher(RoleDispatcher):
-    def handle(self, intent: Intent, message: str) -> Optional[str]:
+    def handle(self, intent: Intent, message: str) -> str:
+        msg_lower = message.lower()
         if intent == Intent.GREETING:
             return "Hello! Welcome to Kravix 🍛 How can I help you today?"
         if intent == Intent.HELP:
@@ -461,7 +468,7 @@ class CustomerDispatcher(RoleDispatcher):
             orders = self.context.get("orders", [])
             if orders:
                 return f"Your latest order status is: {orders[0].get('status', 'unknown')}. Check 'My Orders' for live tracking."
-            return None
+            return "I don't see any active orders. Place an order and I'll help you track it!"
         if intent == Intent.ORDER_CANCELLATION:
             orders = self.context.get("orders", [])
             if orders and orders[0].get('status') == 'placed':
@@ -474,18 +481,16 @@ class CustomerDispatcher(RoleDispatcher):
         if intent == Intent.REFUND:
             return "Refunds for cancelled orders usually reflect in 5-7 business days."
         if intent == Intent.COUPON:
+            # No fabricated coupons
             return "You can view and apply available coupons at the checkout screen. The platform will calculate the best discount automatically!"
         if intent == Intent.DELIVERY:
             return "You can find your Delivery OTP on the active order page. Share it with your rider when they arrive."
         if intent == Intent.PROFILE:
             return "You can manage your account, addresses, and role directly from your Profile settings."
-        return None
-        
-    def fallback(self, intent: Intent) -> str:
         return "I'm here to help with Kravix platform features like orders, food, and delivery. How can I assist you?"
 
 class SellerDispatcher(RoleDispatcher):
-    def handle(self, intent: Intent, message: str) -> Optional[str]:
+    def handle(self, intent: Intent, message: str) -> str:
         if intent == Intent.SELLER_DASHBOARD:
             return "Use your Seller Dashboard to view analytics, toggle restaurant availability, and manage incoming orders."
         if intent == Intent.SELLER_MENU:
@@ -494,13 +499,10 @@ class SellerDispatcher(RoleDispatcher):
             return "Create restaurant-specific coupons from Seller Dashboard -> Coupons."
         if intent == Intent.GREETING:
             return "Hello Seller! Ready for some orders today?"
-        return None
-
-    def fallback(self, intent: Intent) -> str:
         return "As a seller, you can manage your menu, track earnings, and handle orders from the Seller Dashboard."
 
 class RiderDispatcher(RoleDispatcher):
-    def handle(self, intent: Intent, message: str) -> Optional[str]:
+    def handle(self, intent: Intent, message: str) -> str:
         if intent == Intent.RIDER_DASHBOARD:
             return "Toggle your online availability from the Rider Dashboard to start receiving delivery jobs."
         if intent == Intent.RIDER_EARNINGS:
@@ -509,35 +511,29 @@ class RiderDispatcher(RoleDispatcher):
             return "Always collect the Delivery OTP from the customer at the drop-off location to complete the handoff."
         if intent == Intent.GREETING:
             return "Hello Rider! Drive safe today."
-        return None
-
-    def fallback(self, intent: Intent) -> str:
         return "I can help you navigate the Rider Dashboard, manage deliveries, and track earnings."
 
 class AdminDispatcher(RoleDispatcher):
-    def handle(self, intent: Intent, message: str) -> Optional[str]:
+    def handle(self, intent: Intent, message: str) -> str:
         if intent == Intent.ADMIN_DASHBOARD:
             return "Use the Admin Dashboard to verify restaurants/riders, view platform analytics, and force-cancel stuck orders."
         if intent == Intent.ADMIN_USERS:
             return "Manage all platform users, block/unblock accounts from the User Management section."
         if intent == Intent.GREETING:
             return "Hello Admin! System is running smoothly."
-        return None
-
-    def fallback(self, intent: Intent) -> str:
         return "I can assist you with administrative tasks like user moderation, analytics, and platform monitoring."
 
 class MockEngine:
     @staticmethod
-    def process(role: str, message: str, context: Dict[str, Any]) -> tuple[str, Optional[str], str]:
+    def process(role: str, message: str, context: Dict[str, Any]) -> str:
         intent = IntentClassifier.classify(message)
         
         if intent == Intent.OFF_TOPIC:
-            return intent.name, "I am Kravix AI, designed specifically to help with the Kravix food delivery platform. For general knowledge questions, please consult another service.", ""
+            return "I am Kravix AI, designed specifically to help with the Kravix food delivery platform. For general knowledge questions, please consult another service."
             
         denial = PermissionChecker.check(role, intent)
         if denial:
-            return intent.name, denial, ""
+            return denial
             
         if role == "seller":
             dispatcher = SellerDispatcher(context)
@@ -548,9 +544,7 @@ class MockEngine:
         else:
             dispatcher = CustomerDispatcher(context)
             
-        fast_reply = dispatcher.handle(intent, message)
-        fallback_reply = dispatcher.fallback(intent)
-        return intent.name, fast_reply, fallback_reply
+        return dispatcher.handle(intent, message)
 
 
 @app.get("/live")
@@ -635,31 +629,34 @@ async def chat_endpoint(req: ChatRequest):
             logger.warning("Session read failed for %s: %s — starting fresh", req.userId, exc)
             history = []
             
+        # Optional: Apply conversation resolver on the message using history
         safe_message = ConversationResolver.resolve(history, safe_message)
         
         history.append({"role": "user", "content": safe_message})
         if len(history) > MAX_HISTORY_TURNS:
             history = history[-MAX_HISTORY_TURNS:]
 
-        intent_name, fast_reply, fallback_reply = MockEngine.process(role, safe_message, ctx)
-        reply = fast_reply
-        if not reply and _model_manager and _model_manager.ml_available:
-            system_prompt = build_system_prompt(role, ctx, intent_name)
+        system_prompt = build_system_prompt(role, ctx)
+
+        # ML Inference Path
+        reply = None
+        if _model_manager and _model_manager.ml_available:
             full_prompt, history = _trim_prompt(system_prompt, history.copy(), PROMPT_TOKEN_LIMIT)
             
             logger.info("ML inference requested, tokens ~%d", _count_tokens(full_prompt))
-            ml_reply = _model_manager.infer(full_prompt)
+            reply = _model_manager.infer(full_prompt)
 
-            if ml_reply:
+            if reply:
                 fallback_keywords = [
                     "I don't know", "I am an AI", "As an AI", "I cannot",
                     "I'm not able", "I do not have", "I apologize",
                 ]
-                if not any(kw.lower() in ml_reply.lower() for kw in fallback_keywords) and len(ml_reply) >= 5:
-                    reply = ml_reply
+                if any(kw.lower() in reply.lower() for kw in fallback_keywords) or len(reply) < 5:
+                    reply = None  # Fallback to mock engine
         
+        # Mock Engine Path (or Fallback)
         if not reply:
-            reply = fallback_reply
+            reply = MockEngine.process(role, safe_message, ctx)
 
         history.append({"role": "assistant", "content": reply})
         if _session_store:
@@ -668,7 +665,7 @@ async def chat_endpoint(req: ChatRequest):
             except Exception as exc:
                 logger.warning("Session save failed for %s: %s", req.userId, exc)
 
-        return ChatResponse(reply=reply, intent=intent_name)
+        return ChatResponse(reply=reply)
 
     except KravixBaseError:
         raise
