@@ -9,6 +9,37 @@ from structured_logger import get_logger
 
 logger = get_logger("session_store")
 
+_redis_pool = None
+_redis_pool_lock = Lock()
+
+
+def get_or_create_redis_pool(redis_url: str, max_connections: int = 20):
+    global _redis_pool
+    with _redis_pool_lock:
+        if _redis_pool is None:
+            import redis as redis_lib
+            from redis.retry import Retry
+            from redis.backoff import ExponentialBackoff
+            _retry = Retry(ExponentialBackoff(cap=8, base=0.5), retries=3)
+            _redis_pool = redis_lib.ConnectionPool.from_url(
+                redis_url,
+                decode_responses=True,
+                max_connections=max_connections,
+                socket_timeout=3,
+                socket_connect_timeout=3,
+                socket_keepalive=True,
+                socket_keepalive_options={},
+                health_check_interval=30,
+                retry=_retry,
+                retry_on_timeout=True,
+                retry_on_error=[
+                    redis_lib.exceptions.ConnectionError,
+                    redis_lib.exceptions.TimeoutError,
+                ],
+            )
+            logger.info("Redis ConnectionPool created (max_connections=%d)", max_connections)
+        return _redis_pool
+
 
 class SessionStore(ABC):
 
@@ -36,73 +67,82 @@ class RedisSessionStore(SessionStore):
 
     _KEY_PREFIX = "kravix:session:"
 
-    def __init__(self, redis_url: str, ttl: int = 1800, max_sessions: int = 1000) -> None:
+    def __init__(self, redis_url: str, ttl: int = 1800, max_sessions: int = 1000,
+                 max_connections: int = 20) -> None:
         import redis as redis_lib
-        self._client = redis_lib.Redis.from_url(
-            redis_url,
-            decode_responses=True,
-            socket_timeout=3,
-            socket_connect_timeout=3,
-            retry_on_timeout=True,
-        )
+
+        pool = get_or_create_redis_pool(redis_url, max_connections=max_connections)
+        self._client = redis_lib.Redis(connection_pool=pool)
         self._ttl = ttl
         self._max_sessions = max_sessions
         self._client.ping()
-        logger.info("Redis session store connected (TTL=%ds, max=%d)", ttl, max_sessions)
+        logger.info("Redis session store connected (TTL=%ds, max=%d, pool_max=%d)",
+                    ttl, max_sessions, max_connections)
 
     def _key(self, user_id: str) -> str:
         return f"{self._KEY_PREFIX}{user_id}"
 
     def get_history(self, user_id: str) -> List[Dict]:
-        raw = self._client.get(self._key(user_id))
-        if raw is None:
-            return []
         try:
+            raw = self._client.get(self._key(user_id))
+            if raw is None:
+                return []
             return json.loads(raw)
         except (json.JSONDecodeError, TypeError):
             return []
+        except Exception as exc:
+            logger.warning("Redis get_history failed for %s: %s — returning empty", user_id, exc)
+            return []
 
     def save_history(self, user_id: str, history: List[Dict]) -> None:
-        if self.active_count() >= self._max_sessions:
-            cursor, keys = self._client.scan(
-                cursor=0, match=f"{self._KEY_PREFIX}*", count=50
-            )
-            if keys:
-                self._client.delete(keys[0])
-                logger.warning("Evicted session to stay under %d limit", self._max_sessions)
-
-        self._client.setex(self._key(user_id), self._ttl, json.dumps(history))
+        try:
+            if self.active_count() >= self._max_sessions:
+                cursor, keys = self._client.scan(
+                    cursor=0, match=f"{self._KEY_PREFIX}*", count=50
+                )
+                if keys:
+                    self._client.delete(keys[0])
+                    logger.warning("Evicted session to stay under %d limit", self._max_sessions)
+            self._client.setex(self._key(user_id), self._ttl, json.dumps(history))
+        except Exception as exc:
+            logger.warning("Redis save_history failed for %s: %s — history not persisted", user_id, exc)
 
     def cleanup(self) -> int:
         return 0
 
     def active_count(self) -> int:
-        count = 0
-        cursor = "0"
-        while True:
-            cursor, keys = self._client.scan(
-                cursor=cursor, match=f"{self._KEY_PREFIX}*", count=200
-            )
-            count += len(keys)
-            if cursor == 0 or cursor == "0":
-                break
-        return count
+        try:
+            count = 0
+            cursor = "0"
+            while True:
+                cursor, keys = self._client.scan(
+                    cursor=cursor, match=f"{self._KEY_PREFIX}*", count=200
+                )
+                count += len(keys)
+                if cursor == 0 or cursor == "0":
+                    break
+            return count
+        except Exception:
+            return 0
 
     def clear_all(self) -> None:
-        cursor = "0"
-        while True:
-            cursor, keys = self._client.scan(
-                cursor=cursor, match=f"{self._KEY_PREFIX}*", count=200
-            )
-            if keys:
-                self._client.delete(*keys)
-            if cursor == 0 or cursor == "0":
-                break
-        logger.info("All Redis sessions cleared")
+        try:
+            cursor = "0"
+            while True:
+                cursor, keys = self._client.scan(
+                    cursor=cursor, match=f"{self._KEY_PREFIX}*", count=200
+                )
+                if keys:
+                    self._client.delete(*keys)
+                if cursor == 0 or cursor == "0":
+                    break
+            logger.info("All Redis sessions cleared")
+        except Exception as exc:
+            logger.warning("Redis clear_all failed: %s", exc)
 
     def ping(self) -> bool:
         try:
-            return self._client.ping()
+            return bool(self._client.ping())
         except Exception:
             return False
 
@@ -164,18 +204,75 @@ class LRUSessionStore(SessionStore):
         return True
 
 
+class FallbackSessionStore(SessionStore):
+
+    _HEALTH_TTL = 5.0 
+
+    def __init__(self, redis_store: "RedisSessionStore", lru_store: LRUSessionStore) -> None:
+        self._redis = redis_store
+        self._lru = lru_store
+        self._lock = Lock()
+        self._redis_healthy: bool = True
+        self._last_health_check: float = 0.0
+
+    def _is_redis_healthy(self) -> bool:
+        now = time.monotonic()
+        with self._lock:
+            if now - self._last_health_check < self._HEALTH_TTL:
+                return self._redis_healthy
+            healthy = self._redis.ping()
+            if healthy != self._redis_healthy:
+                if healthy:
+                    logger.info("Redis recovered — switching back from LRU fallback")
+                else:
+                    logger.warning("Redis unhealthy — switching to LRU fallback")
+            self._redis_healthy = healthy
+            self._last_health_check = now
+            return healthy
+
+    def get_history(self, user_id: str) -> List[Dict]:
+        if self._is_redis_healthy():
+            result = self._redis.get_history(user_id)
+            if result:
+                self._lru.save_history(user_id, result)
+            return result
+        return self._lru.get_history(user_id)
+
+    def save_history(self, user_id: str, history: List[Dict]) -> None:
+        self._lru.save_history(user_id, history)  
+        if self._is_redis_healthy():
+            self._redis.save_history(user_id, history)
+
+    def cleanup(self) -> int:
+        return self._lru.cleanup()
+
+    def active_count(self) -> int:
+        if self._is_redis_healthy():
+            return self._redis.active_count()
+        return self._lru.active_count()
+
+    def clear_all(self) -> None:
+        self._lru.clear_all()
+        if self._is_redis_healthy():
+            self._redis.clear_all()
+
+    def ping(self) -> bool:
+        return self._is_redis_healthy()
+
+
 def create_session_store(
     redis_url: Optional[str] = None,
     ttl: int = 1800,
     max_sessions: int = 500,
 ) -> SessionStore:
+    lru = LRUSessionStore(max_size=max_sessions, ttl=ttl)
     if redis_url:
         try:
-            return RedisSessionStore(redis_url, ttl=ttl, max_sessions=max_sessions)
+            redis_store = RedisSessionStore(redis_url, ttl=ttl, max_sessions=max_sessions)
+            return FallbackSessionStore(redis_store, lru)
         except Exception as exc:
             logger.warning(
-                "Redis unavailable (%s: %s) — falling back to LRU session store",
+                "Redis unavailable at startup (%s: %s) — using LRU session store",
                 type(exc).__name__, exc,
             )
-
-    return LRUSessionStore(max_size=max_sessions, ttl=ttl)
+    return lru

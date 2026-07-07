@@ -13,6 +13,7 @@ _start_datetime = datetime.now(timezone.utc)
 
 APP_VERSION = os.environ.get("APP_VERSION", "1.0.0")
 BUILD_DATE = os.environ.get("BUILD_DATE", datetime.now(timezone.utc).strftime("%Y%m%d"))
+_FEEDBACK_ENABLED = os.environ.get("ENABLE_FEEDBACK", "false").lower() in ("true", "1", "yes")
 
 
 class HealthMonitor:
@@ -47,12 +48,12 @@ class HealthMonitor:
     def readiness(self) -> Dict[str, Any]:
         checks: Dict[str, Any] = {}
         ready = True
-
+        
         mongo_ok = False
         if self._mongo:
             mongo_ok = self._mongo.ping()
         checks["mongodb"] = mongo_ok
-        if not mongo_ok:
+        if not mongo_ok and _FEEDBACK_ENABLED:
             ready = False
 
         session_ok = True
@@ -74,7 +75,9 @@ class HealthMonitor:
             ready = False
 
         status = "ready" if ready else "degraded"
-        if not mongo_ok or rss >= CRITICAL_MB:
+        if rss >= CRITICAL_MB:
+            status = "not_ready"
+        if not mongo_ok and _FEEDBACK_ENABLED:
             status = "not_ready"
 
         return {"status": status, **checks}

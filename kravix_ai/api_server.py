@@ -52,27 +52,6 @@ from request_guard import (
 )
 from timeout_middleware import TimeoutMiddleware
 from observability import request_metrics, build_metrics_payload
-from error_handling import (
-    register_exception_handlers,
-    KravixBaseError,
-    ModelInferenceError,
-    DatabaseError,
-    error_aggregator,
-)
-from circuit_breaker import CircuitBreaker
-from retry_manager import with_retry, get_default_budget
-from session_store import create_session_store
-from mongo_manager import MongoManager
-from model_manager import ModelManager
-from memory_watchdog import check_memory, memory_diagnostics, is_degraded, get_rss_mb
-from health_monitor import HealthMonitor
-from request_guard import (
-    ConcurrencyGuardMiddleware,
-    request_tracker,
-    setup_rate_limiter,
-)
-from timeout_middleware import TimeoutMiddleware
-from observability import request_metrics, build_metrics_payload
 
 SESSION_TTL = int(os.environ.get("SESSION_TTL_SECONDS", "1800"))
 MAX_SESSIONS = int(os.environ.get("MAX_SESSIONS", "500"))
@@ -80,6 +59,8 @@ REDIS_URL = os.environ.get("REDIS_URL", "")
 ENABLE_FEEDBACK = os.environ.get("ENABLE_FEEDBACK", "false").lower() in ("true", "1", "yes")
 MONGO_URI = os.environ.get("MONGODB_URI", "")
 DB_NAME = os.environ.get("DB_NAME", "kravix_db")
+PROMPT_CHAR_LIMIT = int(os.environ.get("PROMPT_CHAR_LIMIT", "24000"))
+MAX_HISTORY_TURNS = int(os.environ.get("MAX_HISTORY_TURNS", "10"))
 
 
 _session_store = None
@@ -138,6 +119,21 @@ async def _memory_watchdog_loop():
             logger.error("Memory watchdog error: %s", exc, exc_info=True)
 
 
+async def _redis_keepalive_loop():
+    """Ping Redis every 60s to prevent EC2 idle socket closure."""
+    while not _shutdown_event.is_set():
+        try:
+            await asyncio.sleep(60)
+            if _session_store and hasattr(_session_store, "ping"):
+                alive = _session_store.ping()
+                if not alive:
+                    logger.warning("Redis keepalive ping failed — connection may be stale")
+        except asyncio.CancelledError:
+            break
+        except Exception as exc:
+            logger.error("Redis keepalive error: %s", exc)
+
+
 async def _mongo_health_loop():
     while not _shutdown_event.is_set():
         try:
@@ -168,7 +164,7 @@ async def _diagnostics_loop():
 async def lifespan(app: FastAPI):
     global _session_store, _mongo_manager, _model_manager, _health_monitor
 
-    logger.info("=== Kravix AI Microservice starting ===")
+    logger.info("=== Kravix AI starting ===")
 
     _session_store = create_session_store(
         redis_url=REDIS_URL or None,
@@ -201,6 +197,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_session_cleanup_loop(), name="session_cleanup"),
         asyncio.create_task(_memory_watchdog_loop(), name="memory_watchdog"),
         asyncio.create_task(_diagnostics_loop(), name="diagnostics"),
+        asyncio.create_task(_redis_keepalive_loop(), name="redis_keepalive"),
     ])
     if _mongo_manager:
         _background_tasks.append(
@@ -228,8 +225,7 @@ async def lifespan(app: FastAPI):
     if _mongo_manager:
         _mongo_manager.close()
     session_count = _session_store.active_count() if _session_store else 0
-    logger.info("Shutdown complete. Final sessions: %d, RSS: %.1f MB",
-                session_count, get_rss_mb())
+    logger.info("Shutdown complete. Final sessions: %d, RSS: %.1f MB", session_count, get_rss_mb())
 
 
 
@@ -270,13 +266,11 @@ _INJECTION_PATTERN = re.compile(
 
 
 def sanitize_input(text: str) -> str:
-    """Strip prompt-injection attempts from user input."""
     sanitized = _INJECTION_PATTERN.sub("[removed]", text)
     return sanitized[:1000]
 
 
 def normalize_price(price) -> int:
-    """Clamp price to ₹1–₹10,000 range."""
     try:
         p = int(float(price))
     except (TypeError, ValueError):
@@ -353,6 +347,18 @@ async def readiness():
     if not _health_monitor:
         return JSONResponse(status_code=503, content={"status": "not_ready"})
     result = _health_monitor.readiness()
+    if _model_manager and _model_manager.ml_available:
+        try:
+            probe = await asyncio.wait_for(
+                asyncio.get_event_loop().run_in_executor(None, _model_manager.infer, "ping"),
+                timeout=5.0,
+            )
+            result["inference_probe"] = "ok" if probe else "empty_output"
+        except Exception as exc:
+            result["inference_probe"] = f"failed: {type(exc).__name__}"
+            result["status"] = "degraded"
+    else:
+        result["inference_probe"] = "mock_mode"
     status_code = 200 if result["status"] == "ready" else 503
     return JSONResponse(status_code=status_code, content=result)
 
@@ -376,10 +382,6 @@ async def metrics():
         retry_budget=get_default_budget(),
     )
 
-
-# ---------------------------------------------------------------------------
-# Feedback endpoint
-# ---------------------------------------------------------------------------
 
 @app.post("/feedback", status_code=204)
 async def feedback_endpoint(req: FeedbackRequest):
@@ -414,11 +416,15 @@ async def chat_endpoint(req: ChatRequest):
     try:
         safe_message = sanitize_input(req.message)
 
-        history = _session_store.get_history(req.userId) if _session_store else []
+        try:
+            history = _session_store.get_history(req.userId) if _session_store else []
+        except Exception as exc:
+            logger.warning("Session read failed for %s: %s — starting fresh", req.userId, exc)
+            history = []
         history.append({"role": "user", "content": safe_message})
 
-        if len(history) > 5:
-            history = history[-5:]
+        if len(history) > MAX_HISTORY_TURNS:
+            history = history[-MAX_HISTORY_TURNS:]
 
         system_prompt = build_system_prompt(req.role, req.contextData or {})
 
@@ -428,6 +434,16 @@ async def chat_endpoint(req: ChatRequest):
             full_prompt += f"{prefix}{sanitize_input(msg['content'])}\n\n"
 
         full_prompt += "### Response:\n"
+
+        if len(full_prompt) > PROMPT_CHAR_LIMIT:
+            while len(full_prompt) > PROMPT_CHAR_LIMIT and len(history) > 1:
+                history = history[2:]  
+                full_prompt = f"### System:\n{system_prompt}\n\n"
+                for msg in history:
+                    prefix = "### Instruction:\n" if msg["role"] == "user" else "### Response:\n"
+                    full_prompt += f"{prefix}{sanitize_input(msg['content'])}\n\n"
+                full_prompt += "### Response:\n"
+            logger.info("Prompt trimmed to %d chars for cid=%s", len(full_prompt), cid)
 
         reply = None
         if _model_manager and _model_manager.ml_available:
@@ -728,7 +744,10 @@ async def chat_endpoint(req: ChatRequest):
 
         history.append({"role": "assistant", "content": reply})
         if _session_store:
-            _session_store.save_history(req.userId, history)
+            try:
+                _session_store.save_history(req.userId, history)
+            except Exception as exc:
+                logger.warning("Session save failed for %s: %s", req.userId, exc)
 
         return ChatResponse(reply=reply)
 
