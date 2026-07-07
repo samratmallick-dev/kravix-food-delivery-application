@@ -102,6 +102,23 @@ export const addRiderProfile = TryCatch(
                         error: true,
                   });
 
+            const { phoneNumber, aadhaarNumber, drivingLicesce, latitude, longitude } =
+                  req.body;
+
+            if (
+                  !phoneNumber ||
+                  !aadhaarNumber ||
+                  !drivingLicesce ||
+                  latitude === undefined ||
+                  longitude === undefined
+            ) {
+                  return res.status(400).json({
+                        success: false,
+                        message: "All fields are required",
+                        error: true,
+                  });
+            }
+
             const file = req.file;
             if (!file)
                   return res.status(400).json({
@@ -120,32 +137,14 @@ export const addRiderProfile = TryCatch(
 
             const { data: uploadResult } = await axios.post(
                   `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
-                  {
-                        image: fileBuffer,
-                  },
+                  { image: fileBuffer },
                   {
                         headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! },
                         maxContentLength: Infinity,
                         maxBodyLength: Infinity,
+                        timeout: 25000,
                   },
             );
-
-            const { phoneNumber, aadhaarNumber, drivingLicesce, latitude, longitude } =
-                  req.body;
-
-            if (
-                  !phoneNumber ||
-                  !aadhaarNumber ||
-                  !drivingLicesce ||
-                  latitude === undefined ||
-                  longitude === undefined
-            ) {
-                  return res.status(400).json({
-                        success: false,
-                        message: "All fields are required",
-                        error: true,
-                  });
-            }
 
             const lat = Number(latitude);
             const lng = Number(longitude);
