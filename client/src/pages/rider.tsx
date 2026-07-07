@@ -153,7 +153,7 @@ const RiderDashboard = () => {
                   if (editPhone) payload.phoneNumber = editPhone;
                   if (editAadhaar) payload.aadhaarNumber = editAadhaar;
                   if (editLicense) payload.drivingLicesce = editLicense;
-                  if (editImageFile) payload.image = editImageFile;
+                  if (editImageFile) payload.image = await compressImage(editImageFile);
 
                   const data = await updateRiderProfile(payload);
                   setProfile(data.data);
@@ -255,6 +255,39 @@ const RiderDashboard = () => {
             );
       }
 
+      const compressImage = (file: File, maxSizeKB = 400): Promise<File> =>
+            new Promise((resolve) => {
+                  const img = new Image();
+                  const url = URL.createObjectURL(file);
+                  img.onload = () => {
+                        URL.revokeObjectURL(url);
+                        const canvas = document.createElement("canvas");
+                        const MAX_DIM = 800;
+                        let { width, height } = img;
+                        if (width > MAX_DIM || height > MAX_DIM) {
+                              if (width > height) { height = Math.round((height * MAX_DIM) / width); width = MAX_DIM; }
+                              else { width = Math.round((width * MAX_DIM) / height); height = MAX_DIM; }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+                        let quality = 0.8;
+                        const tryCompress = () => {
+                              canvas.toBlob((blob) => {
+                                    if (!blob) return resolve(file);
+                                    if (blob.size / 1024 > maxSizeKB && quality > 0.2) {
+                                          quality -= 0.1;
+                                          tryCompress();
+                                    } else {
+                                          resolve(new File([blob], file.name, { type: "image/jpeg" }));
+                                    }
+                              }, "image/jpeg", quality);
+                        };
+                        tryCompress();
+                  };
+                  img.src = url;
+            });
+
       const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0] ?? null;
             setImage(file);
@@ -266,11 +299,12 @@ const RiderDashboard = () => {
             if (!phoneNumber || !aadhaarNumber || !drivingLicesce || !image) { toast.error("Please fill in all required fields."); return; }
             try {
                   setSubmitting(true);
+                  const compressedImage = await compressImage(image);
                   const data = await addRiderProfile({
                         phoneNumber,
                         aadhaarNumber,
                         drivingLicesce,
-                        image,
+                        image: compressedImage,
                         latitude: location.latitude,
                         longitude: location.longitude,
                   });
