@@ -3,15 +3,15 @@ import { ValidationError } from "../utils/errors.js";
 
 const addressSchema = z.object({
   formattedAddress: z.string().min(3),
-  mobile: z.number().int(),
-  latitude: z.number(),
-  longitude: z.number()
+  mobile: z.coerce.number().int(),
+  latitude: z.coerce.number(),
+  longitude: z.coerce.number()
 });
 
 const menuItemSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
-  price: z.number().positive(),
+  price: z.coerce.number().positive(),
   imageUrl: z.string().optional(),
   isAvailable: z.boolean().optional()
 });
@@ -19,11 +19,11 @@ const menuItemSchema = z.object({
 const couponSchema = z.object({
   code: z.string().min(2).toUpperCase(),
   discountType: z.enum(["percentage", "flat", "free_delivery"]),
-  discountValue: z.number().nonnegative(),
-  maxDiscountAmount: z.number().default(0),
-  minOrderAmount: z.number().default(0),
+  discountValue: z.coerce.number().nonnegative(),
+  maxDiscountAmount: z.coerce.number().default(0),
+  minOrderAmount: z.coerce.number().default(0),
   expiryDate: z.string(),
-  usageLimit: z.number().default(0),
+  usageLimit: z.coerce.number().default(0),
   isActive: z.boolean().default(true)
 });
 
@@ -32,7 +32,7 @@ const placeOrderSchema = z.object({
   items: z.array(
     z.object({
       itemId: z.string(),
-      quantity: z.number().int().positive()
+      quantity: z.coerce.number().int().positive()
     })
   ).nonempty(),
   paymentMethod: z.enum(["razorpay", "stripe", "cod"]),
@@ -42,7 +42,7 @@ const placeOrderSchema = z.object({
 const reviewSchema = z.object({
   orderId: z.string(),
   menuItemId: z.string().nullable().optional(),
-  rating: z.number().int().min(1).max(5),
+  rating: z.coerce.number().int().min(1).max(5),
   comment: z.string().min(1)
 });
 
