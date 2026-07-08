@@ -2,19 +2,30 @@ import "dotenv/config";
 import "./config/env.config.js";
 import express from "express";
 import corsPackage from "cors";
+import helmet from "helmet";
+import compression from "compression";
+import swaggerUi from "swagger-ui-express";
 import { corsOptions } from "./config/cors.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { contentNegotiation } from "./middleware/contentNegotiation.js";
+import { generalLimiter } from "./middleware/rateLimiter.js";
+import { internalAuth } from "./middleware/internalAuth.js";
+import { ROUTES } from "./constants/routes.js";
+import { openApiSpec } from "./docs/openapi.js";
 import socketInternalRoute from "./routes/internal.routes.js";
 import { getIO } from "./config/socket.js";
 
 const app = express();
 
+app.use(generalLimiter);
+
+app.use(helmet({ crossOriginOpenerPolicy: false }));
+app.use(compression());
 app.use(corsPackage(corsOptions));
 app.options("/{*path}", corsPackage(corsOptions));
 
 app.use((req, res, next) => {
-  res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
@@ -25,6 +36,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(requestLogger("realtime"));
+app.use(contentNegotiation);
 
 let requestCount = 0;
 let errorCount = 0;
@@ -32,55 +44,46 @@ let errorCount = 0;
 app.use((req, res, next) => {
   requestCount++;
   res.on("finish", () => {
-    if (res.statusCode >= 400) {
-      errorCount++;
-    }
+    if (res.statusCode >= 400) errorCount++;
   });
   next();
 });
 
-app.get("/live", (req, res) => {
+app.get("/live", (_req, res) => {
   res.status(200).send("OK");
 });
 
-app.get("/ready", async (req, res) => {
+app.get("/ready", (_req, res) => {
   let socketReady = false;
   try {
     const io = getIO();
-    if (io) {
-      socketReady = true;
-    }
-  } catch (err) {}
-
+    if (io) socketReady = true;
+  } catch (_) {}
   res.status(socketReady ? 200 : 503).json({
     status: socketReady ? "READY" : "NOT_READY",
     socketio: socketReady ? "UP" : "DOWN"
   });
 });
 
-app.get("/health", async (req, res) => {
-  res.status(200).json({
-    status: "UP",
-    timestamp: new Date().toISOString()
-  });
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "UP", timestamp: new Date().toISOString() });
 });
 
-app.get("/metrics", (req, res) => {
+app.get("/metrics", (_req, res) => {
   res.set("Content-Type", "text/plain");
-  res.send(`# HELP http_requests_total Total number of HTTP requests
-# TYPE http_requests_total counter
-http_requests_total ${requestCount}
-
-# HELP http_errors_total Total number of HTTP errors
-# TYPE http_errors_total counter
-http_errors_total ${errorCount}
-`);
+  res.send(
+    `# HELP http_requests_total Total number of HTTP requests\n# TYPE http_requests_total counter\nhttp_requests_total ${requestCount}\n\n# HELP http_errors_total Total number of HTTP errors\n# TYPE http_errors_total counter\nhttp_errors_total ${errorCount}\n`
+  );
 });
 
-app.use("/api/v1/socket", socketInternalRoute);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-app.get("/", (req, res) => {
-  res.send("Realtime Service is active!");
+app.use("/api/v1" + ROUTES.SOCKET.BASE, internalAuth, socketInternalRoute);
+
+app.use("/api/v1/socket", (req, res, next) => next());
+
+app.get("/", (_req, res) => {
+  res.json({ service: "kravix-realtime", status: "ok" });
 });
 
 app.use(errorHandler);

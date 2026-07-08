@@ -11,6 +11,10 @@ export const requestLogger = (serviceName: string) => {
     req.headers["x-request-id"] = requestId;
     req.headers["x-trace-id"] = traceId;
 
+    res.setHeader("X-Correlation-ID", correlationId);
+    res.setHeader("X-Request-ID", requestId);
+    res.setHeader("X-Trace-ID", traceId);
+
     const startTime = process.hrtime();
 
     res.on("finish", () => {

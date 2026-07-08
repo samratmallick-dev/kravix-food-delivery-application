@@ -2,9 +2,17 @@ import "dotenv/config";
 import "./config/env.config.js";
 import express from "express";
 import corsPackage from "cors";
+import helmet from "helmet";
+import compression from "compression";
+import swaggerUi from "swagger-ui-express";
+import mongoose from "mongoose";
 import { corsOptions } from "./config/cors/cors.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { contentNegotiation } from "./middleware/contentNegotiation.js";
+import { generalLimiter } from "./middleware/rateLimiter.js";
+import { ROUTES } from "./constants/routes.js";
+import { openApiSpec } from "./docs/openapi.js";
 
 import restaurantRouter from "./routes/restaurant.routes.js";
 import menuItemRouter from "./routes/menuItem.routes.js";
@@ -16,11 +24,14 @@ import reviewRouter from "./routes/review.routes.js";
 
 const app = express();
 
+app.use(generalLimiter);
+
+app.use(helmet({ crossOriginOpenerPolicy: false }));
+app.use(compression());
 app.use(corsPackage(corsOptions));
 app.options("/{*path}", corsPackage(corsOptions));
 
 app.use((req, res, next) => {
-  res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
@@ -31,17 +42,74 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(requestLogger("restaurant"));
+app.use(contentNegotiation);
 
-app.use("/api/v1/restaurants", restaurantRouter);
-app.use("/api/v1/menu", menuItemRouter);
-app.use("/api/v1/cart", cartRouter);
-app.use("/api/v1/address", addressRouter);
-app.use("/api/v1/orders", orderRouter);
-app.use("/api/v1/coupons", couponRouter);
-app.use("/api/v1/reviews", reviewRouter);
+let requestCount = 0;
+let errorCount = 0;
+
+app.use((req, res, next) => {
+  requestCount++;
+  res.on("finish", () => {
+    if (res.statusCode >= 400) errorCount++;
+  });
+  next();
+});
+
+app.get("/live", (_req, res) => {
+  res.status(200).send("OK");
+});
+
+app.get("/ready", (_req, res) => {
+  const mongoStatus = mongoose.connection.readyState === 1;
+  res.status(mongoStatus ? 200 : 503).json({
+    status: mongoStatus ? "READY" : "NOT_READY",
+    mongodb: mongoStatus ? "UP" : "DOWN"
+  });
+});
+
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "UP", timestamp: new Date().toISOString() });
+});
+
+app.get("/metrics", (_req, res) => {
+  res.set("Content-Type", "text/plain");
+  res.send(
+    `# HELP http_requests_total Total number of HTTP requests\n# TYPE http_requests_total counter\nhttp_requests_total ${requestCount}\n\n# HELP http_errors_total Total number of HTTP errors\n# TYPE http_errors_total counter\nhttp_errors_total ${errorCount}\n`
+  );
+});
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+
+app.use("/api/v1" + ROUTES.RESTAURANTS.BASE, restaurantRouter);
+app.use("/api/v1" + ROUTES.MENU_ITEMS.BASE, menuItemRouter);
+app.use("/api/v1" + ROUTES.CART.BASE, cartRouter);
+app.use("/api/v1" + ROUTES.ADDRESSES.BASE, addressRouter);
+app.use("/api/v1" + ROUTES.ORDERS.BASE, orderRouter);
+app.use("/api/v1" + ROUTES.COUPONS.BASE, couponRouter);
+app.use("/api/v1" + ROUTES.REVIEWS.BASE, reviewRouter);
+
+app.use("/api/v1/menu", (req, res) => {
+  res.setHeader("Warning", '299 - "Deprecated API"');
+  res.status(301).json({
+    success: false,
+    message: "This endpoint is deprecated. Use /api/v1/menu-items instead.",
+    error: true,
+    code: "DEPRECATED"
+  });
+});
+
+app.use("/api/v1/address", (req, res) => {
+  res.setHeader("Warning", '299 - "Deprecated API"');
+  res.status(301).json({
+    success: false,
+    message: "This endpoint is deprecated. Use /api/v1/addresses instead.",
+    error: true,
+    code: "DEPRECATED"
+  });
+});
 
 app.get("/", (_req, res) => {
-  res.send("Hello World!");
+  res.json({ service: "kravix-restaurant", status: "ok" });
 });
 
 app.use(errorHandler);

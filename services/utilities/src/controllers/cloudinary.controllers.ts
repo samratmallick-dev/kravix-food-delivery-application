@@ -1,15 +1,11 @@
 import { Request, Response } from "express";
 import { cloudinaryClient } from "../services/index.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
-import { ValidationError, AuthorizationError } from "../utils/errors.js";
+import { ValidationError } from "../utils/errors.js";
 import DataUriParser from "datauri/parser.js";
 import path from "path";
 
 export const uploadImage = TryCatch(async (req: Request, res: Response) => {
-  if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
-    throw new AuthorizationError("Forbidden: Invalid or missing internal key");
-  }
-
   let imageSource: string | undefined;
 
   if (req.file) {
@@ -30,6 +26,6 @@ export const uploadImage = TryCatch(async (req: Request, res: Response) => {
     success: true,
     message: "Image uploaded successfully",
     error: false,
-    url
+    data: { url }
   });
 });
