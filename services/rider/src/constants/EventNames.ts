@@ -1,0 +1,4 @@
+export const EVENT_NAMES = {
+  RIDER_RATED: "RIDER_RATED",
+  ORDER_READY_FOR_RIDER: "ORDER_READY_FOR_RIDER"
+} as const;

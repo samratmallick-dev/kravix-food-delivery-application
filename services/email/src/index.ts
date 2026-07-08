@@ -1,14 +1,12 @@
 import "dotenv/config";
 import { app } from "./app.js";
 import { connectRabbitMQ } from "./config/rabbitmq.js";
-import { startEmailConsumer } from "./consumer/email.consumer.js";
 
 const PORT = process.env.PORT ?? 8100;
 
 const start = async () => {
   try {
     await connectRabbitMQ();
-    await startEmailConsumer();
 
     const server = app.listen(PORT, () => {
       console.log(`✅ [Email Service] Running at http://localhost:${PORT}`);

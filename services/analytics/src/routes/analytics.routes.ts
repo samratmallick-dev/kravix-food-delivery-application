@@ -1,14 +1,13 @@
 import { Router } from "express";
-import { isAuthenticated } from "../middleware/isAuthenticated.js";
+import { authenticate } from "../middleware/authenticate.js";
 import {
-      getDashboardAnalytics,
-      exportRevenueTrendsCSV,
+  getDashboardAnalytics,
+  exportRevenueTrendsCSV
 } from "../controllers/analytics.controllers.js";
 
 const router = Router();
 
-router.route("/").get(isAuthenticated, getDashboardAnalytics);
-
-router.route("/export").get(isAuthenticated, exportRevenueTrendsCSV);
+router.route("/").get(authenticate, getDashboardAnalytics);
+router.route("/export").get(authenticate, exportRevenueTrendsCSV);
 
 export default router;
