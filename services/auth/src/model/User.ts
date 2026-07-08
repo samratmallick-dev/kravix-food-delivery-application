@@ -4,10 +4,10 @@ export interface IUser extends Document {
   name: string;
   email: string;
   image: string;
-  role: string;
+  role: string | null;
   isBlocked: boolean;
   blockedUntil: Date | null;
-  authProvider: "google" | "email";
+  authProviders: Array<"email" | "google">;
   isEmailVerified: boolean;
   passwordHash?: string;
   emailVerificationToken?: string;
@@ -18,61 +18,24 @@ export interface IUser extends Document {
 
 const userSchema: Schema<IUser> = new Schema(
   {
-    name: {
-      type: String,
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true, index: true },
+    image: { type: String, default: "" },
+    role: { type: String, default: null },
+    isBlocked: { type: Boolean, default: false },
+    blockedUntil: { type: Date, default: null },
+    authProviders: {
+      type: [String],
+      enum: ["email", "google"],
+      default: [],
       required: true,
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-    },
-    image: {
-      type: String,
-      default: "",
-    },
-    role: {
-      type: String,
-      default: null,
-    },
-    isBlocked: {
-      type: Boolean,
-      default: false,
-    },
-    blockedUntil: {
-      type: Date,
-      default: null,
-    },
-    authProvider: {
-      type: String,
-      enum: ["google", "email"],
-      default: "google",
-      required: true,
-    },
-    isEmailVerified: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
-    passwordHash: {
-      type: String,
-      select: false,
-    },
-    emailVerificationToken: {
-      type: String,
-      select: false,
-    },
-    emailVerificationExpiry: {
-      type: Date,
-    },
-    passwordResetToken: {
-      type: String,
-      select: false,
-    },
-    passwordResetExpiry: {
-      type: Date,
-    },
+    isEmailVerified: { type: Boolean, default: false, required: true },
+    passwordHash: { type: String, select: false },
+    emailVerificationToken: { type: String, select: false },
+    emailVerificationExpiry: { type: Date },
+    passwordResetToken: { type: String, select: false },
+    passwordResetExpiry: { type: Date },
   },
   {
     timestamps: true,

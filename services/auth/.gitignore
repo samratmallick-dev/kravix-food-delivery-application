@@ -6,10 +6,8 @@ dist/
 
 # Environment variables
 .env
+.env.production
 
 # Editor
 .vscode/
 .idea/
-
-google/
-*/google.ts

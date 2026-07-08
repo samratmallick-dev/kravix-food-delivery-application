@@ -3,11 +3,23 @@ import asyncio
 import json
 import gc
 import os
+import sys
 import signal
 import time
 import re
 import uuid
 import logging
+
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+if sys.stderr and hasattr(sys.stderr, 'reconfigure'):
+    try:
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -359,14 +371,14 @@ Language Instructions:
 
 Format Instructions:
 - You must respond ONLY with a JSON object matching this schema:
-{
+{{
   "reply": "your text response",
   "intent": "INTENT_NAME",
   "action": "ACTION_NAME",
   "intent_confidence": 0.95,
-  "entities": {},
+  "entities": {{}},
   "followUp": ["option 1", "option 2"]
-}
+}}
 - Return raw JSON only, no markdown blocks.
 """
 

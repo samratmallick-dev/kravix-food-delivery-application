@@ -9,7 +9,7 @@ export interface User {
       restaurantId?: string | null;
       isBlocked?: boolean;
       blockedUntil?: string | null;
-      authProvider?: "google" | "email";
+      authProviders?: Array<"email" | "google">;
       isEmailVerified?: boolean;
 };
 

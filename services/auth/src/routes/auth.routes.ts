@@ -1,29 +1,35 @@
 import { Router } from "express";
 import {
-  addUserRole,
+  registerEmailController,
+  registerGoogleController,
+  loginEmailController,
+  loginGoogleController,
+  verifyEmailController,
+  resendVerificationController,
+  forgotPasswordController,
+  resetPasswordController,
   getUserProfile,
   updateUserProfile,
-  loginController,
-  registerWithEmail,
-  loginWithEmail,
-  verifyEmail,
-  resendVerificationEmail,
-  forgotPassword,
-  resetPassword,
+  addUserRole,
 } from "../controllers/auth.controllers.js";
 import { isAuthenticated } from "../middleware/isAuthenticated.js";
 
 const router = Router();
 
-router.route("/sessions").post(loginController);
-router.route("/me/role").patch(isAuthenticated, addUserRole);
-router.route("/me").get(isAuthenticated, getUserProfile).patch(isAuthenticated, updateUserProfile);
+router.post("/register", registerEmailController);
+router.post("/register/google", registerGoogleController);
 
-router.route("/register").post(registerWithEmail);
-router.route("/login").post(loginWithEmail);
-router.route("/verify-email").get(verifyEmail);
-router.route("/resend-verification").post(resendVerificationEmail);
-router.route("/forgot-password").post(forgotPassword);
-router.route("/reset-password").post(resetPassword);
+router.post("/login", loginEmailController);
+router.post("/login/google", loginGoogleController);
+
+router.get("/verify-email", verifyEmailController);
+router.post("/resend-verification", resendVerificationController);
+
+router.post("/forgot-password", forgotPasswordController);
+router.post("/reset-password", resetPasswordController);
+
+router.get("/me", isAuthenticated, getUserProfile);
+router.patch("/me", isAuthenticated, updateUserProfile);
+router.patch("/me/role", isAuthenticated, addUserRole);
 
 export default router;

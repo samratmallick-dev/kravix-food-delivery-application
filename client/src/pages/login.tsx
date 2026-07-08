@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useAppData } from "../context/AppContext";
 import { storage } from "../utils/secureStorage";
-import { loginWithEmail, resendVerificationEmail, loginWithGoogle as apiLoginWithGoogle } from "../utils/auth.api";
+import { loginWithEmail, loginWithGoogle, resendVerificationEmail } from "../utils/auth.api";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -20,41 +20,38 @@ const Login = () => {
   const navigate = useNavigate();
   const { fetchCurrentUser, fetchCart } = useAppData();
   const isProcessing = useRef(false);
-  const retryCount = useRef(0);
+
+  const handleAuthSuccess = async (token: string, needsRoleSelection?: boolean, message?: string) => {
+    storage.setToken(token);
+    await fetchCurrentUser();
+    await fetchCart();
+    if (needsRoleSelection) {
+      toast.success("Please select your role to continue.");
+      navigate("/select-role");
+    } else {
+      toast.success(message || "Login successful");
+      navigate("/");
+    }
+  };
 
   const responseGoogle = async (authResult: { code?: string }) => {
     if (isProcessing.current || !authResult?.code) return;
     isProcessing.current = true;
     setLoading(true);
-
-    const attemptLogin = async (code: string) => apiLoginWithGoogle(code);
-
     try {
-      let data;
-      try {
-        data = await attemptLogin(authResult.code);
-      } catch (firstErr: unknown) {
-        if (retryCount.current >= 1) {
-          retryCount.current = 0;
-          throw firstErr;
-        }
-        retryCount.current += 1;
-        isProcessing.current = false;
-        setLoading(false);
-        setTimeout(() => googleLogin(), 300);
-        return;
+      const data = await loginWithGoogle(authResult.code);
+      await handleAuthSuccess(data.token!, data.needsRoleSelection, data.message);
+    } catch (err: unknown) {
+      const e = err as { message?: string; code?: string };
+      if (e.code === "REGISTER_FIRST" || e.message?.toLowerCase().includes("register first")) {
+        toast.error("No account found. Please register first.");
+        navigate("/register");
+      } else if (e.code === "EMAIL_NOT_VERIFIED" || e.message?.toLowerCase().includes("verify your email")) {
+        setNotVerified(true);
+        setError("");
+      } else {
+        toast.error(e.message || "Google sign-in failed. Please try again.");
       }
-      retryCount.current = 0;
-      storage.setToken(data.token!);
-      await fetchCurrentUser();
-      await fetchCart();
-      toast.success(data.message || "Login Successful");
-      navigate("/");
-    } catch (error: unknown) {
-      toast.error(
-        (error as Error).message ||
-        "Server unreachable. Please try again later.",
-      );
     } finally {
       setLoading(false);
       isProcessing.current = false;
@@ -73,34 +70,17 @@ const Login = () => {
     setNotVerified(false);
     setResendMsg("");
     setLoading(true);
-
     try {
       const data = await loginWithEmail({ email, password });
-
-      if (data.token && data.user) {
-        storage.setToken(data.token);
-        await fetchCurrentUser();
-        await fetchCart();
-
-        if (data.needsRoleSelection) {
-          toast.success("Please select your role to continue.");
-          navigate("/select-role");
-        } else {
-          toast.success("Login successful");
-          navigate("/");
-        }
-      }
+      await handleAuthSuccess(data.token!, data.needsRoleSelection, data.message);
     } catch (err: unknown) {
-      const e = err as { message?: string } & {
-        response?: { data?: { message?: string; code?: string } };
-      };
-      const code = (err as { code?: string }).code;
-      const msg = e.message ?? "Login failed";
-
-      if (code === "EMAIL_NOT_VERIFIED" || msg.includes("verify your email")) {
+      const e = err as { message?: string; code?: string };
+      if (e.code === "EMAIL_NOT_VERIFIED" || e.message?.toLowerCase().includes("verify your email")) {
         setNotVerified(true);
+      } else if (e.message?.toLowerCase().includes("register first") || e.message?.toLowerCase().includes("does not exist")) {
+        setError(e.message ?? "Account not found.");
       } else {
-        setError(msg);
+        setError(e.message ?? "Login failed");
       }
     } finally {
       setLoading(false);
@@ -127,9 +107,7 @@ const Login = () => {
 
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               value={email}
@@ -141,13 +119,8 @@ const Login = () => {
           </div>
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <Link
-                to="/forgot-password"
-                className="text-xs text-primary hover:underline"
-              >
+              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <Link to="/forgot-password" className="text-xs text-primary hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -187,7 +160,16 @@ const Login = () => {
             </div>
           )}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <div className="text-sm text-red-600 space-y-1">
+              <p>{error}</p>
+              {(error.toLowerCase().includes("register first") || error.toLowerCase().includes("does not exist")) && (
+                <Link to="/register" className="text-primary underline">
+                  Create an account
+                </Link>
+              )}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -205,9 +187,7 @@ const Login = () => {
         </div>
 
         <button
-          onClick={() => {
-            if (!loading) googleLogin();
-          }}
+          onClick={() => { if (!loading) googleLogin(); }}
           disabled={loading}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-primary/30 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
         >
@@ -217,10 +197,7 @@ const Login = () => {
 
         <p className="text-center text-sm text-gray-500">
           Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="text-primary font-medium hover:underline"
-          >
+          <Link to="/register" className="text-primary font-medium hover:underline">
             Register
           </Link>
         </p>

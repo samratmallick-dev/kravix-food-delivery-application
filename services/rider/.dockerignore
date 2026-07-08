@@ -7,5 +7,6 @@ Dockerfile
 README.md
 LICENSE
 .env
+.env.production
 *.log
 *.md

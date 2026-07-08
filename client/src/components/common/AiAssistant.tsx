@@ -58,15 +58,21 @@ const AiAssistant: React.FC = () => {
                 recentActions: []
             });
 
-            const aiMsgId = (Date.now() + 1).toString();
             setMessages(prev => [
                 ...prev,
-                { id: aiMsgId, sender: "ai", text: res.reply, _rawMsg: userMsg, _rawReply: res.reply } as any
+                { id: (Date.now() + 1).toString(), sender: "ai", text: res.reply } as Message
             ]);
-        } catch {
+        } catch (err: unknown) {
+            const e = err as { message?: string; status?: number };
+            const isNetworkErr = !e.message ||
+                e.message.toLowerCase().includes("failed to fetch") ||
+                e.message.toLowerCase().includes("networkerror");
+            const displayText = isNetworkErr
+                ? "I can't reach the server right now. Please check your connection and try again."
+                : (e.message ?? "Something went wrong. Please try again.");
             setMessages(prev => [
-                ...prev, 
-                { id: (Date.now() + 1).toString(), sender: "ai", text: "Sorry, I couldn't process your request. Please try again later." }
+                ...prev,
+                { id: (Date.now() + 1).toString(), sender: "ai", text: displayText } as Message
             ]);
         } finally {
             setIsTyping(false);

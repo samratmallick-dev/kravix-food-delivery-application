@@ -4,13 +4,11 @@ import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useAppData } from "../context/AppContext";
-import { storage } from "../utils/secureStorage";
-import { registerWithEmail, resendVerificationEmail, loginWithGoogle } from "../utils/auth.api";
+import { registerWithEmail, registerWithGoogle, resendVerificationEmail } from "../utils/auth.api";
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function getPasswordStrength(pwd: string): { score: number; label: string; color: string } {
   let score = 0;
@@ -27,7 +25,6 @@ function getPasswordStrength(pwd: string): { score: number; label: string; color
   ];
   return { score, ...levels[score] };
 }
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const RegisterPage = () => {
   const [name, setName] = useState("");
@@ -38,12 +35,10 @@ const RegisterPage = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [successEmail, setSuccessEmail] = useState("");
   const [resendMsg, setResendMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-
-  const navigate = useNavigate();
-  const { fetchCurrentUser, fetchCart } = useAppData();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +65,7 @@ const RegisterPage = () => {
     try {
       const data = await registerWithEmail({ name: name.trim(), email, password });
       setSuccess(data.message);
+      setSuccessEmail(email);
     } catch (err: unknown) {
       setError((err as Error).message ?? "Registration failed.");
     } finally {
@@ -80,7 +76,7 @@ const RegisterPage = () => {
   const handleResend = async () => {
     setResendMsg("");
     try {
-      const data = await resendVerificationEmail(email);
+      const data = await resendVerificationEmail(successEmail || email);
       setResendMsg(data.message);
     } catch {
       setResendMsg("Failed to resend. Please try again.");
@@ -91,22 +87,23 @@ const RegisterPage = () => {
     if (!authResult?.code) return;
     setGoogleLoading(true);
     try {
-      const data = await loginWithGoogle(authResult.code);
-      if (data.token) {
-        storage.setToken(data.token);
-        await fetchCurrentUser();
-        await fetchCart();
-      }
-      toast.success(data.message || "Login Successful");
-      navigate("/");
+      const data = await registerWithGoogle(authResult.code);
+      setSuccess(data.message);
+      setSuccessEmail("");
+      toast.success(data.message);
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Google sign-in failed.");
+      const e = err as { message?: string };
+      if (e.message?.toLowerCase().includes("already registered")) {
+        toast.error("This Google account is already registered. Please sign in instead.");
+      } else {
+        toast.error(e.message || "Google registration failed.");
+      }
     } finally {
       setGoogleLoading(false);
     }
   };
 
-  const googleLogin = useGoogleLogin({
+  const googleRegister = useGoogleLogin({
     onSuccess: responseGoogle,
     onError: (err) => console.error("Google OAuth error:", err),
     flow: "auth-code",
@@ -124,9 +121,11 @@ const RegisterPage = () => {
           <div className="space-y-4 text-center">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-green-700 font-medium">{success}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                We sent a link to <span className="font-medium">{email}</span>
-              </p>
+              {successEmail && (
+                <p className="text-sm text-gray-500 mt-1">
+                  We sent a verification link to <span className="font-medium">{successEmail}</span>
+                </p>
+              )}
             </div>
             {resendMsg ? (
               <p className="text-sm text-green-600">{resendMsg}</p>
@@ -135,9 +134,15 @@ const RegisterPage = () => {
                 onClick={handleResend}
                 className="text-sm text-primary underline cursor-pointer"
               >
-                Resend email
+                Resend verification email
               </button>
             )}
+            <p className="text-sm text-gray-500">
+              Already verified?{" "}
+              <Link to="/login" className="text-primary font-medium hover:underline">
+                Sign in
+              </Link>
+            </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -201,9 +206,7 @@ const RegisterPage = () => {
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
               <div className="relative">
                 <input
                   type={showConfirm ? "text" : "password"}
@@ -235,20 +238,24 @@ const RegisterPage = () => {
           </form>
         )}
 
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-xs text-gray-400">OR</span>
-          <div className="flex-1 h-px bg-gray-200" />
-        </div>
+        {!success && (
+          <>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-xs text-gray-400">OR</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
 
-        <button
-          onClick={() => { if (!googleLoading) googleLogin(); }}
-          disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-primary/30 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-        >
-          <FcGoogle size={20} />
-          {googleLoading ? "Signing up..." : "Sign up with Google"}
-        </button>
+            <button
+              onClick={() => { if (!googleLoading) googleRegister(); }}
+              disabled={googleLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-primary/30 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            >
+              <FcGoogle size={20} />
+              {googleLoading ? "Registering..." : "Sign up with Google"}
+            </button>
+          </>
+        )}
 
         <p className="text-center text-sm text-gray-500">
           Already have an account?{" "}

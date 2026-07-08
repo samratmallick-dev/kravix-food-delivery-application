@@ -1,417 +1,347 @@
 import { Request, Response } from "express";
 import axios, { AxiosError } from "axios";
+import http from "http";
+import https from "https";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 
-const AI_MICROSERVICE_URL = process.env.AI_MICROSERVICE_URL || "http://0.0.0.0:5500";
-const RESTAURANT_BASE_URL = process.env.RESTAURANT_BASE_URL || "http://localhost:9000";
+const AI_MICROSERVICE_URL = (process.env.AI_MICROSERVICE_URL || "http://localhost:5500").replace(/\/$/, "");
+const RESTAURANT_BASE_URL = (process.env.RESTAURANT_BASE_URL || "http://localhost:9000").replace(/\/$/, "");
 
-const AI_REQUEST_TIMEOUT_MS = 35_000;
+const AI_REQUEST_TIMEOUT_MS   = 35_000;
 const CONTEXT_FETCH_TIMEOUT_MS = 4_000;
-const MAX_RETRIES = 3;
-const RETRY_BASE_MS = 1_500;
+const HEALTH_CHECK_TIMEOUT_MS  = 4_000;
+const MAX_RETRIES              = 2;
+const RETRY_BASE_MS            = 1_000;
+const HEALTH_CACHE_TTL_MS      = 8_000;
+const COUPON_CACHE_TTL_MS      = 30_000;
+const COLD_START_MAX_WAIT_MS   = 70_000;
+const COLD_START_POLL_MS       = 4_000;
+const COLD_START_QUEUE_MAX     = 40;
+
+const httpAgent  = new http.Agent ({ keepAlive: true, maxSockets: 20, timeout: AI_REQUEST_TIMEOUT_MS + 5_000 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 20, timeout: AI_REQUEST_TIMEOUT_MS + 5_000 });
+
+const aiAxios = axios.create({
+    baseURL: AI_MICROSERVICE_URL,
+    httpAgent,
+    httpsAgent,
+    timeout: AI_REQUEST_TIMEOUT_MS,
+});
+
+const ctxAxios = axios.create({
+    baseURL: RESTAURANT_BASE_URL,
+    httpAgent: new http.Agent({ keepAlive: true, maxSockets: 10 }),
+    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 10 }),
+    timeout: CONTEXT_FETCH_TIMEOUT_MS,
+});
+
+function log(level: "info" | "warn" | "error", event: string, fields: Record<string, unknown>) {
+    const entry = JSON.stringify({ level, service: "utilities", component: "ai", event, ts: new Date().toISOString(), ...fields });
+    if (level === "error") console.error(entry);
+    else if (level === "warn")  console.warn(entry);
+    else                        console.log(entry);
+}
 
 class CircuitBreaker {
-    private name: string;
-    private failureThreshold: number;
-    private recoveryMs: number;
-    
     private state: "CLOSED" | "OPEN" | "HALF_OPEN" = "CLOSED";
     private failures = 0;
     private openUntil = 0;
-    private probing = false;
+    private halfOpenProbeInFlight = false;
 
-    constructor(name: string, threshold = 5, recoveryMs = 30000) {
-        this.name = name;
-        this.failureThreshold = threshold;
-        this.recoveryMs = recoveryMs;
-    }
+    constructor(
+        private readonly name: string,
+        private readonly threshold = 5,
+        private readonly recoveryMs = 30_000,
+    ) {}
 
-    public getState(): "CLOSED" | "OPEN" | "HALF_OPEN" {
-        if (this.state === "OPEN") {
-            if (Date.now() >= this.openUntil) {
-                this.state = "HALF_OPEN";
-                this.probing = false;
-            }
+    getState(): "CLOSED" | "OPEN" | "HALF_OPEN" {
+        if (this.state === "OPEN" && Date.now() >= this.openUntil) {
+            this.state = "HALF_OPEN";
+            this.halfOpenProbeInFlight = false;
+            log("info", "circuit_half_open", { name: this.name });
         }
         return this.state;
     }
 
-    public isOpen(): boolean {
-        return this.getState() === "OPEN";
-    }
-
-    public shouldBlockConcurrently(): boolean {
-        this.getState();
-        if (this.state === "HALF_OPEN") {
-            if (this.probing) {
-                return true;
-            }
-            this.probing = true;
-            return false;
-        }
+    shouldBlock(): boolean {
+        const s = this.getState();
+        if (s === "CLOSED") return false;
+        if (s === "OPEN")   return true;
+        if (this.halfOpenProbeInFlight) return true;
+        this.halfOpenProbeInFlight = true;
         return false;
     }
 
-    public recordSuccess() {
+    recordSuccess() {
         this.failures = 0;
         this.state = "CLOSED";
         this.openUntil = 0;
-        this.probing = false;
-        console.log(`[CircuitBreaker - ${this.name}] State transitioned to CLOSED`);
+        this.halfOpenProbeInFlight = false;
+        log("info", "circuit_closed", { name: this.name });
+        cachedHealth = null;
     }
 
-    public recordFailure() {
+    recordFailure(context: string) {
+        this.halfOpenProbeInFlight = false;
         this.failures++;
-        this.probing = false;
-        if (this.failures >= this.failureThreshold) {
+        if (this.failures >= this.threshold || this.state === "HALF_OPEN") {
             this.state = "OPEN";
             this.openUntil = Date.now() + this.recoveryMs;
-            console.error(JSON.stringify({
-                level: "error", service: "utilities", component: "circuit_breaker",
-                event: "circuit_open", name: this.name, failures: this.failures,
+            log("error", "circuit_open", {
+                name: this.name, failures: this.failures, context,
                 recoveryAt: new Date(this.openUntil).toISOString(),
-            }));
+            });
         }
     }
+
+    isOpen()     { return this.getState() === "OPEN"; }
+    isHalfOpen() { return this.getState() === "HALF_OPEN"; }
 }
 
-const CB = new CircuitBreaker("ai-service", 5, 30000);
+const CB = new CircuitBreaker("ai-service", 5, 30_000);
 
-interface WaitingRequest {
-    resolve: () => void;
-    reject: (err: any) => void;
-    timestamp: number;
-}
+interface Waiter { resolve: () => void; reject: (e: Error) => void; ts: number }
 
-const coldStartQueue = {
-    queue: [] as WaitingRequest[],
-    isWaking: false,
-    wakeStartedAt: 0,
-    maxWakeTimeMs: 65_000,
-    maxQueueSize: 50,
-    pollInterval: null as any,
+const coldStart = {
+    queue:        [] as Waiter[],
+    waking:       false,
+    startedAt:    0,
+    pollTimer:    null as ReturnType<typeof setInterval> | null,
 
-    async enqueue(): Promise<void> {
-        if (this.queue.length >= this.maxQueueSize) {
-            throw new Error("cold_start_queue_full");
+    wait(): Promise<void> {
+        if (this.queue.length >= COLD_START_QUEUE_MAX) {
+            return Promise.reject(new Error("cold_start_queue_full"));
         }
         return new Promise<void>((resolve, reject) => {
-            this.queue.push({ resolve, reject, timestamp: Date.now() });
-            this.startPolling();
+            this.queue.push({ resolve, reject, ts: Date.now() });
+            this._startPolling();
         });
     },
 
-    startPolling() {
-        if (this.isWaking) return;
-        this.isWaking = true;
-        this.wakeStartedAt = Date.now();
-        console.log("[ColdStart] Render service cold-start detected. Queueing requests and starting health poll...");
+    _startPolling() {
+        if (this.pollTimer) return;
+        this.waking    = true;
+        this.startedAt = Date.now();
+        log("info", "cold_start_detected", { queueSize: this.queue.length });
 
-        this.pollInterval = setInterval(async () => {
+        this.pollTimer = setInterval(async () => {
             try {
-                const res = await axios.get(`${AI_MICROSERVICE_URL}/ready`, { timeout: 3000 });
+                const res = await aiAxios.get("/ready", { timeout: 3_000 });
                 if (res.status === 200 || res.status === 503) {
-                    console.log("[ColdStart] Render service is awake!");
-                    this.resolveAll();
+                    log("info", "cold_start_resolved", { elapsed: Date.now() - this.startedAt });
+                    this._resolveAll();
                 }
-            } catch (err: any) {
-                const elapsed = Date.now() - this.wakeStartedAt;
-                if (elapsed > this.maxWakeTimeMs) {
-                    console.error("[ColdStart] Render service failed to wake up within timeout.");
-                    this.rejectAll(new Error("Render cold-start timeout"));
+            } catch {
+                const elapsed = Date.now() - this.startedAt;
+                if (elapsed > COLD_START_MAX_WAIT_MS) {
+                    log("error", "cold_start_timeout", { elapsed });
+                    this._rejectAll(new Error("cold_start_timeout"));
                 } else {
-                    console.log(`[ColdStart] Service still booting... (${Math.round(elapsed / 1000)}s elapsed)`);
+                    log("info", "cold_start_polling", { elapsed: Math.round(elapsed / 1000) + "s" });
                 }
             }
-        }, 5000);
+        }, COLD_START_POLL_MS);
     },
 
-    resolveAll() {
-        if (this.pollInterval) {
-            clearInterval(this.pollInterval);
-            this.pollInterval = null;
-        }
-        this.isWaking = false;
-        const q = this.queue.splice(0);
-        q.forEach(item => item.resolve());
+    _resolveAll() {
+        this._clear();
+        this.queue.splice(0).forEach(w => w.resolve());
     },
 
-    rejectAll(err: any) {
-        if (this.pollInterval) {
-            clearInterval(this.pollInterval);
-            this.pollInterval = null;
-        }
-        this.isWaking = false;
-        const q = this.queue.splice(0);
-        q.forEach(item => item.reject(err));
-    }
+    _rejectAll(err: Error) {
+        this._clear();
+        this.queue.splice(0).forEach(w => w.reject(err));
+    },
+
+    _clear() {
+        if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = null; }
+        this.waking = false;
+    },
 };
 
-interface CouponCache {
-    coupons: any[];
-    timestamp: number;
-}
-
-let cachedCoupons: Record<string, CouponCache> = {};
-const COUPON_CACHE_TTL_MS = 30_000;
-
-async function getOrFetchCoupons(authToken: string, restaurantId: string | undefined): Promise<any[]> {
-    const key = restaurantId || "global";
-    const now = Date.now();
-    
-    if (cachedCoupons[key] && (now - cachedCoupons[key].timestamp < COUPON_CACHE_TTL_MS)) {
-        return cachedCoupons[key].coupons;
-    }
-
-    try {
-        const authHeaders = {
-            Authorization: `Bearer ${authToken}`,
-        };
-        const couponsRes = await axios.get(`${RESTAURANT_BASE_URL}/api/v1/coupons`, {
-            headers: authHeaders,
-            params: restaurantId ? { restaurantId } : {},
-            timeout: CONTEXT_FETCH_TIMEOUT_MS,
-        });
-        const rawCoupons = couponsRes.data?.data ?? [];
-        const coupons = rawCoupons.slice(0, 5).map((c: any) => ({
-            code: c.code,
-            discountType: c.discountType,
-            discountValue: c.discountValue,
-            couponType: c.couponType,
-            isActive: c.isActive,
-        }));
-        cachedCoupons[key] = { coupons, timestamp: now };
-        return coupons;
-    } catch (err: any) {
-        console.warn("Failed to fetch coupons for context: ", err.message);
-        return [];
-    }
-}
-
-interface HealthStatus {
-    healthy: boolean;
-    redis: boolean;
-    model: boolean;
-    mongo: boolean;
-    timestamp: number;
-}
-
+interface HealthStatus { healthy: boolean; redis: boolean; model: boolean; mongo: boolean; ts: number }
 let cachedHealth: HealthStatus | null = null;
-const HEALTH_CACHE_TTL_MS = 10_000;
 
-async function getOrFetchHealth(): Promise<HealthStatus> {
+async function fetchHealth(requestId: string): Promise<HealthStatus> {
     const now = Date.now();
-    if (cachedHealth && (now - cachedHealth.timestamp < HEALTH_CACHE_TTL_MS)) {
-        return cachedHealth;
-    }
+    if (cachedHealth && now - cachedHealth.ts < HEALTH_CACHE_TTL_MS) return cachedHealth;
 
     try {
-        const res = await axios.get(`${AI_MICROSERVICE_URL}/ready`, { timeout: 3000 });
-        const data = res.data;
-        const healthy = res.status === 200 && data.status === "ready";
+        const res = await aiAxios.get("/ready", { timeout: HEALTH_CHECK_TIMEOUT_MS });
+        const d = res.data ?? {};
         cachedHealth = {
-            healthy,
-            redis: data.redis ?? false,
-            model: data.model_loaded ?? false,
-            mongo: data.mongodb ?? false,
-            timestamp: now,
+            healthy: res.status === 200 && d.status === "ready",
+            redis:   d.redis         ?? false,
+            model:   d.model_loaded  ?? false,
+            mongo:   d.mongodb       ?? false,
+            ts:      now,
         };
-    } catch (err: any) {
-        cachedHealth = {
-            healthy: false,
-            redis: false,
-            model: false,
-            mongo: false,
-            timestamp: now,
-        };
+        log("info", "health_ok", { requestId, ...cachedHealth });
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log("warn", "health_check_failed", { requestId, reason: msg });
+        cachedHealth = { healthy: false, redis: false, model: false, mongo: false, ts: now };
     }
     return cachedHealth;
 }
 
 function isRetryable(err: AxiosError): boolean {
-    const code = err.code ?? "";
+    const code   = err.code ?? "";
     const status = err.response?.status ?? 0;
     return (
-        ["ECONNREFUSED", "ECONNRESET", "ETIMEDOUT", "ENOTFOUND", "EAI_AGAIN", "ECONNABORTED"].includes(code) ||
-        status === 502 || status === 503 || status === 504
+        ["ECONNREFUSED","ECONNRESET","ETIMEDOUT","ENOTFOUND","EAI_AGAIN","ECONNABORTED","EPIPE"].includes(code) ||
+        status === 429 || status === 502 || status === 503 || status === 504
     );
 }
 
-function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
+interface AIResult {
+    reply: string; intent: string; action: string;
+    intent_confidence: number; entities: unknown; followUp: string[];
+    redis_latency_ms: number; inference_latency_ms: number;
+    _latencyMs: number; _retries: number;
 }
 
-async function callAIWithRetry(
-    payload: object,
-    requestId: string,
-    userId: string,
-    role: string
-): Promise<{ 
-    reply: string; 
-    intent: string;
-    action: string;
-    intent_confidence: number; 
-    entities: any;
-    followUp: string[];
-    redis_latency_ms: number;
-    inference_latency_ms: number;
-    _latencyMs: number; 
-    _retries: number;
-}> {
+async function callAI(payload: object, requestId: string, userId: string, role: string): Promise<AIResult> {
+    if (CB.shouldBlock()) {
+        const state = CB.getState();
+        log("warn", "circuit_blocked", { requestId, userId, role, state });
 
-    if (CB.isOpen()) {
-        console.warn(JSON.stringify({
-            level: "warn", service: "utilities", component: "circuit_breaker",
-            event: "circuit_rejected", requestId, userId, role, state: CB.getState(),
-        }));
-        throw new Error("circuit_open");
+        if (state === "OPEN") {
+            await coldStart.wait();
+        } else {
+            throw Object.assign(new Error("circuit_open"), { code: "CIRCUIT_OPEN" });
+        }
     }
 
-    if (CB.shouldBlockConcurrently()) {
-        console.warn(JSON.stringify({
-            level: "warn", service: "utilities", component: "circuit_breaker",
-            event: "circuit_concurrent_blocked", requestId, userId, role, state: CB.getState(),
-        }));
-        throw new Error("circuit_concurrent_blocked");
-    }
-
-    let lastError: AxiosError | null = null;
-    let totalRetries = 0;
-    const overallStart = Date.now();
+    let lastErr: AxiosError | null = null;
+    let retries = 0;
+    const t0 = Date.now();
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-        const attemptStart = Date.now();
+        const tAttempt = Date.now();
         try {
-            const response = await axios.post(`${AI_MICROSERVICE_URL}/chat`, payload, {
-                timeout: AI_REQUEST_TIMEOUT_MS,
+            const res = await aiAxios.post("/chat", payload, {
                 headers: { "X-Correlation-ID": requestId, "X-Request-ID": requestId },
             });
-            const latencyMs = Date.now() - attemptStart;
-            const totalMs = Date.now() - overallStart;
 
             CB.recordSuccess();
+            log("info", "ai_call_success", {
+                requestId, userId, role, attempt, retries,
+                latencyMs: Date.now() - tAttempt, totalMs: Date.now() - t0,
+            });
+            return { ...res.data, _latencyMs: Date.now() - t0, _retries: retries };
 
-            console.log(JSON.stringify({
-                level: "info", service: "utilities", component: "ai_client",
-                event: "ai_request_success", requestId, userId, role,
-                attempt, aiLatencyMs: latencyMs, totalMs, retries: totalRetries,
-            }));
+        } catch (err: unknown) {
+            lastErr = err as AxiosError;
+            const code   = lastErr.code ?? "UNKNOWN";
+            const status = lastErr.response?.status ?? null;
+            const retryable = isRetryable(lastErr);
 
-            return { ...response.data, _latencyMs: totalMs, _retries: totalRetries };
-        } catch (err: any) {
-            lastError = err as AxiosError;
-            const latencyMs = Date.now() - attemptStart;
-            const retryable = isRetryable(lastError);
-            const status = lastError.response?.status ?? null;
-            const errorCode = lastError.code ?? "UNKNOWN";
+            log("error", "ai_call_failed", {
+                requestId, userId, role, attempt, retries,
+                code, status, retryable,
+                message: lastErr.message,
+                latencyMs: Date.now() - tAttempt,
+                stack: lastErr.stack?.split("\n").slice(0, 4).join(" | "),
+            });
 
-            console.error(JSON.stringify({
-                level: "error", service: "utilities", component: "ai_client",
-                event: "ai_request_failed", requestId, userId, role,
-                attempt, latencyMs, errorCode, status,
-                message: lastError.message,
-                retrying: retryable && attempt < MAX_RETRIES,
-            }));
-
-            if (attempt === 0 && retryable) {
-                coldStartQueue.startPolling();
-                
-                return {
-                    reply: "Kravix AI is waking up. Please hold on for about 30 seconds... 🙏",
-                    intent: "WAKING_UP",
-                    action: "SHOW_WAKING_UP_SIGN",
-                    intent_confidence: 1.0,
-                    entities: {},
-                    followUp: [],
-                    redis_latency_ms: 0,
-                    inference_latency_ms: 0,
-                    _latencyMs: Date.now() - overallStart,
-                    _retries: 0
-                };
+            if (attempt === 0 && retryable && (code === "ECONNREFUSED" || status === 503 || status === 502)) {
+                log("info", "cold_start_wait_start", { requestId });
+                try {
+                    await coldStart.wait();
+                    log("info", "cold_start_wait_done", { requestId });
+                    continue;
+                } catch (csErr: unknown) {
+                    CB.recordFailure("cold_start_timeout");
+                    throw csErr;
+                }
             }
 
             if (!retryable || attempt === MAX_RETRIES) {
-                CB.recordFailure();
+                CB.recordFailure(`${code ?? status}`);
                 break;
             }
 
-            totalRetries++;
-            // Exponential backoff + randomized jitter (+/- 0-1000ms)
-            const backoffMs = RETRY_BASE_MS * Math.pow(2, attempt) + Math.floor(Math.random() * 1000);
-            await sleep(backoffMs);
+            retries++;
+            const backoff = RETRY_BASE_MS * Math.pow(2, attempt) + Math.floor(Math.random() * 800);
+            log("info", "ai_call_retry", { requestId, attempt, backoffMs: backoff });
+            await sleep(backoff);
         }
     }
 
-    throw lastError;
+    throw lastErr ?? new Error("ai_call_exhausted");
 }
 
-async function fetchContextData(
-    authToken: string,
-    restaurantId: string | undefined,
-    requestId: string,
-    role: string
-): Promise<{
-    orders: { id: string; status: string }[];
+interface ContextData {
+    orders:     { id: string; status: string }[];
     menu_items: { name: string; price: number; available: boolean }[];
-    coupons: any[];
-    _contextLatencyMs: number;
-}> {
-    const contextStart = Date.now();
-    const contextData: {
-        orders: { id: string; status: string }[];
-        menu_items: { name: string; price: number; available: boolean }[];
-        coupons: any[];
-        _contextLatencyMs: number;
-    } = { orders: [], menu_items: [], coupons: [], _contextLatencyMs: 0 };
+    coupons:    unknown[];
+    _ms:        number;
+}
 
-    const authHeaders = {
-        Authorization: `Bearer ${authToken}`,
-        "X-Correlation-ID": requestId,
-        "X-Request-ID": requestId,
-    };
+let couponCache: Record<string, { data: unknown[]; ts: number }> = {};
 
-    // Code-level context boundaries based on user role
+async function fetchContext(token: string, restaurantId: string | undefined, requestId: string, role: string): Promise<ContextData> {
+    const t0 = Date.now();
+    const headers = { Authorization: `Bearer ${token}`, "X-Correlation-ID": requestId };
+    const ctx: ContextData = { orders: [], menu_items: [], coupons: [], _ms: 0 };
+
     if (role === "customer" || role === "admin") {
         try {
-            const ordersRes = await axios.get(`${RESTAURANT_BASE_URL}/api/v1/orders/me`, {
-                headers: authHeaders,
-                params: { limit: 5 },
-                timeout: CONTEXT_FETCH_TIMEOUT_MS,
-            });
-            const rawOrders = ordersRes.data?.data?.orders ?? ordersRes.data?.data ?? [];
-            contextData.orders = rawOrders.map((o: any) => ({
-                id: o._id ?? o.id,
-                status: o.status,
-            }));
-        } catch {
-            console.log("Failed to fetch user orders for AI context. Proceeding without order context.");
+            const r = await ctxAxios.get("/api/v1/orders/me", { headers, params: { limit: 5 } });
+            const raw = r.data?.data?.orders ?? r.data?.data ?? [];
+            ctx.orders = raw.map((o: { _id?: string; id?: string; status: string }) => ({ id: o._id ?? o.id, status: o.status }));
+        } catch (e: unknown) {
+            log("warn", "ctx_orders_failed", { requestId, reason: (e as Error).message });
         }
     }
 
-    if ((role === "customer" || role === "seller" || role === "admin") && restaurantId) {
+    if (restaurantId && (role === "customer" || role === "seller" || role === "admin")) {
         try {
-            const menuRes = await axios.get(
-                `${RESTAURANT_BASE_URL}/api/v1/menu/${restaurantId}`,
-                { headers: authHeaders, timeout: CONTEXT_FETCH_TIMEOUT_MS }
-            );
-            const rawItems = menuRes.data?.data?.menuItems ?? menuRes.data?.data ?? [];
-            contextData.menu_items = rawItems.slice(0, 10).map((item: any) => ({
-                name: item.name,
-                price: item.price,
-                available: item.isAvailable ?? true,
+            const r = await ctxAxios.get(`/api/v1/menu/${restaurantId}`, { headers });
+            const raw = r.data?.data?.menuItems ?? r.data?.data ?? [];
+            ctx.menu_items = raw.slice(0, 10).map((i: { name: string; price: number; isAvailable?: boolean }) => ({
+                name: i.name, price: i.price, available: i.isAvailable ?? true,
             }));
-        } catch {
-            console.log("Failed to fetch restaurant menu for AI context. Proceeding without menu context.");
+        } catch (e: unknown) {
+            log("warn", "ctx_menu_failed", { requestId, reason: (e as Error).message });
         }
     }
 
     if (role === "customer" || role === "seller" || role === "admin") {
-        contextData.coupons = await getOrFetchCoupons(authToken, restaurantId);
+        const key = restaurantId ?? "global";
+        const now = Date.now();
+        if (couponCache[key] && now - couponCache[key].ts < COUPON_CACHE_TTL_MS) {
+            ctx.coupons = couponCache[key].data;
+        } else {
+            try {
+                const r = await ctxAxios.get("/api/v1/coupons", {
+                    headers, params: restaurantId ? { restaurantId } : {},
+                });
+                const raw = (r.data?.data ?? []).slice(0, 5).map((c: { code: string; discountType: string; discountValue: number; couponType: string; isActive: boolean }) => ({
+                    code: c.code, discountType: c.discountType,
+                    discountValue: c.discountValue, couponType: c.couponType, isActive: c.isActive,
+                }));
+                couponCache[key] = { data: raw, ts: now };
+                ctx.coupons = raw;
+            } catch (e: unknown) {
+                log("warn", "ctx_coupons_failed", { requestId, reason: (e as Error).message });
+            }
+        }
     }
 
-    contextData._contextLatencyMs = Date.now() - contextStart;
-    return contextData;
+    ctx._ms = Date.now() - t0;
+    return ctx;
 }
+
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+    customer: ["read:profile","create:order","read:orders","create:payment","read:restaurants","manage:cart"],
+    seller:   ["read:profile","manage:menu","manage:orders","read:earnings","manage:coupons","read:restaurant_analytics"],
+    rider:    ["read:profile","accept:deliveries","update:delivery_status","read:earnings","manage:availability"],
+    admin:    ["read:profile","manage:users","manage:restaurants","manage:riders","read:platform_analytics","manage:platform_settings"],
+};
 
 export const aiChat = async (req: Request, res: Response) => {
     const requestId =
@@ -420,136 +350,106 @@ export const aiChat = async (req: Request, res: Response) => {
         `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
     const authUser = (req as AuthenticatedRequest).user;
-    if (!authUser || !authUser._id) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
+    if (!authUser?._id) return res.status(401).json({ error: "Unauthorized" });
 
-    const userId = authUser._id;
-    const role = authUser.role || "customer";
-    const userName = authUser.name || "User";
+    const userId   = authUser._id as string;
+    const role     = (authUser.role as string) || "customer";
+    const userName = (authUser.name as string) || "User";
+    const { message, restaurantId, currentPage, currentModule, preferredLanguage, recentActions } = req.body as {
+        message: string; restaurantId?: string; currentPage?: string;
+        currentModule?: string; preferredLanguage?: string; recentActions?: string[];
+    };
 
-    const { message, restaurantId, currentPage, currentModule, preferredLanguage, recentActions } = req.body;
+    if (!message) return res.status(400).json({ error: "Missing required field: message" });
 
-    if (!message) {
-        return res.status(400).json({ error: "Missing required field: message" });
-    }
+    const t0    = Date.now();
+    const token = (req.headers.authorization ?? "").replace("Bearer ", "");
 
-    const requestStart = Date.now();
-    const authToken = req.headers.authorization?.split(" ")[1] ?? "";
+    res.setHeader("X-Request-ID", requestId);
 
-    if (coldStartQueue.isWaking) {
+    if (coldStart.waking) {
         return res.status(200).json({
-            reply: "Kravix AI is waking up. Please hold on for about 30 seconds... 🙏",
-            intent: "WAKING_UP",
-            action: "SHOW_WAKING_UP_SIGN",
-            intent_confidence: 1.0,
-            entities: {},
-            followUp: []
+            reply: "Kravix AI is waking up — please hold on for about 30 seconds 🙏",
+            intent: "WAKING_UP", action: "SHOW_WAKING_UP_SIGN",
+            intent_confidence: 1.0, entities: {}, followUp: [],
         });
     }
 
-    const health = await getOrFetchHealth();
-    console.log(JSON.stringify({
-        level: "info", service: "utilities", component: "ai_controller",
-        event: "health_consulted", requestId,
-        aiServiceHealthy: health.healthy,
-        redisHealthy: health.redis,
-        modelReady: health.model,
-        mongoHealthy: health.mongo
-    }));
+    const health = await fetchHealth(requestId);
+    log("info", "health_consulted", {
+        requestId, userId, role,
+        healthy: health.healthy, redis: health.redis, model: health.model,
+    });
 
-    const contextData = await fetchContextData(authToken, restaurantId, requestId, role);
-    const contextLatencyMs = contextData._contextLatencyMs;
+    const ctx = await fetchContext(token, restaurantId, requestId, role);
 
-    const rolePermissions: Record<string, string[]> = {
-        customer: ["read:profile", "create:order", "read:orders", "create:payment", "read:restaurants", "manage:cart"],
-        seller: ["read:profile", "manage:menu", "manage:orders", "read:earnings", "manage:coupons", "read:restaurant_analytics"],
-        rider: ["read:profile", "accept:deliveries", "update:delivery_status", "read:earnings", "manage:availability"],
-        admin: ["read:profile", "manage:users", "manage:restaurants", "manage:riders", "read:platform_analytics", "manage:platform_settings"]
-    };
-    const permissions = rolePermissions[role] || rolePermissions.customer;
-
-    const sanitizedContext = {
-        orders: contextData.orders,
-        menu_items: contextData.menu_items,
-        coupons: contextData.coupons,
-        userId: `user_${userId.slice(-6)}`,
-        userRole: role,
-        authenticated: true,
+    const sanitizedCtx = {
+        orders:            ctx.orders,
+        menu_items:        ctx.menu_items,
+        coupons:           ctx.coupons,
+        userId:            `user_${userId.slice(-6)}`,
+        userRole:          role,
+        authenticated:     true,
         userName,
-        currentPage: currentPage || "/",
-        currentModule: currentModule || "home",
-        permissions,
-        recentActions: recentActions || [],
-        preferredLanguage: preferredLanguage || "en"
+        currentPage:       currentPage  || "/",
+        currentModule:     currentModule || "home",
+        permissions:       ROLE_PERMISSIONS[role] ?? ROLE_PERMISSIONS["customer"],
+        recentActions:     recentActions || [],
+        preferredLanguage: preferredLanguage || "en",
     };
 
     try {
-        const { _latencyMs: aiLatencyMs, _retries: retries, ...data } =
-            await callAIWithRetry({ message, userId, role, contextData: sanitizedContext }, requestId, userId, role);
+        const { _latencyMs, _retries, ...data } = await callAI(
+            { message, userId, role, contextData: sanitizedCtx },
+            requestId, userId, role,
+        );
 
-        const totalMs = Date.now() - requestStart;
-        console.log(JSON.stringify({
-            level: "info", service: "utilities", component: "ai_controller",
-            event: "chat_complete", requestId, correlationId: requestId, userId, role,
-            contextLatencyMs, aiLatencyMs: data.redis_latency_ms + data.inference_latency_ms,
-            redisLatencyMs: data.redis_latency_ms,
-            inferenceLatencyMs: data.inference_latency_ms,
-            totalMs, retries,
-            circuitState: CB.getState(),
-        }));
+        log("info", "chat_complete", {
+            requestId, userId, role,
+            contextMs: ctx._ms, aiMs: _latencyMs, totalMs: Date.now() - t0,
+            retries: _retries, circuitState: CB.getState(),
+            redisMs: (data as { redis_latency_ms?: number }).redis_latency_ms,
+            inferenceMs: (data as { inference_latency_ms?: number }).inference_latency_ms,
+        });
 
-        res.setHeader("X-Request-ID", requestId);
         return res.status(200).json(data);
-    } catch (error: any) {
-        const totalMs = Date.now() - requestStart;
-        const axiosErr = error as AxiosError;
-        const status = axiosErr.response?.status ?? null;
-        const errorCode = axiosErr.code ?? error.message ?? "UNKNOWN";
-        const stack = error.stack ?? "";
 
-        console.error(JSON.stringify({
-            level: "error", service: "utilities", component: "ai_controller",
-            event: "chat_failed", requestId, correlationId: requestId, userId, role,
-            errorCode, status, totalMs,
-            retriesExhausted: MAX_RETRIES,
+    } catch (err: unknown) {
+        const e      = err as AxiosError & { code?: string };
+        const code   = e.code ?? "UNKNOWN";
+        const status = e.response?.status ?? null;
+
+        log("error", "chat_failed", {
+            requestId, userId, role,
+            code, status, totalMs: Date.now() - t0,
+            message: e.message,
             circuitState: CB.getState(),
-            failureReason: error.message || "Request failed",
-            exceptionStackTrace: stack
-        }));
-
-        res.setHeader("X-Request-ID", requestId);
-        return res.status(200).json({
-            reply: "I'm currently unavailable. Please try again in a moment.",
-            intent: "UNKNOWN",
-            action: "NONE",
-            intent_confidence: 0,
-            entities: {},
-            followUp: []
+            stack: e.stack?.split("\n").slice(0, 5).join(" | "),
+        });
+        return res.status(503).json({
+            error: "ai_unavailable",
+            message: "The AI service is temporarily unavailable. Please try again in a moment.",
+            requestId,
         });
     }
 };
 
 export const aiFeedback = async (req: Request, res: Response) => {
-    const requestId =
-        (req.headers["x-request-id"] as string) ||
-        (req.headers["x-correlation-id"] as string) ||
-        `${Date.now()}`;
+    const requestId = (req.headers["x-request-id"] as string) || `${Date.now()}`;
     try {
-        const { messageId, message, reply, role, feedback } = req.body;
+        const { messageId, message, reply, role, feedback } = req.body as {
+            messageId: string; message: string; reply: string; role: string; feedback: number;
+        };
         if (!messageId || !message || !reply || !role || ![1, -1].includes(feedback)) {
             return res.status(400).json({ error: "Missing or invalid feedback fields" });
         }
-        await axios.post(`${AI_MICROSERVICE_URL}/feedback`, { messageId, message, reply, role, feedback }, {
+        await aiAxios.post("/feedback", { messageId, message, reply, role, feedback }, {
             timeout: 5_000,
             headers: { "X-Request-ID": requestId },
         });
         return res.status(204).send();
-    } catch (error: any) {
-        console.error(JSON.stringify({
-            level: "warn", service: "utilities", component: "ai_client",
-            event: "feedback_failed", requestId, message: error.message,
-        }));
+    } catch (err: unknown) {
+        log("warn", "feedback_failed", { requestId, reason: (err as Error).message });
         return res.status(204).send();
     }
 };
