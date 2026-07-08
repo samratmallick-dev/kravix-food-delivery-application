@@ -75,9 +75,12 @@ class RedisSessionStore(SessionStore):
         self._client = redis_lib.Redis(connection_pool=pool)
         self._ttl = ttl
         self._max_sessions = max_sessions
-        self._client.ping()
-        logger.info("Redis session store connected (TTL=%ds, max=%d, pool_max=%d)",
-                    ttl, max_sessions, max_connections)
+        try:
+            self._client.ping()
+            logger.info("Redis session store connected (TTL=%ds, max=%d, pool_max=%d)",
+                        ttl, max_sessions, max_connections)
+        except Exception as exc:
+            logger.warning("Redis session store ping failed during init: %s", exc)
 
     def _key(self, user_id: str) -> str:
         return f"{self._KEY_PREFIX}{user_id}"
@@ -208,18 +211,44 @@ class FallbackSessionStore(SessionStore):
 
     _HEALTH_TTL = 5.0 
 
-    def __init__(self, redis_store: "RedisSessionStore", lru_store: LRUSessionStore) -> None:
-        self._redis = redis_store
+    def __init__(self, redis_url: str, lru_store: LRUSessionStore, ttl: int = 1800, max_sessions: int = 500) -> None:
+        self._redis_url = redis_url
         self._lru = lru_store
+        self._ttl = ttl
+        self._max_sessions = max_sessions
+        self._redis = None
         self._lock = Lock()
-        self._redis_healthy: bool = True
+        self._redis_healthy: bool = False
         self._last_health_check: float = 0.0
+
+        # Try initial connection attempt
+        self._try_init_redis()
+
+    def _try_init_redis(self) -> bool:
+        if self._redis is not None:
+            return True
+        try:
+            self._redis = RedisSessionStore(self._redis_url, ttl=self._ttl, max_sessions=self._max_sessions)
+            self._redis_healthy = self._redis.ping()
+            return self._redis_healthy
+        except Exception as exc:
+            logger.warning("Lazy Redis initialization failed: %s. Will retry dynamically.", exc)
+            self._redis = None
+            self._redis_healthy = False
+            return False
 
     def _is_redis_healthy(self) -> bool:
         now = time.monotonic()
         with self._lock:
             if now - self._last_health_check < self._HEALTH_TTL:
                 return self._redis_healthy
+            
+            self._last_health_check = now
+
+            if self._redis is None:
+                self._try_init_redis()
+                return self._redis_healthy
+
             healthy = self._redis.ping()
             if healthy != self._redis_healthy:
                 if healthy:
@@ -227,11 +256,10 @@ class FallbackSessionStore(SessionStore):
                 else:
                     logger.warning("Redis unhealthy — switching to LRU fallback")
             self._redis_healthy = healthy
-            self._last_health_check = now
             return healthy
 
     def get_history(self, user_id: str) -> List[Dict]:
-        if self._is_redis_healthy():
+        if self._is_redis_healthy() and self._redis:
             result = self._redis.get_history(user_id)
             if result:
                 self._lru.save_history(user_id, result)
@@ -240,20 +268,20 @@ class FallbackSessionStore(SessionStore):
 
     def save_history(self, user_id: str, history: List[Dict]) -> None:
         self._lru.save_history(user_id, history)  
-        if self._is_redis_healthy():
+        if self._is_redis_healthy() and self._redis:
             self._redis.save_history(user_id, history)
 
     def cleanup(self) -> int:
         return self._lru.cleanup()
 
     def active_count(self) -> int:
-        if self._is_redis_healthy():
+        if self._is_redis_healthy() and self._redis:
             return self._redis.active_count()
         return self._lru.active_count()
 
     def clear_all(self) -> None:
         self._lru.clear_all()
-        if self._is_redis_healthy():
+        if self._is_redis_healthy() and self._redis:
             self._redis.clear_all()
 
     def ping(self) -> bool:
@@ -267,12 +295,5 @@ def create_session_store(
 ) -> SessionStore:
     lru = LRUSessionStore(max_size=max_sessions, ttl=ttl)
     if redis_url:
-        try:
-            redis_store = RedisSessionStore(redis_url, ttl=ttl, max_sessions=max_sessions)
-            return FallbackSessionStore(redis_store, lru)
-        except Exception as exc:
-            logger.warning(
-                "Redis unavailable at startup (%s: %s) — using LRU session store",
-                type(exc).__name__, exc,
-            )
+        return FallbackSessionStore(redis_url, lru, ttl=ttl, max_sessions=max_sessions)
     return lru

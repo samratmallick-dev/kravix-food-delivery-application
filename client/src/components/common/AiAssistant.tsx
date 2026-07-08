@@ -51,7 +51,11 @@ const AiAssistant: React.FC = () => {
                 message: userMsg,
                 userId: user._id || "anonymous",
                 role,
-                restaurantId: user.restaurantId || undefined
+                restaurantId: user.restaurantId || undefined,
+                currentPage: window.location.pathname,
+                currentModule: window.location.pathname.split("/")[1] || "home",
+                preferredLanguage: navigator.language || "en",
+                recentActions: []
             });
 
             const aiMsgId = (Date.now() + 1).toString();

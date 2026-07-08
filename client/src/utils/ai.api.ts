@@ -6,6 +6,10 @@ export interface AIChatPayload {
     userId: string;
     role: string;
     restaurantId?: string;
+    currentPage?: string;
+    currentModule?: string;
+    preferredLanguage?: string;
+    recentActions?: string[];
 }
 
 export interface AIChatResponse {
