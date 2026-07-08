@@ -77,24 +77,18 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 app.use("/api/v1", masterRouter);
 
-app.use("/api/v1/menu", (req, res) => {
+app.use("/api/v1/menu", (req, res, next) => {
   res.setHeader("Warning", '299 - "Deprecated API"');
-  res.status(301).json({
-    success: false,
-    message: "This endpoint is deprecated. Use /api/v1/menu-items instead.",
-    error: true,
-    code: "DEPRECATED"
-  });
+  console.warn(`[restaurant] Deprecated route: ${req.method} /api/v1/menu — use /api/v1/menu-items`);
+  req.url = "/menu-items" + (req.url === "/" ? "" : req.url);
+  masterRouter(req, res, next);
 });
 
-app.use("/api/v1/address", (req, res) => {
+app.use("/api/v1/address", (req, res, next) => {
   res.setHeader("Warning", '299 - "Deprecated API"');
-  res.status(301).json({
-    success: false,
-    message: "This endpoint is deprecated. Use /api/v1/addresses instead.",
-    error: true,
-    code: "DEPRECATED"
-  });
+  console.warn(`[restaurant] Deprecated route: ${req.method} /api/v1/address — use /api/v1/addresses`);
+  req.url = "/addresses" + (req.url === "/" ? "" : req.url);
+  masterRouter(req, res, next);
 });
 
 app.get("/", (_req, res) => {
