@@ -4,29 +4,39 @@ import { ValidationError } from "../utils/errors.js";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-const registrationSchema = z.object({
-  name: z.string().min(2).max(50),
-  email: z.string().regex(emailRegex, "Please provide a valid email address."),
-  password: z.string().regex(passwordRegex, "Password must be at least 8 characters with one uppercase letter and one digit.")
+export const registrationSchema = z.object({
+  body: z.object({
+    name: z.string().min(2).max(50),
+    email: z.string().regex(emailRegex, "Please provide a valid email address."),
+    password: z.string().regex(passwordRegex, "Password must be at least 8 characters with one uppercase letter and one digit.")
+  })
 });
 
-const loginSchema = z.object({
-  email: z.string().regex(emailRegex, "Please provide a valid email address."),
-  password: z.string()
+export const loginSchema = z.object({
+  body: z.object({
+    email: z.string().regex(emailRegex, "Please provide a valid email address."),
+    password: z.string()
+  })
 });
 
-const profileUpdateSchema = z.object({
-  name: z.string().min(2).max(50).optional(),
-  image: z.string().optional()
+export const profileUpdateSchema = z.object({
+  body: z.object({
+    name: z.string().min(2).max(50).optional(),
+    image: z.string().optional()
+  })
 });
 
-const roleSchema = z.object({
-  role: z.enum(["customer", "rider", "seller"])
+export const roleSchema = z.object({
+  body: z.object({
+    role: z.enum(["customer", "rider", "seller"])
+  })
 });
 
-const resetPasswordSchema = z.object({
-  token: z.string(),
-  newPassword: z.string().regex(passwordRegex, "Password must be at least 8 characters with one uppercase letter and one digit.")
+export const resetPasswordSchema = z.object({
+  body: z.object({
+    token: z.string(),
+    newPassword: z.string().regex(passwordRegex, "Password must be at least 8 characters with one uppercase letter and one digit.")
+  })
 });
 
 export class AuthValidator {

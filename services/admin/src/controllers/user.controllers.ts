@@ -3,6 +3,7 @@ import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { AdminRequest } from "../middleware/isAdminAuthenticated.js";
 import { userModerationService } from "../services/index.js";
 import { AdminResponseMapper } from "../mappers/admin-response.mapper.js";
+import { successResponse, paginatedResponse } from "../utils/response.js";
 
 export const getAllUsers = TryCatch(async (req: AdminRequest, res: Response, next: NextFunction) => {
   const page = Math.max(1, parseInt(req.query["page"] as string) || 1);
@@ -11,38 +12,20 @@ export const getAllUsers = TryCatch(async (req: AdminRequest, res: Response, nex
 
   const { users, total } = await userModerationService.getAllUsers(page, limit, role);
   const dtos = users.map((u) => AdminResponseMapper.toUserDto(u, (u as any).riderPicture));
-
-  return res.status(200).json({
-    success: true,
-    message: "Users fetched successfully",
-    error: false,
-    data: {
-      users: dtos,
-      total,
-      page,
-      pages: Math.ceil(total / limit)
-    }
-  });
+  return paginatedResponse(res, 200, "Users fetched successfully", dtos, page, limit, total);
 });
 
 export const getUserById = TryCatch(async (req: AdminRequest, res: Response, next: NextFunction) => {
   const userId = req.params["userId"] as string;
   const user = await userModerationService.getUserById(userId);
-  return res.status(200).json({
-    success: true,
-    message: "User fetched successfully",
-    error: false,
-    data: AdminResponseMapper.toUserDto(user)
-  });
+  return successResponse(res, 200, "User fetched successfully", AdminResponseMapper.toUserDto(user));
 });
 
 export const blockUser = TryCatch(async (req: AdminRequest, res: Response, next: NextFunction) => {
   const userId = req.params["userId"] as string;
   const user = await userModerationService.blockUser(userId);
-  return res.status(200).json({
-    success: true,
-    message: user.isBlocked ? "User blocked for 7 days" : "User unblocked",
-    error: false,
-    data: { isBlocked: user.isBlocked, blockedUntil: user.blockedUntil }
+  return successResponse(res, 200, user.isBlocked ? "User blocked for 7 days" : "User unblocked", {
+    isBlocked: user.isBlocked,
+    blockedUntil: user.blockedUntil
   });
 });

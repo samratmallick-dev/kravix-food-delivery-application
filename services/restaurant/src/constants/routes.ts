@@ -1,22 +1,37 @@
 export const ROUTES = {
+  AUTH: {
+    BASE: "/auth",
+    REGISTER: "/register",
+    REGISTER_GOOGLE: "/register/google",
+    LOGIN: "/login",
+    LOGIN_GOOGLE: "/login/google",
+    LOGOUT: "/logout",
+    REFRESH: "/refresh-token",
+    FORGOT_PASSWORD: "/forgot-password",
+    RESET_PASSWORD: "/reset-password",
+    VERIFY_EMAIL: "/verify-email",
+    RESEND_VERIFICATION: "/resend-verification"
+  },
+  USERS: {
+    BASE: "/users",
+    ME: "/me",
+    ME_ROLE: "/me/role",
+    DETAIL: "/:userId"
+  },
   RESTAURANTS: {
     BASE: "/restaurants",
-    ME: "/me",
-    ME_STATUS: "/me/status",
-    DETAIL: "/:id"
+    DETAIL: "/:restaurantId",
+    MENU: "/:restaurantId/menu-items",
+    REVIEWS: "/:restaurantId/reviews"
   },
   MENU_ITEMS: {
     BASE: "/menu-items",
-    AUTOCOMPLETE: "/autocomplete",
-    SEARCH: "/search",
-    BY_RESTAURANT: "/:restaurantId",
-    DETAIL: "/:itemId",
-    AVAILABILITY: "/:itemId/availability"
+    DETAIL: "/:menuItemId"
   },
   CART: {
     BASE: "/cart",
-    INCREMENT: "/increment",
-    DECREMENT: "/decrement"
+    ITEMS: "/items",
+    ITEM_DETAIL: "/items/:itemId"
   },
   ADDRESSES: {
     BASE: "/addresses",
@@ -24,40 +39,67 @@ export const ROUTES = {
   },
   ORDERS: {
     BASE: "/orders",
+    DETAIL: "/:orderId",
+    TRACKING: "/:orderId/tracking"
+  },
+  RIDERS: {
+    BASE: "/riders",
     ME: "/me",
-    ME_DETAIL: "/me/:orderId",
-    ME_CANCEL: "/me/:orderId/cancel",
-    REORDER: "/reorder/:orderId",
-    RESTAURANT_ORDERS: "/restaurants/:restaurantId",
-    RESTAURANT_SALES: "/restaurants/:restaurantId/sales-stats",
-    STATUS: "/:orderId/status",
-    PAYMENT: "/:id/payment",
-    INTERNAL_RIDER_ASSIGNMENT: "/internal/rider-assignment",
-    INTERNAL_CURRENT: "/internal/current",
-    INTERNAL_STATUS: "/internal/status",
-    INTERNAL_DELIVERY_HISTORY: "/internal/delivery-history",
-    INTERNAL_SET_OTP: "/internal/set-otp",
-    INTERNAL_COD_PAYMENT: "/internal/cod-payment",
-    INTERNAL_DETAIL: "/internal/:orderId"
+    LOCATION: "/location",
+    ORDERS: "/orders",
+    ACCEPT: "/orders/:orderId/accept",
+    PICKUP: "/orders/:orderId/pickup",
+    DELIVER: "/orders/:orderId/deliver"
+  },
+  PAYMENTS: {
+    BASE: "/payments",
+    DETAIL: "/:paymentId",
+    VERIFY: "/verify",
+    WEBHOOK: "/webhook"
   },
   COUPONS: {
     BASE: "/coupons",
-    APPLY: "/apply",
-    ANALYTICS: "/analytics/:id",
-    DETAIL: "/:id"
+    DETAIL: "/:couponId"
   },
   REVIEWS: {
     BASE: "/reviews",
-    BY_RESTAURANT: "/restaurant/:id",
-    BY_RIDER: "/rider/:id",
-    REPORT: "/report",
-    ADMIN: "/admin",
-    ADMIN_MODERATE: "/admin/moderate/:id"
+    DETAIL: "/:reviewId"
   },
   SEARCH: {
     BASE: "/search",
     RESTAURANTS: "/restaurants",
     MENU_ITEMS: "/menu-items",
     SUGGESTIONS: "/suggestions"
+  },
+  ANALYTICS: {
+    BASE: "/analytics",
+    DASHBOARD: "/dashboard",
+    ORDERS: "/orders",
+    RESTAURANTS: "/restaurants",
+    REVENUE: "/revenue"
+  },
+  ADMIN: {
+    BASE: "/admin",
+    USERS: "/users",
+    RESTAURANTS: "/restaurants",
+    RIDERS: "/riders",
+    ORDERS: "/orders",
+    BLOCK_USER: "/users/:userId/block",
+    UNBLOCK_USER: "/users/:userId/unblock"
+  },
+  AI: {
+    BASE: "/ai",
+    CHAT: "/chat",
+    SEARCH: "/search",
+    HEALTH: "/health"
+  },
+  UPLOADS: {
+    BASE: "/uploads",
+    IMAGES: "/images",
+    IMAGE_DETAIL: "/images/:id"
+  },
+  SOCKET: {
+    BASE: "/socket",
+    EVENTS: "/events"
   }
 } as const;

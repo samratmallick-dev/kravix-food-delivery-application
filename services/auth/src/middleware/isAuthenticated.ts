@@ -18,44 +18,28 @@ export const isAuthenticated = async (
             const authHeader = req.headers.authorization;
 
             if (!authHeader || !authHeader.startsWith("Bearer ")) {
-                  res.status(401).json({
-                        message: "Unauthorized - No Auth Token in Headers",
-                        success: false,
-                        error: true,
-                  });
+                  res.status(401).json({ success: false, message: "Unauthorized - No Auth Token in Headers", error: true, code: "UNAUTHORIZED", details: [] });
                   return;
             }
 
             const token = authHeader.split(" ")[1];
 
             if (!token) {
-                  res.status(401).json({
-                        message: "Unauthorized - Missing Auth Token",
-                        success: false,
-                        error: true,
-                  });
+                  res.status(401).json({ success: false, message: "Unauthorized - Missing Auth Token", error: true, code: "UNAUTHORIZED", details: [] });
                   return;
             }
 
             const secretKey = process.env.JWT_SECRET as string;
 
             if (!secretKey) {
-                  res.status(500).json({
-                        message: "Server configuration error",
-                        success: false,
-                        error: true,
-                  });
+                  res.status(500).json({ success: false, message: "Server configuration error", error: true, code: "INTERNAL_SERVER_ERROR", details: [] });
                   return;
             }
 
             const decodedToken = jwt.verify(token, secretKey) as JwtPayload;
 
             if (!decodedToken || !decodedToken._id) {
-                  res.status(401).json({
-                        message: "Invalid Token",
-                        success: false,
-                        error: true,
-                  });
+                  res.status(401).json({ success: false, message: "Invalid Token", error: true, code: "UNAUTHORIZED", details: [] });
                   return;
             }
 
@@ -64,19 +48,13 @@ export const isAuthenticated = async (
             next();
       } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
-                  res
-                        .status(401)
-                        .json({ message: "Token expired", success: false, error: true });
+                  res.status(401).json({ success: false, message: "Token expired", error: true, code: "TOKEN_EXPIRED", details: [] });
                   return;
             }
             if (error instanceof jwt.JsonWebTokenError) {
-                  res
-                        .status(401)
-                        .json({ message: "Invalid token", success: false, error: true });
+                  res.status(401).json({ success: false, message: "Invalid token", error: true, code: "UNAUTHORIZED", details: [] });
                   return;
             }
-            res
-                  .status(500)
-                  .json({ message: "Internal Server error", success: false, error: true });
+            res.status(500).json({ success: false, message: "Internal Server error", error: true, code: "INTERNAL_SERVER_ERROR", details: [] });
       }
 };

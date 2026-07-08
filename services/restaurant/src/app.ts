@@ -11,16 +11,10 @@ import { requestLogger } from "./middleware/requestLogger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { contentNegotiation } from "./middleware/contentNegotiation.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
-import { ROUTES } from "./constants/routes.js";
+import { correlationId } from "./middleware/correlationId.js";
 import { openApiSpec } from "./docs/openapi.js";
 
-import restaurantRouter from "./routes/restaurant.routes.js";
-import menuItemRouter from "./routes/menuItem.routes.js";
-import cartRouter from "./routes/cart.routes.js";
-import addressRouter from "./routes/address.routes.js";
-import orderRouter from "./routes/order.routes.js";
-import couponRouter from "./routes/coupon.routes.js";
-import reviewRouter from "./routes/review.routes.js";
+import masterRouter from "./routes/index.js";
 
 const app = express();
 
@@ -41,6 +35,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(correlationId);
 app.use(requestLogger("restaurant"));
 app.use(contentNegotiation);
 
@@ -80,13 +75,7 @@ app.get("/metrics", (_req, res) => {
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-app.use("/api/v1" + ROUTES.RESTAURANTS.BASE, restaurantRouter);
-app.use("/api/v1" + ROUTES.MENU_ITEMS.BASE, menuItemRouter);
-app.use("/api/v1" + ROUTES.CART.BASE, cartRouter);
-app.use("/api/v1" + ROUTES.ADDRESSES.BASE, addressRouter);
-app.use("/api/v1" + ROUTES.ORDERS.BASE, orderRouter);
-app.use("/api/v1" + ROUTES.COUPONS.BASE, couponRouter);
-app.use("/api/v1" + ROUTES.REVIEWS.BASE, reviewRouter);
+app.use("/api/v1", masterRouter);
 
 app.use("/api/v1/menu", (req, res) => {
   res.setHeader("Warning", '299 - "Deprecated API"');

@@ -5,7 +5,8 @@ import { AuthenticatedRequest } from "../middleware/authenticate.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { riderService } from "../services/index.js";
 import { createRiderSchema, updateRiderLocationSchema, toggleAvailabilitySchema } from "../validators/RiderValidator.js";
-import { ValidationError, AuthenticationError } from "../utils/errors.js";
+import { ValidationError, AuthenticationError, AuthorizationError } from "../utils/errors.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 export const addRiderProfile = TryCatch(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -14,19 +15,11 @@ export const addRiderProfile = TryCatch(
       throw new AuthenticationError("User not authenticated");
     }
     if (user.role !== "rider") {
-      res.status(403).json({ success: false, message: "Access denied. Riders only.", error: true });
-      return;
+      return errorResponse(res, 403, "Access denied. Riders only.", "FORBIDDEN");
     }
 
     const { phoneNumber, aadhaarNumber, drivingLicesce, latitude, longitude, pictureUrl } = req.body;
-    const validated = createRiderSchema.parse({
-      phoneNumber,
-      aadhaarNumber,
-      drivingLicesce,
-      latitude,
-      longitude,
-      pictureUrl
-    });
+    const validated = createRiderSchema.parse({ phoneNumber, aadhaarNumber, drivingLicesce, latitude, longitude, pictureUrl });
 
     let resolvedPictureUrl = validated.pictureUrl || "";
     if (!resolvedPictureUrl) {
@@ -41,11 +34,11 @@ export const addRiderProfile = TryCatch(
       }
 
       const { data: uploadResult } = await axios.post(
-        `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+        `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
         { image: fileBuffer },
         { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
       );
-      resolvedPictureUrl = uploadResult.url;
+      resolvedPictureUrl = uploadResult.data.url;
     }
 
     const data = await riderService.createProfile(user._id.toString(), {
@@ -57,12 +50,7 @@ export const addRiderProfile = TryCatch(
       pictureUrl: resolvedPictureUrl
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Rider profile created successfully",
-      error: false,
-      data
-    });
+    return successResponse(res, 201, "Rider profile created successfully", data);
   }
 );
 
@@ -73,8 +61,7 @@ export const updateRiderProfile = TryCatch(
       throw new AuthenticationError("User not authenticated");
     }
     if (user.role !== "rider") {
-      res.status(403).json({ success: false, message: "Access denied. Riders only.", error: true });
-      return;
+      return errorResponse(res, 403, "Access denied. Riders only.", "FORBIDDEN");
     }
 
     const { phoneNumber, aadhaarNumber, drivingLicesce, pictureUrl } = req.body;
@@ -91,11 +78,11 @@ export const updateRiderProfile = TryCatch(
       }
 
       const { data: uploadResult } = await axios.post(
-        `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+        `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
         { image: fileBuffer },
         { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
       );
-      updates.picture = uploadResult.url;
+      updates.picture = uploadResult.data.url;
     } else if (pictureUrl) {
       updates.picture = pictureUrl;
     }
@@ -105,13 +92,7 @@ export const updateRiderProfile = TryCatch(
     }
 
     const data = await riderService.updateProfile(user._id.toString(), updates);
-
-    res.status(200).json({
-      success: true,
-      message: "Rider profile updated successfully",
-      error: false,
-      data
-    });
+    return successResponse(res, 200, "Rider profile updated successfully", data);
   }
 );
 
@@ -122,18 +103,11 @@ export const fetchMyProfile = TryCatch(
       throw new AuthenticationError("User not authenticated");
     }
     if (user.role !== "rider") {
-      res.status(403).json({ success: false, message: "Access denied. Riders only.", error: true });
-      return;
+      return errorResponse(res, 403, "Access denied. Riders only.", "FORBIDDEN");
     }
 
     const data = await riderService.getProfile(user._id.toString());
-
-    res.status(200).json({
-      success: true,
-      message: "Rider profile fetched successfully",
-      error: false,
-      data
-    });
+    return successResponse(res, 200, "Rider profile fetched successfully", data);
   }
 );
 
@@ -144,8 +118,7 @@ export const toggleRiderAvailability = TryCatch(
       throw new AuthenticationError("User not authenticated");
     }
     if (user.role !== "rider") {
-      res.status(403).json({ success: false, message: "Access denied. Riders only.", error: true });
-      return;
+      return errorResponse(res, 403, "Access denied. Riders only.", "FORBIDDEN");
     }
 
     const { isAvailable, latitude, longitude } = req.body;
@@ -158,12 +131,7 @@ export const toggleRiderAvailability = TryCatch(
       validated.longitude
     );
 
-    res.status(200).json({
-      success: true,
-      message: `Rider is now ${validated.isAvailable ? "available" : "unavailable"}`,
-      error: false,
-      data
-    });
+    return successResponse(res, 200, `Rider is now ${validated.isAvailable ? "available" : "unavailable"}`, data);
   }
 );
 
@@ -180,13 +148,7 @@ export const acceptOrder = TryCatch(
     }
 
     const data = await riderService.acceptOrder(user._id.toString(), user.name, orderId as string);
-
-    res.status(200).json({
-      success: true,
-      message: "Order accepted successfully",
-      error: false,
-      data
-    });
+    return successResponse(res, 200, "Order accepted successfully", data);
   }
 );
 
@@ -198,13 +160,7 @@ export const fetchCurrentOrder = TryCatch(
     }
 
     const data = await riderService.getCurrentOrder(user._id.toString());
-
-    res.status(200).json({
-      success: true,
-      message: "Current order fetched successfully",
-      error: false,
-      data
-    });
+    return successResponse(res, 200, "Current order fetched successfully", data);
   }
 );
 
@@ -216,13 +172,7 @@ export const updateOrderStatus = TryCatch(
     }
 
     const data = await riderService.updateOrderStatus(user._id.toString(), req.body);
-
-    res.status(200).json({
-      success: true,
-      message: "Order status updated successfully",
-      error: false,
-      data
-    });
+    return successResponse(res, 200, "Order status updated successfully", data);
   }
 );
 
@@ -239,12 +189,7 @@ export const generateDeliveryOtp = TryCatch(
     }
 
     await riderService.generateDeliveryOtp(user._id.toString(), orderId);
-
-    res.status(200).json({
-      success: true,
-      message: "OTP generated and sent to customer",
-      error: false
-    });
+    return successResponse(res, 200, "OTP generated and sent to customer");
   }
 );
 
@@ -256,19 +201,10 @@ export const updateLiveLocation = TryCatch(
     }
 
     const { latitude, longitude, orderId, customerUserId } = req.body;
-    const validated = updateRiderLocationSchema.parse({
-      latitude,
-      longitude,
-      orderId,
-      customerUserId
-    });
+    const validated = updateRiderLocationSchema.parse({ latitude, longitude, orderId, customerUserId });
 
     await riderService.updateLiveLocation(user._id.toString(), validated);
-
-    res.status(200).json({
-      success: true,
-      error: false
-    });
+    return successResponse(res, 200, "Location updated successfully");
   }
 );
 
@@ -280,13 +216,7 @@ export const fetchEarnings = TryCatch(
     }
 
     const data = await riderService.getEarnings(user._id.toString());
-
-    res.status(200).json({
-      success: true,
-      message: "Earnings fetched successfully",
-      error: false,
-      data
-    });
+    return successResponse(res, 200, "Earnings fetched successfully", data);
   }
 );
 
@@ -298,12 +228,6 @@ export const fetchDeliveryHistory = TryCatch(
     }
 
     const data = await riderService.getDeliveryHistory(user._id.toString());
-
-    res.status(200).json({
-      success: true,
-      message: "Delivery history fetched successfully",
-      error: false,
-      data
-    });
+    return successResponse(res, 200, "Delivery history fetched successfully", data);
   }
 );

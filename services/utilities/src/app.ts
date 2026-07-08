@@ -1,6 +1,6 @@
 import "dotenv/config";
 import "./config/env.config.js";
-import express from "express";
+import express, { Router } from "express";
 import corsPackage from "cors";
 import helmet from "helmet";
 import compression from "compression";
@@ -11,6 +11,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { contentNegotiation } from "./middleware/contentNegotiation.js";
 import { generalLimiter, paymentLimiter } from "./middleware/rateLimiter.js";
 import { idempotency } from "./middleware/idempotency.js";
+import { correlationId } from "./middleware/correlationId.js";
 import { ROUTES } from "./constants/routes.js";
 import { openApiSpec } from "./docs/openapi.js";
 import { getRabbitMQConnection } from "./config/rabbitmq.js";
@@ -38,6 +39,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(correlationId);
 app.use(requestLogger("utilities"));
 app.use(contentNegotiation);
 
@@ -81,9 +83,11 @@ app.get("/metrics", (_req, res) => {
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-app.use("/api/v1" + ROUTES.UPLOADS.BASE, cloudinaryRoutes);
-app.use("/api/v1" + ROUTES.PAYMENTS.BASE, paymentLimiter, idempotency, paymentRoutes);
-app.use("/api/v1" + ROUTES.AI.BASE, aiRoutes);
+const masterRouter = Router();
+masterRouter.use(ROUTES.UPLOADS.BASE, cloudinaryRoutes);
+masterRouter.use(ROUTES.PAYMENTS.BASE, paymentLimiter, idempotency, paymentRoutes);
+masterRouter.use(ROUTES.AI.BASE, aiRoutes);
+app.use("/api/v1", masterRouter);
 
 app.use("/api/v1/cloudinary", (req, res) => {
   res.setHeader("Warning", '299 - "Deprecated API"');

@@ -15,13 +15,13 @@ import {
   updateOrderStatus,
   updateRiderProfile
 } from "../controllers/rider.controllers.js";
+import { ROUTES } from "../constants/routes.js";
 
 const router = Router();
 
-router.route("/")
-  .post(authenticate, upload, addRiderProfile);
+router.route("/").post(authenticate, upload, addRiderProfile);
 
-router.route("/me")
+router.route(ROUTES.RIDERS.ME)
   .get(authenticate, fetchMyProfile)
   .patch(authenticate, checkBlocked, upload, updateRiderProfile);
 
@@ -31,22 +31,37 @@ router.route("/me/availability")
 router.route("/me/location")
   .patch(authenticate, updateLiveLocation);
 
+router.route(ROUTES.RIDERS.LOCATION)
+  .patch(authenticate, updateLiveLocation);
+
 router.route("/me/earnings")
   .get(authenticate, fetchEarnings);
 
 router.route("/orders/current")
   .get(authenticate, fetchCurrentOrder);
 
-router.route("/orders/status")
+router.route("/orders/:orderId/status")
   .patch(authenticate, updateOrderStatus);
 
 router.route("/orders/delivery-history")
   .get(authenticate, fetchDeliveryHistory);
 
-router.route("/orders/:orderId/accept")
+router.route(ROUTES.RIDERS.ACCEPT)
   .post(authenticate, checkBlocked, acceptOrder);
 
-router.route("/orders/otp/generate")
+router.route(ROUTES.RIDERS.PICKUP)
+  .patch(authenticate, checkBlocked, (req, res, next) => {
+    req.body = { ...req.body, status: "picked_up", orderId: req.params["orderId"] };
+    return updateOrderStatus(req, res, next);
+  });
+
+router.route(ROUTES.RIDERS.DELIVER)
+  .patch(authenticate, checkBlocked, (req, res, next) => {
+    req.body = { ...req.body, status: "delivered", orderId: req.params["orderId"] };
+    return updateOrderStatus(req, res, next);
+  });
+
+router.route("/orders/:orderId/otp/generate")
   .post(authenticate, generateDeliveryOtp);
 
 export default router;

@@ -3,30 +3,24 @@ import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { cartService } from "../services/index.js";
 import { NotFoundError } from "../utils/errors.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 export const addToCart = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const { restaurantId, itemId } = req.body;
   const cartItem = await cartService.addToCart(user._id.toString(), itemId, restaurantId, 1);
-
   const statusCode = cartItem.quantity === 1 ? 201 : 200;
-
-  return res.status(statusCode).json({
-    message: "Item added to cart.",
-    data: cartItem,
-    error: false,
-    success: true
-  });
+  return successResponse(res, statusCode, "Item added to cart.", cartItem);
 });
 
 export const fetchCart = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const cart = await cartService.getCart(user._id.toString());
@@ -40,22 +34,13 @@ export const fetchCart = TryCatch(async (req: AuthenticatedRequest, res: Respons
     cartLength += cartItem.quantity;
   }
 
-  return res.status(200).json({
-    message: "Cart item fetch successfully",
-    success: true,
-    error: false,
-    data: {
-      cart,
-      cartLength,
-      subTotal
-    }
-  });
+  return successResponse(res, 200, "Cart fetched successfully", { cart, cartLength, subTotal });
 });
 
 export const incrementCart = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const { itemId } = req.body;
@@ -66,19 +51,13 @@ export const incrementCart = TryCatch(async (req: AuthenticatedRequest, res: Res
   }
 
   const updated = await cartService.updateQuantity(user._id.toString(), itemId, item.quantity + 1);
-
-  return res.status(200).json({
-    message: "Cart item quantity increased.",
-    data: updated,
-    error: false,
-    success: true
-  });
+  return successResponse(res, 200, "Cart item quantity increased.", updated);
 });
 
 export const decrementCart = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const { itemId } = req.body;
@@ -89,27 +68,15 @@ export const decrementCart = TryCatch(async (req: AuthenticatedRequest, res: Res
   }
 
   const updated = await cartService.updateQuantity(user._id.toString(), itemId, item.quantity - 1);
-
-  return res.status(200).json({
-    message: "Cart item quantity decreased.",
-    data: updated,
-    error: false,
-    success: true
-  });
+  return successResponse(res, 200, "Cart item quantity decreased.", updated);
 });
 
 export const clearCart = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   await cartService.clearCart(user._id.toString());
-
-  return res.status(200).json({
-    message: "Cart Cleared",
-    error: false,
-    success: true,
-    data: {}
-  });
+  return successResponse(res, 200, "Cart cleared successfully");
 });

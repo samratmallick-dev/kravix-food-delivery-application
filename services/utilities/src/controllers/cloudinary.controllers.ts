@@ -4,6 +4,7 @@ import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { ValidationError } from "../utils/errors.js";
 import DataUriParser from "datauri/parser.js";
 import path from "path";
+import { successResponse } from "../utils/response.js";
 
 export const uploadImage = TryCatch(async (req: Request, res: Response) => {
   let imageSource: string | undefined;
@@ -21,11 +22,5 @@ export const uploadImage = TryCatch(async (req: Request, res: Response) => {
   }
 
   const url = await cloudinaryClient.uploadImage(imageSource);
-
-  return res.status(200).json({
-    success: true,
-    message: "Image uploaded successfully",
-    error: false,
-    data: { url }
-  });
+  return successResponse(res, 200, "Image uploaded successfully", { url });
 });

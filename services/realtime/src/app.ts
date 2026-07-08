@@ -1,6 +1,6 @@
 import "dotenv/config";
 import "./config/env.config.js";
-import express from "express";
+import express, { Router } from "express";
 import corsPackage from "cors";
 import helmet from "helmet";
 import compression from "compression";
@@ -11,6 +11,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { contentNegotiation } from "./middleware/contentNegotiation.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { internalAuth } from "./middleware/internalAuth.js";
+import { correlationId } from "./middleware/correlationId.js";
 import { ROUTES } from "./constants/routes.js";
 import { openApiSpec } from "./docs/openapi.js";
 import socketInternalRoute from "./routes/internal.routes.js";
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(correlationId);
 app.use(requestLogger("realtime"));
 app.use(contentNegotiation);
 
@@ -78,9 +80,9 @@ app.get("/metrics", (_req, res) => {
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-app.use("/api/v1" + ROUTES.SOCKET.BASE, internalAuth, socketInternalRoute);
-
-app.use("/api/v1/socket", (req, res, next) => next());
+const masterRouter = Router();
+masterRouter.use(ROUTES.SOCKET.EVENTS, internalAuth, socketInternalRoute);
+app.use("/api/v1", masterRouter);
 
 app.get("/", (_req, res) => {
   res.json({ service: "kravix-realtime", status: "ok" });

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import "./config/env.config.js";
-import express from "express";
+import express, { Router } from "express";
 import corsPackage from "cors";
 import helmet from "helmet";
 import compression from "compression";
@@ -11,6 +11,7 @@ import { requestLogger } from "./middleware/requestLogger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { contentNegotiation } from "./middleware/contentNegotiation.js";
 import { generalLimiter, authLimiter } from "./middleware/rateLimiter.js";
+import { correlationId } from "./middleware/correlationId.js";
 import { ROUTES } from "./constants/routes.js";
 import { openApiSpec } from "./docs/openapi.js";
 import adminRouter from "./routes/admin.routes.js";
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(correlationId);
 app.use(requestLogger("admin"));
 app.use(contentNegotiation);
 
@@ -73,7 +75,9 @@ app.get("/metrics", (_req, res) => {
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-app.use("/api/v1" + ROUTES.ADMIN.BASE, authLimiter, adminRouter);
+const masterRouter = Router();
+masterRouter.use(ROUTES.ADMIN.BASE, adminRouter);
+app.use("/api/v1", authLimiter, masterRouter);
 
 app.get("/", (_req, res) => {
   res.json({ service: "kravix-admin", status: "ok" });

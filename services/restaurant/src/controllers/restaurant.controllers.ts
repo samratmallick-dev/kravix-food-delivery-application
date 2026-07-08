@@ -7,6 +7,7 @@ import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import { ValidationError } from "../utils/errors.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 interface TokenPayload {
   _id: string;
@@ -26,7 +27,7 @@ const tokengenerator = (user: TokenPayload): string => {
 export const createRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const { name, description, latitude, longitude, formattedAddress, phone } = req.body;
@@ -46,7 +47,7 @@ export const createRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
   }
 
   const { data: updateResult } = await axios.post(
-    `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+    `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
     { image: fileBuffer },
     {
       headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
@@ -59,7 +60,7 @@ export const createRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
     user._id.toString(),
     name as string,
     (description as string) || "",
-    updateResult.url,
+    updateResult.data.url,
     Number(phone),
     [Number(longitude), Number(latitude)],
     formattedAddress as string
@@ -74,11 +75,8 @@ export const createRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
     restaurantId: restaurant.id
   });
 
-  return res.status(201).json({
-    message: "Restaurant created successfully",
-    success: true,
-    error: false,
-    data: RestaurantResponseMapper.toRestaurantDto(restaurant),
+  return successResponse(res, 201, "Restaurant created successfully", {
+    restaurant: RestaurantResponseMapper.toRestaurantDto(restaurant),
     token
   });
 });
@@ -88,7 +86,7 @@ export const addRestaurant = createRestaurant;
 export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const restaurant = await restaurantService.getMyRestaurant(user._id.toString());
@@ -102,28 +100,19 @@ export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res:
       role: user.role,
       restaurantId: restaurant.id
     });
-
-    return res.status(200).json({
-      message: "Restaurant retrieved successfully",
-      success: true,
-      error: false,
-      data: RestaurantResponseMapper.toRestaurantDto(restaurant),
+    return successResponse(res, 200, "Restaurant retrieved successfully", {
+      restaurant: RestaurantResponseMapper.toRestaurantDto(restaurant),
       token
     });
   }
 
-  return res.status(200).json({
-    message: "Restaurant retrieved successfully",
-    success: true,
-    error: false,
-    data: RestaurantResponseMapper.toRestaurantDto(restaurant)
-  });
+  return successResponse(res, 200, "Restaurant retrieved successfully", RestaurantResponseMapper.toRestaurantDto(restaurant));
 });
 
 export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const { status } = req.body;
@@ -132,19 +121,13 @@ export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest,
   }
 
   const restaurant = await restaurantService.updateRestaurantStatus(user._id.toString(), status);
-
-  return res.status(200).json({
-    message: "Restaurant status updated successfully",
-    success: true,
-    error: false,
-    data: RestaurantResponseMapper.toRestaurantDto(restaurant)
-  });
+  return successResponse(res, 200, "Restaurant status updated successfully", RestaurantResponseMapper.toRestaurantDto(restaurant));
 });
 
 export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const { name, description } = req.body;
@@ -159,7 +142,7 @@ export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
       throw new ValidationError("Failed to create file buffer.");
     }
     const { data: uploadResult } = await axios.post(
-      `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+      `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
       { image: fileBuffer },
       {
         headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
@@ -167,17 +150,11 @@ export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
         maxBodyLength: Infinity
       }
     );
-    updates.image = uploadResult.url;
+    updates.image = uploadResult.data.url;
   }
 
   const restaurant = await restaurantService.updateRestaurant(user._id.toString(), updates);
-
-  return res.status(200).json({
-    message: "Restaurant updated successfully",
-    success: true,
-    error: false,
-    data: RestaurantResponseMapper.toRestaurantDto(restaurant)
-  });
+  return successResponse(res, 200, "Restaurant updated successfully", RestaurantResponseMapper.toRestaurantDto(restaurant));
 });
 
 export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -194,23 +171,11 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
   );
 
   const dtos = restaurants.map(RestaurantResponseMapper.toRestaurantDto);
-
-  return res.status(200).json({
-    success: true,
-    message: "Nearest restaurants fetched successfully",
-    error: false,
-    data: dtos,
-    ...(correctedQuery ? { correctedQuery } : {})
-  });
+  return successResponse(res, 200, "Nearest restaurants fetched successfully", dtos, correctedQuery ? { correctedQuery } : undefined);
 });
 
 export const fetchSingleRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const { id } = req.params;
   const restaurant = await restaurantService.getRestaurantDetails(id as string);
-  return res.status(200).json({
-    message: "Restaurant fetched successfully",
-    success: true,
-    error: false,
-    data: RestaurantResponseMapper.toRestaurantDto(restaurant)
-  });
+  return successResponse(res, 200, "Restaurant fetched successfully", RestaurantResponseMapper.toRestaurantDto(restaurant));
 });

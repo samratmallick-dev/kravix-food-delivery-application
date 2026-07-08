@@ -15,6 +15,7 @@ import {
   jwtService
 } from "../services/index.js";
 import { DatabaseError } from "../utils/errors.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 const checkDbReady = (): void => {
   if (mongoose.connection.readyState !== 1) {
@@ -24,38 +25,25 @@ const checkDbReady = (): void => {
 
 export const registerEmailController = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
   checkDbReady();
-  const validData = AuthValidator.validateRegister(req.body);
-  await registrationService.register(validData.name, validData.email, validData.password);
-  return res.status(201).json({
-    success: true,
-    message: "Registration successful. Please verify your email before signing in.",
-    error: false
-  });
+  await registrationService.register(req.body.name, req.body.email, req.body.password);
+  return successResponse(res, 201, "Registration successful. Please verify your email before signing in.");
 });
 
 export const registerGoogleController = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
   checkDbReady();
   const { code } = req.body as { code?: string };
   if (!code) {
-    return res.status(400).json({ success: false, message: "Authorization code is required", error: true });
+    return errorResponse(res, 400, "Authorization code is required", "VALIDATION_ERROR");
   }
   await googleRegistrationService.registerWithGoogle(code);
-  return res.status(201).json({
-    success: true,
-    message: "Registration successful. Please verify your email before signing in.",
-    error: false
-  });
+  return successResponse(res, 201, "Registration successful. Please verify your email before signing in.");
 });
 
 export const loginEmailController = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
   checkDbReady();
-  const validData = AuthValidator.validateLogin(req.body);
-  const user = await emailLoginService.login(validData.email, validData.password);
+  const user = await emailLoginService.login(req.body.email, req.body.password);
   const token = jwtService.generateToken(user);
-  return res.status(200).json({
-    success: true,
-    message: "Login successful",
-    error: false,
+  return successResponse(res, 200, "Login successful", {
     token,
     needsRoleSelection: !user.role,
     user: AuthResponseMapper.toResponseDto(user)
@@ -66,14 +54,11 @@ export const loginGoogleController = TryCatch(async (req: Request, res: Response
   checkDbReady();
   const { code } = req.body as { code?: string };
   if (!code) {
-    return res.status(400).json({ success: false, message: "Authorization code is required", error: true });
+    return errorResponse(res, 400, "Authorization code is required", "VALIDATION_ERROR");
   }
   const user = await googleLoginService.loginWithGoogle(code);
   const token = jwtService.generateToken(user);
-  return res.status(200).json({
-    success: true,
-    message: "Login successful",
-    error: false,
+  return successResponse(res, 200, "Login successful", {
     token,
     needsRoleSelection: !user.role,
     user: AuthResponseMapper.toResponseDto(user)
@@ -83,87 +68,66 @@ export const loginGoogleController = TryCatch(async (req: Request, res: Response
 export const verifyEmailController = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
   const { token } = req.query as { token?: string };
   if (!token) {
-    return res.status(400).json({ success: false, message: "Verification link is invalid or has expired.", error: true });
+    return errorResponse(res, 400, "Verification link is invalid or has expired.", "VALIDATION_ERROR");
   }
   await verificationService.verifyEmail(token);
-  return res.status(200).json({ success: true, message: "Email verified successfully. You can now sign in.", error: false });
+  return successResponse(res, 200, "Email verified successfully. You can now sign in.");
 });
 
 export const resendVerificationController = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body as { email?: string };
   if (!email) {
-    return res.status(400).json({ success: false, message: "Email is required", error: true });
+    return errorResponse(res, 400, "Email is required", "VALIDATION_ERROR");
   }
   await verificationService.resendVerification(email);
-  return res.status(200).json({
-    success: true,
-    message: "If your email is registered and unverified, a new verification link has been sent.",
-    error: false
-  });
+  return successResponse(res, 200, "If your email is registered and unverified, a new verification link has been sent.");
 });
 
 export const forgotPasswordController = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body as { email?: string };
   if (!email) {
-    return res.status(400).json({ success: false, message: "Email is required", error: true });
+    return errorResponse(res, 400, "Email is required", "VALIDATION_ERROR");
   }
   await passwordResetService.forgotPassword(email);
-  return res.status(200).json({
-    success: true,
-    message: "If an account with that email exists, a password reset link has been sent.",
-    error: false
-  });
+  return successResponse(res, 200, "If an account with that email exists, a password reset link has been sent.");
 });
 
 export const resetPasswordController = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
-  const validData = AuthValidator.validateResetPassword(req.body);
-  await passwordResetService.resetPassword(validData.token, validData.newPassword);
-  return res.status(200).json({ success: true, message: "Password reset successful. You can now sign in.", error: false });
+  await passwordResetService.resetPassword(req.body.token, req.body.newPassword);
+  return successResponse(res, 200, "Password reset successful. You can now sign in.");
 });
 
 export const getUserProfile = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const userPayload = req.user;
   if (!userPayload || !userPayload._id) {
-    return res.status(401).json({ success: false, message: "Unauthorized user", error: true, user: null });
+    return errorResponse(res, 401, "Unauthorized user", "UNAUTHORIZED");
   }
   const user = await profileService.getUserProfile(userPayload._id.toString());
-  return res.status(200).json({
-    success: true,
-    message: "User profile retrieved successfully",
-    error: false,
-    data: AuthResponseMapper.toResponseDto(user)
-  });
+  return successResponse(res, 200, "User profile retrieved successfully", AuthResponseMapper.toResponseDto(user));
 });
 
 export const updateUserProfile = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const userPayload = req.user;
   if (!userPayload || !userPayload._id) {
-    return res.status(401).json({ success: false, message: "Unauthorized user", error: true });
+    return errorResponse(res, 401, "Unauthorized user", "UNAUTHORIZED");
   }
-  const validData = AuthValidator.validateProfileUpdate(req.body);
-  const updatedUser = await profileService.updateUserProfile(userPayload._id.toString(), validData.name, validData.image);
+  const updatedUser = await profileService.updateUserProfile(userPayload._id.toString(), req.body.name, req.body.image);
   const token = jwtService.generateToken(updatedUser);
-  return res.status(200).json({
-    success: true,
-    message: "Profile updated successfully",
-    error: false,
+  return successResponse(res, 200, "Profile updated successfully", {
     token,
-    data: AuthResponseMapper.toResponseDto(updatedUser)
+    user: AuthResponseMapper.toResponseDto(updatedUser)
   });
 });
 
 export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const userPayload = req.user;
   if (!userPayload || !userPayload._id) {
-    return res.status(401).json({ success: false, message: "Unauthorized user", error: true });
+    return errorResponse(res, 401, "Unauthorized user", "UNAUTHORIZED");
   }
-  const validData = AuthValidator.validateRole(req.body);
-  const updatedUser = await profileService.addUserRole(userPayload._id.toString(), validData.role);
+  const updatedUser = await profileService.addUserRole(userPayload._id.toString(), req.body.role);
   const token = jwtService.generateToken(updatedUser);
-  return res.status(200).json({
-    success: true,
-    message: "Role Updated Successfully",
+  return successResponse(res, 200, "Role updated successfully", {
     token,
-    data: AuthResponseMapper.toResponseDto(updatedUser)
+    user: AuthResponseMapper.toResponseDto(updatedUser)
   });
 });

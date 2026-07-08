@@ -1,26 +1,20 @@
 import "dotenv/config";
 import "./config/env.config.js";
-import express from "express";
+import express, { Router } from "express";
 import corsPackage from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import swaggerUi from "swagger-ui-express";
 import mongoose from "mongoose";
+import { corsOptions } from "./config/cors.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { contentNegotiation } from "./middleware/contentNegotiation.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
+import { correlationId } from "./middleware/correlationId.js";
 import { ROUTES } from "./constants/routes.js";
 import { openApiSpec } from "./docs/openapi.js";
 import analyticsRouter from "./routes/analytics.routes.js";
-
-const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(",")
-    : ["http://localhost:5173", "http://localhost:5174"],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"]
-};
 
 const app = express();
 
@@ -41,6 +35,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(correlationId);
 app.use(requestLogger("analytics"));
 app.use(contentNegotiation);
 
@@ -80,7 +75,9 @@ app.get("/metrics", (_req, res) => {
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-app.use("/api/v1" + ROUTES.ANALYTICS.BASE, analyticsRouter);
+const masterRouter = Router();
+masterRouter.use(ROUTES.ANALYTICS.BASE, analyticsRouter);
+app.use("/api/v1", masterRouter);
 
 app.get("/", (_req, res) => {
   res.json({ service: "kravix-analytics", status: "ok" });

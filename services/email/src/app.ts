@@ -1,13 +1,16 @@
 import "dotenv/config";
 import "./config/env.config.js";
 import express from "express";
+import corsPackage from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import swaggerUi from "swagger-ui-express";
+import { corsOptions } from "./config/cors.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { contentNegotiation } from "./middleware/contentNegotiation.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
+import { correlationId } from "./middleware/correlationId.js";
 import { openApiSpec } from "./docs/openapi.js";
 import { getRabbitMQConnection } from "./config/rabbitmq.js";
 
@@ -17,8 +20,20 @@ app.use(generalLimiter);
 
 app.use(helmet({ crossOriginOpenerPolicy: false }));
 app.use(compression());
+app.use(corsPackage(corsOptions));
+app.options("/{*path}", corsPackage(corsOptions));
 
-app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  next();
+});
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(correlationId);
 app.use(requestLogger("email"));
 app.use(contentNegotiation);
 
@@ -61,6 +76,10 @@ app.get("/metrics", (_req, res) => {
 });
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+
+app.use("/api/v1", (req, res, next) => {
+  res.json({ service: "kravix-email", status: "ok", message: "Email service - RabbitMQ consumer only" });
+});
 
 app.get("/", (_req, res) => {
   res.json({ service: "kravix-email", status: "ok" });

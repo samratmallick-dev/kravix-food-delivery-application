@@ -4,6 +4,7 @@ import { analyticsService } from "../services/index.js";
 import { analyticsQuerySchema } from "../validators/AnalyticsValidator.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { ValidationError, AuthenticationError, AuthorizationError } from "../utils/errors.js";
+import { successResponse } from "../utils/response.js";
 
 export const getDashboardAnalytics = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const user = req.user;
@@ -16,16 +17,9 @@ export const getDashboardAnalytics = TryCatch(async (req: AuthenticatedRequest, 
   }
 
   const validated = analyticsQuerySchema.parse(req.query);
-
   const isSeller = user.role === "seller";
   const data = await analyticsService.getDashboardAnalytics(validated, user.restaurantId, isSeller);
-
-  return res.status(200).json({
-    message: "Dashboard analytics fetched successfully",
-    data,
-    success: true,
-    error: false
-  });
+  return successResponse(res, 200, "Dashboard analytics fetched successfully", data);
 });
 
 export const exportRevenueTrendsCSV = TryCatch(async (req: AuthenticatedRequest, res: Response) => {
@@ -39,14 +33,10 @@ export const exportRevenueTrendsCSV = TryCatch(async (req: AuthenticatedRequest,
   }
 
   const validated = analyticsQuerySchema.parse(req.query);
-
   const isSeller = user.role === "seller";
   const csv = await analyticsService.exportRevenueTrendsCSV(validated, user.restaurantId, isSeller);
 
   res.setHeader("Content-Type", "text/csv");
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename="revenue_trends_${validated.interval || "daily"}.csv"`
-  );
+  res.setHeader("Content-Disposition", `attachment; filename="revenue_trends_${validated.interval || "daily"}.csv"`);
   return res.status(200).send(csv);
 });

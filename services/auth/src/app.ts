@@ -10,8 +10,8 @@ import { requestLogger } from "./middleware/requestLogger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { contentNegotiation } from "./middleware/contentNegotiation.js";
 import { generalLimiter, authLimiter } from "./middleware/rateLimiter.js";
-import authRouter from "./routes/auth.routes.js";
-import { ROUTES } from "./constants/routes.js";
+import { correlationId } from "./middleware/correlationId.js";
+import masterRouter from "./routes/index.js";
 import { openApiSpec } from "./docs/openapi.js";
 
 const app = express();
@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(correlationId);
 app.use(requestLogger("auth"));
 app.use(contentNegotiation);
 
@@ -68,10 +69,7 @@ app.get("/metrics", (_req, res) => {
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-app.use("/api/v1" + ROUTES.AUTH.BASE, authLimiter, authRouter);
-
-app.use("/api/v1/auth/register", authLimiter);
-app.use("/api/v1/auth/login", authLimiter);
+app.use("/api/v1", authLimiter, masterRouter);
 
 app.get("/", (_req, res) => {
   res.json({ service: "kravix-auth", status: "ok" });

@@ -6,11 +6,12 @@ import { RestaurantResponseMapper } from "../mappers/restaurant-response.mapper.
 import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import { ValidationError, NotFoundError } from "../utils/errors.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const restaurant = await restaurantService.getMyRestaurant(user._id.toString());
@@ -31,7 +32,7 @@ export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Resp
   }
 
   const { data: updateResult } = await axios.post(
-    `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+    `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
     { image: fileBuffer },
     {
       headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
@@ -44,22 +45,17 @@ export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Resp
     name,
     description,
     price: Number(price),
-    imageUrl: updateResult.url,
+    imageUrl: updateResult.data.url,
     isAvailable: true
   });
 
-  return res.status(201).json({
-    message: "Menu item added successfully",
-    success: true,
-    error: false,
-    data: RestaurantResponseMapper.toMenuItemDto(menuItems)
-  });
+  return successResponse(res, 201, "Menu item added successfully", RestaurantResponseMapper.toMenuItemDto(menuItems));
 });
 
 export const getAllMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const restaurantId = req.params["restaurantId"] as string;
@@ -68,20 +64,13 @@ export const getAllMenuItems = TryCatch(async (req: AuthenticatedRequest, res: R
   }
 
   const menuItems = await menuItemService.getMenuItems(restaurantId);
-  const dtos = menuItems.map(RestaurantResponseMapper.toMenuItemDto);
-
-  return res.status(200).json({
-    message: "Menu items fetched successfully",
-    success: true,
-    error: false,
-    data: dtos
-  });
+  return successResponse(res, 200, "Menu items fetched successfully", menuItems.map(RestaurantResponseMapper.toMenuItemDto));
 });
 
 export const deleteMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const itemId = req.params["itemId"] as string;
@@ -97,13 +86,7 @@ export const deleteMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Re
   }
 
   await menuItemService.deleteMenuItem(sellerRestaurantId, itemId);
-
-  return res.status(200).json({
-    message: "Menu item deleted successfully",
-    success: true,
-    error: false,
-    data: {}
-  });
+  return successResponse(res, 200, "Menu item deleted successfully");
 });
 
 export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -120,13 +103,7 @@ export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Resp
     Number(radius)
   );
 
-  return res.status(200).json({
-    message: "Food search results fetched successfully",
-    success: true,
-    error: false,
-    data: results,
-    ...(correctedQuery ? { correctedQuery } : {})
-  });
+  return successResponse(res, 200, "Food search results fetched successfully", results, correctedQuery ? { correctedQuery } : undefined);
 });
 
 export const autocomplete = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -134,7 +111,7 @@ export const autocomplete = TryCatch(async (req: AuthenticatedRequest, res: Resp
   const query = (q as string).trim();
 
   if (!query) {
-    return res.status(200).json({ success: true, data: [] });
+    return successResponse(res, 200, "Suggestions fetched successfully", []);
   }
   if (!latitude || !longitude) {
     throw new ValidationError("Latitude and longitude are required");
@@ -147,13 +124,13 @@ export const autocomplete = TryCatch(async (req: AuthenticatedRequest, res: Resp
     Number(radius)
   );
 
-  return res.status(200).json({ success: true, data: suggestions });
+  return successResponse(res, 200, "Suggestions fetched successfully", suggestions);
 });
 
 export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   const itemId = req.params["itemId"] as string;
@@ -162,11 +139,5 @@ export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequ
   }
 
   const updated = await menuItemService.toggleMenuItemAvailability(itemId, user._id.toString());
-
-  return res.status(200).json({
-    message: "Menu item availability toggled successfully",
-    success: true,
-    error: false,
-    data: RestaurantResponseMapper.toMenuItemDto(updated)
-  });
+  return successResponse(res, 200, "Menu item availability toggled successfully", RestaurantResponseMapper.toMenuItemDto(updated));
 });

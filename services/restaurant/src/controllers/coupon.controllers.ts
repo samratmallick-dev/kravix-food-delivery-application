@@ -4,11 +4,12 @@ import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { couponService } from "../services/index.js";
 import { RestaurantValidator } from "../validators/restaurant.validator.js";
 import { AuthorizationError } from "../utils/errors.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 export const createCoupon = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
   if (user.role !== "admin" && user.role !== "seller") {
@@ -18,17 +19,10 @@ export const createCoupon = TryCatch(async (req: AuthenticatedRequest, res: Resp
   const validData = RestaurantValidator.validateCoupon(req.body);
   const couponType = (req.body.couponType as string) || "global";
   const bodyRestaurantId = (req.body.restaurantId as string) || null;
-
   const targetRestaurantId = user.role === "seller" ? (user.restaurantId || null) : (couponType === "restaurant" ? bodyRestaurantId : null);
 
   const coupon = await couponService.createCoupon(targetRestaurantId, validData, couponType);
-
-  return res.status(201).json({
-    message: "Coupon created successfully",
-    data: coupon,
-    success: true,
-    error: false
-  });
+  return successResponse(res, 201, "Coupon created successfully", coupon);
 });
 
 export const getCoupons = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -40,13 +34,7 @@ export const getCoupons = TryCatch(async (req: AuthenticatedRequest, res: Respon
   const queryRestaurantId = restaurantId ? (restaurantId as string) : null;
 
   const coupons = await couponService.getCoupons(userRole, sellerRestaurantId, queryRestaurantId);
-
-  return res.status(200).json({
-    message: "Coupons fetched successfully",
-    data: coupons,
-    success: true,
-    error: false
-  });
+  return successResponse(res, 200, "Coupons fetched successfully", coupons);
 });
 
 export const updateCoupon = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -57,15 +45,8 @@ export const updateCoupon = TryCatch(async (req: AuthenticatedRequest, res: Resp
 
   const id = req.params["id"] as string;
   const sellerRestaurantId = user.restaurantId || null;
-
   const updated = await couponService.updateCoupon(id, sellerRestaurantId, user.role, req.body);
-
-  return res.status(200).json({
-    message: "Coupon updated successfully",
-    data: updated,
-    success: true,
-    error: false
-  });
+  return successResponse(res, 200, "Coupon updated successfully", updated);
 });
 
 export const deleteCoupon = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -76,38 +57,26 @@ export const deleteCoupon = TryCatch(async (req: AuthenticatedRequest, res: Resp
 
   const id = req.params["id"] as string;
   const sellerRestaurantId = user.restaurantId || null;
-
   await couponService.deleteCoupon(id, sellerRestaurantId, user.role);
-
-  return res.status(200).json({
-    message: "Coupon deleted successfully",
-    success: true,
-    error: false
-  });
+  return successResponse(res, 200, "Coupon deleted successfully");
 });
 
 export const applyCoupon = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
-  const { code, restaurantId, orderAmount, deliveryFee } = req.body;
+  const { code, orderAmount, deliveryFee } = req.body;
   const coupon = await couponService.validateCouponCode(code as string, user._id.toString(), Number(orderAmount));
-
   const discountAmount = coupon.calculateDiscount(Number(orderAmount), Number(deliveryFee || 0));
 
-  return res.status(200).json({
-    message: "Coupon is valid",
-    data: {
-      code: coupon.code,
-      discountType: coupon.discountType,
-      discountValue: coupon.discountValue,
-      discountAmount,
-      minOrderAmount: coupon.minOrderAmount
-    },
-    success: true,
-    error: false
+  return successResponse(res, 200, "Coupon is valid", {
+    code: coupon.code,
+    discountType: coupon.discountType,
+    discountValue: coupon.discountValue,
+    discountAmount,
+    minOrderAmount: coupon.minOrderAmount
   });
 });
 
@@ -119,13 +88,6 @@ export const getCouponAnalytics = TryCatch(async (req: AuthenticatedRequest, res
 
   const id = req.params["id"] as string;
   const sellerRestaurantId = user.restaurantId || null;
-
   const analytics = await couponService.getCouponAnalytics(id, sellerRestaurantId, user.role);
-
-  return res.status(200).json({
-    message: "Coupon analytics fetched successfully",
-    data: analytics,
-    success: true,
-    error: false
-  });
+  return successResponse(res, 200, "Coupon analytics fetched successfully", analytics);
 });
