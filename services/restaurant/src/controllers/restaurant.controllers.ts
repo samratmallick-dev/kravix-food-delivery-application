@@ -1,507 +1,216 @@
+import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
-import { Response } from "express";
-import { Restaurant } from "../model/Restaurant.js";
-import { MenuItem } from "../model/MenuItems.js";
-import { Order } from "../model/Order.js";
-import { User } from "../model/User.js";
+import { restaurantService } from "../services/index.js";
+import { RestaurantResponseMapper } from "../mappers/restaurant-response.mapper.js";
 import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-import { normalizeSearchQuery } from "../utils/searchNormalizer.js";
+import { ValidationError } from "../utils/errors.js";
 
 interface TokenPayload {
-      _id: string;
-      name: string;
-      email: string;
-      image: string;
-      role: string | null;
-      restaurantId?: string;
+  _id: string;
+  name: string;
+  email: string;
+  image: string;
+  role: string | null;
+  restaurantId?: string;
 }
 
 const tokengenerator = (user: TokenPayload): string => {
-      const secretkey = process.env.JWT_SECRET;
-      if (!secretkey) throw new Error("JWT_SECRET environment variable is not set");
-
-      return jwt.sign(user, secretkey, { expiresIn: "15d" });
+  const secretkey = process.env.JWT_SECRET;
+  if (!secretkey) throw new Error("JWT_SECRET environment variable is not set");
+  return jwt.sign(user, secretkey, { expiresIn: "15d" });
 };
 
-export const addRestaurant = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
+export const createRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+  }
 
-            if (!user) {
-                  return res.status(401).json({
-                        message: "User not authenticated",
-                        success: false,
-                        error: true,
-                  });
-            }
+  const { name, description, latitude, longitude, formattedAddress, phone } = req.body;
 
-            const existingRestaurant = await Restaurant.findOne({
-                  ownerId: user?._id,
-            });
+  if ([name, latitude, longitude].some((field) => !field || String(field).trim() === "")) {
+    throw new ValidationError("Name, latitude and longitude are required fields");
+  }
 
-            if (existingRestaurant) {
-                  return res.status(400).json({
-                        message: "Seller already has a restaurant",
-                        success: false,
-                        error: true,
-                  });
-            }
+  const file = req.file;
+  if (!file) {
+    throw new ValidationError("Image file is required");
+  }
 
-            const { name, description, latitude, longitude, formattedAddress, phone } =
-                  req.body;
+  const fileBuffer = getBuffer(file);
+  if (!fileBuffer) {
+    throw new ValidationError("Failed to create file buffer.");
+  }
 
-            if (
-                  [name, latitude, longitude].some((field) => !field || field.trim() === "")
-            ) {
-                  return res.status(400).json({
-                        message: "Name, latitude and longitude are required fields",
-                        success: false,
-                        error: true,
-                  });
-            }
+  const { data: updateResult } = await axios.post(
+    `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+    { image: fileBuffer },
+    {
+      headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
+    }
+  );
 
-            const file = req.file;
-            if (!file) {
-                  return res.status(400).json({
-                        message: "Image file is required",
-                        success: false,
-                        error: true,
-                  });
-            }
+  const restaurant = await restaurantService.createRestaurant(
+    user._id.toString(),
+    name as string,
+    (description as string) || "",
+    updateResult.url,
+    Number(phone),
+    [Number(longitude), Number(latitude)],
+    formattedAddress as string
+  );
 
-            const fileBuffer = getBuffer(file);
-            if (!fileBuffer) {
-                  return res.status(500).json({
-                        message: "Failed to create file buffer.",
-                        success: false,
-                        error: true,
-                  });
-            }
+  const token = tokengenerator({
+    _id: user._id.toString(),
+    name: user.name,
+    email: user.email,
+    image: user.image || "",
+    role: user.role,
+    restaurantId: restaurant.id
+  });
 
-            const { data: updateResult } = await axios.post(
-                  `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
-                  {
-                        image: fileBuffer,
-                  },
-                  {
-                        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
-                        maxContentLength: Infinity,
-                        maxBodyLength: Infinity,
-                  },
-            );
+  return res.status(201).json({
+    message: "Restaurant created successfully",
+    success: true,
+    error: false,
+    data: RestaurantResponseMapper.toRestaurantDto(restaurant),
+    token
+  });
+});
 
-            const restaurant = await Restaurant.create({
-                  name,
-                  description,
-                  image: updateResult.url,
-                  ownerId: user._id,
-                  phone,
-                  autoLocation: {
-                        type: "Point",
-                        coordinates: [Number(longitude), Number(latitude)],
-                        formattedAddress,
-                  },
-            });
+export const addRestaurant = createRestaurant;
 
-            const token = tokengenerator({
-                  _id: user._id,
-                  name: user.name,
-                  email: user.email,
-                  image: user.image,
-                  role: user.role,
-                  restaurantId: restaurant._id.toString(),
-            });
+export const fetchMyRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+  }
 
-            return res.status(201).json({
-                  message: "Restaurant created successfully",
-                  success: true,
-                  error: false,
-                  data: restaurant,
-                  token,
-            });
-      },
-);
+  const restaurant = await restaurantService.getMyRestaurant(user._id.toString());
 
-export const fetchMyRestaurant = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
-            if (!user) {
-                  return res.status(401).json({
-                        message: "User not authenticated",
-                        success: false,
-                        error: true,
-                  });
-            }
-            const restaurant = await Restaurant.findOne({
-                  ownerId: user._id,
-            });
-            if (!restaurant) {
-                  return res.status(404).json({
-                        message: "Restaurant not found for this seller",
-                        success: false,
-                        error: true,
-                  });
-            }
+  if (!req.user?.restaurantId) {
+    const token = tokengenerator({
+      _id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      image: user.image || "",
+      role: user.role,
+      restaurantId: restaurant.id
+    });
 
-            if (!req.user?.restaurantId) {
-                  const token = tokengenerator({
-                        _id: user._id,
-                        name: user.name,
-                        email: user.email,
-                        image: user.image,
-                        role: user.role,
-                        restaurantId: restaurant._id.toString(),
-                  });
+    return res.status(200).json({
+      message: "Restaurant retrieved successfully",
+      success: true,
+      error: false,
+      data: RestaurantResponseMapper.toRestaurantDto(restaurant),
+      token
+    });
+  }
 
-                  return res.status(200).json({
-                        message: "Restaurant retrieved successfully",
-                        success: true,
-                        error: false,
-                        data: restaurant,
-                        token,
-                  });
-            }
+  return res.status(200).json({
+    message: "Restaurant retrieved successfully",
+    success: true,
+    error: false,
+    data: RestaurantResponseMapper.toRestaurantDto(restaurant)
+  });
+});
 
-            return res.status(200).json({
-                  message: "Restaurant retrieved successfully",
-                  success: true,
-                  error: false,
-                  data: restaurant,
-            });
-      },
-);
+export const updateRestaurantStatus = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+  }
 
-export const updateRestaurantStatus = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
-            if (!user) {
-                  return res.status(401).json({
-                        message: "User not authenticated",
-                        success: false,
-                        error: true,
-                  });
-            }
+  const { status } = req.body;
+  if (typeof status !== "boolean") {
+    throw new ValidationError("Status must be a boolean value");
+  }
 
-            const { status } = req.body;
-            if (typeof status !== "boolean") {
-                  return res.status(400).json({
-                        message: "Status must be a boolean value",
-                        success: false,
-                        error: true,
-                  });
-            }
+  const restaurant = await restaurantService.updateRestaurantStatus(user._id.toString(), status);
 
-            if (status === false) {
-                  const restaurant = await Restaurant.findOne({ ownerId: user._id });
-                  if (restaurant) {
-                        const activeOrder = await Order.findOne({
-                              restaurantId: restaurant._id.toString(),
-                              paymentStatus: "paid",
-                              status: { $nin: ["delivered", "cancelled"] },
-                        });
-                        if (activeOrder) {
-                              return res.status(400).json({
-                                    message:
-                                          "Cannot close restaurant with active orders. Please complete all orders first.",
-                                    success: false,
-                                    error: true,
-                              });
-                        }
-                  }
-            }
+  return res.status(200).json({
+    message: "Restaurant status updated successfully",
+    success: true,
+    error: false,
+    data: RestaurantResponseMapper.toRestaurantDto(restaurant)
+  });
+});
 
-            const updateRestaurantStatus = await Restaurant.findOneAndUpdate(
-                  { ownerId: user._id },
-                  { isOpen: status },
-                  { new: true },
-            );
+export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+  }
 
-            if (!updateRestaurantStatus) {
-                  return res.status(404).json({
-                        message: "Failed to update restaurant status",
-                        success: false,
-                        error: true,
-                  });
-            }
-            axios
-                  .post(
-                        `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
-                        {
-                              event: "restaurant:status",
-                              room: `Restaurant:${updateRestaurantStatus._id}`,
-                              payload: {
-                                    isOpen: updateRestaurantStatus.isOpen,
-                                    restaurantId: updateRestaurantStatus._id.toString(),
-                              },
-                        },
-                        { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } },
-                  )
-                  .catch((err) => console.error("Socket emit failed:", err.message));
+  const { name, description } = req.body;
+  const updates: { name?: string; description?: string; image?: string } = {};
+  if (name) updates.name = name as string;
+  if (description !== undefined) updates.description = description as string;
 
-            axios
-                  .post(
-                        `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`,
-                        {
-                              event: "admin:restaurant:status",
-                              room: "Admin",
-                              payload: {
-                                    restaurantId: updateRestaurantStatus._id.toString(),
-                                    isOpen: updateRestaurantStatus.isOpen,
-                              },
-                        },
-                        { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY } },
-                  )
-                  .catch((err) => console.error("Admin socket emit failed:", err.message));
+  const file = req.file;
+  if (file) {
+    const fileBuffer = getBuffer(file);
+    if (!fileBuffer) {
+      throw new ValidationError("Failed to create file buffer.");
+    }
+    const { data: uploadResult } = await axios.post(
+      `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
+      { image: fileBuffer },
+      {
+        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
+      }
+    );
+    updates.image = uploadResult.url;
+  }
 
-            return res.status(200).json({
-                  message: "Restaurant status updated successfully",
-                  success: true,
-                  error: false,
-                  data: updateRestaurantStatus,
-            });
-      },
-);
+  const restaurant = await restaurantService.updateRestaurant(user._id.toString(), updates);
 
-export const updateRestaurant = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
-            if (!user) {
-                  return res.status(401).json({
-                        message: "User not authenticated",
-                        success: false,
-                        error: true,
-                  });
-            }
+  return res.status(200).json({
+    message: "Restaurant updated successfully",
+    success: true,
+    error: false,
+    data: RestaurantResponseMapper.toRestaurantDto(restaurant)
+  });
+});
 
-            const { name, description } = req.body;
-            const updates: { name?: string; description?: string; image?: string } = {};
-            if (name) updates.name = name;
-            if (description !== undefined) updates.description = description;
+export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const { latitude, longitude, radius = 5000, search = "" } = req.query;
+  if (!latitude || !longitude) {
+    throw new ValidationError("Latitude and longitude are required");
+  }
 
-            const file = req.file;
-            if (file) {
-                  const fileBuffer = getBuffer(file);
-                  if (!fileBuffer) {
-                        return res.status(500).json({
-                              message: "Failed to create file buffer.",
-                              success: false,
-                              error: true,
-                        });
-                  }
-                  const { data: uploadResult } = await axios.post(
-                        `${process.env.UTILS_SERVICE_URI}/api/v1/cloudinary/images`,
-                        { image: fileBuffer },
-                        {
-                              headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
-                              maxContentLength: Infinity,
-                              maxBodyLength: Infinity,
-                        },
-                  );
-                  updates.image = uploadResult.url;
-            }
+  const { restaurants, correctedQuery } = await restaurantService.getNearestRestaurants(
+    Number(longitude),
+    Number(latitude),
+    Number(radius),
+    search as string
+  );
 
-            const updatedRestaurant = await Restaurant.findOneAndUpdate(
-                  { ownerId: user._id },
-                  updates,
-                  { new: true },
-            );
+  const dtos = restaurants.map(RestaurantResponseMapper.toRestaurantDto);
 
-            if (!updatedRestaurant) {
-                  return res.status(404).json({
-                        message: "Failed to update restaurant",
-                        success: false,
-                        error: true,
-                  });
-            }
+  return res.status(200).json({
+    success: true,
+    message: "Nearest restaurants fetched successfully",
+    error: false,
+    data: dtos,
+    ...(correctedQuery ? { correctedQuery } : {})
+  });
+});
 
-            return res.status(200).json({
-                  message: "Restaurant updated successfully",
-                  success: true,
-                  error: false,
-                  data: updatedRestaurant,
-            });
-      },
-);
-
-export const getNearestRestaurant = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const { latitude, longitude, radius = 5000, search = "" } = req.query;
-            if (!latitude || !longitude) {
-                  return res.status(400).json({
-                        message: "Latitude and longitude are required",
-                        success: false,
-                        error: true,
-                  });
-            }
-
-            const now = new Date();
-            const blockedOwners = await User.find({
-                  isBlocked: true,
-                  blockedUntil: { $gt: now },
-            }).distinct("_id");
-            const blockedOwnerIds = blockedOwners.map((id: any) => id.toString());
-
-            const geoNearStage = {
-                  $geoNear: {
-                        near: {
-                              type: "Point" as const,
-                              coordinates: [Number(longitude), Number(latitude)] as [
-                                    number,
-                                    number,
-                              ],
-                        },
-                        distanceField: "distance",
-                        maxDistance: Number(radius),
-                        spherical: true,
-                        query: {
-                              isVerified: true,
-                              ...(blockedOwnerIds.length > 0
-                                    ? { ownerId: { $nin: blockedOwnerIds } }
-                                    : {}),
-                        },
-                  },
-            };
-
-            const sortAndProject = [
-                  { $sort: { distance: 1 as const, isOpen: -1 as const } },
-                  {
-                        $addFields: {
-                              distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
-                        },
-                  },
-                  { $limit: 25 },
-            ];
-
-            let restaurants: any[] = [];
-            let correctedQuery: string | undefined;
-
-            if (search && typeof search === "string") {
-                  const rawSearch = search.trim();
-                  const { normalized: normalizedSearch, corrected } = await normalizeSearchQuery(rawSearch);
-                  if (corrected) correctedQuery = normalizedSearch;
-
-                  const buildRestaurantResults = async (query: string, maxDistance: number) => {
-                        const tokens = query.trim().split(/\s+/).filter(Boolean);
-                        const nameRegex = new RegExp(tokens.join("|"), "i");
-
-                        const byName = await Restaurant.aggregate([
-                              {
-                                    ...geoNearStage,
-                                    $geoNear: {
-                                          ...geoNearStage.$geoNear,
-                                          maxDistance,
-                                          query: {
-                                                isVerified: true,
-                                                name: { $regex: nameRegex },
-                                                ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}),
-                                          },
-                                    },
-                              },
-                              ...sortAndProject,
-                        ]);
-
-                        const matchingItems = await MenuItem.find({
-                              name: { $regex: nameRegex },
-                              isAvailable: true,
-                        }).distinct("restaurantId");
-
-                        const byMenuItems =
-                              matchingItems.length > 0
-                                    ? await Restaurant.aggregate([
-                                          {
-                                                ...geoNearStage,
-                                                $geoNear: {
-                                                      ...geoNearStage.$geoNear,
-                                                      maxDistance,
-                                                      query: {
-                                                            isVerified: true,
-                                                            _id: {
-                                                                  $in: matchingItems.map(
-                                                                        (id: any) => new mongoose.Types.ObjectId(id.toString()),
-                                                                  ),
-                                                            },
-                                                            ...(blockedOwnerIds.length > 0 ? { ownerId: { $nin: blockedOwnerIds } } : {}),
-                                                      },
-                                                },
-                                          },
-                                          ...sortAndProject,
-                                    ])
-                                    : [];
-
-                        const seen = new Set<string>();
-                        const results: any[] = [];
-                        for (const r of [...byName, ...byMenuItems]) {
-                              const key = r._id.toString();
-                              if (!seen.has(key)) { seen.add(key); results.push(r); }
-                        }
-                        return results;
-                  };
-
-                  const requestedRadius = Number(radius);
-
-                  // Always try the exact literal text the user typed FIRST. A query like "Mach vat"
-                  // might just be a restaurant/dish's actual (Benglish) name rather than something
-                  // that needs translating — an exact match on real data should always win over a
-                  // broad synonym match on unrelated restaurants. Only fall back to the
-                  // normalized/translated query if the literal text truly matches nothing.
-                  restaurants = await buildRestaurantResults(rawSearch, requestedRadius);
-                  if (restaurants.length > 0) correctedQuery = undefined;
-
-                  if (restaurants.length === 0 && corrected && normalizedSearch.toLowerCase() !== rawSearch.toLowerCase()) {
-                        restaurants = await buildRestaurantResults(normalizedSearch, requestedRadius);
-                  }
-
-                  // A text match can exist further away than the requested radius. Rather than
-                  // silently reporting "no results" (while still showing a stale correction banner),
-                  // widen the search once before giving up, mirroring the autocomplete endpoint's
-                  // "expand to 50km if nothing nearby" behavior.
-                  if (restaurants.length === 0 && requestedRadius < 50000) {
-                        restaurants = await buildRestaurantResults(rawSearch, 50000);
-                        if (restaurants.length > 0) correctedQuery = undefined;
-                        if (restaurants.length === 0 && corrected && normalizedSearch.toLowerCase() !== rawSearch.toLowerCase()) {
-                              restaurants = await buildRestaurantResults(normalizedSearch, 50000);
-                        }
-                  }
-            } else {
-                  restaurants = await Restaurant.aggregate([
-                        geoNearStage,
-                        ...sortAndProject,
-                  ]);
-            }
-
-            return res.status(200).json({
-                  message: "Restaurants fetched successfully",
-                  success: true,
-                  error: false,
-                  count: restaurants.length,
-                  data: restaurants,
-                  ...(correctedQuery ? { correctedQuery } : {}),
-            });
-      },
-);
-
-export const fetchSingleRestaurant = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const { id } = req.params;
-            const restaurant = await Restaurant.findById({
-                  _id: id,
-            });
-            if (!restaurant) {
-                  return res.status(404).json({
-                        message: "Restaurant not found",
-                        success: false,
-                        error: true,
-                  });
-            }
-            return res.status(200).json({
-                  message: "Restaurant fetched successfully",
-                  success: true,
-                  error: false,
-                  data: restaurant,
-            });
-      },
-);
+export const fetchSingleRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  const restaurant = await restaurantService.getRestaurantDetails(id as string);
+  return res.status(200).json({
+    message: "Restaurant fetched successfully",
+    success: true,
+    error: false,
+    data: RestaurantResponseMapper.toRestaurantDto(restaurant)
+  });
+});

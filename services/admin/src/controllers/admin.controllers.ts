@@ -1,39 +1,15 @@
-import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import { Request, Response, NextFunction } from "express";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
+import { AdminValidator } from "../validators/admin.validator.js";
+import { adminService } from "../services/index.js";
 
-export const adminLogin = TryCatch(async (req: Request, res: Response) => {
-      const { email, password } = req.body as { email: string; password: string };
-
-      if (!email || !password) {
-            return res.status(400).json({
-                  success: false,
-                  message: "Email and password are required",
-                  error: true,
-            });
-      }
-
-      const adminEmail = process.env.ADMIN_EMAIL;
-      const adminPassword = process.env.ADMIN_PASSWORD;
-
-      if (email !== adminEmail || password !== adminPassword) {
-            return res.status(401).json({
-                  success: false,
-                  message: "Invalid credentials",
-                  error: true,
-            });
-      }
-
-      const token = jwt.sign(
-            { _id: "admin", email, role: "admin" },
-            process.env.JWT_SECRET as string,
-            { expiresIn: "15d" },
-      );
-
-      return res.status(200).json({
-            success: true,
-            message: "Admin login successful",
-            error: false,
-            data: { token },
-      });
+export const adminLogin = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
+  const validData = AdminValidator.validateLogin(req.body);
+  const token = await adminService.login(validData.email, validData.password);
+  return res.status(200).json({
+    success: true,
+    message: "Admin login successful",
+    error: false,
+    data: { token }
+  });
 });

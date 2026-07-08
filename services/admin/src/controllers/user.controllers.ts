@@ -1,132 +1,48 @@
-import { Response } from "express";
+import { Response, NextFunction } from "express";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { AdminRequest } from "../middleware/isAdminAuthenticated.js";
-import { User } from "../models/User.js";
-import { Restaurant } from "../models/Restaurant.js";
-import { Rider } from "../models/Rider.js";
-import { publishAdminEvent } from "../config/rabbitmq.js";
+import { userModerationService } from "../services/index.js";
+import { AdminResponseMapper } from "../mappers/admin-response.mapper.js";
 
-export const getAllUsers = TryCatch(
-      async (req: AdminRequest, res: Response) => {
-            const page = Math.max(1, parseInt(req.query["page"] as string) || 1);
-            const limit = Math.min(100, parseInt(req.query["limit"] as string) || 20);
-            const { role } = req.query;
+export const getAllUsers = TryCatch(async (req: AdminRequest, res: Response, next: NextFunction) => {
+  const page = Math.max(1, parseInt(req.query["page"] as string) || 1);
+  const limit = Math.min(100, parseInt(req.query["limit"] as string) || 20);
+  const role = req.query["role"] as string | undefined;
 
-            const filter: Record<string, unknown> = {};
-            if (role === "null") filter["role"] = null;
-            else if (role) filter["role"] = role;
+  const { users, total } = await userModerationService.getAllUsers(page, limit, role);
+  const dtos = users.map((u) => AdminResponseMapper.toUserDto(u, (u as any).riderPicture));
 
-            const [users, total] = await Promise.all([
-                  User.find(filter)
-                        .sort({ createdAt: -1 })
-                        .skip((page - 1) * limit)
-                        .limit(limit)
-                        .lean(),
-                  User.countDocuments(filter),
-            ]);
+  return res.status(200).json({
+    success: true,
+    message: "Users fetched successfully",
+    error: false,
+    data: {
+      users: dtos,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    }
+  });
+});
 
-            // Attach rider profile pictures for users with role "rider"
-            const riderUserIds = users
-                  .filter((u) => u.role === "rider")
-                  .map((u) => u._id.toString());
+export const getUserById = TryCatch(async (req: AdminRequest, res: Response, next: NextFunction) => {
+  const userId = req.params["userId"] as string;
+  const user = await userModerationService.getUserById(userId);
+  return res.status(200).json({
+    success: true,
+    message: "User fetched successfully",
+    error: false,
+    data: AdminResponseMapper.toUserDto(user)
+  });
+});
 
-            if (riderUserIds.length > 0) {
-                  const riderProfiles = await Rider.find(
-                        { userId: { $in: riderUserIds } },
-                        { userId: 1, picture: 1 },
-                  ).lean();
-
-                  const riderPictureMap = new Map(
-                        riderProfiles.map((r) => [r.userId, r.picture]),
-                  );
-
-                  for (const user of users) {
-                        if (user.role === "rider") {
-                              const riderPic = riderPictureMap.get(user._id.toString());
-                              if (riderPic) {
-                                    (user as any).riderPicture = riderPic;
-                              }
-                        }
-                  }
-            }
-
-            return res.status(200).json({
-                  success: true,
-                  message: "Users fetched successfully",
-                  error: false,
-                  data: {
-                        users,
-                        total,
-                        page,
-                        pages: Math.ceil(total / limit),
-                  },
-            });
-      },
-);
-
-export const getUserById = TryCatch(
-      async (req: AdminRequest, res: Response) => {
-            const user = await User.findById(req.params["userId"]).lean();
-            if (!user)
-                  return res.status(404).json({
-                        success: false,
-                        message: "User not found",
-                        error: true,
-                  });
-            return res.status(200).json({
-                  success: true,
-                  message: "User fetched successfully",
-                  error: false,
-                  data: user,
-            });
-      },
-);
-
-const BLOCK_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
-
-export const blockUser = TryCatch(async (req: AdminRequest, res: Response) => {
-      const user = await User.findById(req.params["userId"]);
-      if (!user)
-            return res
-                  .status(404)
-                  .json({ success: false, message: "User not found", error: true });
-
-      const now = new Date();
-      const isCurrentlyBlocked =
-            user.isBlocked && user.blockedUntil && user.blockedUntil > now;
-
-      if (isCurrentlyBlocked) {
-            user.isBlocked = false;
-            user.blockedUntil = null;
-      } else {
-            user.isBlocked = true;
-            user.blockedUntil = new Date(now.getTime() + BLOCK_DURATION_MS);
-      }
-
-      await user.save();
-
-      let restaurantId: string | null = null;
-      if (user.role === "seller") {
-            const restaurant = await Restaurant.findOne({
-                  ownerId: user._id.toString(),
-            })
-                  .select("_id")
-                  .lean();
-            restaurantId = restaurant?._id?.toString() ?? null;
-      }
-
-      publishAdminEvent("USER_BLOCK_STATUS_CHANGED", {
-            userId: user._id.toString(),
-            role: user.role ?? null,
-            isBlocked: user.isBlocked,
-            blockedUntil: user.blockedUntil?.toISOString() ?? null,
-            restaurantId,
-      });
-
-      return res.status(200).json({
-            success: true,
-            message: user.isBlocked ? "User blocked for 7 days" : "User unblocked",
-            error: false,
-            data: { isBlocked: user.isBlocked, blockedUntil: user.blockedUntil },
-      });
+export const blockUser = TryCatch(async (req: AdminRequest, res: Response, next: NextFunction) => {
+  const userId = req.params["userId"] as string;
+  const user = await userModerationService.blockUser(userId);
+  return res.status(200).json({
+    success: true,
+    message: user.isBlocked ? "User blocked for 7 days" : "User unblocked",
+    error: false,
+    data: { isBlocked: user.isBlocked, blockedUntil: user.blockedUntil }
+  });
 });

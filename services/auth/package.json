@@ -22,7 +22,8 @@
             "googleapis": "^171.4.0",
             "jsonwebtoken": "^9.0.3",
             "mongoose": "^9.6.2",
-            "multer": "^2.1.1"
+            "multer": "^2.1.1",
+            "zod": "^4.4.3"
       },
       "devDependencies": {
             "@types/amqplib": "^0.10.8",

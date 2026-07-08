@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
-import { IUser } from "../model/User.js";
+import { User } from "../domain/entities/User.js";
+import { IJwtService } from "../interfaces/IJwtService.js";
 
 export interface TokenPayload {
   _id: string;
@@ -7,19 +8,23 @@ export interface TokenPayload {
   email: string;
   image: string;
   role: string | null;
-  restaurantId?: string;
+  restaurantId: string | null;
 }
 
-export const generateToken = (user: IUser, extra: Partial<TokenPayload> = {}): string => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET is not set");
-  const payload: TokenPayload = {
-    _id: user._id.toString(),
-    name: user.name,
-    email: user.email,
-    image: user.image,
-    role: user.role ?? null,
-    ...extra,
-  };
-  return jwt.sign(payload, secret, { expiresIn: "15d" });
-};
+export class JwtService implements IJwtService {
+  generateToken(user: User): string {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error("JWT_SECRET is not set");
+    }
+    const payload: TokenPayload = {
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      role: user.role,
+      restaurantId: user.restaurantId ?? null
+    };
+    return jwt.sign(payload, secret, { expiresIn: "15d" });
+  }
+}

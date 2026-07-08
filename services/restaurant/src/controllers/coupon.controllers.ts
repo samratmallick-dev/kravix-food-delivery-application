@@ -1,458 +1,131 @@
-import { Response } from "express";
+import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
-import { Coupon } from "../model/Coupon.js";
-import { CouponUsage } from "../model/CouponUsage.js";
+import { couponService } from "../services/index.js";
+import { RestaurantValidator } from "../validators/restaurant.validator.js";
+import { AuthorizationError } from "../utils/errors.js";
 
-// Create Coupon
-export const createCoupon = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
-            if (!user) {
-                  return res
-                        .status(401)
-                        .json({
-                              message: "User not authenticated",
-                              success: false,
-                              error: true,
-                        });
-            }
+export const createCoupon = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+  }
 
-            const {
-                  code,
-                  discountType,
-                  discountValue,
-                  maxDiscountAmount,
-                  minOrderAmount,
-                  expiryDate,
-                  usageLimit,
-                  perUserLimit,
-                  couponType,
-                  restaurantId,
-            } = req.body;
+  if (user.role !== "admin" && user.role !== "seller") {
+    throw new AuthorizationError("Access denied");
+  }
 
-            if (!code || !discountType || discountValue === undefined || !expiryDate) {
-                  return res
-                        .status(400)
-                        .json({
-                              message: "Missing required fields",
-                              success: false,
-                              error: true,
-                        });
-            }
+  const validData = RestaurantValidator.validateCoupon(req.body);
+  const couponType = (req.body.couponType as string) || "global";
+  const bodyRestaurantId = (req.body.restaurantId as string) || null;
 
-            // Authorization checks
-            if (user.role !== "admin" && user.role !== "seller") {
-                  return res
-                        .status(403)
-                        .json({ message: "Access denied", success: false, error: true });
-            }
+  const targetRestaurantId = user.role === "seller" ? (user.restaurantId || null) : (couponType === "restaurant" ? bodyRestaurantId : null);
 
-            let targetRestaurantId = null;
-            let type: "global" | "restaurant" = "global";
+  const coupon = await couponService.createCoupon(targetRestaurantId, validData, couponType);
 
-            if (user.role === "seller") {
-                  if (!user.restaurantId) {
-                        return res
-                              .status(400)
-                              .json({
-                                    message: "Seller is not associated with any restaurant",
-                                    success: false,
-                                    error: true,
-                              });
-                  }
-                  targetRestaurantId = user.restaurantId;
-                  type = "restaurant";
-            } else {
-                  type = couponType || "global";
-                  targetRestaurantId = couponType === "restaurant" ? restaurantId : null;
-            }
+  return res.status(201).json({
+    message: "Coupon created successfully",
+    data: coupon,
+    success: true,
+    error: false
+  });
+});
 
-            // Check if coupon code already exists
-            const normalizedCode = code.trim().toUpperCase();
-            const existing = await Coupon.findOne({ code: normalizedCode });
-            if (existing) {
-                  return res
-                        .status(400)
-                        .json({
-                              message: "Coupon code already exists",
-                              success: false,
-                              error: true,
-                        });
-            }
+export const getCoupons = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  const { restaurantId } = req.query;
 
-            const coupon = await Coupon.create({
-                  code: normalizedCode,
-                  discountType,
-                  discountValue,
-                  maxDiscountAmount: maxDiscountAmount || 0,
-                  minOrderAmount: minOrderAmount || 0,
-                  expiryDate: new Date(expiryDate),
-                  usageLimit: usageLimit || 0,
-                  perUserLimit: perUserLimit !== undefined ? perUserLimit : 1,
-                  couponType: type,
-                  restaurantId: targetRestaurantId,
-                  isActive: true,
-            });
+  const userRole = user ? user.role : "customer";
+  const sellerRestaurantId = user ? (user.restaurantId || null) : null;
+  const queryRestaurantId = restaurantId ? (restaurantId as string) : null;
 
-            return res.status(201).json({
-                  message: "Coupon created successfully",
-                  data: coupon,
-                  success: true,
-                  error: false,
-            });
-      },
-);
+  const coupons = await couponService.getCoupons(userRole, sellerRestaurantId, queryRestaurantId);
 
-// Get Coupons
-export const getCoupons = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
-            const { restaurantId } = req.query;
+  return res.status(200).json({
+    message: "Coupons fetched successfully",
+    data: coupons,
+    success: true,
+    error: false
+  });
+});
 
-            let query: any = {};
+export const updateCoupon = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user || (user.role !== "admin" && user.role !== "seller")) {
+    throw new AuthorizationError("Access denied");
+  }
 
-            if (!user) {
-                  // Unauthenticated view (e.g. general customer checkout or browsing)
-                  query.isActive = true;
-                  query.expiryDate = { $gt: new Date() };
-                  if (restaurantId) {
-                        query.$or = [
-                              { couponType: "global" },
-                              { restaurantId: restaurantId.toString() },
-                        ];
-                  } else {
-                        query.couponType = "global";
-                  }
-            } else if (user.role === "admin") {
-                  // Admin sees everything
-                  query = {};
-            } else if (user.role === "seller") {
-                  // Seller sees coupons for their restaurant
-                  if (!user.restaurantId) {
-                        return res
-                              .status(200)
-                              .json({
-                                    message: "No coupons found",
-                                    data: [],
-                                    success: true,
-                                    error: false,
-                              });
-                  }
-                  query.restaurantId = user.restaurantId;
-            } else {
-                  // Customer sees active coupons
-                  query.isActive = true;
-                  query.expiryDate = { $gt: new Date() };
-                  if (restaurantId) {
-                        query.$or = [
-                              { couponType: "global" },
-                              { restaurantId: restaurantId.toString() },
-                        ];
-                  } else {
-                        query.couponType = "global";
-                  }
-            }
+  const id = req.params["id"] as string;
+  const sellerRestaurantId = user.restaurantId || null;
 
-            const coupons = await Coupon.find(query).sort({ createdAt: -1 });
+  const updated = await couponService.updateCoupon(id, sellerRestaurantId, user.role, req.body);
 
-            return res.status(200).json({
-                  message: "Coupons fetched successfully",
-                  data: coupons,
-                  success: true,
-                  error: false,
-            });
-      },
-);
+  return res.status(200).json({
+    message: "Coupon updated successfully",
+    data: updated,
+    success: true,
+    error: false
+  });
+});
 
-// Update Coupon
-export const updateCoupon = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
-            if (!user || (user.role !== "admin" && user.role !== "seller")) {
-                  return res
-                        .status(403)
-                        .json({ message: "Access denied", success: false, error: true });
-            }
+export const deleteCoupon = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user || (user.role !== "admin" && user.role !== "seller")) {
+    throw new AuthorizationError("Access denied");
+  }
 
-            const { id } = req.params;
-            const coupon = await Coupon.findById(id);
+  const id = req.params["id"] as string;
+  const sellerRestaurantId = user.restaurantId || null;
 
-            if (!coupon) {
-                  return res
-                        .status(404)
-                        .json({ message: "Coupon not found", success: false, error: true });
-            }
+  await couponService.deleteCoupon(id, sellerRestaurantId, user.role);
 
-            // Check seller ownership
-            if (user.role === "seller" && coupon.restaurantId !== user.restaurantId) {
-                  return res
-                        .status(403)
-                        .json({
-                              message: "Access denied to this coupon",
-                              success: false,
-                              error: true,
-                        });
-            }
+  return res.status(200).json({
+    message: "Coupon deleted successfully",
+    success: true,
+    error: false
+  });
+});
 
-            const updateData = { ...req.body };
-            if (updateData.code) {
-                  updateData.code = updateData.code.trim().toUpperCase();
-                  const existing = await Coupon.findOne({
-                        code: updateData.code,
-                        _id: { $ne: id },
-                  } as any);
-                  if (existing) {
-                        return res
-                              .status(400)
-                              .json({
-                                    message: "Coupon code already exists",
-                                    success: false,
-                                    error: true,
-                              });
-                  }
-            }
+export const applyCoupon = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated", success: false, error: true });
+  }
 
-            const updatedCoupon = await Coupon.findByIdAndUpdate(id, updateData, {
-                  new: true,
-            });
+  const { code, restaurantId, orderAmount, deliveryFee } = req.body;
+  const coupon = await couponService.validateCouponCode(code as string, user._id.toString(), Number(orderAmount));
 
-            return res.status(200).json({
-                  message: "Coupon updated successfully",
-                  data: updatedCoupon,
-                  success: true,
-                  error: false,
-            });
-      },
-);
+  const discountAmount = coupon.calculateDiscount(Number(orderAmount), Number(deliveryFee || 0));
 
-// Delete Coupon
-export const deleteCoupon = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
-            if (!user || (user.role !== "admin" && user.role !== "seller")) {
-                  return res
-                        .status(403)
-                        .json({ message: "Access denied", success: false, error: true });
-            }
+  return res.status(200).json({
+    message: "Coupon is valid",
+    data: {
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      discountAmount,
+      minOrderAmount: coupon.minOrderAmount
+    },
+    success: true,
+    error: false
+  });
+});
 
-            const { id } = req.params;
-            const coupon = await Coupon.findById(id);
+export const getCouponAnalytics = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user || (user.role !== "admin" && user.role !== "seller")) {
+    throw new AuthorizationError("Access denied");
+  }
 
-            if (!coupon) {
-                  return res
-                        .status(404)
-                        .json({ message: "Coupon not found", success: false, error: true });
-            }
+  const id = req.params["id"] as string;
+  const sellerRestaurantId = user.restaurantId || null;
 
-            // Check seller ownership
-            if (user.role === "seller" && coupon.restaurantId !== user.restaurantId) {
-                  return res
-                        .status(403)
-                        .json({
-                              message: "Access denied to this coupon",
-                              success: false,
-                              error: true,
-                        });
-            }
+  const analytics = await couponService.getCouponAnalytics(id, sellerRestaurantId, user.role);
 
-            await Coupon.findByIdAndDelete(id);
-
-            return res.status(200).json({
-                  message: "Coupon deleted successfully",
-                  success: true,
-                  error: false,
-            });
-      },
-);
-
-// Apply / Validate Coupon
-export const applyCoupon = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
-            if (!user) {
-                  return res
-                        .status(401)
-                        .json({
-                              message: "User not authenticated",
-                              success: false,
-                              error: true,
-                        });
-            }
-
-            const { code, restaurantId, orderAmount, deliveryFee } = req.body;
-
-            if (!code || !restaurantId || orderAmount === undefined) {
-                  return res
-                        .status(400)
-                        .json({
-                              message: "Code, restaurantId, and orderAmount are required",
-                              success: false,
-                              error: true,
-                        });
-            }
-
-            const normalizedCode = code.trim().toUpperCase();
-            const coupon = await Coupon.findOne({ code: normalizedCode });
-
-            if (!coupon) {
-                  return res
-                        .status(404)
-                        .json({
-                              message: "Coupon code not found",
-                              success: false,
-                              error: true,
-                        });
-            }
-
-            if (!coupon.isActive) {
-                  return res
-                        .status(400)
-                        .json({ message: "Coupon is inactive", success: false, error: true });
-            }
-
-            if (new Date(coupon.expiryDate) < new Date()) {
-                  return res
-                        .status(400)
-                        .json({ message: "Coupon has expired", success: false, error: true });
-            }
-
-            if (
-                  coupon.couponType === "restaurant" &&
-                  coupon.restaurantId !== restaurantId
-            ) {
-                  return res
-                        .status(400)
-                        .json({
-                              message: "Coupon is not valid for this restaurant",
-                              success: false,
-                              error: true,
-                        });
-            }
-
-            if (orderAmount < coupon.minOrderAmount) {
-                  return res.status(400).json({
-                        message: `Minimum order amount of ₹${coupon.minOrderAmount} required to use this coupon`,
-                        success: false,
-                        error: true,
-                  });
-            }
-
-            if (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit) {
-                  return res
-                        .status(400)
-                        .json({
-                              message: "Coupon usage limit reached",
-                              success: false,
-                              error: true,
-                        });
-            }
-
-            if (coupon.perUserLimit > 0) {
-                  const usageCount = await CouponUsage.countDocuments({
-                        couponId: coupon._id,
-                        userId: user._id,
-                  });
-                  if (usageCount >= coupon.perUserLimit) {
-                        return res
-                              .status(400)
-                              .json({
-                                    message: "You have reached your limit for this coupon",
-                                    success: false,
-                                    error: true,
-                              });
-                  }
-            }
-
-            // Calculate discount amount
-            let discountAmount = 0;
-            if (coupon.discountType === "percentage") {
-                  discountAmount = (orderAmount * coupon.discountValue) / 100;
-                  if (
-                        coupon.maxDiscountAmount > 0 &&
-                        discountAmount > coupon.maxDiscountAmount
-                  ) {
-                        discountAmount = coupon.maxDiscountAmount;
-                  }
-            } else if (coupon.discountType === "flat") {
-                  discountAmount = coupon.discountValue;
-            } else if (coupon.discountType === "free_delivery") {
-                  discountAmount = deliveryFee || 0;
-            }
-
-            // Cap discount amount at order amount
-            if (discountAmount > orderAmount) {
-                  discountAmount = orderAmount;
-            }
-
-            return res.status(200).json({
-                  message: "Coupon is valid",
-                  data: {
-                        code: coupon.code,
-                        discountType: coupon.discountType,
-                        discountValue: coupon.discountValue,
-                        discountAmount: Math.round(discountAmount * 100) / 100,
-                        minOrderAmount: coupon.minOrderAmount,
-                  },
-                  success: true,
-                  error: false,
-            });
-      },
-);
-
-// Coupon Analytics
-export const getCouponAnalytics = TryCatch(
-      async (req: AuthenticatedRequest, res: Response) => {
-            const user = req.user;
-            if (!user || (user.role !== "admin" && user.role !== "seller")) {
-                  return res
-                        .status(403)
-                        .json({ message: "Access denied", success: false, error: true });
-            }
-
-            const { id } = req.params;
-            const coupon = await Coupon.findById(id);
-
-            if (!coupon) {
-                  return res
-                        .status(404)
-                        .json({ message: "Coupon not found", success: false, error: true });
-            }
-
-            if (user.role === "seller" && coupon.restaurantId !== user.restaurantId) {
-                  return res
-                        .status(403)
-                        .json({ message: "Access denied", success: false, error: true });
-            }
-
-            const usages = await CouponUsage.find({ couponId: coupon._id })
-                  .sort({ usedAt: -1 })
-                  .limit(100);
-
-            const summary = await CouponUsage.aggregate([
-                  { $match: { couponId: coupon._id } },
-                  {
-                        $group: {
-                              _id: null,
-                              totalRedemptions: { $sum: 1 },
-                              totalDiscountAmount: { $sum: "$discountApplied" },
-                        },
-                  },
-            ]);
-
-            const totalRedemptions = summary[0]?.totalRedemptions || 0;
-            const totalDiscountAmount = summary[0]?.totalDiscountAmount || 0;
-
-            return res.status(200).json({
-                  message: "Coupon analytics fetched successfully",
-                  data: {
-                        coupon,
-                        totalRedemptions,
-                        totalDiscountAmount,
-                        usages,
-                  },
-                  success: true,
-                  error: false,
-            });
-      },
-);
+  return res.status(200).json({
+    message: "Coupon analytics fetched successfully",
+    data: analytics,
+    success: true,
+    error: false
+  });
+});
