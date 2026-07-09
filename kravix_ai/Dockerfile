@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.prod.txt
 
 RUN adduser -D appuser
 
-COPY --chown=appuser:appuser *.py ./
+COPY --chown=appuser:appuser . .
 
 USER appuser
 

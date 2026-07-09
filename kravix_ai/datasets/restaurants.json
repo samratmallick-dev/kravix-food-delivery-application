@@ -1,0 +1,280 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-07-10T12:00:00Z",
+  "schemaVersion": "1",
+  "data": [
+    {
+      "id": "rest_verification_policy",
+      "domain": "restaurants",
+      "content": "All new restaurants on Kravix must pass a strict verification process. This includes submitting FSSAI/Food Safety licenses, GST details, and owner KYC. Verification takes 2-3 business days. Unverified restaurants cannot go online or accept orders.",
+      "aliases": [
+        "restaurant verification",
+        "seller kyc",
+        "fssai",
+        "gst",
+        "onboarding seller",
+        "approval process"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Policy"
+    },
+    {
+      "id": "rest_menu_management",
+      "domain": "restaurants",
+      "content": "Sellers can manage their menus via the Seller Dashboard. They can add items, update prices, add descriptions, and upload photos. Items can be marked 'Out of Stock' temporarily without deleting them. Any major price change above 50% triggers a manual admin review.",
+      "aliases": [
+        "menu management",
+        "add item",
+        "edit price",
+        "out of stock",
+        "menu rules",
+        "hide item",
+        "upload photo"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Workflow"
+    },
+    {
+      "id": "rest_coupons_offers",
+      "domain": "restaurants",
+      "content": "Restaurants can run custom promotional campaigns. Sellers can create flat discount coupons (e.g., ₹50 off) or percentage discounts (e.g., 20% off up to ₹100). The financial burden of restaurant-created coupons falls on the seller, reducing their final payout.",
+      "aliases": [
+        "create coupon",
+        "seller discount",
+        "restaurant offer",
+        "promo code",
+        "campaign",
+        "run offer"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Marketing"
+    },
+    {
+      "id": "rest_business_hours",
+      "domain": "restaurants",
+      "content": "Restaurants must set their operating hours in the dashboard. The system automatically takes the restaurant offline outside these hours. Sellers can also use the 'Emergency Close' toggle to stop receiving orders temporarily if the kitchen is overwhelmed.",
+      "aliases": [
+        "business hours",
+        "opening time",
+        "closing time",
+        "emergency close",
+        "toggle online",
+        "offline",
+        "restaurant timings"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Operations"
+    },
+    {
+      "id": "rest_taxes_and_charges",
+      "domain": "restaurants",
+      "content": "Restaurants can configure packaging charges up to a maximum of ₹25 per order. GST is collected by Kravix on behalf of the restaurant. Commission fees range from 12% to 18% depending on the seller tier and are deducted before payout.",
+      "aliases": [
+        "taxes",
+        "commission",
+        "packaging charge",
+        "platform fee",
+        "deductions"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "rest_delivery_radius",
+      "domain": "restaurants",
+      "content": "The default delivery radius for a restaurant is 5 KM. Premium verified sellers can request an expansion up to 10 KM, provided their packaging standards ensure food remains hot and intact. Admins configure this radius.",
+      "aliases": [
+        "delivery radius",
+        "coverage area",
+        "how far",
+        "delivery zone"
+      ],
+      "roles_allowed": [
+        "customer",
+        "seller",
+        "admin"
+      ],
+      "category": "Operations"
+    },
+    {
+      "id": "rest_analytics_dashboard",
+      "domain": "restaurants",
+      "content": "The Analytics tab in the Seller Dashboard provides insights into daily revenue, top-selling items, customer retention rates, order cancellation rates, and peak ordering hours. Sellers can export this data as CSV.",
+      "aliases": [
+        "analytics",
+        "revenue dashboard",
+        "export csv",
+        "top items",
+        "sales report",
+        "performance"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Analytics"
+    },
+    {
+      "id": "rest_payout_workflow",
+      "domain": "restaurants",
+      "content": "Seller payouts are processed every Wednesday for the previous week's (Monday-Sunday) successful orders. The payout amount is (Total Order Value) - (Kravix Commission) - (Seller Funded Coupons). Payouts are directly credited to the verified bank account.",
+      "aliases": [
+        "seller payout",
+        "when do i get paid",
+        "bank transfer",
+        "settlement cycle",
+        "weekly payment"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "rest_ratings_reviews",
+      "domain": "restaurants",
+      "content": "Customers rate restaurants out of 5 stars after delivery and can leave written reviews. A restaurant's average rating is visible on its profile. Sellers can respond publicly to reviews but cannot delete negative ones; abusive reviews can be reported to admin.",
+      "aliases": [
+        "restaurant rating",
+        "reviews",
+        "how are restaurants rated",
+        "respond to review",
+        "report review"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Reputation"
+    },
+    {
+      "id": "rest_minimum_order",
+      "domain": "restaurants",
+      "content": "Sellers can set a Minimum Order Value for their restaurant (e.g., ₹99). Orders below this amount cannot be placed from that restaurant. This helps sellers cover fixed preparation and delivery costs on small orders.",
+      "aliases": [
+        "minimum order",
+        "min order value",
+        "minimum cart value",
+        "order too small"
+      ],
+      "roles_allowed": [
+        "customer",
+        "seller",
+        "admin"
+      ],
+      "category": "Operations"
+    },
+    {
+      "id": "rest_holiday_schedule",
+      "domain": "restaurants",
+      "content": "Sellers can mark specific dates as holidays in advance from the dashboard's Holiday Schedule. The restaurant automatically goes offline on those dates and customers see 'Closed for holiday' instead of being able to order.",
+      "aliases": [
+        "holiday schedule",
+        "closed for holiday",
+        "vacation mode",
+        "restaurant closed dates"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Operations"
+    },
+    {
+      "id": "rest_dine_in_takeaway_cloud",
+      "domain": "restaurants",
+      "content": "Restaurants on Kravix can operate as Dine-In (physical seating), Takeaway-only, or Cloud Kitchen (delivery-only, no seating). This model is set during onboarding and shown on the restaurant profile so customers know what to expect.",
+      "aliases": [
+        "dine in",
+        "takeaway",
+        "cloud kitchen",
+        "restaurant type",
+        "seating available"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Operations"
+    },
+    {
+      "id": "rest_bank_verification",
+      "domain": "restaurants",
+      "content": "Sellers must link a verified bank account (via a cancelled cheque or bank statement plus a ₹1 penny-drop verification) before payouts can begin. Payouts are blocked until bank verification is complete.",
+      "aliases": [
+        "bank verification",
+        "penny drop",
+        "add bank account",
+        "payout account",
+        "cancelled cheque"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "rest_featured_trending",
+      "domain": "restaurants",
+      "content": "Restaurants can be marked 'Featured' or 'Trending' based on order volume, ratings, and platform promotions curated by admins. Featured restaurants appear at the top of the home feed and get higher visibility.",
+      "aliases": [
+        "featured restaurant",
+        "trending restaurant",
+        "top restaurants",
+        "how to get featured",
+        "promotion visibility"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Marketing"
+    },
+    {
+      "id": "rest_preparation_time",
+      "domain": "restaurants",
+      "content": "Each restaurant sets an average Preparation Time per item or order type in the dashboard. This value directly feeds into the ETA calculation shown to customers and can be adjusted during rush hours to stay accurate.",
+      "aliases": [
+        "preparation time",
+        "prep time",
+        "cooking time",
+        "kitchen time"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Operations"
+    },
+    {
+      "id": "rest_inventory_stock",
+      "domain": "restaurants",
+      "content": "Sellers can manage ingredient-level stock alerts for popular items. When an ingredient runs low, the seller gets a dashboard notification to restock or temporarily mark related menu items 'Out of Stock'.",
+      "aliases": [
+        "inventory",
+        "stock management",
+        "ingredient stock",
+        "low stock alert"
+      ],
+      "roles_allowed": [
+        "seller",
+        "admin"
+      ],
+      "category": "Workflow"
+    }
+  ]
+}
