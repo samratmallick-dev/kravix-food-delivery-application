@@ -1967,8 +1967,8 @@ This project is licensed under the MIT License - see the [License](License) file
 **Samrat Mallick** from Habra, West Bengal-743263, India.
 - **GitHub**: [@samratmallick-dev](https://github.com/samratmallick-dev)
 - **Linkedin**: [@samrat-mallick01](https://www.linkedin.com/in/samrat-mallick01)
-- **Portfolio**: [@Samrat Mallick]([https://](https://myportfolio-io-dusky.vercel.app/))
-- **E-mail**: [@G-mail]([mailto:samratmallick832@gmail.com)
+- **Portfolio**: [@Samrat Mallick](https://https://myportfolio-io-dusky.vercel.app)
+- **E-mail**: [@G-mail](mailto:samratmallick832@gmail.com)
 
 ---
 
