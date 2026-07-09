@@ -6,7 +6,7 @@
     {
       "id": "food_fish_fry",
       "domain": "foods",
-      "content": "Fish Fry is a popular Bengali snack or appetizer. It consists of marinated fish pieces (usually Bhetki) coated in spices or batter and deep-fried until crispy. Often served with kasundi (mustard sauce) and onion salad.",
+      "content": "Fish Fry is a popular Bengali snack or appetizer. It consists of marinated fish pieces (usually Bhetki) coated in spices or batter and deep-fried until crispy. Often served with kasundi (mustard sauce) and onion salad. Key ingredients: Bhetki fish, Ginger, Garlic, Green chili, Cilantro, Lemon juice, Breadcrumbs, Egg, Oil. Allergens: Fish, Egg, Gluten. Dietary: Non-Vegetarian, Halal. Spice level: Medium. Pairs well with: Kasundi, Onion salad, Tea.",
       "aliases": [
         "Fish Fry",
         "fishfry",
@@ -70,8 +70,8 @@
         "bhaja": "fry"
       },
       "translations": {
-        "bn": "\u09ae\u09be\u099b \u09ad\u09be\u099c\u09be",
-        "hi": "\u092e\u091b\u0932\u0940 \u092b\u094d\u0930\u093e\u0908"
+        "bn": "মাছ ভাজা",
+        "hi": "मछली फ्राई"
       },
       "spiceLevel": "Medium",
       "preparationTime": "20 mins",
@@ -96,7 +96,7 @@
     {
       "id": "food_chicken_biryani",
       "domain": "foods",
-      "content": "Chicken Biryani is a highly aromatic and delicious mixed rice dish originating from the Indian subcontinent. The Kolkata variant includes a signature soft boiled potato and sometimes a boiled egg, flavored lightly with kewra water and saffron.",
+      "content": "Chicken Biryani is a highly aromatic and delicious mixed rice dish originating from the Indian subcontinent. The Kolkata variant includes a signature soft boiled potato and sometimes a boiled egg, flavored lightly with kewra water and saffron. Key ingredients: Basmati Rice, Chicken, Potato, Egg, Yogurt, Onions, Ghee, Biryani Masala, Saffron, Kewra water. Allergens: Dairy. Dietary: Non-Vegetarian, Halal. Spice level: Medium-High. Pairs well with: Raita, Salad, Soft Drinks.",
       "aliases": [
         "Chicken Biryani",
         "murgi biryani",
@@ -152,8 +152,8 @@
         "biriyani": "biryani"
       },
       "translations": {
-        "bn": "\u099a\u09bf\u0995\u09c7\u09a8 \u09ac\u09bf\u09b0\u09bf\u09af\u09bc\u09be\u09a8\u09bf",
-        "hi": "\u091a\u093f\u0915\u0928 \u092c\u093f\u0930\u092f\u093e\u0928\u0940"
+        "bn": "চিকেন বিরিয়ানি",
+        "hi": "चिकन बिरयानी"
       },
       "spiceLevel": "Medium-High",
       "preparationTime": "45 mins",
@@ -177,7 +177,7 @@
     {
       "id": "food_mutton_biryani",
       "domain": "foods",
-      "content": "Mutton Biryani is a rich, flavorful mixed rice dish made with tender marinated goat meat, long-grain basmati rice, and a blend of aromatic spices. A staple in Indian festive cuisine.",
+      "content": "Mutton Biryani is a rich, flavorful mixed rice dish made with tender marinated goat meat, long-grain basmati rice, and a blend of aromatic spices. A staple in Indian festive cuisine. Key ingredients: Basmati Rice, Mutton, Potato, Yogurt, Onions, Ghee, Biryani Masala, Saffron. Allergens: Dairy. Dietary: Non-Vegetarian, Halal. Spice level: Medium-High. Pairs well with: Raita, Mutton Chaap, Borhani.",
       "aliases": [
         "Mutton Biryani",
         "khashir biryani",
@@ -231,8 +231,8 @@
         "lamb": "mutton"
       },
       "translations": {
-        "bn": "\u09ae\u09be\u099f\u09a8 \u09ac\u09bf\u09b0\u09bf\u09af\u09bc\u09be\u09a8\u09bf",
-        "hi": "\u092e\u091f\u0928 \u092c\u093f\u0930\u092f\u093e\u0928\u0940"
+        "bn": "মাটন বিরিয়ানি",
+        "hi": "मटन बिरयानी"
       },
       "spiceLevel": "Medium-High",
       "preparationTime": "60 mins",
@@ -256,7 +256,7 @@
     {
       "id": "food_margherita_pizza",
       "domain": "foods",
-      "content": "Margherita Pizza is a classic Italian pizza with a simple but delicious topping of San Marzano tomato sauce, fresh mozzarella cheese, fresh basil leaves, and a drizzle of extra virgin olive oil.",
+      "content": "Margherita Pizza is a classic Italian pizza with a simple but delicious topping of San Marzano tomato sauce, fresh mozzarella cheese, fresh basil leaves, and a drizzle of extra virgin olive oil. Key ingredients: Pizza dough, Tomato sauce, Fresh Mozzarella, Basil, Olive oil. Allergens: Dairy, Gluten. Dietary: Vegetarian. Spice level: Mild. Pairs well with: Garlic Bread, Soft Drinks.",
       "aliases": [
         "Margherita Pizza",
         "classic pizza",
@@ -305,8 +305,8 @@
         "pizaa": "pizza"
       },
       "translations": {
-        "bn": "\u09ae\u09be\u09b0\u09cd\u0997\u09be\u09b0\u09bf\u099f\u09be \u09aa\u09bf\u099c\u09cd\u099c\u09be",
-        "hi": "\u092e\u093e\u0930\u094d\u0917\u0947\u0930\u093f\u091f\u093e \u092a\u093f\u091c\u094d\u091c\u093e"
+        "bn": "মার্গারিটা পিজ্জা",
+        "hi": "मार्गेरिटा पिज्जा"
       },
       "spiceLevel": "Mild",
       "preparationTime": "15 mins",
@@ -329,7 +329,7 @@
     {
       "id": "food_pepperoni_pizza",
       "domain": "foods",
-      "content": "Pepperoni Pizza is a popular American-Italian dish featuring a classic cheese pizza base topped with slices of pepperoni (a spicy, cured sausage made from beef and pork).",
+      "content": "Pepperoni Pizza is a popular American-Italian dish featuring a classic cheese pizza base topped with slices of pepperoni (a spicy, cured sausage made from beef and pork). Key ingredients: Pizza dough, Tomato sauce, Mozzarella, Pepperoni slices. Allergens: Dairy, Gluten, Pork. Dietary: Non-Vegetarian. Spice level: Medium. Pairs well with: French Fries, Cola.",
       "aliases": [
         "Pepperoni Pizza",
         "pepperoni",
@@ -376,8 +376,8 @@
         "pepperoni": "spicy sausage"
       },
       "translations": {
-        "bn": "\u09aa\u09c7\u09aa\u09c7\u09b0\u09cb\u09a8\u09bf \u09aa\u09bf\u099c\u09cd\u099c\u0e32",
-        "hi": "\u092a\u0947\u092a\u0947\u0930\u094b\u0928\u0940 \u092a\u093f\u091c\u094d\u091c\u093e"
+        "bn": "পেপেরোনি পিজ্জา",
+        "hi": "पेपेरोनी पिज्जा"
       },
       "spiceLevel": "Medium",
       "preparationTime": "15 mins",
@@ -399,7 +399,7 @@
     {
       "id": "food_chicken_burger",
       "domain": "foods",
-      "content": "Chicken Burger features a crispy or grilled chicken patty served in a sliced bun, typically garnished with lettuce, tomato, onion, and mayonnaise or cheese.",
+      "content": "Chicken Burger features a crispy or grilled chicken patty served in a sliced bun, typically garnished with lettuce, tomato, onion, and mayonnaise or cheese. Key ingredients: Burger Bun, Chicken Patty, Lettuce, Tomato, Mayonnaise, Cheese slice. Allergens: Gluten, Dairy, Egg. Dietary: Non-Vegetarian, Halal. Spice level: Mild-Medium. Pairs well with: French Fries, Milkshake.",
       "aliases": [
         "Chicken Burger",
         "chicken sandwich",
@@ -450,8 +450,8 @@
         "murgi": "chicken"
       },
       "translations": {
-        "bn": "\u099a\u09bf\u0995\u09c7\u09a8 \u09ac\u09be\u09b0\u09cd\u0997\u09be\u09b0",
-        "hi": "\u091a\u093f\u0915\u0928 \u092c\u0930\u094d\u0917\u0930"
+        "bn": "চিকেন বার্গার",
+        "hi": "चिकन बर्गर"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "12 mins",
@@ -475,7 +475,7 @@
     {
       "id": "food_veg_burger",
       "domain": "foods",
-      "content": "A Veg Burger is a vegetarian fast-food item featuring a plant-based or vegetable/potato mixed patty inside a bun, served with fresh greens and vegetarian sauces.",
+      "content": "A Veg Burger is a vegetarian fast-food item featuring a plant-based or vegetable/potato mixed patty inside a bun, served with fresh greens and vegetarian sauces. Key ingredients: Burger Bun, Vegetable Patty, Lettuce, Tomato, Eggless Mayonnaise. Allergens: Gluten, Soy. Dietary: Vegetarian. Spice level: Mild. Pairs well with: French Fries, Coke.",
       "aliases": [
         "Veg Burger",
         "vegetarian burger",
@@ -523,8 +523,8 @@
         "vegetable": "veg"
       },
       "translations": {
-        "bn": "\u09ad\u09c7\u099c \u09ac\u09be\u09b0\u09cd\u0997\u09be\u09b0",
-        "hi": "\u0935\u0947\u091c \u092c\u0930\u094d\u0917\u0930"
+        "bn": "ভেজ বার্গার",
+        "hi": "वेज बर्गर"
       },
       "spiceLevel": "Mild",
       "preparationTime": "10 mins",
@@ -547,7 +547,7 @@
     {
       "id": "food_hakka_noodles",
       "domain": "foods",
-      "content": "Veg Hakka Noodles is an Indian-Chinese street food classic. It consists of boiled noodles stir-fried in a wok with julienned vegetables like cabbage, carrots, and capsicum, seasoned with soy sauce and vinegar.",
+      "content": "Veg Hakka Noodles is an Indian-Chinese street food classic. It consists of boiled noodles stir-fried in a wok with julienned vegetables like cabbage, carrots, and capsicum, seasoned with soy sauce and vinegar. Key ingredients: Noodles, Cabbage, Carrot, Capsicum, Soy Sauce, Vinegar, Garlic. Allergens: Gluten, Soy. Dietary: Vegetarian. Spice level: Mild-Medium. Pairs well with: Chilli Chicken, Chilli Paneer, Manchurian.",
       "aliases": [
         "Hakka Noodles",
         "veg noodles",
@@ -598,8 +598,8 @@
         "haka": "hakka"
       },
       "translations": {
-        "bn": "\u09b9\u09be\u0995\u09cd\u0995\u09be \u09a8\u09c1\u09a1\u09b2\u09b8",
-        "hi": "\u0939\u0915\u094d\u0915\u093e \u0928\u0942\u0921\u0932\u094d\u0938"
+        "bn": "হাক্কা নুডলস",
+        "hi": "हक्का नूडल्स"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "15 mins",
@@ -623,7 +623,7 @@
     {
       "id": "food_chilli_chicken",
       "domain": "foods",
-      "content": "Chilli Chicken is a popular Indo-Chinese appetizer or side dish. It features crispy fried chicken chunks tossed in a spicy, sweet, and tangy sauce made with soy sauce, chili sauce, bell peppers, and onions.",
+      "content": "Chilli Chicken is a popular Indo-Chinese appetizer or side dish. It features crispy fried chicken chunks tossed in a spicy, sweet, and tangy sauce made with soy sauce, chili sauce, bell peppers, and onions. Key ingredients: Boneless Chicken, Bell Peppers, Onions, Soy Sauce, Green Chilli Sauce, Garlic, Cornstarch. Allergens: Soy, Gluten. Dietary: Non-Vegetarian, Halal. Spice level: High. Pairs well with: Hakka Noodles, Fried Rice.",
       "aliases": [
         "Chilli Chicken",
         "chili chicken",
@@ -674,8 +674,8 @@
         "murgi": "chicken"
       },
       "translations": {
-        "bn": "\u099a\u09bf\u09b2\u09bf \u099a\u09bf\u0995\u09c7\u09a8",
-        "hi": "\u091a\u093f\u0932\u0940 \u091a\u093f\u0915\u0928"
+        "bn": "চিলি চিকেন",
+        "hi": "चिली चिकन"
       },
       "spiceLevel": "High",
       "preparationTime": "20 mins",
@@ -698,7 +698,7 @@
     {
       "id": "food_masala_dosa",
       "domain": "foods",
-      "content": "Masala Dosa is a popular South Indian dish. It is a thin, crispy crepe made from a fermented batter of rice and lentils, filled with a spiced potato curry (masala), and served with coconut chutney and sambar.",
+      "content": "Masala Dosa is a popular South Indian dish. It is a thin, crispy crepe made from a fermented batter of rice and lentils, filled with a spiced potato curry (masala), and served with coconut chutney and sambar. Key ingredients: Rice, Urad Dal, Potato, Onion, Turmeric, Mustard seeds, Curry leaves. Dietary: Vegetarian, Gluten-Free. Spice level: Mild-Medium. Pairs well with: Sambar, Coconut Chutney, Filter Coffee.",
       "aliases": [
         "Masala Dosa",
         "dosa",
@@ -745,8 +745,8 @@
         "aloo": "potato"
       },
       "translations": {
-        "bn": "\u09ae\u09be\u09b8\u09be\u09b2\u09be \u09a7\u09cb\u09b8\u09be",
-        "hi": "\u092e\u0938\u093e\u0932\u093e \u0921\u094b\u0938\u093e"
+        "bn": "মাসালা ধোসা",
+        "hi": "मसाला डोसा"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "10 mins",
@@ -771,7 +771,7 @@
     {
       "id": "food_paneer_butter_masala",
       "domain": "foods",
-      "content": "Paneer Butter Masala is a rich and creamy North Indian curry made with soft paneer (Indian cottage cheese) cubes cooked in a tomato-onion gravy loaded with butter and cream.",
+      "content": "Paneer Butter Masala is a rich and creamy North Indian curry made with soft paneer (Indian cottage cheese) cubes cooked in a tomato-onion gravy loaded with butter and cream. Key ingredients: Paneer, Tomatoes, Onions, Butter, Cream, Cashews, Garam Masala. Allergens: Dairy, Tree Nuts. Dietary: Vegetarian. Spice level: Mild-Medium. Pairs well with: Naan, Tandoori Roti, Jeera Rice.",
       "aliases": [
         "Paneer Butter Masala",
         "paneer makhani",
@@ -820,8 +820,8 @@
         "sabzi": "veg"
       },
       "translations": {
-        "bn": "\u09aa\u09a8\u09bf\u09b0 \u09ac\u09be\u099f\u09be\u09b0 \u09ae\u09be\u09b8\u09be\u09b2\u09be",
-        "hi": "\u092a\u0928\u0940\u0930 \u092c\u091f\u0930 \u092e\u0938\u093e\u0932\u093e"
+        "bn": "পনির বাটার মাসালা",
+        "hi": "पनीर बटर मसाला"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "25 mins",
@@ -844,7 +844,7 @@
     {
       "id": "food_butter_chicken",
       "domain": "foods",
-      "content": "Butter Chicken (Murgh Makhani) is a classic North Indian dish featuring tender roasted chicken pieces simmered in a mildly spiced, rich, sweet, and creamy tomato and butter gravy.",
+      "content": "Butter Chicken (Murgh Makhani) is a classic North Indian dish featuring tender roasted chicken pieces simmered in a mildly spiced, rich, sweet, and creamy tomato and butter gravy. Key ingredients: Chicken, Tomatoes, Butter, Cream, Cashews, Kasuri Methi, Spices. Allergens: Dairy, Tree Nuts. Dietary: Non-Vegetarian, Halal. Spice level: Mild-Medium. Pairs well with: Butter Naan, Garlic Naan, Pulao.",
       "aliases": [
         "Butter Chicken",
         "murgh makhani",
@@ -894,8 +894,8 @@
         "murgh": "chicken"
       },
       "translations": {
-        "bn": "\u09ac\u09be\u099f\u09be\u09b0 \u099a\u09bf\u0995\u09c7\u09a8",
-        "hi": "\u092c\u091f\u0930 \u091a\u093f\u0915\u0928"
+        "bn": "বাটার চিকেন",
+        "hi": "बटर चिकन"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "30 mins",
@@ -919,7 +919,7 @@
     {
       "id": "food_rosogolla",
       "domain": "foods",
-      "content": "Rosogolla (Rasgulla) is a syrupy dessert popular in the Indian subcontinent. It is made from ball-shaped dumplings of chhena (an Indian cottage cheese) and semolina dough, cooked in light sugar syrup.",
+      "content": "Rosogolla (Rasgulla) is a syrupy dessert popular in the Indian subcontinent. It is made from ball-shaped dumplings of chhena (an Indian cottage cheese) and semolina dough, cooked in light sugar syrup. Key ingredients: Chhena (Milk), Sugar, Water, Cardamom. Allergens: Dairy. Dietary: Vegetarian. Spice level: Mild. Pairs well with: Samosa, Kachori.",
       "aliases": [
         "Rosogolla",
         "Rasgulla",
@@ -963,8 +963,8 @@
         "rosogolla": "rasgulla"
       },
       "translations": {
-        "bn": "\u09b0\u09b8\u0997\u09cb\u09b2\u09cd\u09b2\u09be",
-        "hi": "\u0930\u0938\u0917\u0941\u0932\u094d\u0932\u093e"
+        "bn": "রসগোল্লা",
+        "hi": "रसगुल्ला"
       },
       "spiceLevel": "Mild",
       "preparationTime": "40 mins",
@@ -985,7 +985,7 @@
     {
       "id": "food_mango_lassi",
       "domain": "foods",
-      "content": "Mango Lassi is a delicious creamy drink made of mango, yogurt, milk, a little sugar, and a sprinkling of cardamom. It's refreshing and acts as a cooling beverage during hot summers.",
+      "content": "Mango Lassi is a delicious creamy drink made of mango, yogurt, milk, a little sugar, and a sprinkling of cardamom. It's refreshing and acts as a cooling beverage during hot summers. Key ingredients: Mango pulp, Yogurt, Sugar, Milk, Cardamom. Allergens: Dairy. Dietary: Vegetarian. Spice level: Mild. Pairs well with: Spicy Food, Biryani.",
       "aliases": [
         "Mango Lassi",
         "lassi",
@@ -1032,8 +1032,8 @@
         "lassi": "yogurt drink"
       },
       "translations": {
-        "bn": "\u0986\u09ae\u09c7\u09b0 \u09b2\u09b8\u09cd\u09af\u09bf",
-        "hi": "\u092e\u0948\u0902\u0917\u094b \u0932\u0938\u094d\u0938\u0940"
+        "bn": "আমের লস্যি",
+        "hi": "मैंगो लस्सी"
       },
       "spiceLevel": "Mild",
       "preparationTime": "5 mins",
@@ -1054,7 +1054,7 @@
     {
       "id": "food_plain_rice",
       "domain": "foods",
-      "content": "Steamed Plain Rice is a staple across the Indian subcontinent, prepared by boiling premium long-grain or medium-grain varieties until fluffy.",
+      "content": "Steamed Plain Rice is a staple across the Indian subcontinent, prepared by boiling premium long-grain or medium-grain varieties until fluffy. Key ingredients: Rice, Water. Dietary: Vegetarian, Vegan, Gluten-Free. Spice level: Mild. Pairs well with: Dal Tadka, Fish Curry, Chicken Curry.",
       "aliases": [
         "Plain Rice",
         "steamed rice",
@@ -1099,8 +1099,8 @@
         "chawal": "rice"
       },
       "translations": {
-        "bn": "\u09b8\u09be\u09a6\u09be \u09ad\u09be\u09a4",
-        "hi": "\u0909\u092c\u0932\u0947 \u091a\u093e\u0935\u0932"
+        "bn": "সাদা ভাত",
+        "hi": "उबले चावल"
       },
       "spiceLevel": "Mild",
       "preparationTime": "15 mins",
@@ -1125,7 +1125,7 @@
     {
       "id": "food_butter_naan",
       "domain": "foods",
-      "content": "Butter Naan is a leavened flatbread cooked in a traditional clay oven (tandoor) and generously brushed with melted butter.",
+      "content": "Butter Naan is a leavened flatbread cooked in a traditional clay oven (tandoor) and generously brushed with melted butter. Key ingredients: All-purpose flour, Yeast, Yogurt, Milk, Butter. Allergens: Gluten, Dairy. Dietary: Vegetarian. Spice level: Mild. Pairs well with: Butter Chicken, Paneer Butter Masala.",
       "aliases": [
         "Butter Naan",
         "naan",
@@ -1169,8 +1169,8 @@
         "chapati": "roti"
       },
       "translations": {
-        "bn": "\u09ac\u09be\u099f\u09be\u09b0 \u09a8\u09be\u09a8",
-        "hi": "\u092c\u091f\u0930 \u0928\u093e\u0928"
+        "bn": "বাটার নান",
+        "hi": "बटर नान"
       },
       "spiceLevel": "Mild",
       "preparationTime": "8 mins",
@@ -1192,7 +1192,7 @@
     {
       "id": "food_fuchka",
       "domain": "foods",
-      "content": "Fuchka (Pani Puri/Golgappa) is the ultimate street food crisp fried hollow puris stuffed with a spicy mashed potato mix and filled with tangy tamarind water.",
+      "content": "Fuchka (Pani Puri/Golgappa) is the ultimate street food crisp fried hollow puris stuffed with a spicy mashed potato mix and filled with tangy tamarind water. Key ingredients: Semolina puris, Potatoes, Spiced tamarind water, Chana, Green chilies. Allergens: Gluten. Dietary: Vegetarian, Vegan. Spice level: High. Pairs well with: Alu Chop, Jhalmuri.",
       "aliases": [
         "Fuchka",
         "panipuri",
@@ -1239,8 +1239,8 @@
         "golgappa": "fuchka"
       },
       "translations": {
-        "bn": "\u09ab\u09c1\u099a\u0995\u09be",
-        "hi": "\u0917\u094b\u0932\u0917\u092a\u094d\u092a\u093e"
+        "bn": "ফুচকা",
+        "hi": "गोलगप्पा"
       },
       "spiceLevel": "High",
       "preparationTime": "5 mins",
@@ -1262,7 +1262,7 @@
     {
       "id": "food_sushi_salmon",
       "domain": "foods",
-      "content": "Premium Japanese Salmon Nigiri featuring slices of fresh raw salmon draped over hand-pressed seasoned vinegared sushi rice.",
+      "content": "Premium Japanese Salmon Nigiri featuring slices of fresh raw salmon draped over hand-pressed seasoned vinegared sushi rice. Key ingredients: Sushi rice, Fresh Salmon, Nori, Wasabi, Soy sauce. Allergens: Fish, Soy. Dietary: Non-Vegetarian. Spice level: Mild. Pairs well with: Gari (Ginger), Green Tea, Ramen.",
       "aliases": [
         "Sushi",
         "salmon sushi",
@@ -1308,8 +1308,8 @@
         "sushi": "raw fish rice"
       },
       "translations": {
-        "ja": "\u30b5\u30fc\u30e2\u30f3\u63e1\u308a",
-        "hi": "\u0938\u0941\u0936\u0940"
+        "ja": "サーモン握り",
+        "hi": "सुशी"
       },
       "spiceLevel": "Mild",
       "preparationTime": "15 mins",
