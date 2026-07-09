@@ -1,32 +1,237 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const STOPWORDS = new Set([
-      "ami", "amar", "amr", "amra", "chai", "khabo", "debo", "dao", "ektu", "ekta",
-      "mujhe", "muje", "chahiye", "chahie", "mera", "ek", "do", "dena",
-      "please", "pls", "give", "want", "need", "order", "get", "some", "a", "an", "the",
+      "a", "an", "the", "and", "or", "but", "to", "for", "of", "on", "in", "at",
+      "with", "from", "by", "about", "into", "over", "under", "after", "before",
+      "please", "pls", "plz", "kindly",
+      "want", "need", "looking", "search", "find", "show", "display",
+      "give", "get", "bring", "send", "provide", "fetch",
+      "have", "has", "had", "having",
+      "can", "could", "will", "would", "should", "may", "might",
+      "is", "are", "was", "were", "be", "been", "being",
+      "me", "my", "mine", "you", "your", "yours", "we", "our", "ours",
+      "they", "their", "them", "he", "she", "his", "her", "it", "its",
+      "this", "that", "these", "those",
+      "some", "any", "all", "many", "much", "few", "little",
+      "one", "two", "three", "four", "five",
+      "order", "buy", "purchase", "deliver", "delivery",
+      "food", "restaurant", "hotel", "shop", "place",
+      "near", "nearby", "best", "good", "top", "popular",
+      "today", "now", "currently", "available",
+
+      "ami", "amar", "amr", "amake", "amader",
+      "tumi", "tomar", "tomake", "tomader",
+      "se", "tara", "oder", "or",
+      "ek", "ekta", "ekti", "dui", "tin",
+      "chai", "lagbe", "dorkar", "dao", "den", "din",
+      "de", "dite", "niye", "niyeaso",
+      "khabo", "khai", "khete", "khaite",
+      "ache", "ase", "chilo", "hobe", "holo",
+      "ki", "keno", "kothay", "kobe", "kivabe",
+      "eto", "onek", "aro", "sob", "shob",
+      "ektu", "khub", "valo", "bhalo",
+      "amarjonno", "jonno", "sathe",
+      "theke", "porjonto", "moddhe", "upar", "niche",
+      "akhon", "aj", "kal", "ajke", "ekhon",
+      "please", "plz",
+
+      "main", "mai", "mera", "meri", "mere",
+      "mujhe", "muje", "hum", "ham", "hamara",
+      "tum", "tumhara", "aap", "aapka",
+      "ye", "yeh", "wo", "woh", "unka",
+      "ek", "do", "teen", "char", "paanch",
+      "chahiye", "chahie", "chahta", "chahti",
+      "do", "de", "dena", "dijiye", "dejiye",
+      "lao", "lana", "bhejo",
+      "khana", "khane", "khanahai", "khunga", "khayenge",
+      "hai", "hain", "tha", "thi", "the",
+      "ho", "hoga", "hogi", "honge",
+      "kya", "kyu", "kyon", "kaise", "kab", "kaha",
+      "ke", "ki", "ka", "ko", "se", "tak", "par",
+      "bahut", "thoda", "sab", "aur",
+      "ab", "aaj", "kal",
+      "please", "plz",
+
+      "bro", "bhai", "dada", "boss", "sir", "madam",
+      "hello", "hi", "hey", "thanks", "thankyou",
+      "ok", "okay", "acha", "accha", "achha",
+      "hmm", "hmmm", "huh", "lol",
+      "urgent", "quick", "fast",
+      "just", "only", "simply",
+      "pleasee", "plss", "plzzz",
+
+      "kg", "gm", "gram", "grams", "ml", "ltr", "liter", "litre",
+      "piece", "pieces", "pc", "pcs", "plate", "plates",
+      "bowl", "bowls", "cup", "cups", "box", "boxes",
+      "small", "medium", "large", "full", "half",
+
+      "&", "-", "_", ".", ",", "?"
 ]);
 
 const SYNONYMS: Record<string, string> = {
-      vat: "rice", bhat: "rice", bhaat: "rice",
-      dal: "lentils", daal: "lentils",
-      ruti: "bread", roti: "bread",
+      vat: "rice", bhat: "rice", bhaat: "rice", chaal: "rice", chawal: "rice",
+      dal: "lentils", daal: "lentils", lentil: "lentils",
+      ruti: "roti", chapati: "roti", bread: "roti",
       mach: "fish", maach: "fish",
-      mangsho: "mutton", mangshe: "mutton",
-      murgi: "chicken", murgh: "chicken",
+      mangsho: "mutton", mangshe: "mutton", goat: "mutton", lamb: "mutton",
+      murgi: "chicken", murgh: "chicken", broiler: "chicken",
       dim: "egg", deem: "egg",
       cha: "tea",
+      biriyani: "biryani", biriani: "biryani", briyani: "biryani",
+      burgur: "burger", burgar: "burger",
+      piza: "pizza", pizaa: "pizza",
+      kebap: "kebab", doner: "kebab",
+      sabji: "veg", sabzi: "veg", vegetable: "veg",
+      chowmin: "chowmein", chaumin: "chowmein", chaomeen: "chowmein",
+      nudles: "noodles", noodels: "noodles", noodel: "noodles", noodls: "noodles",
+      manchuriya: "manchuria",
+      sezwan: "schezwan", shezwan: "schezwan", schezuan: "schezwan",
+      chily: "chilli", chilie: "chilli",
+      momoes: "momos", momo: "momos",
+      fridrice: "friedrice", "fride rice": "friedrice", fride: "friedrice",
+      haka: "hakka",
+      rosogolla: "rasgulla",
 };
 
 const VOCABULARY = [
-      "biryani", "rice", "chicken", "mutton", "fish", "egg", "bread", "lentils",
-      "pizza", "burger", "pasta", "noodles", "soup", "curry", "kebab", "roll",
-      "sandwich", "salad", "dessert", "cake", "coffee", "tea", "juice",
-      "paneer", "tandoori", "tikka", "dal", "roti", "paratha", "dosa", "idli",
-      "samosa", "chaat", "momos", "sushi", "tacos", "steak", "shawarma",
-      "restaurant", "hotel", "cafe", "dhaba", "fried", "grilled", "roasted",
+      "rice", "vat", "bhat", "bhaat", "chaal", "chawal", "jeera", "pulao", "pulav",
+      "khichuri", "khichdi", "friedrice", "fried", "ricebowl",
+
+      "roti", "ruti", "chapati", "naan", "kulcha", "paratha", "lachha", "rumali",
+      "puri", "luchi", "bhatura", "bread", "bun", "toast",
+
+      "dal", "daal", "lentil", "lentils", "sambar", "rasam",
+
+      "chicken", "murgh", "murgi", "broiler", "chickencurry",
+      "butterchicken", "tandoorichicken", "friedchicken",
+      "grilledchicken", "chickentikka", "chicken65",
+      "chickenbiryani", "chickenroll", "chickenburger",
+      "chickensandwich", "chickenpizza", "chickenpasta",
+
+      "mutton", "goat", "lamb", "mangsho", "mangshe",
+      "muttoncurry", "muttonbiryani", "muttonkosha",
+
+      "beef", "beefburger", "beefsteak", "beefcurry",
+
+      "pork", "bacon", "ham", "sausages", "salami",
+
+      "fish", "mach", "maach", "ilish", "hilsa", "katla",
+      "rui", "rohu", "pomfret", "bhetki", "salmon",
+      "tuna", "cod", "prawn", "shrimp", "lobster",
+      "crab", "octopus", "squid",
+
+      "egg", "dim", "deem", "omelette", "boiledegg",
+      "eggroll", "eggcurry", "eggfriedrice",
+
+      "biryani", "biriyani", "biriani", "briyani",
+      "hyderabadibiryani", "kolkatabiryani", "lucknowibiryani",
+
+      "paneer", "palak", "malai", "kofta", "korma",
+      "buttermasala", "shahi", "chole", "rajma",
+      "aloo", "gobi", "bhindi", "baingan", "mixedveg",
+      "veg", "vegetable", "sabji", "sabzi",
+
+      "dosa", "idli", "vada", "uttapam", "upma",
+      "pongal", "appam", "puttu",
+
+      "chowmin", "chaumin", "chaomeen",
+      "nudles", "noodels", "noodel", "noodls",
+      "manchuriya", "manchuria",
+      "schezwan", "sezwan", "shezwan", "schezuan",
+      "chilli", "chily", "chilie",
+      "momo", "momos", "momoes",
+      "fride rice", "fridrice", "fride",
+      "hakka", "haka",
+
+      "pizza", "piza", "pizaa",
+      "pasta", "lasagna", "spaghetti",
+      "macaroni", "risotto", "ravioli",
+
+      "burger", "burgur", "burgar",
+      "hotdog", "fries", "frenchfries",
+      "nuggets", "wrap", "sandwich",
+
+      "shawarma", "falafel", "hummus",
+      "kebab", "kebap", "doner",
+      "gyro", "pita",
+
+      "sushi", "ramen", "udon", "tempura",
+      "teriyaki", "yakitori",
+
+      "kimchi", "bibimbap", "tteokbokki",
+      "bulgogi",
+
+      "padthai", "thaicurry",
+
+      "tacos", "burrito", "quesadilla",
+      "nachos", "enchilada",
+
+      "samosa", "kachori", "chaat",
+      "pakora", "bhaji", "fuchka",
+      "golgappa", "panipuri", "jhalmuri",
+
+      "roll", "kathi", "frankie",
+      "sub", "wrap", "clubsandwich",
+
+      "soup", "tomatosoup", "chickensoup",
+      "hotsour", "sweetcorn",
+
+      "salad", "greens", "caesar",
+
+      "cake", "pastry", "brownie", "cookie",
+      "icecream", "ice", "cream", "kulfi",
+      "gulabjamun", "rasgulla", "rosogolla",
+      "sandesh", "mishti", "jalebi",
+      "rabri", "kheer", "payesh",
+      "halwa", "laddu", "barfi",
+      "cheesecake", "donut", "muffin",
+
+      "tea", "cha", "coffee",
+      "latte", "cappuccino", "espresso",
+      "americano", "mocha",
+      "juice", "smoothie", "milkshake",
+      "lassi", "falooda",
+      "cola", "coke", "pepsi",
+      "sprite", "fanta",
+      "water", "soda",
+
+      "apple", "banana", "mango",
+      "orange", "grape", "pineapple",
+      "watermelon", "papaya",
+      "guava", "litchi", "kiwi",
+      "pear", "peach",
+
+      "potato", "tomato", "onion",
+      "carrot", "cabbage", "spinach",
+      "capsicum", "corn", "peas",
+      "broccoli", "cauliflower",
+      "mushroom", "bean",
+
+      "fried", "grilled", "roasted",
+      "steamed", "baked", "smoked",
+      "crispy", "spicy", "hot",
+      "masala", "curry", "dry",
+      "gravy", "bbq", "barbecue",
+      "tandoori", "tikka",
+
+      "breakfast", "lunch", "dinner",
+      "snack", "brunch", "meal",
+      "combo", "thali", "platter",
+
+      "mach", "maach", "bhaat", "vat",
+      "dim", "mangsho", "alu",
+      "posto", "shukto", "chingri",
+      "ilish", "payesh",
+
+      "khana", "khane", "sabji",
+      "roti", "chapati", "chawal",
+      "dal", "paneer", "paratha",
+      "kachori", "poha", "upma",
+      "halwa", "lassi"
+,
+      "restaurant", "hotel", "cafe", "dhaba",
       "kfc", "mcdonalds", "subway", "dominos", "pizza hut", "chinese", "thai",
       "indian", "bengali", "mughlai", "continental", "seafood", "vegan",
-      "pulao", "khichuri", "puri", "bhaji", "chowmein", "manchurian",
 ];
 
 function levenshtein(a: string, b: string): number {
