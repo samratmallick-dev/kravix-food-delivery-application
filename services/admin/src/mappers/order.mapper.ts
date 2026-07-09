@@ -10,7 +10,14 @@ export class OrderMapper {
       raw.status,
       raw.paymentMethod,
       raw.paymentStatus,
-      raw.totalAmount
+      raw.totalAmount,
+      raw.createdAt ? new Date(raw.createdAt) : undefined,
+      raw.deliveryAddress,
+      raw.items,
+      raw.subtotal,
+      raw.deliveryFee,
+      raw.platformFee,
+      raw.riderName
     );
   }
 

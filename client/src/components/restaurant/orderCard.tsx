@@ -171,10 +171,12 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
                         )}
 
                         <div className="flex flex-col gap-2 pt-1">
-                              <div className="flex items-start gap-1.5 text-xs text-gray-500">
-                                    <MapPin size={12} className="mt-0.5 shrink-0 text-gray-400" />
-                                    <span className="leading-snug">{order.deliveryAddress.formatedAddress}</span>
-                              </div>
+                              {order.deliveryAddress && (
+                                    <div className="flex items-start gap-1.5 text-xs text-gray-500">
+                                          <MapPin size={12} className="mt-0.5 shrink-0 text-gray-400" />
+                                          <span className="leading-snug">{order.deliveryAddress.formatedAddress}</span>
+                                    </div>
+                              )}
                               <div className="flex items-center gap-2">
                                     <CreditCard size={12} className="text-gray-400 shrink-0" />
                                     <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize bg-gray-100 text-gray-600">

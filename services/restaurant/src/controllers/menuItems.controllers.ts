@@ -73,19 +73,19 @@ export const deleteMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Re
     return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
-  const itemId = req.params["itemId"] as string;
+  const itemId = req.params["menuItemId"] as string;
   if (!itemId) {
     throw new ValidationError("Menu Item ID is required");
   }
 
-  const sellerRestaurantId = (user.restaurantId as string) || "";
-  const item = await menuItemService.getMenuItems(sellerRestaurantId);
-  const found = item.find((i) => i.id === itemId);
+  const restaurant = await restaurantService.getMyRestaurant(user._id.toString());
+  const items = await menuItemService.getMenuItems(restaurant.id);
+  const found = items.find((i) => i.id === itemId);
   if (!found) {
     throw new NotFoundError("Menu item not found in restaurant");
   }
 
-  await menuItemService.deleteMenuItem(sellerRestaurantId, itemId);
+  await menuItemService.deleteMenuItem(restaurant.id, itemId);
   return successResponse(res, 200, "Menu item deleted successfully");
 });
 

@@ -35,7 +35,8 @@ export class Order {
     public riderId?: string | null,
     public riderName?: string | null,
     public riderPhoneNumber?: number | null,
-    public distance?: number
+    public distance?: number,
+    public createdAt?: Date
   ) {}
 
   calculateTotals(distance: number, coupon?: Coupon, couponUsageCount?: number): void {

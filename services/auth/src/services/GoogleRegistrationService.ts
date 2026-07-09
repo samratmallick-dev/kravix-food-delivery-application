@@ -13,7 +13,7 @@ export class GoogleRegistrationService implements IGoogleRegistrationService {
     private eventPublisher: IAuthEventPublisher
   ) {}
 
-  async registerWithGoogle(code: string): Promise<void> {
+  async registerWithGoogle(code: string): Promise<string> {
     const profile = await this.googleClient.exchangeCode(code);
     const existing = await this.userRepository.findByEmail(profile.email);
 
@@ -25,7 +25,7 @@ export class GoogleRegistrationService implements IGoogleRegistrationService {
         }
         await this.userRepository.update(existing);
         this.eventPublisher.publishUserRegistered(existing.id, existing.name, existing.email, existing.image);
-        return;
+        return existing.email;
       }
       throw new ConflictError("This email is already registered. Please sign in instead.");
     }
@@ -46,5 +46,6 @@ export class GoogleRegistrationService implements IGoogleRegistrationService {
 
     this.eventPublisher.publishVerificationEmail(profile.email, profile.name, rawToken);
     this.eventPublisher.publishUserRegistered(saved.id, saved.name, saved.email, saved.image);
+    return profile.email;
   }
 }

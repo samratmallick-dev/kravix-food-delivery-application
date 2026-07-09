@@ -1,4 +1,5 @@
-import { authBaseUrl } from "../components/common/constant";
+import { authBaseUrl, usersBaseUrl } from "../components/common/constant";
+
 import { request } from "./request";
 import type { User } from "../types/types";
 
@@ -16,16 +17,18 @@ export interface LoginPayload {
 export interface AuthResponse {
   success: boolean;
   message: string;
-  token?: string;
-  needsRoleSelection?: boolean;
-  user?: {
-    _id: string;
-    name: string;
-    email: string;
-    role: string | null;
-    isEmailVerified: boolean;
-    authProviders: Array<"email" | "google">;
-    image: string;
+  data?: {
+    token?: string;
+    needsRoleSelection?: boolean;
+    user?: {
+      _id: string;
+      name: string;
+      email: string;
+      role: string | null;
+      isEmailVerified: boolean;
+      authProviders: Array<"email" | "google">;
+      image: string;
+    };
   };
 }
 
@@ -40,21 +43,25 @@ export interface UpdateProfilePayload {
 }
 
 export interface UpdateProfileResponse {
-  token: string;
-  data: {
-    _id: string;
-    name: string;
-    email: string;
-    image: string;
-    role: string | null;
+  success: boolean;
+  message: string;
+  data?: {
+    token: string;
+    user: {
+      _id: string;
+      name: string;
+      email: string;
+      image: string;
+      role: string | null;
+    };
   };
 }
 
 export const registerWithEmail = (payload: RegisterPayload): Promise<MessageResponse> =>
   request<MessageResponse>(`${authBaseUrl}/register`, { method: "POST", body: JSON.stringify(payload) });
 
-export const registerWithGoogle = (code: string): Promise<MessageResponse> =>
-  request<MessageResponse>(`${authBaseUrl}/register/google`, { method: "POST", body: JSON.stringify({ code }) });
+export const registerWithGoogle = (code: string): Promise<MessageResponse & { data?: { email: string } }> =>
+  request<MessageResponse & { data?: { email: string } }>(`${authBaseUrl}/register/google`, { method: "POST", body: JSON.stringify({ code }) });
 
 export const loginWithEmail = (payload: LoginPayload): Promise<AuthResponse> =>
   request<AuthResponse>(`${authBaseUrl}/login`, { method: "POST", body: JSON.stringify(payload) });
@@ -75,10 +82,10 @@ export const resetPassword = (payload: { token: string; newPassword: string }): 
   request<MessageResponse>(`${authBaseUrl}/reset-password`, { method: "POST", body: JSON.stringify(payload) });
 
 export const getMyProfile = (token?: string): Promise<{ data: User }> =>
-  request<{ data: User }>(`${authBaseUrl}/me`, { method: "GET" }, token);
+  request<{ data: User }>(`${usersBaseUrl}/me`, { method: "GET" }, token);
 
 export const updateProfile = (payload: UpdateProfilePayload, token?: string): Promise<UpdateProfileResponse> =>
-  request<UpdateProfileResponse>(`${authBaseUrl}/me`, { method: "PATCH", body: JSON.stringify(payload) }, token);
+  request<UpdateProfileResponse>(`${usersBaseUrl}/me`, { method: "PATCH", body: JSON.stringify(payload) }, token);
 
 export const updateRole = (role: string): Promise<UpdateProfileResponse> =>
-  request<UpdateProfileResponse>(`${authBaseUrl}/me/role`, { method: "PATCH", body: JSON.stringify({ role }) });
+  request<UpdateProfileResponse>(`${usersBaseUrl}/me/role`, { method: "PATCH", body: JSON.stringify({ role }) });

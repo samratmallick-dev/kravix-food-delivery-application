@@ -24,7 +24,7 @@ interface Address {
 
 
 const Checkout = () => {
-      const { cart, subTotal, quantity, location: userLocation, user } = useAppData();
+      const { cart, subTotal, quantity, location: userLocation, user, fetchCart } = useAppData();
       const isBlocked = !!(user?.isBlocked && user.blockedUntil && new Date(user.blockedUntil) > new Date());
       const [addresses, setAddresses] = useState<Address[]>([]);
       const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -175,6 +175,7 @@ const Checkout = () => {
             setCreatingOrder(true);
             try {
                   const data = await apiCreateOrder({ paymentMethod, addressId: selectedAddressId, couponCode: appliedCoupon?.code || undefined });
+                  await fetchCart();
                   return data.data;
             } catch (err: any) {
                   toast.error(err.message || "Something went wrong while creating order!");
@@ -279,6 +280,7 @@ const Checkout = () => {
                         couponCode: appliedCoupon?.code || undefined,
                   });
                   storage.removeAppliedCoupon();
+                  await fetchCart();
                   navigate("/order-success/" + data.data.orderId);
                   window.scrollTo({ top: 0, behavior: "smooth" });
             } catch (err: any) {

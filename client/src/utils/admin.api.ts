@@ -47,9 +47,10 @@ export const getRestaurantById = (restaurantId: string): Promise<ApiResponse<any
             method: "GET",
       });
 
-export const verifyRestaurant = (restaurantId: string): Promise<ApiResponse<any>> =>
+export const verifyRestaurant = (restaurantId: string, isVerified = true): Promise<ApiResponse<any>> =>
       adminReq<ApiResponse<any>>(`${adminBaseUrl}/restaurants/${restaurantId}/verify`, {
             method: "PATCH",
+            body: JSON.stringify({ isVerified }),
       });
 
 export const deleteRestaurant = (restaurantId: string): Promise<SuccessResponse> =>
@@ -69,9 +70,10 @@ export const getRiderById = (riderId: string): Promise<ApiResponse<any>> =>
             method: "GET",
       });
 
-export const verifyRider = (riderId: string): Promise<ApiResponse<any>> =>
+export const verifyRider = (riderId: string, isVerified = true): Promise<ApiResponse<any>> =>
       adminReq<ApiResponse<any>>(`${adminBaseUrl}/riders/${riderId}/verify`, {
             method: "PATCH",
+            body: JSON.stringify({ isVerified }),
       });
 
 export const deleteRider = (riderId: string): Promise<SuccessResponse> =>

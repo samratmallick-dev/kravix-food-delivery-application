@@ -6,7 +6,8 @@ export class User {
     public readonly image: string,
     public readonly role: string | null,
     public isBlocked: boolean,
-    public blockedUntil: Date | null
+    public blockedUntil: Date | null,
+    public readonly createdAt: Date
   ) {}
 
   toggleBlock(blockedUntil?: Date | null): void {

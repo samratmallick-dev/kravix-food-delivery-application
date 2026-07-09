@@ -29,8 +29,12 @@ const CustomerRestaurantPage = () => {
             try {
                   const data = await fetchSingleRestaurant(id!);
                   setRestaurant(data.data || null);
-            } catch (error) {
+            } catch (error: any) {
                   console.log(error);
+                  if (error.status === 404) {
+                        toast.error("Restaurant not found.");
+                        navigate("/");
+                  }
             } finally {
                   setLoading(false);
             }

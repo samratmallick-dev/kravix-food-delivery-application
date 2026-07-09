@@ -54,7 +54,11 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
             });
 
             newSocket.on("disconnect", (reason) => {
-                  console.log("❌ Socket disconnected:", reason);
+                  if (reason === "io client disconnect") {
+                        console.log("ℹ️ Socket disconnected by client");
+                  } else {
+                        console.log("❌ Socket disconnected:", reason);
+                  }
                   setSocket(null);
             });
 

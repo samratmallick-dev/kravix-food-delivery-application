@@ -46,7 +46,7 @@ const Home = () => {
                         longitude: location.longitude,
                         search
                   });
-                  setRestaurants(data.data || []);
+                  setRestaurants((data.data || []).filter((r) => !!r._id));
                   setLoading(false);
                   setSearching(false);
             } catch (error: any) {

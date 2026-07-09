@@ -42,20 +42,20 @@ export interface PlaceOrderRequestDto {
 }
 
 export interface RestaurantResponseDto {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   image: string;
   ownerId: string;
   phone: number;
   isVerified: boolean;
-  autoLocation: { coordinates: [number, number]; formattedAddress: string };
+  autoLocation: { type: "Point"; coordinates: [number, number]; formattedAddress: string };
   isOpen: boolean;
   distanceKm?: number;
 }
 
 export interface MenuItemResponseDto {
-  id: string;
+  _id: string;
   restaurantId: string;
   name: string;
   description: string;
@@ -65,7 +65,7 @@ export interface MenuItemResponseDto {
 }
 
 export interface CartResponseDto {
-  id: string;
+  _id: string;
   userId: string;
   itemId: string;
   restaurantId: string;
@@ -73,7 +73,7 @@ export interface CartResponseDto {
 }
 
 export interface OrderResponseDto {
-  id: string;
+  _id: string;
   userId: string;
   restaurantId: string;
   restaurantName: string;
@@ -92,5 +92,17 @@ export interface OrderResponseDto {
   status: string;
   paymentMethod: string;
   paymentStatus: string;
+  riderName?: string | null;
+  riderPhoneNumber?: number | null;
   distance?: number;
+  createdAt?: string;
+  addressId?: string;
+  deliveryAddress?: {
+    formatedAddress: string;
+    mobile: number;
+    customerName: string;
+    latitude: number;
+    longitude: number;
+  };
+  riderAmount?: number;
 }

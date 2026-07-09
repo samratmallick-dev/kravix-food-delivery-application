@@ -37,13 +37,20 @@ const Restaurant = () => {
 
       const fetchMyRestaurant = async () => {
             try {
-                  const data = await apiFetchMyRestaurant();
+                  const res = await apiFetchMyRestaurant();
+                  const isNested = res.data && "restaurant" in res.data;
+                  const restaurantData = isNested
+                        ? (res.data as { restaurant: IRestaurant; token: string }).restaurant
+                        : (res.data as IRestaurant);
+                  const token = isNested
+                        ? (res.data as { restaurant: IRestaurant; token: string }).token
+                        : undefined;
 
-                  if (data.token) {
-                        storage.setToken(data.token);
-                        setUser((prev) => prev ? { ...prev, restaurantId: data.data?._id } : prev);
+                  if (token) {
+                        storage.setToken(token);
+                        setUser((prev) => prev ? { ...prev, restaurantId: restaurantData._id } : prev);
                   }
-                  setRestaurant(data.data || null);
+                  setRestaurant(restaurantData || null);
             } catch (error: any) {
                   console.log(error.message);
             } finally {

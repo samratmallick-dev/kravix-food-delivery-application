@@ -43,8 +43,8 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
                         formattedAddress: location.formattedAddress
                   });
                   if (response.success) {
-                        if (response.token) {
-                              storage.setToken(response.token);
+                        if (response.data?.token) {
+                              storage.setToken(response.data.token);
                         }
                         toast.success(response.message || "Restaurant added successfully.");
                         fetchMyRestaurant();

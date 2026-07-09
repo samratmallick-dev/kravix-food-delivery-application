@@ -2,7 +2,7 @@ import { IGoogleLoginService } from "../interfaces/IGoogleLoginService.js";
 import { IUserRepository } from "../interfaces/IUserRepository.js";
 import { IGoogleClient } from "../interfaces/IGoogleClient.js";
 import { User } from "../domain/entities/User.js";
-import { AuthenticationError, AuthorizationError } from "../utils/errors.js";
+import { AuthenticationError } from "../utils/errors.js";
 
 export class GoogleLoginService implements IGoogleLoginService {
   constructor(
@@ -18,12 +18,19 @@ export class GoogleLoginService implements IGoogleLoginService {
       throw new AuthenticationError("No account exists with this email. Please register first.", "REGISTER_FIRST");
     }
 
+    let needsUpdate = false;
+
     if (!user.authProviders.includes("google")) {
-      throw new AuthorizationError("This account is not linked with Google Sign-In. Please use Email login.");
+      user.authProviders.push("google");
+      needsUpdate = true;
     }
 
     if (!user.isEmailVerified) {
       user.isEmailVerified = true;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
       await this.userRepository.update(user);
     }
 

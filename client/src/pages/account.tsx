@@ -96,8 +96,9 @@ const Account = () => {
                   }
 
                   const res = await updateProfile(payload, token);
-                  storage.setToken(res.token);
-                  setUser((prev) => prev ? { ...prev, ...res.data } : prev);
+                  if (res.data?.token) storage.setToken(res.data.token);
+                  const updatedUser = res.data?.user;
+                  if (updatedUser) setUser((prev) => prev ? { ...prev, ...updatedUser } : prev);
                   toast.success("Profile updated successfully");
                   setEditing(false);
                   setPreviewImage(null);

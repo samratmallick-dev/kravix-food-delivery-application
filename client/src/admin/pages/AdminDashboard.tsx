@@ -39,11 +39,12 @@ const AdminDashboard = () => {
             try {
                   const [dash, orders] = await Promise.all([
                         getAdminDashboard(),
-                        getAllOrders({ page: 1, limit: 50, paymentStatus: "paid" }),
+                        getAllOrders({ page: 1, limit: 50 }),
                   ]);
                   setStats(dash.data);
+                  const orderList: IOrder[] = Array.isArray(orders.data) ? orders.data : [];
                   setLiveOrders(
-                        orders.data.orders
+                        orderList
                               .filter((o: IOrder) => ACTIVE_STATUSES.has(o.status))
                               .map((o: IOrder) => ({
                                     orderId: o._id,
@@ -51,7 +52,7 @@ const AdminDashboard = () => {
                                     totalAmount: o.totalAmount,
                                     status: o.status,
                                     paymentMethod: o.paymentMethod,
-                                    createdAt: o.createdAt,
+      createdAt: o.createdAt instanceof Date ? o.createdAt.toISOString() : String(o.createdAt),
                               }))
                   );
             } catch {

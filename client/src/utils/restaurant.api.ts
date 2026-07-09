@@ -33,8 +33,14 @@ export interface NearestRestaurantResponse {
       correctedQuery?: string;
 }
 
-export const fetchMyRestaurant = (): Promise<ApiResponse<IRestaurant> & { token?: string }> =>
-      request<ApiResponse<IRestaurant> & { token?: string }>(`${restaurantBaseUrl}/me`, {
+export interface FetchMyRestaurantResponse {
+      success: boolean;
+      message: string;
+      data: IRestaurant | { restaurant: IRestaurant; token: string };
+}
+
+export const fetchMyRestaurant = (): Promise<FetchMyRestaurantResponse> =>
+      request<FetchMyRestaurantResponse>(`${restaurantBaseUrl}/me`, {
             method: "GET",
       });
 
@@ -56,7 +62,7 @@ export const updateRestaurantStatus = (status: boolean): Promise<ApiResponse<IRe
             body: JSON.stringify({ status }),
       });
 
-export const addRestaurant = (payload: AddRestaurantPayload): Promise<ApiResponse<IRestaurant> & { token: string }> => {
+export const addRestaurant = (payload: AddRestaurantPayload): Promise<ApiResponse<{ restaurant: IRestaurant; token: string }>> => {
       const formData = new FormData();
       formData.append("name", payload.name);
       formData.append("description", payload.description);
@@ -66,7 +72,7 @@ export const addRestaurant = (payload: AddRestaurantPayload): Promise<ApiRespons
       formData.append("phone", payload.phone);
       formData.append("image", payload.image);
 
-      return request<ApiResponse<IRestaurant> & { token: string }>(`${restaurantBaseUrl}/`, {
+      return request<ApiResponse<{ restaurant: IRestaurant; token: string }>>(`${restaurantBaseUrl}/`, {
             method: "POST",
             body: formData,
       });

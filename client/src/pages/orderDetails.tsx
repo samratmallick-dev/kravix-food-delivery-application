@@ -380,38 +380,47 @@ const OrderDetails = () => {
             );
       };
 
-      const deadlineIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+      const deadlineTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
       useEffect(() => {
             if (!order) return;
-            const isActive = !["delivered", "cancelled"].includes(order.status);
-            if (!isActive) {
-                  if (deadlineIntervalRef.current) clearInterval(deadlineIntervalRef.current);
-                  return;
+            
+            if (deadlineTimeoutRef.current) {
+                  clearTimeout(deadlineTimeoutRef.current);
+                  deadlineTimeoutRef.current = null;
             }
 
+            const isPending = order.status === "placed";
+            if (!isPending) return;
+
+            const isDismissed = localStorage.getItem(`cancel-popup-dismissed-${order._id}`) === "true";
+            if (isDismissed) return;
+
             const placed = new Date(order.createdAt).getTime();
+            if (isNaN(placed)) return;
+            
             const deadline = placed + 30 * 60 * 1000;
             const now = Date.now();
 
-            const startRepeating = () => {
-                  setShowDeadlinePopup(true);
-                  if (!deadlineIntervalRef.current) {
-                        deadlineIntervalRef.current = setInterval(() => setShowDeadlinePopup(true), 60_000);
+            const triggerPopup = () => {
+                  const dismissed = localStorage.getItem(`cancel-popup-dismissed-${order._id}`) === "true";
+                  if (!dismissed) {
+                        setShowDeadlinePopup(true);
                   }
             };
 
             if (now >= deadline) {
-                  startRepeating();
-                  return () => { if (deadlineIntervalRef.current) clearInterval(deadlineIntervalRef.current); };
+                  triggerPopup();
             } else {
-                  const t = setTimeout(startRepeating, deadline - now);
-                  return () => {
-                        clearTimeout(t);
-                        if (deadlineIntervalRef.current) clearInterval(deadlineIntervalRef.current);
-                  };
+                  deadlineTimeoutRef.current = setTimeout(triggerPopup, deadline - now);
             }
-      }, [order?.createdAt, order?.status]);
+
+            return () => {
+                  if (deadlineTimeoutRef.current) {
+                        clearTimeout(deadlineTimeoutRef.current);
+                  }
+            };
+      }, [order?.createdAt, order?.status, order?._id]);
 
       const prevStatusRef = useRef<string | null>(null);
       const confettiFiredRef = useRef(false);
@@ -636,17 +645,19 @@ const OrderDetails = () => {
                         </div>
                   </div>
 
-                  <div className="bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 shadow-sm space-y-2">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Delivery Address</p>
-                        <div className="flex items-start gap-2 text-sm text-gray-500">
-                              <MapPin size={15} className="mt-0.5 shrink-0 text-gray-400" />
-                              <span className="wrap-break-word">{order.deliveryAddress.formatedAddress}</span>
+                  {order.deliveryAddress && (
+                        <div className="bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 shadow-sm space-y-2">
+                              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Delivery Address</p>
+                              <div className="flex items-start gap-2 text-sm text-gray-500">
+                                    <MapPin size={15} className="mt-0.5 shrink-0 text-gray-400" />
+                                    <span className="wrap-break-word">{order.deliveryAddress.formatedAddress}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <Phone size={15} className="shrink-0 text-gray-400" />
+                                    <span>{order.deliveryAddress.mobile}</span>
+                              </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                              <Phone size={15} className="shrink-0 text-gray-400" />
-                              <span>{order.deliveryAddress.mobile}</span>
-                        </div>
-                  </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-3">
                         <div className="bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 shadow-sm flex items-center gap-3">
@@ -723,13 +734,20 @@ const OrderDetails = () => {
                                     </div>
                                     <div className="flex gap-3 pt-2">
                                           <button
-                                                onClick={() => setShowDeadlinePopup(false)}
+                                                onClick={() => {
+                                                      setShowDeadlinePopup(false);
+                                                      localStorage.setItem(`cancel-popup-dismissed-${order._id}`, "true");
+                                                }}
                                                 className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 active:scale-95 transition cursor-pointer"
                                           >
                                                 Wait
                                           </button>
                                           <button
-                                                onClick={() => { setShowDeadlinePopup(false); setShowCancelConfirm(true); }}
+                                                onClick={() => { 
+                                                      setShowDeadlinePopup(false); 
+                                                      localStorage.setItem(`cancel-popup-dismissed-${order._id}`, "true");
+                                                      setShowCancelConfirm(true); 
+                                                }}
                                                 className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5"
                                           >
                                                 <Ban size={14} /> Cancel Order

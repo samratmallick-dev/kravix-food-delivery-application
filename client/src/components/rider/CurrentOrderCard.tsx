@@ -97,7 +97,7 @@ const CurrentOrderCard = ({
 
                   <div className="flex items-start gap-2 text-sm text-gray-500">
                         <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
-                        <span>{order.deliveryAddress.formatedAddress}</span>
+                        <span>{order.deliveryAddress?.formatedAddress || "Address not available"}</span>
                   </div>
 
                   <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5">
@@ -105,12 +105,12 @@ const CurrentOrderCard = ({
                               <Phone size={14} className="text-primary shrink-0" />
                               <div>
                                     <p className="text-xs text-gray-400">Customer</p>
-                                    <p className="font-medium">{order.deliveryAddress.customerName}</p>
-                                    <p className="text-xs text-gray-500">{order.deliveryAddress.mobile}</p>
+                                    <p className="font-medium">{order.deliveryAddress?.customerName || "Customer"}</p>
+                                    <p className="text-xs text-gray-500">{order.deliveryAddress?.mobile || "N/A"}</p>
                               </div>
                         </div>
                         <a
-                              href={`tel:${order.deliveryAddress.mobile}`}
+                              href={`tel:${order.deliveryAddress?.mobile || ""}`}
                               className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-white hover:bg-red-700 transition"
                         >
                               Call

@@ -35,8 +35,8 @@ export const registerGoogleController = TryCatch(async (req: Request, res: Respo
   if (!code) {
     return errorResponse(res, 400, "Authorization code is required", "VALIDATION_ERROR");
   }
-  await googleRegistrationService.registerWithGoogle(code);
-  return successResponse(res, 201, "Registration successful. Please verify your email before signing in.");
+  const email = await googleRegistrationService.registerWithGoogle(code);
+  return successResponse(res, 201, "Registration successful. Please verify your email before signing in.", { email });
 });
 
 export const loginEmailController = TryCatch(async (req: Request, res: Response, next: NextFunction) => {

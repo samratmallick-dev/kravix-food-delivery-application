@@ -13,7 +13,8 @@ export class AdminResponseMapper {
       image: user.image,
       role: user.role,
       isBlocked: user.isBlocked,
-      blockedUntil: user.blockedUntil ? user.blockedUntil.toISOString() : null
+      blockedUntil: user.blockedUntil ? user.blockedUntil.toISOString() : null,
+      createdAt: user.createdAt.toISOString()
     };
     if (riderPicture) {
       dto.riderPicture = riderPicture;
@@ -31,7 +32,8 @@ export class AdminResponseMapper {
       phone: restaurant.phone,
       isVerified: restaurant.isVerified,
       autoLocation: restaurant.autoLocation,
-      isOpen: restaurant.isOpen
+      isOpen: restaurant.isOpen,
+      createdAt: restaurant.createdAt.toISOString()
     };
   }
 
@@ -45,12 +47,14 @@ export class AdminResponseMapper {
       drivingLicesce: rider.drivingLicesce,
       isVerified: rider.isVerified,
       location: rider.location,
-      isAvailable: rider.isAvailable
+      isAvailable: rider.isAvailable,
+      lastActiveAt: rider.lastActiveAt.toISOString(),
+      createdAt: rider.createdAt.toISOString()
     };
   }
 
   static toOrderDto(order: Order): OrderResponseDto {
-    return {
+    const dto: OrderResponseDto = {
       _id: order.id,
       userId: order.userId,
       restaurantId: order.restaurantId,
@@ -58,7 +62,17 @@ export class AdminResponseMapper {
       status: order.status,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
-      totalAmount: order.totalAmount
+      totalAmount: order.totalAmount,
+      createdAt: order.createdAt ? order.createdAt.toISOString() : new Date().toISOString(),
     };
+
+    if (order.deliveryAddress) dto.deliveryAddress = order.deliveryAddress;
+    if (order.items) dto.items = order.items;
+    if (order.subtotal !== undefined) dto.subtotal = order.subtotal;
+    if (order.deliveryFee !== undefined) dto.deliveryFee = order.deliveryFee;
+    if (order.platformFee !== undefined) dto.platformFee = order.platformFee;
+    if (order.riderName !== undefined && order.riderName !== null) dto.riderName = order.riderName;
+
+    return dto;
   }
 }

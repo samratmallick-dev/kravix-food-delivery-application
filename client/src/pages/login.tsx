@@ -40,7 +40,7 @@ const Login = () => {
     setLoading(true);
     try {
       const data = await loginWithGoogle(authResult.code);
-      await handleAuthSuccess(data.token!, data.needsRoleSelection, data.message);
+      await handleAuthSuccess(data.data?.token!, data.data?.needsRoleSelection, data.message);
     } catch (err: unknown) {
       const e = err as { message?: string; code?: string };
       if (e.code === "REGISTER_FIRST" || e.message?.toLowerCase().includes("register first")) {
@@ -72,7 +72,7 @@ const Login = () => {
     setLoading(true);
     try {
       const data = await loginWithEmail({ email, password });
-      await handleAuthSuccess(data.token!, data.needsRoleSelection, data.message);
+      await handleAuthSuccess(data.data?.token!, data.data?.needsRoleSelection, data.message);
     } catch (err: unknown) {
       const e = err as { message?: string; code?: string };
       if (e.code === "EMAIL_NOT_VERIFIED" || e.message?.toLowerCase().includes("verify your email")) {

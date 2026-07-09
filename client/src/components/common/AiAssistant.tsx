@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Bot, X, Send, ChevronDown } from "lucide-react";
 import { aiApi } from "../../utils/ai.api";
 import { useAppData } from "../../context/AppContext";
+import { useAdminAuth } from "../../admin/context/AdminAuthContext";
 
 interface Message {
     id: string;
@@ -12,7 +13,14 @@ interface Message {
 
 const AiAssistant: React.FC = () => {
     const { user } = useAppData();
+    const { isAdminAuth, getAdminToken } = useAdminAuth();
     const [isOpen, setIsOpen] = useState(false);
+    
+    const isAdminRoute = window.location.pathname.startsWith('/admin');
+    const effectiveRole = isAdminRoute && isAdminAuth ? "admin" : (user?.role || "customer");
+    const effectiveUserId = isAdminRoute && isAdminAuth ? "admin-user" : (user?._id || "anonymous");
+    const effectiveName = isAdminRoute && isAdminAuth ? "Admin" : (user?.name || "there");
+    const shouldRender = (user && !isAdminRoute) || (isAdminRoute && isAdminAuth);
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState("");
     const [isTyping, setIsTyping] = useState(false);
@@ -24,11 +32,11 @@ const AiAssistant: React.FC = () => {
                 {
                     id: "1",
                     sender: "ai",
-                    text: `Hi ${user?.name || "there"}! I'm the Kravix Assistant. How can I help you today?`
+                    text: `Hi ${effectiveName}! I'm the Kravix Assistant. How can I help you today?`
                 }
             ]);
         }
-    }, [isOpen, messages.length, user]);
+    }, [isOpen, messages.length, effectiveName]);
 
     useEffect(() => {
         if (chatBodyRef.current) {
@@ -37,7 +45,7 @@ const AiAssistant: React.FC = () => {
     }, [messages, isTyping]);
 
     const handleSend = useCallback(async () => {
-        if (!inputValue.trim() || !user) return;
+        if (!inputValue.trim() || !shouldRender) return;
         
         const userMsg = inputValue.trim();
         const newMsg: Message = { id: Date.now().toString(), sender: "user", text: userMsg };
@@ -46,17 +54,17 @@ const AiAssistant: React.FC = () => {
         setIsTyping(true);
 
         try {
-            const role = user.role || "customer";
+            const tokenOverride = (isAdminRoute && isAdminAuth) ? getAdminToken() || undefined : undefined;
             const res = await aiApi.chat({
                 message: userMsg,
-                userId: user._id || "anonymous",
-                role,
-                restaurantId: user.restaurantId || undefined,
+                userId: effectiveUserId,
+                role: effectiveRole,
+                restaurantId: user?.restaurantId || undefined,
                 currentPage: window.location.pathname,
                 currentModule: window.location.pathname.split("/")[1] || "home",
                 preferredLanguage: navigator.language || "en",
                 recentActions: []
-            });
+            }, tokenOverride);
 
             setMessages(prev => [
                 ...prev,
@@ -77,13 +85,13 @@ const AiAssistant: React.FC = () => {
         } finally {
             setIsTyping(false);
         }
-    }, [inputValue, user]);
+    }, [inputValue, shouldRender, effectiveUserId, effectiveRole, isAdminRoute, isAdminAuth, getAdminToken, user]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
     }, [handleSend]);
 
-    if (!user) return null;
+    if (!shouldRender) return null;
 
     return (
         <>
@@ -103,7 +111,7 @@ const AiAssistant: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm leading-tight">Kravix Assistant</p>
-                            <p className="text-xs text-white/70 capitalize">{user.role ?? "customer"} mode</p>
+                            <p className="text-xs text-white/70 capitalize">{effectiveRole} mode</p>
                         </div>
                         <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-white/20 transition-colors" aria-label="Close">
                             <X size={18} />

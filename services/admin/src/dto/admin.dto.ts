@@ -19,6 +19,7 @@ export interface UserResponseDto {
   role: string | null;
   isBlocked: boolean;
   blockedUntil: string | null;
+  createdAt: string;
   riderPicture?: string;
 }
 
@@ -32,6 +33,7 @@ export interface RestaurantResponseDto {
   isVerified: boolean;
   autoLocation: { coordinates: [number, number]; formattedAddress: string };
   isOpen: boolean;
+  createdAt: string;
 }
 
 export interface RiderResponseDto {
@@ -44,6 +46,8 @@ export interface RiderResponseDto {
   isVerified: boolean;
   location: { coordinates: [number, number] };
   isAvailable: boolean;
+  lastActiveAt: string;
+  createdAt: string;
 }
 
 export interface OrderResponseDto {
@@ -55,4 +59,17 @@ export interface OrderResponseDto {
   paymentMethod: string;
   paymentStatus: string;
   totalAmount: number;
+  createdAt: string;
+  deliveryAddress?: {
+    formatedAddress: string;
+    mobile: number;
+    customerName: string;
+    latitude: number;
+    longitude: number;
+  };
+  items?: any[];
+  subtotal?: number;
+  deliveryFee?: number;
+  platformFee?: number;
+  riderName?: string | null;
 }

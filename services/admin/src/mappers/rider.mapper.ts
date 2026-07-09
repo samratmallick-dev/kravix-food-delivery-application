@@ -10,10 +10,10 @@ export class RiderMapper {
       raw.aadhaarNumber,
       raw.drivingLicesce,
       raw.isVerified ?? false,
-      {
-        coordinates: raw.location?.coordinates || [0, 0]
-      },
-      raw.isAvailable ?? false
+      { coordinates: raw.location?.coordinates || [0, 0] },
+      raw.isAvailable ?? false,
+      raw.lastActiveAt ? new Date(raw.lastActiveAt) : new Date(),
+      raw.createdAt ? new Date(raw.createdAt) : new Date()
     );
   }
 

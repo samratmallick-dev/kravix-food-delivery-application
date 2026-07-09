@@ -20,7 +20,15 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
   const status = err instanceof AppError ? err.status : (err.status ?? 500);
   const message = err.message ?? "Something went wrong";
-  const code = (err instanceof AppError ? err.code : undefined) ?? "INTERNAL_SERVER_ERROR";
+  const statusCodeMap: Record<number, string> = {
+    400: "BAD_REQUEST",
+    401: "UNAUTHORIZED",
+    403: "FORBIDDEN",
+    404: "NOT_FOUND",
+    409: "CONFLICT",
+    502: "EXTERNAL_SERVICE_ERROR"
+  };
+  const code = (err instanceof AppError ? err.code : undefined) ?? statusCodeMap[status] ?? "INTERNAL_SERVER_ERROR";
 
   const responseBody: Record<string, any> = {
     success: false,

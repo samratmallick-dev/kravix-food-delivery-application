@@ -35,9 +35,9 @@ const AdminOrders = () => {
                   if (fromDate) params["from"] = fromDate;
                   if (toDate) params["to"] = toDate;
                   const res = await getAllOrders(params);
-                  setOrders(res.data.orders);
-                  setPages(res.data.pages);
-                  setTotal(res.data.total);
+                  setOrders(Array.isArray(res.data) ? res.data : []);
+                  setPages(res.meta?.totalPages ?? 1);
+                  setTotal(res.meta?.total ?? 0);
             } catch { toast.error("Failed to load orders"); }
             finally { setLoading(false); }
       }, [page, statusFilter, paymentFilter, fromDate, toDate]);
@@ -167,13 +167,13 @@ const AdminOrders = () => {
                                           </div>
                                           <div>
                                                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Delivery Address</p>
-                                                <p className="text-sm text-gray-600">{selected.deliveryAddress.formatedAddress}</p>
-                                                <p className="text-xs text-gray-400 mt-1">{selected.deliveryAddress.customerName} · {selected.deliveryAddress.mobile}</p>
+                                                <p className="text-sm text-gray-600">{selected.deliveryAddress?.formatedAddress || "Address not available"}</p>
+                                                <p className="text-xs text-gray-400 mt-1">{selected.deliveryAddress?.customerName || "Customer"} · {selected.deliveryAddress?.mobile || "N/A"}</p>
                                           </div>
                                           <div>
-                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Items ({selected.items.length})</p>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Items ({selected.items?.length || 0})</p>
                                                 <div className="space-y-1.5">
-                                                      {selected.items.map((item, i) => (
+                                                      {(selected.items || []).map((item, i) => (
                                                             <div key={i} className="flex justify-between">
                                                                   <span className="text-gray-600">{item.name} × {item.quantity}</span>
                                                                   <span className="font-medium text-gray-700">₹{item.price * item.quantity}</span>

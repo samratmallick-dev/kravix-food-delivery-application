@@ -29,9 +29,9 @@ const AdminRestaurants = () => {
                   const params: Record<string, string | number> = { page, limit: 20 };
                   if (filter !== "all") params["isVerified"] = filter;
                   const res = await getAllRestaurants(params);
-                  setRestaurants(res.data.restaurants);
-                  setPages(res.data.pages);
-                  setTotal(res.data.total);
+                  setRestaurants(Array.isArray(res.data) ? res.data : []);
+                  setPages(res.meta?.totalPages ?? 1);
+                  setTotal(res.meta?.total ?? 0);
             } catch { toast.error("Failed to load restaurants"); }
             finally { setLoading(false); }
       }, [page, filter]);
@@ -63,10 +63,20 @@ const AdminRestaurants = () => {
       const handleVerify = async (r: Restaurant) => {
             setVerifyLoading(r._id);
             try {
-                  await verifyRestaurant(r._id);
-                  setRestaurants((prev) => prev.map((x) => x._id === r._id ? { ...x, isVerified: !x.isVerified } : x));
-                  toast.success(`Restaurant ${!r.isVerified ? "verified" : "unverified"}`);
+                  await verifyRestaurant(r._id, true);
+                  setRestaurants((prev) => prev.map((x) => x._id === r._id ? { ...x, isVerified: true } : x));
+                  toast.success("Restaurant verified");
             } catch { toast.error("Failed to update verification"); }
+            finally { setVerifyLoading(null); }
+      };
+
+      const handleDeclineRestaurant = async (r: Restaurant) => {
+            setVerifyLoading(r._id);
+            try {
+                  await verifyRestaurant(r._id, false);
+                  setRestaurants((prev) => prev.map((x) => x._id === r._id ? { ...x, isVerified: false } : x));
+                  toast.success("Restaurant declined");
+            } catch { toast.error("Failed to decline restaurant"); }
             finally { setVerifyLoading(null); }
       };
 
@@ -105,7 +115,7 @@ const AdminRestaurants = () => {
                   header: "Status",
                   render: (r: Restaurant) => (
                         <div className="flex flex-col gap-1">
-                              <VerifyToggle isVerified={r.isVerified} loading={verifyLoading === r._id} onToggle={() => handleVerify(r)} />
+                              <VerifyToggle isVerified={r.isVerified} loading={verifyLoading === r._id} onToggle={() => handleVerify(r)} onDecline={() => handleDeclineRestaurant(r)} />
                               <span className={`text-xs font-medium ${r.isOpen ? "text-green-600" : "text-gray-400"}`}>{r.isOpen ? "Open" : "Closed"}</span>
                         </div>
                   ),

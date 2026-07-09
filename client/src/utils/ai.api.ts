@@ -26,11 +26,11 @@ export interface AIFeedbackPayload {
 }
 
 export const aiApi = {
-    chat: (payload: AIChatPayload): Promise<AIChatResponse> => {
+    chat: (payload: AIChatPayload, tokenOverride?: string): Promise<AIChatResponse> => {
         return request<AIChatResponse>(`${aiBaseUrl}/chat`, {
             method: "POST",
             body: JSON.stringify(payload),
-        });
+        }, tokenOverride);
     },
     feedback: (payload: AIFeedbackPayload): Promise<void> => {
         return request<void>(`${aiBaseUrl}/feedback`, {

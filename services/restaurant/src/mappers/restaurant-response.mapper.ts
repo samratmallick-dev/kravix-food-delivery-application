@@ -7,14 +7,18 @@ import { RestaurantResponseDto, MenuItemResponseDto, CartResponseDto, OrderRespo
 export class RestaurantResponseMapper {
   static toRestaurantDto(restaurant: Restaurant): RestaurantResponseDto {
     const dto: RestaurantResponseDto = {
-      id: restaurant.id,
+      _id: restaurant.id,
       name: restaurant.name,
       description: restaurant.description,
       image: restaurant.image,
       ownerId: restaurant.ownerId,
       phone: restaurant.phone,
       isVerified: restaurant.isVerified,
-      autoLocation: restaurant.autoLocation,
+      autoLocation: {
+        type: "Point",
+        coordinates: restaurant.autoLocation.coordinates,
+        formattedAddress: restaurant.autoLocation.formattedAddress
+      },
       isOpen: restaurant.isOpen
     };
     if (restaurant.distanceKm !== undefined) {
@@ -25,7 +29,7 @@ export class RestaurantResponseMapper {
 
   static toMenuItemDto(item: MenuItem): MenuItemResponseDto {
     return {
-      id: item.id,
+      _id: item.id,
       restaurantId: item.restaurantId,
       name: item.name,
       description: item.description,
@@ -37,7 +41,7 @@ export class RestaurantResponseMapper {
 
   static toCartDto(cart: Cart): CartResponseDto {
     return {
-      id: cart.id,
+      _id: cart.id,
       userId: cart.userId,
       itemId: cart.itemId,
       restaurantId: cart.restaurantId,
@@ -47,7 +51,7 @@ export class RestaurantResponseMapper {
 
   static toOrderDto(order: Order): OrderResponseDto {
     const dto: OrderResponseDto = {
-      id: order.id,
+      _id: order.id,
       userId: order.userId,
       restaurantId: order.restaurantId,
       restaurantName: order.restaurantName,
@@ -65,10 +69,22 @@ export class RestaurantResponseMapper {
       totalAmount: order.totalAmount,
       status: order.status,
       paymentMethod: order.paymentMethod,
-      paymentStatus: order.paymentStatus
+      paymentStatus: order.paymentStatus,
+      addressId: order.addressId,
+      deliveryAddress: order.deliveryAddress,
+      riderAmount: order.riderAmount
     };
+    if (order.riderName !== undefined && order.riderName !== null) {
+      dto.riderName = order.riderName;
+    }
+    if (order.riderPhoneNumber !== undefined && order.riderPhoneNumber !== null) {
+      dto.riderPhoneNumber = order.riderPhoneNumber;
+    }
     if (order.distance !== undefined) {
       dto.distance = order.distance;
+    }
+    if (order.createdAt) {
+      dto.createdAt = order.createdAt.toISOString();
     }
     return dto;
   }

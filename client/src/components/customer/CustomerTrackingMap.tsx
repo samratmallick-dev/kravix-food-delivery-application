@@ -102,7 +102,7 @@ const CustomerTrackingMap = ({ order }: { order: IOrder }) => {
       const [riderLocation, setRiderLocation] = useState<[number, number] | null>(null);
 
       const isActive = ACTIVE_TRACKING_STATUSES.includes(order.status);
-      const hasDeliveryCoords = order.deliveryAddress.latitude != null && order.deliveryAddress.longitude != null;
+      const hasDeliveryCoords = order.deliveryAddress?.latitude != null && order.deliveryAddress?.longitude != null;
 
       useEffect(() => { setRiderLocation(null); }, [order._id]);
 

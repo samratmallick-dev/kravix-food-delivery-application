@@ -62,7 +62,7 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
       const fetchOrders = useCallback(async () => {
             try {
                   const { data } = await fetchRestaurantOrders(restaurantId);
-                  setOrders(data?.orders || []);
+                  setOrders((Array.isArray(data) ? data : (data as any)?.orders) || []);
             } catch (error) {
                   console.log(error);
             } finally {
@@ -82,6 +82,8 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
 
       useEffect(() => {
             if (!socket) return;
+
+            socket.emit("join:restaurant", restaurantId);
 
             const onNewOrder = () => {
                   fetchOrders();

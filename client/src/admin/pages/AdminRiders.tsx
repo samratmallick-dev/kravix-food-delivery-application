@@ -30,9 +30,9 @@ const AdminRiders = () => {
                   if (verifiedFilter !== "all") params["isVerified"] = verifiedFilter;
                   if (availableFilter !== "all") params["isAvailable"] = availableFilter;
                   const res = await getAllRiders(params);
-                  setRiders(res.data.riders);
-                  setPages(res.data.pages);
-                  setTotal(res.data.total);
+                  setRiders(Array.isArray(res.data) ? res.data : []);
+                  setPages(res.meta?.totalPages ?? 1);
+                  setTotal(res.meta?.total ?? 0);
             } catch { toast.error("Failed to load riders"); }
             finally { setLoading(false); }
       }, [page, verifiedFilter, availableFilter]);
@@ -64,10 +64,20 @@ const AdminRiders = () => {
       const handleVerify = async (r: Rider) => {
             setVerifyLoading(r._id);
             try {
-                  await verifyRider(r._id);
-                  setRiders((prev) => prev.map((x) => x._id === r._id ? { ...x, isVerified: !x.isVerified } : x));
-                  toast.success(`Rider ${!r.isVerified ? "verified" : "unverified"}`);
+                  await verifyRider(r._id, true);
+                  setRiders((prev) => prev.map((x) => x._id === r._id ? { ...x, isVerified: true } : x));
+                  toast.success("Rider verified");
             } catch { toast.error("Failed to update verification"); }
+            finally { setVerifyLoading(null); }
+      };
+
+      const handleDeclineRider = async (r: Rider) => {
+            setVerifyLoading(r._id);
+            try {
+                  await verifyRider(r._id, false);
+                  setRiders((prev) => prev.map((x) => x._id === r._id ? { ...x, isVerified: false } : x));
+                  toast.success("Rider declined");
+            } catch { toast.error("Failed to decline rider"); }
             finally { setVerifyLoading(null); }
       };
 
@@ -103,7 +113,7 @@ const AdminRiders = () => {
                   header: "Verification",
                   render: (r: Rider) => (
                         <div className="flex flex-col gap-1">
-                              <VerifyToggle isVerified={r.isVerified} loading={verifyLoading === r._id} onToggle={() => handleVerify(r)} />
+                              <VerifyToggle isVerified={r.isVerified} loading={verifyLoading === r._id} onToggle={() => handleVerify(r)} onDecline={() => handleDeclineRider(r)} />
                               <span className={`text-xs font-medium ${r.isAvailable ? "text-green-600" : "text-gray-400"}`}>{r.isAvailable ? "Online" : "Offline"}</span>
                         </div>
                   ),

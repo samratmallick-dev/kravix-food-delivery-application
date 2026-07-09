@@ -34,7 +34,7 @@ const AdminUsers = () => {
             if (u.role === "rider") {
                   try {
                         const { data } = await getAllRiders({ limit: 100 });
-                        const found = data.riders.find((r: RiderProfile) => r.userId === u._id);
+                        const found = (Array.isArray(data) ? data : []).find((r: RiderProfile) => r.userId === u._id);
                         setRiderProfile(found ?? null);
                   } catch { /* non-critical */ }
             }
@@ -57,9 +57,9 @@ const AdminUsers = () => {
                   const params: Record<string, string | number> = { page, limit: 20 };
                   if (roleFilter !== "all") params["role"] = roleFilter;
                   const res = await getAllUsers(params);
-                  setUsers(res.data.users);
-                  setPages(res.data.pages);
-                  setTotal(res.data.total);
+                  setUsers(Array.isArray(res.data) ? res.data : []);
+                  setPages(res.meta?.totalPages ?? 1);
+                  setTotal(res.meta?.total ?? 0);
             } catch { toast.error("Failed to load users"); }
             finally { setLoading(false); }
       }, [page, roleFilter]);

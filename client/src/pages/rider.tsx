@@ -216,7 +216,7 @@ const RiderDashboard = () => {
                   const nextStatus = RIDER_ORDER_TRANSITIONS[currentOrder.status];
                   if (nextStatus === "delivered") {
                         setCurrentOrder(null);
-                        setProfile((prev) => prev ? { ...prev, isAvailable: false } : prev);
+                        setProfile((prev) => prev ? { ...prev, isAvailable: true } : prev);
                         fetchDeliveryHistory();
                   } else if (nextStatus) {
                         setCurrentOrder((prev) => prev ? { ...prev, status: nextStatus as IOrder["status"] } : prev);
@@ -397,9 +397,9 @@ const RiderDashboard = () => {
                               </div>
                               <div className="text-center">
                                     <h2 className="text-white text-xl font-bold">{user?.name}</h2>
-                                    <span className={`inline-flex items-center gap-1.5 mt-1 px-3 py-0.5 rounded-full text-xs font-semibold ${profile.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
-                                          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${profile.isAvailable ? "bg-green-500" : "bg-gray-400"}`} />
-                                          {profile.isAvailable ? "Available" : "Unavailable"}
+                                    <span className={`inline-flex items-center gap-1.5 mt-1 px-3 py-0.5 rounded-full text-xs font-semibold ${currentOrder ? "bg-blue-100 text-blue-700" : profile.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
+                                          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${currentOrder ? "bg-blue-500" : profile.isAvailable ? "bg-green-500" : "bg-gray-400"}`} />
+                                          {currentOrder ? "On Delivery" : profile.isAvailable ? "Available" : "Unavailable"}
                                     </span>
                               </div>
                               <button
@@ -510,9 +510,9 @@ const RiderDashboard = () => {
                                     <button
                                           onClick={toggleAvailability}
                                           disabled={isBlocked || toggling || !location || !!currentOrder}
-                                          className={`w-full py-3 rounded-xl font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50 ${profile.isAvailable ? "bg-gray-500 hover:bg-gray-600" : "bg-primary hover:bg-red-700"}`}
+                                          className={`w-full py-3 rounded-xl font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50 ${(profile.isAvailable || currentOrder) ? "bg-gray-500 hover:bg-gray-600" : "bg-primary hover:bg-red-700"}`}
                                     >
-                                          {toggling ? <><Loader2 size={18} className="animate-spin" /> Updating...</> : profile.isAvailable ? <><Bike size={18} /> Go Offline</> : <><Bike size={18} /> Go Online</>}
+                                          {toggling ? <><Loader2 size={18} className="animate-spin" /> Updating...</> : (profile.isAvailable || currentOrder) ? <><Bike size={18} /> Go Offline</> : <><Bike size={18} /> Go Online</>}
                                     </button>
                               )}
                               {currentOrder && (

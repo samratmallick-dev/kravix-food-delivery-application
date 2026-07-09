@@ -89,7 +89,7 @@ const RegisterPage = () => {
     try {
       const data = await registerWithGoogle(authResult.code);
       setSuccess(data.message);
-      setSuccessEmail("");
+      setSuccessEmail(data.data?.email || "");
       toast.success(data.message);
     } catch (err: unknown) {
       const e = err as { message?: string };

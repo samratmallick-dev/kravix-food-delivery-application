@@ -1,9 +1,8 @@
 import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
-import { orderService } from "../services/index.js";
+import { orderService, cartRepository } from "../services/index.js";
 import { RestaurantResponseMapper } from "../mappers/restaurant-response.mapper.js";
-import { RestaurantValidator } from "../validators/restaurant.validator.js";
 import { AuthorizationError, ValidationError } from "../utils/errors.js";
 import { PlaceOrderRequestDto } from "../dto/restaurant.dto.js";
 import { successResponse, errorResponse } from "../utils/response.js";
@@ -14,15 +13,22 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res: Respo
     return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
-  const validData = RestaurantValidator.validatePlaceOrder(req.body);
-  const dto: PlaceOrderRequestDto = {
-    addressId: validData.addressId,
-    items: validData.items,
-    paymentMethod: validData.paymentMethod
-  };
-  if (validData.couponCode !== undefined) {
-    dto.couponCode = validData.couponCode;
+  const { addressId, paymentMethod, couponCode } = req.body;
+  if (!addressId || !paymentMethod) {
+    throw new ValidationError("addressId and paymentMethod are required");
   }
+
+  const cartItems = await cartRepository.find(user._id.toString());
+  if (!cartItems || cartItems.length === 0) {
+    throw new ValidationError("Cart is empty");
+  }
+
+  const dto: PlaceOrderRequestDto = {
+    addressId,
+    items: cartItems.map((c) => ({ itemId: c.itemId as string, quantity: c.quantity })),
+    paymentMethod,
+    ...(couponCode ? { couponCode } : {})
+  };
 
   const result = await orderService.createOrder(user._id.toString(), user.name, dto);
   return successResponse(res, 201, "Order placed successfully", result);

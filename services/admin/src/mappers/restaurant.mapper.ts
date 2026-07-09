@@ -14,7 +14,8 @@ export class RestaurantMapper {
         coordinates: raw.autoLocation?.coordinates || [0, 0],
         formattedAddress: raw.autoLocation?.formattedAddress || ""
       },
-      raw.isOpen ?? false
+      raw.isOpen ?? false,
+      raw.createdAt ? new Date(raw.createdAt) : new Date()
     );
   }
 

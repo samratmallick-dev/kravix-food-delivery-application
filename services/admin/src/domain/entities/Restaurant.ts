@@ -8,7 +8,8 @@ export class Restaurant {
     public readonly phone: number,
     public isVerified: boolean,
     public readonly autoLocation: { coordinates: [number, number]; formattedAddress: string },
-    public readonly isOpen: boolean
+    public readonly isOpen: boolean,
+    public readonly createdAt: Date
   ) {}
 
   toggleVerify(isVerified?: boolean): void {

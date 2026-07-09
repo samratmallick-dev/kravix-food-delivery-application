@@ -36,7 +36,8 @@ export class OrderMapper {
       raw.riderId ? raw.riderId.toString() : null,
       raw.riderName || null,
       raw.riderPhoneNumber || null,
-      raw.distance || 0
+      raw.distance || 0,
+      raw.createdAt
     );
   }
 
@@ -66,7 +67,8 @@ export class OrderMapper {
       riderId: domain.riderId,
       riderName: domain.riderName,
       riderPhoneNumber: domain.riderPhoneNumber,
-      distance: domain.distance
+      distance: domain.distance,
+      createdAt: domain.createdAt
     };
   }
 }

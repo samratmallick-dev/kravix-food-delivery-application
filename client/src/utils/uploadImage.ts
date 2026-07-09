@@ -11,6 +11,6 @@ export const uploadImage = async (file: File): Promise<string> => {
     });
 
     const data = await res.json();
-    if (!res.ok || !data.url) throw new Error(data.message || "Image upload failed");
-    return data.url as string;
+    if (!res.ok || !data?.data?.url) throw new Error(data.message || "Image upload failed");
+    return data.data.url as string;
 };

@@ -441,9 +441,9 @@ class IntentClassifier:
             r"\b(restaurant|dokan|kache|khola|bondo)\b"
         ],
         Intent.ORDER_TRACKING: [
-            r"\b(track|where is my order|order status|my order|status)\b",
-            r"(অর্ডার|ট্র্যাক|কোথায়|অবস্থা|স্ট্যাটাস)",
-            r"\b(track|order status|kothay|kothai|status)\b"
+            r"\b(track|where is my order|order status|my order|status|what did i order|which item i ordered|ordered items)\b",
+            r"(অর্ডার|ট্র্যাক|কোথায়|অবস্থা|স্ট্যাটাস|কী অর্ডার করেছি|কোন আইটেম)",
+            r"\b(track|order status|kothay|kothai|status|ki order korechi|kon item order)\b"
         ],
         Intent.ORDER_CANCELLATION: [
             r"\b(cancel|stop order)\b",
@@ -752,7 +752,24 @@ class MockEngine:
         orders = context.get("orders", [])
         if orders:
             latest = orders[0]
-            status_info = f"#{latest.get('id', 'N/A')} ({latest.get('status', 'unknown')})"
+            items_str = ""
+            if "items" in latest and latest["items"]:
+                items_str = ", ".join([f"{item['name']} (x{item['quantity']})" for item in latest["items"]])
+                
+            rest_str = f" from {latest.get('restaurantName')}" if latest.get("restaurantName") else ""
+            amount_str = f" for ₹{latest.get('totalAmount')}" if latest.get("totalAmount") else ""
+            rider_str = f" | Rider: {latest.get('riderName')} ({latest.get('riderPhoneNumber', 'N/A')})" if latest.get("riderName") else ""
+            
+            if items_str:
+                details_en = f"{rest_str}{amount_str}. Items: {items_str}{rider_str}"
+                details_bn = f"{rest_str} (৳{latest.get('totalAmount', 0)}). আইটেম: {items_str}{rider_str}"
+                details_bn_latin = f"{rest_str}{amount_str}. Items: {items_str}{rider_str}"
+                
+                status_info = f"#{latest.get('id', 'N/A')} ({latest.get('status', 'unknown')}){details_en}" if lang == "en" else \
+                              f"#{latest.get('id', 'N/A')} ({latest.get('status', 'unknown')}){details_bn}" if lang == "bn" else \
+                              f"#{latest.get('id', 'N/A')} ({latest.get('status', 'unknown')}){details_bn_latin}"
+            else:
+                status_info = f"#{latest.get('id', 'N/A')} ({latest.get('status', 'unknown')}){rest_str}{amount_str}{rider_str}"
         else:
             status_info = "no active orders" if lang == "en" else ("কোনো সক্রিয় অর্ডার নেই" if lang == "bn" else "kono active order nei")
             

@@ -47,7 +47,7 @@ export class Rider {
   }
 
   completeDelivery(earnings: number): void {
-    this.isAvailable = false;
+    this.isAvailable = true;
     this.deliveryOtp = null;
     this.deliveryOtpExpiry = null;
     this.totalDeliveries += 1;

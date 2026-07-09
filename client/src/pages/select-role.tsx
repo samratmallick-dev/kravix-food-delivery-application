@@ -18,10 +18,11 @@ const SelectRole = () => {
 
       const addRole = async () => {
             try {
-                  const data = await updateRole(role as string);
+                  const res = await updateRole(role as string);
+                  const token = res.data?.token;
 
-                  if (data) {
-                        storage.setToken(data.token);
+                  if (token) {
+                        storage.setToken(token);
                         await fetchCurrentUser();
                         await fetchCart();
                         toast.success("Role Updated Successfully");

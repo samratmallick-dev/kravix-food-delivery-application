@@ -50,4 +50,13 @@ export class OrderRepository implements IOrderRepository {
     if (!raw) return null;
     return OrderMapper.toDomain(raw);
   }
+
+  async findActiveOrderForRider(riderId: string): Promise<Order | null> {
+    const raw = await OrderModel.findOne({
+      riderId,
+      status: { $in: ["rider_assigned", "picked_up", "out_for_delivery", "reached_delivery_location"] }
+    }).lean();
+    if (!raw) return null;
+    return OrderMapper.toDomain(raw);
+  }
 }

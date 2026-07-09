@@ -257,7 +257,7 @@ export class OrderService implements IOrderService {
   }
 
   async getCurrentOrdersForRiders(riderId: string): Promise<Order> {
-    const order = await this.orderRepository.findById(riderId);
+    const order = await this.orderRepository.findActiveOrderForRider(riderId);
     if (!order) {
       throw new NotFoundError("No current order found for this rider");
     }

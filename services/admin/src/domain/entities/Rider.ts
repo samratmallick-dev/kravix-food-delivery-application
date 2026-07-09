@@ -8,7 +8,9 @@ export class Rider {
     public readonly drivingLicesce: string,
     public isVerified: boolean,
     public readonly location: { coordinates: [number, number] },
-    public readonly isAvailable: boolean
+    public readonly isAvailable: boolean,
+    public readonly lastActiveAt: Date,
+    public readonly createdAt: Date
   ) {}
 
   toggleVerify(isVerified?: boolean): void {

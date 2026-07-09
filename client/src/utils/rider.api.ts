@@ -104,7 +104,7 @@ export const fetchCurrentOrder = (): Promise<ApiResponse<any>> =>
       });
 
 export const updateOrderStatusByRider = (orderId: string, latitude?: number, longitude?: number, otp?: string, codPaymentMode?: string): Promise<ApiResponse<any>> =>
-      request<ApiResponse<any>>(`${riderBaseUrl}/orders/status`, {
+      request<ApiResponse<any>>(`${riderBaseUrl}/orders/${orderId}/status`, {
             method: "PATCH",
             body: JSON.stringify({ orderId, latitude, longitude, otp, codPaymentMode }),
       });
@@ -120,7 +120,7 @@ export const acceptOrder = (orderId: string): Promise<ApiResponse<IRider>> =>
       });
 
 export const generateDeliveryOtp = (orderId: string): Promise<SuccessResponse> =>
-      request<SuccessResponse>(`${riderBaseUrl}/orders/otp/generate`, {
+      request<SuccessResponse>(`${riderBaseUrl}/orders/${orderId}/otp/generate`, {
             method: "POST",
             body: JSON.stringify({ orderId }),
       });

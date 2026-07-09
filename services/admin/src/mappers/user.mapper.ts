@@ -9,7 +9,8 @@ export class UserMapper {
       raw.image,
       raw.role ?? null,
       raw.isBlocked ?? false,
-      raw.blockedUntil ? new Date(raw.blockedUntil) : null
+      raw.blockedUntil ? new Date(raw.blockedUntil) : null,
+      raw.createdAt ? new Date(raw.createdAt) : new Date()
     );
   }
 

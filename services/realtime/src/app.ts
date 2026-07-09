@@ -81,7 +81,7 @@ app.get("/metrics", (_req, res) => {
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 const masterRouter = Router();
-masterRouter.use(ROUTES.SOCKET.EVENTS, internalAuth, socketInternalRoute);
+masterRouter.use(ROUTES.SOCKET.BASE, internalAuth, socketInternalRoute);
 app.use("/api/v1", masterRouter);
 
 app.get("/", (_req, res) => {

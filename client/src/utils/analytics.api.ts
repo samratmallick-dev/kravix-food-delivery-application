@@ -20,7 +20,6 @@ export const getDashboardAnalytics = (params: AnalyticsParams): Promise<ApiRespo
 
 export const exportRevenueTrendsCSV = (params: AnalyticsParams): Promise<Blob> => {
       const qs = buildQueryString(params as any);
-      // For binary/blob responses, we might need a custom request call or bypass the JSON parsing
       return fetch(`${analyticsBaseUrl}/export${qs}`, {
             method: "GET",
             headers: {

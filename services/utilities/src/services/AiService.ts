@@ -68,9 +68,18 @@ export class AIService implements IAIService {
 
     if (role === "customer" || role === "admin") {
       try {
-        const r = await this.ctxAxios.get("/api/v1/orders/me", { headers, params: { limit: 5 } });
+        const url = role === "admin" ? "/api/v1/admin/orders" : "/api/v1/orders/me";
+        const r = await this.ctxAxios.get(url, { headers, params: { limit: 5 } });
         const raw = r.data?.data?.orders ?? r.data?.data ?? [];
-        ctx.orders = raw.map((o: any) => ({ id: o._id ?? o.id, status: o.status }));
+        ctx.orders = raw.map((o: any) => ({
+          id: o._id ?? o.id?.slice(0, 20).toUpperCase() ?? "UNKNOWN",
+          status: o.status,
+          restaurantName: o.restaurantName,
+          riderName: o.riderName,
+          riderPhoneNumber: o.riderPhoneNumber,
+          totalAmount: o.totalAmount,
+          items: (o.items || []).map((i: any) => ({ name: i.name, quantity: i.quantity }))
+        }));
       } catch (e: any) {
         console.warn("ctx_orders_failed:", e.message);
       }

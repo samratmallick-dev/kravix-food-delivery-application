@@ -175,7 +175,7 @@ export const getNearestRestaurant = TryCatch(async (req: AuthenticatedRequest, r
 });
 
 export const fetchSingleRestaurant = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const { id } = req.params;
+  const { restaurantId: id } = req.params;
   const restaurant = await restaurantService.getRestaurantDetails(id as string);
   return successResponse(res, 200, "Restaurant fetched successfully", RestaurantResponseMapper.toRestaurantDto(restaurant));
 });
