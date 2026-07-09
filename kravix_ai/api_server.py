@@ -66,20 +66,6 @@ from request_guard import (
 from timeout_middleware import TimeoutMiddleware
 from observability import request_metrics, build_metrics_payload
 
-from pipeline import (
-    DatasetLoader,
-    KnowledgeIndexer,
-    KnowledgeRetriever,
-    ContextInjector,
-    PromptBuilder,
-    LanguageResolver
-)
-
-_dataset_loader = None
-_knowledge_indexer = None
-_knowledge_retriever = None
-
-
 SESSION_TTL = int(os.environ.get("SESSION_TTL_SECONDS", "1800"))
 MAX_SESSIONS = int(os.environ.get("MAX_SESSIONS", "500"))
 REDIS_URL = os.environ.get("REDIS_URL", "")
@@ -124,22 +110,6 @@ class FeedbackRequest(BaseModel):
     role: str
     feedback: int
 
-
-async def _dataset_watchdog_loop():
-    while not _shutdown_event.is_set():
-        try:
-            await asyncio.sleep(10)
-            if _dataset_loader and _knowledge_indexer and _knowledge_retriever:
-                modified = _dataset_loader.get_modified_datasets()
-                if modified:
-                    for name, data in modified.items():
-                        _knowledge_indexer.update_dataset(name, data)
-                    _knowledge_retriever.clear_cache()
-                    logger.info("Knowledge index updated incrementally.")
-        except asyncio.CancelledError:
-            break
-        except Exception as exc:
-            logger.error("Dataset watchdog error: %s", exc, exc_info=True)
 
 async def _session_cleanup_loop():
     while not _shutdown_event.is_set():
@@ -212,7 +182,7 @@ async def _diagnostics_loop():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _session_store, _mongo_manager, _model_manager, _health_monitor, _dataset_loader, _knowledge_indexer, _knowledge_retriever
+    global _session_store, _mongo_manager, _model_manager, _health_monitor
 
     logger.info("=== Kravix AI starting ===")
 
@@ -244,14 +214,8 @@ async def lifespan(app: FastAPI):
     )
 
 
-    _dataset_loader = DatasetLoader("datasets")
-    datasets = _dataset_loader.load_all(fail_on_error=True)
-    _knowledge_indexer = KnowledgeIndexer()
-    _knowledge_indexer.build_index(datasets)
-    _knowledge_retriever = KnowledgeRetriever(_knowledge_indexer)
     
     _background_tasks.extend([
-        asyncio.create_task(_dataset_watchdog_loop(), name="dataset_watchdog"),
         asyncio.create_task(_session_cleanup_loop(), name="session_cleanup"),
         asyncio.create_task(_memory_watchdog_loop(), name="memory_watchdog"),
         asyncio.create_task(_diagnostics_loop(), name="diagnostics"),
@@ -550,12 +514,12 @@ async def chat_endpoint(req: ChatRequest):
         if len(history) > MAX_HISTORY_TURNS:
             history = history[-MAX_HISTORY_TURNS:]
 
-        lang = LanguageResolver.detect_language(safe_message, ctx.get("preferredLanguage", "en"))
-        retrieved_chunks = _knowledge_retriever.retrieve(safe_message, role, lang, top_k=3, min_confidence=0.2) if _knowledge_retriever else []
-        dynamic_context_str = ContextInjector.inject_dynamic_context(ctx, lang)
+        lang = ctx.get("preferredLanguage", "en")
+        retrieved_chunks = []
         
-        system_prompt = PromptBuilder.build_system_prompt(
-            SYSTEM_PROMPT_TEMPLATE, role, lang, retrieved_chunks, dynamic_context_str
+        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+            role=role,
+            preferred_language=lang
         )
 
         reply = None
