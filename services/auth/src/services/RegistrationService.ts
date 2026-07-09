@@ -17,7 +17,7 @@ export class RegistrationService implements IRegistrationService {
     const existing = await this.userRepository.findByEmail(normalizedEmail);
 
     if (existing) {
-      if (existing.isEmailVerified && existing.authProviders.includes("google") && !existing.authProviders.includes("email")) {
+      if (existing.authProviders.includes("google") && !existing.authProviders.includes("email")) {
         const passwordHash = await bcrypt.hash(password, 10);
         const rawToken = crypto.randomBytes(32).toString("hex");
         existing.authProviders.push("email");

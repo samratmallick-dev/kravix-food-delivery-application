@@ -18,7 +18,7 @@ export class GoogleRegistrationService implements IGoogleRegistrationService {
     const existing = await this.userRepository.findByEmail(profile.email);
 
     if (existing) {
-      if (existing.isEmailVerified && existing.authProviders.includes("email") && !existing.authProviders.includes("google")) {
+      if (existing.authProviders.includes("email") && !existing.authProviders.includes("google")) {
         existing.authProviders.push("google");
         if (!existing.image && profile.picture) {
           existing.image = profile.picture;

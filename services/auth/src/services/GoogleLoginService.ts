@@ -23,7 +23,8 @@ export class GoogleLoginService implements IGoogleLoginService {
     }
 
     if (!user.isEmailVerified) {
-      throw new AuthorizationError("Please verify your email before signing in.", "EMAIL_NOT_VERIFIED");
+      user.isEmailVerified = true;
+      await this.userRepository.update(user);
     }
 
     user.checkNotBlocked();
