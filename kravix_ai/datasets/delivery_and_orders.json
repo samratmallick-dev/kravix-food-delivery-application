@@ -1,0 +1,267 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-07-10T12:00:00Z",
+  "schemaVersion": "1",
+  "data": [
+    {
+      "id": "order_lifecycle_full",
+      "domain": "delivery_and_orders",
+      "content": "The full order lifecycle is: Order Created -> Payment Pending -> Payment Success -> Restaurant Accepted -> Preparing -> Ready for Pickup -> Rider Assigned -> Rider Arrived at Restaurant -> Picked Up -> On The Way -> Arriving at Customer -> Delivered. Exceptions lead to Rejected, Cancelled, or Failed states.",
+      "aliases": [
+        "order lifecycle",
+        "track order",
+        "order status meaning",
+        "what happens to my order",
+        "status flow"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Lifecycle"
+    },
+    {
+      "id": "order_cancellation_rules",
+      "domain": "delivery_and_orders",
+      "content": "Customers can cancel an order without penalty only BEFORE the restaurant accepts it (usually within 60 seconds). Once the restaurant accepts and starts 'Preparing', the order cannot be cancelled by the customer. If forced, a 100% cancellation fee applies and no refund is given.",
+      "aliases": [
+        "cancel order",
+        "cancellation rules",
+        "stop order",
+        "cancellation fee",
+        "can i cancel",
+        "বাতিল",
+        "ক্যান্সেল"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Policy"
+    },
+    {
+      "id": "order_refund_rules",
+      "domain": "delivery_and_orders",
+      "content": "Refunds are issued automatically if a restaurant rejects the order, or if the order is cancelled before acceptance. Refunds are processed to the original payment source (Credit Card/UPI/Stripe) and reflect in 5-7 business days. For Kravix Wallet payments, refunds are instant.",
+      "aliases": [
+        "refund",
+        "money back",
+        "return money",
+        "refund timeline",
+        "when will i get refund",
+        "টাকা ফেরত",
+        "রিফান্ড"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "order_eta_logic",
+      "domain": "delivery_and_orders",
+      "content": "ETA (Estimated Time of Arrival) is dynamically calculated using AI. It considers: Average Restaurant Preparation Time + Rider Distance to Restaurant + Distance from Restaurant to Customer + Live Traffic Data + Weather Conditions.",
+      "aliases": [
+        "eta",
+        "delivery time",
+        "how long",
+        "time taken",
+        "why is it late",
+        "সময়"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Logistics"
+    },
+    {
+      "id": "order_payment_states",
+      "domain": "delivery_and_orders",
+      "content": "Payment states include: Pending (waiting for gateway), Success (money deducted), Failed (gateway rejected), Refunded, and COD (Cash on Delivery). If a payment fails but money is deducted, the gateway auto-reverses it in 3-5 days.",
+      "aliases": [
+        "payment state",
+        "payment failed",
+        "money deducted",
+        "transaction failed",
+        "payment success"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "order_cod_wallet",
+      "domain": "delivery_and_orders",
+      "content": "Cash on Delivery (COD) is available for orders up to ₹1500. Users can also pay using the Kravix Wallet for instant checkouts. You can top up the wallet using cards or UPI. Wallet cashbacks cannot be withdrawn to a bank account.",
+      "aliases": [
+        "cod",
+        "cash on delivery",
+        "pay in cash",
+        "kravix wallet",
+        "wallet top up",
+        "cashback"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "order_scheduled_delivery",
+      "domain": "delivery_and_orders",
+      "content": "Customers can use Scheduled Delivery to order food in advance (up to 24 hours). The restaurant will receive the order and prepare it so it's fresh right before the scheduled delivery window.",
+      "aliases": [
+        "scheduled delivery",
+        "preorder",
+        "order in advance",
+        "schedule order",
+        "book food"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Feature"
+    },
+    {
+      "id": "order_taxes_fees",
+      "domain": "delivery_and_orders",
+      "content": "Total bill includes: Item Price + GST (5% or 18% depending on restaurant type) + Packaging Charge (set by seller) + Delivery Fee (distance-based) + Platform Service Fee (₹5 flat). A detailed digital invoice is emailed after delivery.",
+      "aliases": [
+        "taxes",
+        "service fee",
+        "delivery fee",
+        "packaging charge",
+        "invoice",
+        "bill details",
+        "extra charge"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "order_disputes_exceptions",
+      "domain": "delivery_and_orders",
+      "content": "If items are missing, food is spilled, or the wrong order is delivered, customers must raise a Dispute within 12 hours via the Help section. Uploading photos is mandatory. Our support team reviews and issues partial or full refunds to the Kravix Wallet.",
+      "aliases": [
+        "missing item",
+        "spilled food",
+        "wrong order",
+        "dispute",
+        "complain",
+        "bad food",
+        "support"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Support"
+    },
+    {
+      "id": "order_partial_refund_cancellation",
+      "domain": "delivery_and_orders",
+      "content": "Partial refunds apply when only some items in an order are missing or incorrect; the refund is calculated proportionally to the affected item's price plus its share of tax. Partial cancellations (removing one item before restaurant acceptance) are supported on select orders.",
+      "aliases": [
+        "partial refund",
+        "partial cancellation",
+        "one item missing refund",
+        "remove item from order"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "order_split_payment",
+      "domain": "delivery_and_orders",
+      "content": "Split Payment lets customers pay part of the bill using Kravix Wallet balance and the remainder via card, UPI, or net banking in a single checkout, ensuring wallet credits are used first before charging the primary payment method.",
+      "aliases": [
+        "split payment",
+        "pay with wallet and card",
+        "combine payment methods"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "order_gst_invoice",
+      "domain": "delivery_and_orders",
+      "content": "A GST-compliant digital invoice, itemizing GST rate, taxable value, and total tax, is auto-generated and emailed after every delivered order. Business customers can add their GSTIN in checkout to claim input tax credit.",
+      "aliases": [
+        "gst invoice",
+        "tax invoice",
+        "gstin",
+        "business invoice",
+        "input tax credit"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "order_priority_express_instant",
+      "domain": "delivery_and_orders",
+      "content": "Kravix offers Instant Delivery (fastest available rider, priority dispatch, small surcharge) alongside standard delivery. Order priority is also automatically raised for orders that are running behind their promised ETA.",
+      "aliases": [
+        "instant delivery",
+        "express delivery",
+        "priority order",
+        "fast delivery",
+        "surcharge"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Feature"
+    },
+    {
+      "id": "order_pickup_self_collect",
+      "domain": "delivery_and_orders",
+      "content": "Customers can choose 'Pickup' at checkout to collect their order directly from the restaurant instead of home delivery, avoiding the delivery fee entirely. The restaurant notifies the customer when the order is ready.",
+      "aliases": [
+        "pickup order",
+        "self pickup",
+        "collect from restaurant",
+        "no delivery fee"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Feature"
+    },
+    {
+      "id": "order_payment_retry_webhook",
+      "domain": "delivery_and_orders",
+      "content": "If a payment gateway webhook confirming success arrives late, the order stays in 'Payment Pending' with an automatic retry check every 30 seconds for up to 5 minutes before the customer is prompted to retry or choose another method.",
+      "aliases": [
+        "payment retry",
+        "webhook delay",
+        "payment pending stuck",
+        "gateway confirmation delay"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Finance"
+    },
+    {
+      "id": "order_loyalty_points",
+      "domain": "delivery_and_orders",
+      "content": "Customers earn Loyalty Points on every successful order (1 point per ₹10 spent). Points can be redeemed at checkout for discounts, subject to a minimum redemption threshold, and expire 12 months after being earned.",
+      "aliases": [
+        "loyalty points",
+        "reward points",
+        "redeem points",
+        "points expiry"
+      ],
+      "roles_allowed": [
+        "all"
+      ],
+      "category": "Feature"
+    }
+  ]
+}
