@@ -342,8 +342,11 @@ def _mock_reply(message: str, role: str, chunks) -> str:
             "admin": "Access platform analytics and user management from the admin panel.",
         }.get(role, "Browse restaurants, place orders, and track your deliveries.")
         return f"Hi there! \U0001f44b Welcome to Kravix. {role_hint} How can I help you today?"
-    if chunks:
-        return chunks[0].content[:300].strip()
+    
+    message_lower = message.lower()
+    if any(food in message_lower for food in ["food", "biriyani", "pizza", "burger", "menu"]):
+        return "I can help you find restaurants serving that! (Note: This is a mock response as the AI model is currently unavailable)."
+        
     return "I'm here to help with anything related to Kravix — orders, restaurants, delivery, and more. What would you like to know?"
 
 def normalize_price(price) -> int:
@@ -414,20 +417,27 @@ Identity:
 User Role: {role}
 Always tailor your response to the user's role (customer / seller / rider / admin).
 
+Behavioral Instructions:
+1. Directly address the user's specific input using the conversation history for context.
+2. ONLY use the [Retrieved Knowledge Base] if it contains information directly relevant to the user's query.
+3. CRITICAL: If the retrieved knowledge is irrelevant or does not answer the user's specific request (e.g., the user asks for "biriyani" or "food names" and the knowledge base only has platform features), DO NOT regurgitate the irrelevant knowledge. Instead, politely state that you cannot fulfill that specific request or don't have that information.
+4. Never list generic app features or policies unless explicitly asked.
+5. For casual greetings, respond warmly and offer help without summarizing any knowledge base content.
+
 Language Instructions:
 - Reply in {preferred_language}.
 
 Format Instructions:
 - You must respond ONLY with a JSON object matching this schema:
 {{
-  "reply": "your text response",
-  "intent": "INTENT_NAME",
-  "action": "ACTION_NAME",
+  "reply": "your conversational text response addressing the user directly",
+  "intent": "The inferred user intent (e.g., GREETING, SEARCH_FOOD, ORDER_STATUS, FAQ)",
+  "action": "The action the app should take (e.g., NAVIGATE, SHOW_MODAL, NONE)",
   "intent_confidence": 0.95,
-  "entities": {{}},
+  "entities": {{"food_name": "biriyani"}},
   "followUp": ["option 1", "option 2"]
 }}
-- Return raw JSON only.
+- Return raw JSON only, without any markdown formatting.
 """
 
 def parse_json_response(reply_text: str) -> Dict[str, Any]:
