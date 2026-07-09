@@ -329,6 +329,23 @@ def sanitize_input(text: str) -> str:
     sanitized = _INJECTION_PATTERN.sub("[removed]", text)
     return sanitized[:1000]
 
+_GREETING_WORDS = {"hi", "hello", "hey", "hiya", "howdy", "greetings", "sup", "yo"}
+
+def _is_greeting(text: str) -> bool:
+    return text.lower().strip().rstrip("!.,") in _GREETING_WORDS
+
+def _mock_reply(message: str, role: str, chunks) -> str:
+    if _is_greeting(message):
+        role_hint = {
+            "seller": "Manage your menu, track orders, and view analytics from your dashboard.",
+            "rider": "Check your current deliveries and earnings from your dashboard.",
+            "admin": "Access platform analytics and user management from the admin panel.",
+        }.get(role, "Browse restaurants, place orders, and track your deliveries.")
+        return f"Hi there! \U0001f44b Welcome to Kravix. {role_hint} How can I help you today?"
+    if chunks:
+        return chunks[0].content[:300].strip()
+    return "I'm here to help with anything related to Kravix — orders, restaurants, delivery, and more. What would you like to know?"
+
 def normalize_price(price) -> int:
     try:
         p = int(float(price))
@@ -573,15 +590,19 @@ async def chat_endpoint(req: ChatRequest):
                 ]
                 if reply and (any(kw.lower() in reply.lower() for kw in fallback_keywords) or len(reply) < 5):
                     reply = None
+        else:
+            reply = _mock_reply(safe_message, role, retrieved_chunks)
+            intent = "GREETING" if _is_greeting(safe_message) else "GENERAL_QUERY"
+            intent_confidence = 0.8
         
         inference_latency = (time.monotonic() - inference_start) * 1000
         
         if not reply:
             if not retrieved_chunks:
-                reply = "I'm sorry, but I don't have that information."
+                reply = "I'm sorry, I don't have information on that. Try asking about our menu, orders, or delivery."
             else:
-                reply = "I'm sorry, I cannot process your request at the moment due to high load."
-            intent_confidence = 0.1
+                reply = retrieved_chunks[0].content[:300].strip()
+            intent_confidence = 0.4
 
         history.append({"role": "assistant", "content": reply})
         
