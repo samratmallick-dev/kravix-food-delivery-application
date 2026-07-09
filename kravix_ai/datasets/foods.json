@@ -9,7 +9,6 @@
       "content": "Fish Fry is a popular Bengali snack or appetizer. It consists of marinated fish pieces (usually Bhetki) coated in spices or batter and deep-fried until crispy. Often served with kasundi (mustard sauce) and onion salad.",
       "aliases": [
         "Fish Fry",
-        "fish fry",
         "fishfry",
         "fried fish",
         "fried river fish",
@@ -71,8 +70,8 @@
         "bhaja": "fry"
       },
       "translations": {
-        "bn": "মাছ ভাজা",
-        "hi": "मछली फ्राई"
+        "bn": "\u09ae\u09be\u099b \u09ad\u09be\u099c\u09be",
+        "hi": "\u092e\u091b\u0932\u0940 \u092b\u094d\u0930\u093e\u0908"
       },
       "spiceLevel": "Medium",
       "preparationTime": "20 mins",
@@ -153,8 +152,8 @@
         "biriyani": "biryani"
       },
       "translations": {
-        "bn": "চিকেন বিরিয়ানি",
-        "hi": "चिकन बिरयानी"
+        "bn": "\u099a\u09bf\u0995\u09c7\u09a8 \u09ac\u09bf\u09b0\u09bf\u09af\u09bc\u09be\u09a8\u09bf",
+        "hi": "\u091a\u093f\u0915\u0928 \u092c\u093f\u0930\u092f\u093e\u0928\u0940"
       },
       "spiceLevel": "Medium-High",
       "preparationTime": "45 mins",
@@ -232,8 +231,8 @@
         "lamb": "mutton"
       },
       "translations": {
-        "bn": "মাটন বিরিয়ানি",
-        "hi": "मटन बिरयानी"
+        "bn": "\u09ae\u09be\u099f\u09a8 \u09ac\u09bf\u09b0\u09bf\u09af\u09bc\u09be\u09a8\u09bf",
+        "hi": "\u092e\u091f\u0928 \u092c\u093f\u0930\u092f\u093e\u0928\u0940"
       },
       "spiceLevel": "Medium-High",
       "preparationTime": "60 mins",
@@ -306,8 +305,8 @@
         "pizaa": "pizza"
       },
       "translations": {
-        "bn": "মার্গারিটা পিজ্জা",
-        "hi": "मार्गेरिटा पिज्जा"
+        "bn": "\u09ae\u09be\u09b0\u09cd\u0997\u09be\u09b0\u09bf\u099f\u09be \u09aa\u09bf\u099c\u09cd\u099c\u09be",
+        "hi": "\u092e\u093e\u0930\u094d\u0917\u0947\u0930\u093f\u091f\u093e \u092a\u093f\u091c\u094d\u091c\u093e"
       },
       "spiceLevel": "Mild",
       "preparationTime": "15 mins",
@@ -377,8 +376,8 @@
         "pepperoni": "spicy sausage"
       },
       "translations": {
-        "bn": "পেপেরোনি পিজ্জา",
-        "hi": "पेपेरोनी पिज्जा"
+        "bn": "\u09aa\u09c7\u09aa\u09c7\u09b0\u09cb\u09a8\u09bf \u09aa\u09bf\u099c\u09cd\u099c\u0e32",
+        "hi": "\u092a\u0947\u092a\u0947\u0930\u094b\u0928\u0940 \u092a\u093f\u091c\u094d\u091c\u093e"
       },
       "spiceLevel": "Medium",
       "preparationTime": "15 mins",
@@ -451,8 +450,8 @@
         "murgi": "chicken"
       },
       "translations": {
-        "bn": "চিকেন বার্গার",
-        "hi": "चिकन बर्गर"
+        "bn": "\u099a\u09bf\u0995\u09c7\u09a8 \u09ac\u09be\u09b0\u09cd\u0997\u09be\u09b0",
+        "hi": "\u091a\u093f\u0915\u0928 \u092c\u0930\u094d\u0917\u0930"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "12 mins",
@@ -524,8 +523,8 @@
         "vegetable": "veg"
       },
       "translations": {
-        "bn": "ভেজ বার্গার",
-        "hi": "वेज बर्गर"
+        "bn": "\u09ad\u09c7\u099c \u09ac\u09be\u09b0\u09cd\u0997\u09be\u09b0",
+        "hi": "\u0935\u0947\u091c \u092c\u0930\u094d\u0917\u0930"
       },
       "spiceLevel": "Mild",
       "preparationTime": "10 mins",
@@ -599,8 +598,8 @@
         "haka": "hakka"
       },
       "translations": {
-        "bn": "হাক্কা নুডলস",
-        "hi": "हक्का नूडल्स"
+        "bn": "\u09b9\u09be\u0995\u09cd\u0995\u09be \u09a8\u09c1\u09a1\u09b2\u09b8",
+        "hi": "\u0939\u0915\u094d\u0915\u093e \u0928\u0942\u0921\u0932\u094d\u0938"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "15 mins",
@@ -675,8 +674,8 @@
         "murgi": "chicken"
       },
       "translations": {
-        "bn": "চিলি চিকেন",
-        "hi": "चिली चिकन"
+        "bn": "\u099a\u09bf\u09b2\u09bf \u099a\u09bf\u0995\u09c7\u09a8",
+        "hi": "\u091a\u093f\u0932\u0940 \u091a\u093f\u0915\u0928"
       },
       "spiceLevel": "High",
       "preparationTime": "20 mins",
@@ -746,8 +745,8 @@
         "aloo": "potato"
       },
       "translations": {
-        "bn": "মাসালা ধোসা",
-        "hi": "मसाला डोसा"
+        "bn": "\u09ae\u09be\u09b8\u09be\u09b2\u09be \u09a7\u09cb\u09b8\u09be",
+        "hi": "\u092e\u0938\u093e\u0932\u093e \u0921\u094b\u0938\u093e"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "10 mins",
@@ -821,8 +820,8 @@
         "sabzi": "veg"
       },
       "translations": {
-        "bn": "পনির বাটার মাসালা",
-        "hi": "पनीर बटर मसाला"
+        "bn": "\u09aa\u09a8\u09bf\u09b0 \u09ac\u09be\u099f\u09be\u09b0 \u09ae\u09be\u09b8\u09be\u09b2\u09be",
+        "hi": "\u092a\u0928\u0940\u0930 \u092c\u091f\u0930 \u092e\u0938\u093e\u0932\u093e"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "25 mins",
@@ -895,8 +894,8 @@
         "murgh": "chicken"
       },
       "translations": {
-        "bn": "বাটার চিকেন",
-        "hi": "बटर चिकन"
+        "bn": "\u09ac\u09be\u099f\u09be\u09b0 \u099a\u09bf\u0995\u09c7\u09a8",
+        "hi": "\u092c\u091f\u0930 \u091a\u093f\u0915\u0928"
       },
       "spiceLevel": "Mild-Medium",
       "preparationTime": "30 mins",
@@ -964,8 +963,8 @@
         "rosogolla": "rasgulla"
       },
       "translations": {
-        "bn": "রসগোল্লা",
-        "hi": "रसगुल्ला"
+        "bn": "\u09b0\u09b8\u0997\u09cb\u09b2\u09cd\u09b2\u09be",
+        "hi": "\u0930\u0938\u0917\u0941\u0932\u094d\u0932\u093e"
       },
       "spiceLevel": "Mild",
       "preparationTime": "40 mins",
@@ -1033,8 +1032,8 @@
         "lassi": "yogurt drink"
       },
       "translations": {
-        "bn": "আমের লস্যি",
-        "hi": "मैंगो लस्सी"
+        "bn": "\u0986\u09ae\u09c7\u09b0 \u09b2\u09b8\u09cd\u09af\u09bf",
+        "hi": "\u092e\u0948\u0902\u0917\u094b \u0932\u0938\u094d\u0938\u0940"
       },
       "spiceLevel": "Mild",
       "preparationTime": "5 mins",
@@ -1100,8 +1099,8 @@
         "chawal": "rice"
       },
       "translations": {
-        "bn": "সাদা ভাত",
-        "hi": "उबले चावल"
+        "bn": "\u09b8\u09be\u09a6\u09be \u09ad\u09be\u09a4",
+        "hi": "\u0909\u092c\u0932\u0947 \u091a\u093e\u0935\u0932"
       },
       "spiceLevel": "Mild",
       "preparationTime": "15 mins",
@@ -1170,8 +1169,8 @@
         "chapati": "roti"
       },
       "translations": {
-        "bn": "বাটার নান",
-        "hi": "बटर नान"
+        "bn": "\u09ac\u09be\u099f\u09be\u09b0 \u09a8\u09be\u09a8",
+        "hi": "\u092c\u091f\u0930 \u0928\u093e\u0928"
       },
       "spiceLevel": "Mild",
       "preparationTime": "8 mins",
@@ -1240,8 +1239,8 @@
         "golgappa": "fuchka"
       },
       "translations": {
-        "bn": "ফুচকা",
-        "hi": "गोलगप्पा"
+        "bn": "\u09ab\u09c1\u099a\u0995\u09be",
+        "hi": "\u0917\u094b\u0932\u0917\u092a\u094d\u092a\u093e"
       },
       "spiceLevel": "High",
       "preparationTime": "5 mins",
@@ -1309,8 +1308,8 @@
         "sushi": "raw fish rice"
       },
       "translations": {
-        "ja": "サーモン握り",
-        "hi": "सुशी"
+        "ja": "\u30b5\u30fc\u30e2\u30f3\u63e1\u308a",
+        "hi": "\u0938\u0941\u0936\u0940"
       },
       "spiceLevel": "Mild",
       "preparationTime": "15 mins",

@@ -43,7 +43,7 @@
     {
       "id": "rest_coupons_offers",
       "domain": "restaurants",
-      "content": "Restaurants can run custom promotional campaigns. Sellers can create flat discount coupons (e.g., ₹50 off) or percentage discounts (e.g., 20% off up to ₹100). The financial burden of restaurant-created coupons falls on the seller, reducing their final payout.",
+      "content": "Restaurants can run custom promotional campaigns. Sellers can create flat discount coupons (e.g., \u20b950 off) or percentage discounts (e.g., 20% off up to \u20b9100). The financial burden of restaurant-created coupons falls on the seller, reducing their final payout.",
       "aliases": [
         "create coupon",
         "seller discount",
@@ -80,10 +80,9 @@
     {
       "id": "rest_taxes_and_charges",
       "domain": "restaurants",
-      "content": "Restaurants can configure packaging charges up to a maximum of ₹25 per order. GST is collected by Kravix on behalf of the restaurant. Commission fees range from 12% to 18% depending on the seller tier and are deducted before payout.",
+      "content": "Restaurants can configure packaging charges up to a maximum of \u20b925 per order. GST is collected by Kravix on behalf of the restaurant. Commission fees range from 12% to 18% depending on the seller tier and are deducted before payout.",
       "aliases": [
         "taxes",
-        "gst",
         "commission",
         "packaging charge",
         "platform fee",
@@ -165,7 +164,7 @@
     {
       "id": "rest_minimum_order",
       "domain": "restaurants",
-      "content": "Sellers can set a Minimum Order Value for their restaurant (e.g., ₹99). Orders below this amount cannot be placed from that restaurant. This helps sellers cover fixed preparation and delivery costs on small orders.",
+      "content": "Sellers can set a Minimum Order Value for their restaurant (e.g., \u20b999). Orders below this amount cannot be placed from that restaurant. This helps sellers cover fixed preparation and delivery costs on small orders.",
       "aliases": [
         "minimum order",
         "min order value",
@@ -213,7 +212,7 @@
     {
       "id": "rest_bank_verification",
       "domain": "restaurants",
-      "content": "Sellers must link a verified bank account (via a cancelled cheque or bank statement plus a ₹1 penny-drop verification) before payouts can begin. Payouts are blocked until bank verification is complete.",
+      "content": "Sellers must link a verified bank account (via a cancelled cheque or bank statement plus a \u20b91 penny-drop verification) before payouts can begin. Payouts are blocked until bank verification is complete.",
       "aliases": [
         "bank verification",
         "penny drop",
