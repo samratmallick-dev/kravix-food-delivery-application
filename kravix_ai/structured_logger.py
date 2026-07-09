@@ -70,5 +70,5 @@ def get_logger(component: str) -> logging.Logger:
         record.component = component  
         return record
 
-    logger.makeRecord = _make_record 
+    logger.makeRecord = _make_record
     return logger

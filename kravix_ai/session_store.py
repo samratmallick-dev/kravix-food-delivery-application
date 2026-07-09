@@ -116,7 +116,7 @@ class RedisSessionStore(SessionStore):
     def active_count(self) -> int:
         try:
             count = 0
-            cursor = "0"
+            cursor = 0
             while True:
                 cursor, keys = self._client.scan(
                     cursor=cursor, match=f"{self._KEY_PREFIX}*", count=200
@@ -130,7 +130,7 @@ class RedisSessionStore(SessionStore):
 
     def clear_all(self) -> None:
         try:
-            cursor = "0"
+            cursor = 0
             while True:
                 cursor, keys = self._client.scan(
                     cursor=cursor, match=f"{self._KEY_PREFIX}*", count=200
@@ -216,12 +216,11 @@ class FallbackSessionStore(SessionStore):
         self._lru = lru_store
         self._ttl = ttl
         self._max_sessions = max_sessions
-        self._redis = None
+        self._redis: Optional[RedisSessionStore] = None
         self._lock = Lock()
         self._redis_healthy: bool = False
         self._last_health_check: float = 0.0
 
-        # Try initial connection attempt
         self._try_init_redis()
 
     def _try_init_redis(self) -> bool:

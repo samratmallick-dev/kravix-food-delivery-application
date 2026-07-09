@@ -45,8 +45,8 @@ class ModelManager:
         self._inference_timeout = inference_timeout
 
         self._lock = Lock()
-        self._model = None
-        self._tokenizer = None
+        self._model: Any = None
+        self._tokenizer: Any = None
         self._model_loaded = False
 
         self._consecutive_failures = 0

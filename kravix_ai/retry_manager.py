@@ -117,7 +117,8 @@ def with_retry(
                     )
                     await asyncio.sleep(delay)
 
-            raise last_exc  
-
+            if last_exc is not None:
+                raise last_exc
+            raise RuntimeError("Retry loop exited without an exception")
         return wrapper
     return decorator

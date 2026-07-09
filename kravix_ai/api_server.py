@@ -334,48 +334,6 @@ _GREETING_WORDS = {"hi", "hello", "hey", "hiya", "howdy", "greetings", "sup", "y
 def _is_greeting(text: str) -> bool:
     return text.lower().strip().rstrip("!.,") in _GREETING_WORDS
 
-_FOOD_LISTING_TRIGGERS = [
-    "food name", "foods name", "food list", "foods list", "list of food",
-    "what food", "what foods", "available food", "show food", "give food",
-    "suggest food", "recommend food", "food options", "food items",
-    "what can i eat", "what to eat", "what to order", "what should i order",
-]
-
-_MOCK_INTENT_MAP = [
-    (["track", "order status", "where is my order", "my order"], "To track your order, go to the Orders page from the navigation menu. You'll see real-time status updates there. 📦"),
-    (["cancel", "cancell"], "You can cancel an order before the restaurant accepts it. Go to Orders → Order Details → Cancel Order."),
-    (["payment", "pay", "stripe", "razorpay", "cod", "cash"], "Kravix supports Stripe, Razorpay, and Cash on Delivery (COD). You can choose your preferred method at checkout."),
-    (["restaurant", "nearby", "find food", "search"], "Use the search bar on the home page to find nearby restaurants. You can filter by cuisine, rating, and distance."),
-    (["delivery", "rider", "deliver"], "Once your order is picked up by a rider, you can track their location in real-time on the order tracking page."),
-    (["coupon", "discount", "promo", "offer"], "You can apply coupon codes at checkout. Check the home page or your email for active offers."),
-    (["address", "location", "deliver to"], "You can manage your saved delivery addresses from Account → Addresses."),
-    (["account", "profile", "password", "login", "register", "sign"], "You can manage your profile, change your password, and update your details from the Account page."),
-    (["review", "rating", "feedback"], "After your order is delivered, you can leave a rating and review for the restaurant from the Order Details page."),
-    (["seller", "restaurant owner", "add menu", "my restaurant"], "As a seller, manage your menu, orders, and analytics from the Restaurant Dashboard."),
-    (["earning", "income", "payout"], "Riders can view their total earnings and delivery history from the Rider Dashboard."),
-]
-
-_MOCK_INTENT_LABELS = [
-    (["track", "order status", "where is my order", "my order"], "ORDER_STATUS"),
-    (["cancel"], "ORDER_CANCEL"),
-    (["payment", "pay", "stripe", "razorpay", "cod", "cash"], "PAYMENT_INFO"),
-    (["restaurant", "nearby", "find food", "search"], "SEARCH_RESTAURANT"),
-    (["menu", "item", "dish", "food", "biriyani", "pizza", "burger", "dosa", "noodle"], "SEARCH_FOOD"),
-    (["delivery", "rider", "deliver"], "DELIVERY_STATUS"),
-    (["coupon", "discount", "promo", "offer"], "COUPON_INFO"),
-    (["address", "location", "deliver to"], "ADDRESS_MANAGEMENT"),
-    (["account", "profile", "password", "login", "register", "sign"], "ACCOUNT_MANAGEMENT"),
-    (["review", "rating", "feedback"], "REVIEW"),
-    (["earning", "income", "payout"], "EARNINGS"),
-]
-
-def _infer_mock_intent(message: str) -> str:
-    msg_lower = message.lower()
-    for keywords, label in _MOCK_INTENT_LABELS:
-        if any(kw in msg_lower for kw in keywords):
-            return label
-    return "GENERAL_QUERY"
-
 def _mock_reply(message: str, role: str, chunks) -> str:
     if _is_greeting(message):
         role_hint = {
@@ -383,41 +341,10 @@ def _mock_reply(message: str, role: str, chunks) -> str:
             "rider": "Check your current deliveries and earnings from your dashboard.",
             "admin": "Access platform analytics and user management from the admin panel.",
         }.get(role, "Browse restaurants, place orders, and track your deliveries.")
-        return f"Hi there! 👋 Welcome to Kravix. {role_hint} How can I help you today?"
-
-    msg_lower = message.lower()
-
-    if any(trigger in msg_lower for trigger in _FOOD_LISTING_TRIGGERS):
-        if _knowledge_indexer:
-            food_docs = [
-                (doc_id, doc)
-                for doc_id, doc in _knowledge_indexer.documents.items()
-                if "foods.json" in doc_id
-            ]
-            if food_docs:
-                names = []
-                for doc_id, doc in food_docs[:10]:
-                    first_line = doc.content.split(".")[0].strip()
-                    candidate = first_line.split(" is ")[0].split(" are ")[0].strip()
-                    if len(candidate.split()) > 4 or not candidate:
-                        raw_id = doc_id.split("::")[-1].replace("food_", "").replace("_", " ")
-                        candidate = raw_id.title()
-                    names.append(candidate)
-                if names:
-                    return (
-                        "Here are some popular foods available on Kravix: 🍽️\n"
-                        + ", ".join(names[:8])
-                        + ".\nSearch for any of these on the home page to find nearby restaurants serving them!"
-                    )
-
-    for keywords, response in _MOCK_INTENT_MAP:
-        if any(kw in msg_lower for kw in keywords):
-            return response
-
+        return f"Hi there! \U0001f44b Welcome to Kravix. {role_hint} How can I help you today?"
     if chunks:
         return chunks[0].content[:300].strip()
-
-    return "I'm not sure about that. You can ask me about orders, payments, restaurants, delivery, coupons, or your account."
+    return "I'm here to help with anything related to Kravix — orders, restaurants, delivery, and more. What would you like to know?"
 
 def normalize_price(price) -> int:
     try:
@@ -487,27 +414,20 @@ Identity:
 User Role: {role}
 Always tailor your response to the user's role (customer / seller / rider / admin).
 
-Behavioral Instructions:
-1. Directly address the user's specific input using the conversation history for context.
-2. ONLY use the [Retrieved Knowledge Base] if it contains information directly relevant to the user's query.
-3. CRITICAL: If the retrieved knowledge is irrelevant or does not answer the user's specific request (e.g., the user asks for "biriyani" or "food names" and the knowledge base only has platform features), DO NOT regurgitate the irrelevant knowledge. Instead, politely state that you cannot fulfill that specific request or don't have that information.
-4. Never list generic app features or policies unless explicitly asked.
-5. For casual greetings, respond warmly and offer help without summarizing any knowledge base content.
-
 Language Instructions:
 - Reply in {preferred_language}.
 
 Format Instructions:
 - You must respond ONLY with a JSON object matching this schema:
 {{
-  "reply": "your conversational text response addressing the user directly",
-  "intent": "The inferred user intent (e.g., GREETING, SEARCH_FOOD, ORDER_STATUS, FAQ)",
-  "action": "The action the app should take (e.g., NAVIGATE, SHOW_MODAL, NONE)",
+  "reply": "your text response",
+  "intent": "INTENT_NAME",
+  "action": "ACTION_NAME",
   "intent_confidence": 0.95,
-  "entities": {{"food_name": "biriyani"}},
+  "entities": {{}},
   "followUp": ["option 1", "option 2"]
 }}
-- Return raw JSON only, without any markdown formatting.
+- Return raw JSON only.
 """
 
 def parse_json_response(reply_text: str) -> Dict[str, Any]:
@@ -631,7 +551,7 @@ async def chat_endpoint(req: ChatRequest):
             history = history[-MAX_HISTORY_TURNS:]
 
         lang = LanguageResolver.detect_language(safe_message, ctx.get("preferredLanguage", "en"))
-        retrieved_chunks = _knowledge_retriever.retrieve(safe_message, role, lang, top_k=3, min_confidence=0.2)
+        retrieved_chunks = _knowledge_retriever.retrieve(safe_message, role, lang, top_k=3, min_confidence=0.2) if _knowledge_retriever else []
         dynamic_context_str = ContextInjector.inject_dynamic_context(ctx, lang)
         
         system_prompt = PromptBuilder.build_system_prompt(
@@ -672,7 +592,7 @@ async def chat_endpoint(req: ChatRequest):
                     reply = None
         else:
             reply = _mock_reply(safe_message, role, retrieved_chunks)
-            intent = "GREETING" if _is_greeting(safe_message) else _infer_mock_intent(safe_message)
+            intent = "GREETING" if _is_greeting(safe_message) else "GENERAL_QUERY"
             intent_confidence = 0.8
         
         inference_latency = (time.monotonic() - inference_start) * 1000
