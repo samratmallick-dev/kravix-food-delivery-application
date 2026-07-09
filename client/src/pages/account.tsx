@@ -80,10 +80,10 @@ const Account = () => {
                               body: JSON.stringify({ image: previewImage }),
                         });
                         const uploadData = await uploadRes.json();
-                        if (!uploadRes.ok || !uploadData.url) {
+                        if (!uploadRes.ok || !uploadData.data?.url) {
                               throw new Error(uploadData.message || "Image upload failed");
                         }
-                        imageUrl = uploadData.url;
+                        imageUrl = uploadData.data.url;
                   }
 
                   const payload: { name?: string; image?: string } = {};
