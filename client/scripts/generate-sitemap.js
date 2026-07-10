@@ -107,8 +107,7 @@ ${xmlUrls}
             fs.writeFileSync(SITEMAP_PATH, sitemapXml);
             console.log(`Successfully generated sitemap.xml with ${sortedRoutes.length} public paths!`);
       } catch (err) {
-            console.error('Error generating sitemap:', err);
-            process.exit(1);
+            console.warn('Warning: sitemap generation failed (non-fatal):', err.message);
       }
 }
 
