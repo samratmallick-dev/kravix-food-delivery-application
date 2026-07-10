@@ -1,14 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /cart
-Disallow: /checkout
-Disallow: /payment-success/
-Disallow: /ordersuccess
-Disallow: /order-success/
-Disallow: /orders/
-Disallow: /address
-Disallow: /account
-Disallow: /select-role
 
 Sitemap: https://kravix-nu.vercel.app/sitemap.xml
