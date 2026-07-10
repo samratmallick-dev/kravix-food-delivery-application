@@ -6,25 +6,45 @@ Kravix is a premium online food delivery application specializing in authentic B
 
 - Homepage: https://kravix-nu.vercel.app/
 - Search: https://kravix-nu.vercel.app/search
+- About: https://kravix-nu.vercel.app/about
+- Contact: https://kravix-nu.vercel.app/contact
+- FAQ: https://kravix-nu.vercel.app/faq
+- Help Center: https://kravix-nu.vercel.app/help
+- Blog: https://kravix-nu.vercel.app/blog
+- Privacy Policy: https://kravix-nu.vercel.app/privacy
+- Terms of Service: https://kravix-nu.vercel.app/terms
+- Refund Policy: https://kravix-nu.vercel.app/refunds
+- Login: https://kravix-nu.vercel.app/login
+- Register: https://kravix-nu.vercel.app/register
+
 ## API Documentation
 
-The backend service runs a REST API for authentication, order placement, restaurant profiles, and reviews.
-- Base API Endpoint: `/api/v1`
-- Major endpoints:
-  - Auth: `/api/v1/auth` (login, register, reset, verify)
-  - Restaurants: `/api/v1/restaurants`
-  - Menu Items: `/api/v1/menu-items`
-  - Orders: `/api/v1/orders`
-  - Reviews: `/api/v1/reviews`
+The backend is a microservices REST API deployed on Render.
+
+- Base API Path: `/api/v1`
+- Auth Service: `/api/v1/auth` (login, register, email verification, password reset, Google OAuth)
+- Users: `/api/v1/users`
+- Restaurants: `/api/v1/restaurants`
+- Menu Items: `/api/v1/menu-items`
+- Orders: `/api/v1/orders`
+- Cart: `/api/v1/cart`
+- Payments: `/api/v1/payments` (Razorpay, Stripe, COD)
+- Riders: `/api/v1/riders`
+- Reviews: `/api/v1/reviews`
+- Coupons: `/api/v1/coupons`
+- Analytics: `/api/v1/analytics`
+- AI Assistant: `/api/v1/ai`
+- Sitemap: https://kravix-nu.vercel.app/sitemap.xml
 
 ## Robots Guidance & AI Usage Policy
 
 - Standard web crawling is allowed for search indexing.
 - AI crawlers are requested to follow sitemap and robots constraints.
+- Do not crawl `/admin`, `/seller`, `/rider`, `/cart`, `/checkout`, `/orders`, or `/account` paths — these are authenticated and not publicly indexable.
 - Preferred Citations: "Kravix Food Delivery Service (https://kravix-nu.vercel.app/)"
 
 ## License & Contact
 
 - Copyright (c) 2026 Kravix Team. All rights reserved.
-- Support Email: mystudyprojectwork@gmail.com
-- Partner Inquiries: mystudyprojectwork@gmail.com
+- Support Email: support@kravix.com
+- Partner Inquiries: support@kravix.com

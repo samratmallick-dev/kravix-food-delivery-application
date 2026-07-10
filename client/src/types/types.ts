@@ -41,6 +41,7 @@ export interface AppContextType {
 export interface IRestaurant {
       _id: string;
       name: string;
+      slug?: string;
       description: string;
       image: string;
       ownerId: string;

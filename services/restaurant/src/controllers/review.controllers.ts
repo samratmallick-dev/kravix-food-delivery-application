@@ -1,7 +1,7 @@
 import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../middleware/isAuthenticated.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
-import { reviewService } from "../services/index.js";
+import { reviewService, restaurantService } from "../services/index.js";
 import { RestaurantValidator } from "../validators/restaurant.validator.js";
 import { AuthorizationError } from "../utils/errors.js";
 import { successResponse, errorResponse } from "../utils/response.js";
@@ -35,8 +35,9 @@ export const getRestaurantReviews = TryCatch(async (req: AuthenticatedRequest, r
   const { id } = req.params;
   const { rating, sortBy, order } = req.query;
 
+  const restaurant = await restaurantService.getRestaurantDetails(id as string);
   const result = await reviewService.getRestaurantReviews(
-    id as string,
+    restaurant.id,
     rating ? Number(rating) : undefined,
     sortBy as string,
     order as string

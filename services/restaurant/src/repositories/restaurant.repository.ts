@@ -11,6 +11,12 @@ export class RestaurantRepository implements IRestaurantRepository {
     return RestaurantMapper.toDomain(raw);
   }
 
+  async findBySlug(slug: string): Promise<Restaurant | null> {
+    const raw = await RestaurantModel.findOne({ slug }).lean();
+    if (!raw) return null;
+    return RestaurantMapper.toDomain(raw);
+  }
+
   async findByOwner(ownerId: string): Promise<Restaurant | null> {
     const raw = await RestaurantModel.findOne({ ownerId }).lean();
     if (!raw) return null;

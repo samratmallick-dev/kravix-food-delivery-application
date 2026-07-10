@@ -38,14 +38,14 @@ export class OrderRepository implements IOrderRepository {
 
   async countByStatusPaid(): Promise<any> {
     return await OrderModel.aggregate([
-      { $match: { paymentStatus: "paid" } },
+      { $match: { paymentStatus: { $in: ["paid", "cod_paid"] } } },
       { $group: { _id: "$status", count: { $sum: 1 } } }
     ]);
   }
 
   async getTotalPaidRevenue(): Promise<number> {
     const res = await OrderModel.aggregate([
-      { $match: { paymentStatus: "paid" } },
+      { $match: { paymentStatus: { $in: ["paid", "cod_paid"] } } },
       { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } }
     ]);
     return res[0]?.totalRevenue ?? 0;

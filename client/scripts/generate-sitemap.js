@@ -14,11 +14,22 @@ const PRIORITY_SCORES = {
       '/about': 0.8,
       '/contact': 0.8,
       '/faq': 0.8,
-      '/careers': 0.7,
+      '/help': 0.7,
       '/blog': 0.7,
-      '/login': 0.5,
-      '/register': 0.5,
+      '/privacy': 0.5,
+      '/terms': 0.5,
+      '/refunds': 0.5,
+      '/login': 0.4,
+      '/register': 0.4,
 };
+
+const EXCLUDED_PATHS = new Set([
+      'dashboard', 'users', 'restaurants', 'riders', 'orders',
+      'analytics', 'coupons', 'reviews', 'cart', 'checkout',
+      'address', 'account', 'select-role', 'payment-success',
+      'order-success', 'ordersuccess', 'verify-email',
+      'forgot-password', 'reset-password',
+]);
 
 function generateSitemap() {
       try {
@@ -28,10 +39,10 @@ function generateSitemap() {
             }
 
             const appContent = fs.readFileSync(APP_TSX_PATH, 'utf-8');
-            
-            const pathRegex = /path=["']([^"']+)["']/g;
+
+            const pathRegex = /path=[\"']([^\"']+)[\"']/g;
             const extractedRoutes = new Set();
-            
+
             let match;
             while ((match = pathRegex.exec(appContent)) !== null) {
                   const routePath = match[1];
@@ -48,12 +59,7 @@ function generateSitemap() {
                         cleaned.startsWith('admin') ||
                         cleaned.startsWith('seller') ||
                         cleaned.startsWith('rider') ||
-                        [
-                              'dashboard', 'users', 'restaurants', 'riders', 'orders', 
-                              'analytics', 'coupons', 'reviews', 'cart', 'checkout', 
-                              'address', 'account', 'select-role', 'payment-success', 
-                              'order-success', 'ordersuccess'
-                        ].includes(cleaned)
+                        EXCLUDED_PATHS.has(cleaned)
                   );
             };
 
@@ -69,11 +75,20 @@ function generateSitemap() {
                   cleanRoutes.unshift('/');
             }
 
-            const xmlUrls = cleanRoutes.map(route => {
+            const sortedRoutes = cleanRoutes.sort((a, b) => {
+                  const pa = PRIORITY_SCORES[a] ?? 0.6;
+                  const pb = PRIORITY_SCORES[b] ?? 0.6;
+                  return pb - pa;
+            });
+
+            const now = new Date().toISOString().split('T')[0];
+
+            const xmlUrls = sortedRoutes.map(route => {
                   const priority = PRIORITY_SCORES[route] !== undefined ? PRIORITY_SCORES[route] : 0.6;
                   const changefreq = route === '/' || route === '/search' ? 'daily' : 'weekly';
                   return `  <url>
     <loc>https://kravix-nu.vercel.app${route === '/' ? '' : route}</loc>
+    <lastmod>${now}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority.toFixed(1)}</priority>
   </url>`;
@@ -85,12 +100,12 @@ ${xmlUrls}
 </urlset>`;
 
             const dir = path.dirname(SITEMAP_PATH);
-            if (!fs.existsSync(dir)){
+            if (!fs.existsSync(dir)) {
                   fs.mkdirSync(dir, { recursive: true });
             }
 
             fs.writeFileSync(SITEMAP_PATH, sitemapXml);
-            console.log(`Successfully generated sitemap.xml with ${cleanRoutes.length} public paths!`);
+            console.log(`Successfully generated sitemap.xml with ${sortedRoutes.length} public paths!`);
       } catch (err) {
             console.error('Error generating sitemap:', err);
             process.exit(1);

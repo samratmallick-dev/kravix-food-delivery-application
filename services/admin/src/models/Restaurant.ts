@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface IRestaurant extends Document {
       name: string;
+      slug: string;
       description: string;
       image: string;
       ownerId: string;
@@ -22,6 +23,13 @@ const restaurantSchema = new Schema<IRestaurant>(
             name: {
                   type: String,
                   required: true,
+                  trim: true,
+            },
+            slug: {
+                  type: String,
+                  required: true,
+                  unique: true,
+                  lowercase: true,
                   trim: true,
             },
             description: {
@@ -62,6 +70,7 @@ const restaurantSchema = new Schema<IRestaurant>(
 );
 
 restaurantSchema.index({ autoLocation: "2dsphere" });
+restaurantSchema.index({ slug: 1 }, { unique: true });
 
 export const Restaurant =
       (mongoose.models["Restaurant"] as mongoose.Model<IRestaurant>) ||

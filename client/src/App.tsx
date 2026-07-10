@@ -38,6 +38,14 @@ const AdminOrders = lazy(() => import("./admin/pages/AdminOrders"));
 const AdminAnalytics = lazy(() => import("./admin/pages/AdminAnalytics"));
 const AdminCoupons = lazy(() => import("./admin/pages/AdminCoupons"));
 const AdminReviews = lazy(() => import("./admin/pages/AdminReviews"));
+const About = lazy(() => import("./pages/about"));
+const Help = lazy(() => import("./pages/help"));
+const Privacy = lazy(() => import("./pages/privacy"));
+const Terms = lazy(() => import("./pages/terms"));
+const Refunds = lazy(() => import("./pages/refunds"));
+const Blog = lazy(() => import("./pages/blog"));
+const Contact = lazy(() => import("./pages/contact"));
+const FAQ = lazy(() => import("./pages/faq"));
 
 const App = () => {
       const { loading } = useAppData();
@@ -67,6 +75,30 @@ const App = () => {
                                     <Route path="/register" element={<RegisterPage />} />
                                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                                     <Route path="/reset-password" element={<ResetPasswordPage />} />
+                              </Route>
+                              <Route element={
+                                    <>
+                                          <a 
+                                                href="#main-content" 
+                                                className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded-lg z-50 font-bold focus:outline-none"
+                                          >
+                                                Skip to main content
+                                          </a>
+                                          <Navbar />
+                                          <main id="main-content" className="flex-1 min-h-[60vh] focus:outline-none" tabIndex={-1}>
+                                                <Outlet />
+                                          </main>
+                                          <Footer />
+                                    </>
+                              }>
+                                    <Route path="/about" element={<About />} />
+                                    <Route path="/help" element={<Help />} />
+                                    <Route path="/privacy" element={<Privacy />} />
+                                    <Route path="/terms" element={<Terms />} />
+                                    <Route path="/refunds" element={<Refunds />} />
+                                    <Route path="/blog" element={<Blog />} />
+                                    <Route path="/contact" element={<Contact />} />
+                                    <Route path="/faq" element={<FAQ />} />
                               </Route>
                               <Route element={<ProtectedRoutes />}>
                                     <Route path="/seller" element={<Restaurant />} />

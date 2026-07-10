@@ -60,12 +60,13 @@ export const getAllMenuItems = TryCatch(async (req: AuthenticatedRequest, res: R
     return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
   }
 
-  const restaurantId = req.params["restaurantId"] as string;
-  if (!restaurantId) {
+  const restaurantIdOrSlug = req.params["restaurantId"] as string;
+  if (!restaurantIdOrSlug) {
     throw new ValidationError("Restaurant ID is required");
   }
 
-  const menuItems = await menuItemService.getMenuItems(restaurantId);
+  const restaurant = await restaurantService.getRestaurantDetails(restaurantIdOrSlug);
+  const menuItems = await menuItemService.getMenuItems(restaurant.id);
   return successResponse(res, 200, "Menu items fetched successfully", menuItems.map(RestaurantResponseMapper.toMenuItemDto));
 });
 

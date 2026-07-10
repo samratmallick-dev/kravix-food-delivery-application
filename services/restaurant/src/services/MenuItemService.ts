@@ -231,13 +231,13 @@ export class MenuItemService implements IMenuItemService {
         $or: [{ name: { $regex: expandedRegex } }, { description: { $regex: expandedRegex } }],
         isVerified: true,
         _id: proximityFilter
-      }).select("name image").limit(4).lean(),
+      }).select("name image slug").limit(4).lean(),
 
       RestaurantModel.find({
         $or: [{ name: { $regex: rawRegex } }, { description: { $regex: rawRegex } }],
         isVerified: true,
         _id: proximityFilter
-      }).select("name image").limit(4).lean()
+      }).select("name image slug").limit(4).lean()
     ]);
 
     const finalFood = foodByExpanded.length > 0
@@ -260,7 +260,7 @@ export class MenuItemService implements IMenuItemService {
 
     const suggestions = [
       ...finalRestaurants.slice(0, 4).map((r: any) => ({
-        id: r._id.toString(),
+        id: r.slug || r._id.toString(),
         name: r.name,
         image: r.image || "",
         type: "Restaurant" as const

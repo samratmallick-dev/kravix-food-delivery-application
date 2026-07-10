@@ -3,18 +3,20 @@ import { MapPin } from "lucide-react";
 
 type RestaurantProps = {
       id: string;
+      slug?: string;
       name: string;
       image: string;
       distance: string;
       isOpen: boolean;
 };
 
-const RestaurantsCard = ({ id, name, image, distance, isOpen }: RestaurantProps) => {
+const RestaurantsCard = ({ id, slug, name, image, distance, isOpen }: RestaurantProps) => {
       const navigate = useNavigate();
+      const identifier = slug || id;
       const handleKeyDown = (e: React.KeyboardEvent) => {
             if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  navigate(`/restaurant/${id}`);
+                  navigate(`/restaurant/${identifier}`);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
             }
       };
@@ -24,7 +26,7 @@ const RestaurantsCard = ({ id, name, image, distance, isOpen }: RestaurantProps)
       return (
             <div
                   onClick={() => {
-                        navigate(`/restaurant/${id}`);
+                        navigate(`/restaurant/${identifier}`);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   onKeyDown={handleKeyDown}

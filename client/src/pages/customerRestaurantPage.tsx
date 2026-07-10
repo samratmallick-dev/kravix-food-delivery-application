@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import type { IMenuItem, IRestaurant, IReview } from "../types/types";
 import type { ReviewRatingsSummary } from "../utils/review.api";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchSingleRestaurant } from "../utils/restaurant.api";
 import { getAllMenuItems } from "../utils/menu.api";
 import { getRestaurantReviews, reportReview } from "../utils/review.api";
@@ -28,17 +28,27 @@ const CustomerRestaurantPage = () => {
       const [loading, setLoading] = useState(true);
       const [activeTab, setActiveTab] = useState<"menu" | "reviews">("menu");
       const [summary, setSummary] = useState<ReviewRatingsSummary | null>(null);
+      const fetchedIdRef = useRef<string | null>(null);
 
       const loadRestaurantData = async () => {
             if (!id) return;
+            if (fetchedIdRef.current === id) return;
             try {
                   setLoading(true);
                   const [resData, menuData] = await Promise.all([
                         fetchSingleRestaurant(id),
                         getAllMenuItems(id)
                   ]);
-                  setRestaurant(resData.data || null);
+                  const rest = resData.data || null;
+                  setRestaurant(rest);
                   setMenuItem(Array.isArray(menuData.data) ? menuData.data : []);
+                  if (rest) {
+                        fetchedIdRef.current = id;
+                        if (rest.slug && id !== rest.slug) {
+                              fetchedIdRef.current = rest.slug;
+                              navigate(`/restaurant/${rest.slug}`, { replace: true });
+                        }
+                  }
             } catch (error: any) {
                   console.log(error);
                   if (error.status === 404) {
@@ -104,7 +114,7 @@ const CustomerRestaurantPage = () => {
             "@graph": [
                   {
                         "@type": "Restaurant",
-                        "@id": `https://kravix-nu.vercel.app/restaurant/${restaurant._id}#restaurant`,
+                        "@id": `https://kravix-nu.vercel.app/restaurant/${restaurant.slug || restaurant._id}#restaurant`,
                         "name": restaurant.name,
                         "image": restaurant.image,
                         "description": restaurant.description || `Order fresh meals online from ${restaurant.name}.`,
@@ -121,7 +131,7 @@ const CustomerRestaurantPage = () => {
                               "latitude": resLat,
                               "longitude": resLong
                         },
-                        "url": `https://kravix-nu.vercel.app/restaurant/${restaurant._id}`,
+                        "url": `https://kravix-nu.vercel.app/restaurant/${restaurant.slug || restaurant._id}`,
                         ...(summary ? {
                               "aggregateRating": {
                                     "@type": "AggregateRating",
@@ -131,7 +141,7 @@ const CustomerRestaurantPage = () => {
                         } : {}),
                         "hasMenu": {
                               "@type": "Menu",
-                              "@id": `https://kravix-nu.vercel.app/restaurant/${restaurant._id}#menu`,
+                              "@id": `https://kravix-nu.vercel.app/restaurant/${restaurant.slug || restaurant._id}#menu`,
                               "name": `${restaurant.name} Menu`,
                               "hasMenuSection": menuItem.length > 0 ? Array.from(new Set(menuItem.map(m => m.category))).map(cat => ({
                                     "@type": "MenuSection",
@@ -168,7 +178,7 @@ const CustomerRestaurantPage = () => {
                                     "@type": "ListItem",
                                     "position": 3,
                                     "name": restaurant.name,
-                                    "item": `https://kravix-nu.vercel.app/restaurant/${restaurant._id}`
+                                    "item": `https://kravix-nu.vercel.app/restaurant/${restaurant.slug || restaurant._id}`
                               }
                         ]
                   }
@@ -180,7 +190,7 @@ const CustomerRestaurantPage = () => {
                   <SEO
                         title={`${restaurant.name} | Kravix`}
                         description={`Order online from ${restaurant.name} on Kravix. Explore their menu of ${restaurant.description || "delicious cuisines"} for fast, hot delivery.`}
-                        path={`/restaurant/${restaurant._id}`}
+                        path={`/restaurant/${restaurant.slug || restaurant._id}`}
                         image={restaurant.image}
                         type="restaurant"
                   />

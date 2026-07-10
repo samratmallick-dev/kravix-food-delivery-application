@@ -5,6 +5,7 @@ export class RestaurantMapper {
     return new Restaurant(
       raw._id.toString(),
       raw.name,
+      raw.slug || "",
       raw.description || "",
       raw.image,
       raw.ownerId,
@@ -21,6 +22,7 @@ export class RestaurantMapper {
   static toPersistence(domain: Restaurant): any {
     return {
       name: domain.name,
+      slug: domain.slug,
       description: domain.description,
       image: domain.image,
       ownerId: domain.ownerId,

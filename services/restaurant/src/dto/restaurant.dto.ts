@@ -46,6 +46,7 @@ export interface PlaceOrderRequestDto {
 export interface RestaurantResponseDto {
   _id: string;
   name: string;
+  slug: string;
   description: string;
   image: string;
   ownerId: string;

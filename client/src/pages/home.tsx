@@ -12,7 +12,7 @@ import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
 import SEO from "../components/common/SEO";
 import StructuredData from "../components/common/StructuredData";
-import { Zap, Shield, Clock, Heart, Loader, MapPin } from "lucide-react";
+import { Zap, Shield, Clock, Heart, Loader, MapPin, ChevronDown } from "lucide-react";
 import { getAvailableCategories } from "../utils/menu.api";
 import type { ICategory } from "../utils/menu.api";
 
@@ -23,6 +23,7 @@ const Home = () => {
       const { location, locationLoading, detectUserLocation } = useAppData();
       const [searchParams] = useSearchParams();
       const isMobile = useMobile();
+      const [activeFaq, setActiveFaq] = useState<number | null>(null);
       const { socket } = useSocket();
 
       const search = searchParams.get("search") || "";
@@ -214,24 +215,24 @@ const Home = () => {
                   <FeatureBanmner />
 
                   <section aria-labelledby="why-kravix-heading" className="container-app py-6">
-                        <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-10 shadow-xs space-y-6">
+                        <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-10 shadow-xs space-y-8">
                               <div className="text-center max-w-xl mx-auto space-y-2">
-                                    <h2 id="why-kravix-heading" className="text-2xl font-black text-gray-800">Why Choose Kravix Food Delivery?</h2>
-                                    <p className="text-xs text-text-secondary font-semibold">We offer the smartest way to order fresh and delicious food online.</p>
+                                    <h2 id="why-kravix-heading" className="text-2xl md:text-3xl font-black text-gray-800 tracking-tight">Why Choose Kravix Food Delivery?</h2>
+                                    <p className="text-xs md:text-sm text-text-secondary font-semibold">We offer the smartest way to order fresh and delicious food online.</p>
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                     {[
-                                          { icon: Zap, title: "Lightning Fast Delivery", desc: "Our localized riders ensure your favorite meals arrive hot and fresh within 30 minutes of preparation." },
-                                          { icon: Shield, title: "Hygiene Guaranteed", desc: "We partner exclusively with restaurants that maintain strict contactless preparation standards." },
-                                          { icon: Clock, title: "Live Order Tracking", desc: "Track your food order in real-time from the kitchen counter all the way to your door." },
-                                          { icon: Heart, title: "AI-Powered Recommendations", desc: "Get smart recommendations based on your cuisine preferences and location history." }
+                                          { icon: Zap, title: "Lightning Fast Delivery", desc: "Our localized riders ensure your favorite meals arrive hot and fresh within 30 minutes of preparation.", border: "hover:border-amber-200 hover:shadow-amber-100/40", badge: "text-amber-500 bg-amber-500/10" },
+                                          { icon: Shield, title: "Hygiene Guaranteed", desc: "We partner exclusively with restaurants that maintain strict contactless preparation standards.", border: "hover:border-emerald-200 hover:shadow-emerald-100/40", badge: "text-emerald-500 bg-emerald-500/10" },
+                                          { icon: Clock, title: "Live Order Tracking", desc: "Track your food order in real-time from the kitchen counter all the way to your door.", border: "hover:border-blue-200 hover:shadow-blue-100/40", badge: "text-blue-500 bg-blue-500/10" },
+                                          { icon: Heart, title: "AI-Powered Recommendations", desc: "Get smart recommendations based on your cuisine preferences and location history.", border: "hover:border-rose-200 hover:shadow-rose-100/40", badge: "text-rose-500 bg-rose-500/10" }
                                     ].map((item, idx) => (
-                                          <div key={idx} className="flex flex-col items-center text-center p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50 hover:shadow-xs transition-shadow duration-200">
-                                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                                                      <item.icon className="w-6 h-6 text-primary" />
+                                          <div key={idx} className={`flex flex-col items-center text-center p-6 bg-white rounded-2xl border border-gray-100 shadow-3xs transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg group ${item.border}`}>
+                                                <div className={`w-12 h-12 rounded-2xl ${item.badge} flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110`}>
+                                                      <item.icon className="w-5 h-5" />
                                                 </div>
-                                                <h3 className="text-sm font-bold text-gray-800 mb-1">{item.title}</h3>
-                                                <p className="text-xs text-text-secondary leading-relaxed font-semibold">{item.desc}</p>
+                                                <h3 className="text-xs md:text-sm font-bold text-gray-800 mb-2">{item.title}</h3>
+                                                <p className="text-[11px] md:text-xs text-text-secondary leading-relaxed font-semibold">{item.desc}</p>
                                           </div>
                                     ))}
                               </div>
@@ -360,6 +361,7 @@ const Home = () => {
                                                       return <RestaurantsCard
                                                             key={restaurant._id}
                                                             id={restaurant._id}
+                                                            slug={restaurant.slug}
                                                             name={restaurant.name}
                                                             image={restaurant.image ?? ""}
                                                             distance={`${distance}`}
@@ -375,57 +377,111 @@ const Home = () => {
                   </section>
 
                   <section aria-labelledby="cuisine-heading" className="container-app py-6">
-                        <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-10 shadow-xs space-y-6">
-                              <h2 id="cuisine-heading" className="text-2xl font-black text-gray-800 text-center">Explore Our Curated Cuisines</h2>
+                        <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-10 shadow-xs space-y-8">
+                              <h2 id="cuisine-heading" className="text-2xl md:text-3xl font-black text-gray-800 text-center tracking-tight">Explore Our Curated Cuisines</h2>
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <article className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100/50 flex flex-col justify-between">
-                                          <div className="space-y-2">
-                                                <h3 className="text-base font-bold text-gray-800">Authentic Bengali Cuisine</h3>
-                                                <p className="text-xs text-text-secondary leading-relaxed font-semibold">
-                                                      Savor the traditional tastes of Bengal. From delectable Macher Jhol (fish curry) and Kosha Mangsho (mutton) to sweet treats like Rosogolla and Sandesh, our partners serve it authentic.
-                                                </p>
-                                          </div>
-                                          <Link to="/search?search=bengali&type=food" className="text-xs font-bold text-primary hover:underline mt-4 inline-block">Order Bengali Food &rarr;</Link>
-                                    </article>
-                                    <article className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100/50 flex flex-col justify-between">
-                                          <div className="space-y-2">
-                                                <h3 className="text-base font-bold text-gray-800">Traditional Indian Specialties</h3>
-                                                <p className="text-xs text-text-secondary leading-relaxed font-semibold">
-                                                      Indulge in rich culinary traditions from North to South India. Experience slow-cooked biryani, buttery paneer, warm tandoori naan, and fragrant curries.
-                                                </p>
-                                          </div>
-                                          <Link to="/search?search=indian&type=food" className="text-xs font-bold text-primary hover:underline mt-4 inline-block">Order Indian Food &rarr;</Link>
-                                    </article>
-                                    <article className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100/50 flex flex-col justify-between">
-                                          <div className="space-y-2">
-                                                <h3 className="text-base font-bold text-gray-800">Asian & Multi-Cuisine Delights</h3>
-                                                <p className="text-xs text-text-secondary leading-relaxed font-semibold">
-                                                      From Chinese dim sums and street style noodles to Italian pizzas and Continental treats, satisfy your global cravings instantly.
-                                                </p>
-                                          </div>
-                                          <Link to="/search?search=chinese&type=food" className="text-xs font-bold text-primary hover:underline mt-4 inline-block">Order Asian Food &rarr;</Link>
-                                    </article>
+                                    {[
+                                          {
+                                                title: "Authentic Bengali Cuisine",
+                                                desc: "Savor the traditional tastes of Bengal. From delectable Macher Jhol (fish curry) and Kosha Mangsho (mutton) to sweet treats like Rosogolla and Sandesh, our partners serve it authentic.",
+                                                link: "/search?search=bengali&type=food",
+                                                label: "Order Bengali Food",
+                                                gradient: "from-amber-500/20 to-red-500/10",
+                                                border: "hover:border-amber-200 hover:shadow-amber-100/30"
+                                          },
+                                          {
+                                                title: "Traditional Indian Specialties",
+                                                desc: "Indulge in rich culinary traditions from North to South India. Experience slow-cooked biryani, buttery paneer, warm tandoori naan, and fragrant curries.",
+                                                link: "/search?search=indian&type=food",
+                                                label: "Order Indian Food",
+                                                gradient: "from-orange-500/20 to-amber-500/10",
+                                                border: "hover:border-orange-200 hover:shadow-orange-100/30"
+                                          },
+                                          {
+                                                title: "Asian & Multi-Cuisine Delights",
+                                                desc: "From Chinese dim sums and street style noodles to Italian pizzas and Continental treats, satisfy your global cravings instantly.",
+                                                link: "/search?search=chinese&type=food",
+                                                label: "Order Asian Food",
+                                                gradient: "from-rose-500/20 to-purple-500/10",
+                                                border: "hover:border-rose-200 hover:shadow-rose-100/30"
+                                          }
+                                    ].map((cuisine, idx) => (
+                                          <article 
+                                                key={idx} 
+                                                className={`bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-3xs flex flex-col justify-between transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg group ${cuisine.border}`}
+                                          >
+                                                <div className={`h-24 bg-gradient-to-br ${cuisine.gradient} p-5 flex items-end shrink-0`}>
+                                                      <h3 className="text-xs md:text-sm font-black text-gray-800 uppercase tracking-wider">{cuisine.title}</h3>
+                                                </div>
+                                                <div className="p-5 flex flex-col flex-1 justify-between gap-4">
+                                                      <p className="text-[11px] md:text-xs text-text-secondary leading-relaxed font-semibold">
+                                                            {cuisine.desc}
+                                                      </p>
+                                                      <Link 
+                                                            to={cuisine.link} 
+                                                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                                            className="w-full text-center py-2.5 rounded-xl border border-primary/20 text-primary font-bold text-xs hover:bg-primary hover:text-white hover:border-transparent transition-all duration-300 select-none block"
+                                                      >
+                                                            {cuisine.label} &rarr;
+                                                      </Link>
+                                                </div>
+                                          </article>
+                                    ))}
                               </div>
                         </div>
                   </section>
 
                   <section aria-labelledby="faq-heading" className="container-app py-6">
-                        <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-10 shadow-xs space-y-6">
-                              <h2 id="faq-heading" className="text-2xl font-black text-gray-800 text-center">Kravix Food Delivery FAQs</h2>
+                        <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-10 shadow-xs space-y-8">
+                              <h2 id="faq-heading" className="text-2xl md:text-3xl font-black text-gray-800 text-center tracking-tight">Kravix Food Delivery FAQs</h2>
                               <div className="max-w-2xl mx-auto space-y-4">
                                     {[
                                           { q: "Which areas does Kravix deliver to?", a: "We primarily operate in Kolkata and surrounding areas in West Bengal, delivering within a 10 KM radius of our listed partner restaurants." },
                                           { q: "How do I join as a Partner or Rider?", a: "We welcome local businesses and delivery personnel! You can register as a partner by clicking Become a Partner or apply to be a courier on the Become a Rider page." },
                                           { q: "Is there a contact number for support?", a: "Yes, you can contact our 24/7 help desk through the Contact Us page or drop an email directly to support@kravix.com." }
-                                    ].map((faq, index) => (
-                                          <details key={index} className="group border border-gray-100 rounded-xl p-4 bg-gray-50/30 hover:bg-gray-50 transition-colors">
-                                                <summary className="flex justify-between items-center cursor-pointer font-bold text-sm text-gray-800 focus:outline-none">
-                                                      <span>{faq.q}</span>
-                                                      <span className="text-primary group-open:-rotate-180 transition-transform duration-200">↓</span>
-                                                </summary>
-                                                <p className="mt-3 text-xs text-text-secondary leading-relaxed font-semibold">{faq.a}</p>
-                                          </details>
-                                    ))}
+                                    ].map((faq, index) => {
+                                          const isOpen = activeFaq === index;
+                                          return (
+                                                <div 
+                                                      key={index} 
+                                                      className={`bg-white rounded-2xl border transition-all duration-300 overflow-hidden shadow-3xs ${
+                                                            isOpen ? "border-primary/20 shadow-xs ring-2 ring-primary/5" : "border-gray-100 hover:border-gray-250"
+                                                      }`}
+                                                >
+                                                      <button
+                                                            type="button"
+                                                            onClick={() => setActiveFaq(isOpen ? null : index)}
+                                                            className="w-full flex justify-between items-center p-5 text-left font-bold text-xs md:text-sm text-gray-850 cursor-pointer select-none focus:outline-none"
+                                                      >
+                                                            <span>{faq.q}</span>
+                                                            <ChevronDown 
+                                                                  size={16} 
+                                                                  className={`text-primary transition-transform duration-300 shrink-0 ml-4 ${
+                                                                        isOpen ? "rotate-180" : ""
+                                                                  }`} 
+                                                            />
+                                                      </button>
+                                                      <div 
+                                                            className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                                                                  isOpen ? "max-h-40 border-t border-gray-50" : "max-h-0"
+                                                            }`}
+                                                      >
+                                                            <p className="p-5 text-[11px] md:text-xs text-text-secondary leading-relaxed font-semibold">
+                                                                  {faq.a}
+                                                            </p>
+                                                      </div>
+                                                </div>
+                                          );
+                                    })}
+                              </div>
+                              <div className="text-center pt-2">
+                                    <Link 
+                                          to="/faq" 
+                                          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                          className="text-xs md:text-sm font-bold text-primary hover:underline inline-flex items-center gap-1 hover:scale-102 transition-transform"
+                                    >
+                                          View all FAQs &rarr;
+                                    </Link>
                               </div>
                         </div>
                   </section>

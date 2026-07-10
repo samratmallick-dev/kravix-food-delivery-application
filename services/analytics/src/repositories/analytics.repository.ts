@@ -1,9 +1,9 @@
 import { IAnalyticsRepository } from "../interfaces/IAnalyticsRepository.js";
-import { Order, Restaurant, User, Rider, Review } from "../model/SharedModels.js";
+import { Order, Restaurant, User, Rider } from "../model/SharedModels.js";
 
 export class AnalyticsRepository implements IAnalyticsRepository {
   private buildMatchStage(startDate?: Date, endDate?: Date, restaurantId?: string): any {
-    const match: any = { paymentStatus: "paid" };
+    const match: any = { paymentStatus: { $in: ["paid", "cod_paid"] } };
 
     if (restaurantId) {
       match.restaurantId = restaurantId;
@@ -163,7 +163,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
           _id: 0,
           itemId: "$_id",
           name: 1,
-          quantity: 1,
+          quantitySold: "$quantity",
           revenue: { $round: ["$revenue", 2] }
         }
       }
@@ -173,34 +173,37 @@ export class AnalyticsRepository implements IAnalyticsRepository {
   async computePeakOrderHours(startDate?: Date, endDate?: Date, restaurantId?: string): Promise<any[]> {
     const matchStage = this.buildMatchStage(startDate, endDate, restaurantId);
 
-    return await Order.aggregate([
+    const raw = await Order.aggregate([
       { $match: matchStage },
       {
         $group: {
           _id: { $hour: "$createdAt" },
-          orders: { $sum: 1 }
+          ordersCount: { $sum: 1 }
         }
       },
-      { $sort: { _id: 1 } },
-      {
-        $project: {
-          _id: 0,
-          hour: "$_id",
-          orders: 1
-        }
-      }
+      { $sort: { _id: 1 } }
     ]);
+
+    const hourMap = new Map<number, number>();
+    for (const entry of raw) {
+      hourMap.set(entry._id, entry.ordersCount);
+    }
+
+    return Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      ordersCount: hourMap.get(hour) ?? 0
+    }));
   }
 
   async computeTopRestaurants(startDate?: Date, endDate?: Date, limit = 5): Promise<any[]> {
     const matchStage = this.buildMatchStage(startDate, endDate);
 
-    return await Order.aggregate([
+    const raw = await Order.aggregate([
       { $match: matchStage },
       {
         $group: {
           _id: "$restaurantId",
-          restaurantName: { $first: "$restaurantName" },
+          name: { $first: "$restaurantName" },
           orders: { $sum: 1 },
           revenue: { $sum: "$totalAmount" }
         }
@@ -211,17 +214,23 @@ export class AnalyticsRepository implements IAnalyticsRepository {
         $project: {
           _id: 0,
           restaurantId: "$_id",
-          restaurantName: 1,
-          orders: 1,
+          name: 1,
+          ordersCount: "$orders",
           revenue: { $round: ["$revenue", 2] }
         }
       }
     ]);
+
+    return raw;
   }
 
   async computeUserGrowth(startDate?: Date, endDate?: Date): Promise<any[]> {
-    const match: any = { role: "customer" };
+    let initialCount = 0;
+    if (startDate) {
+      initialCount = await User.countDocuments({ createdAt: { $lt: startDate } });
+    }
 
+    const match: any = {};
     if (startDate || endDate) {
       match.createdAt = {};
       if (startDate) {
@@ -234,7 +243,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       }
     }
 
-    return await User.aggregate([
+    const rawGrowth = await User.aggregate([
       { $match: match },
       {
         $group: {
@@ -246,42 +255,47 @@ export class AnalyticsRepository implements IAnalyticsRepository {
           count: { $sum: 1 }
         }
       },
-      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
-      {
-        $project: {
-          _id: 0,
-          date: {
-            $concat: [
-              { $toString: "$_id.year" },
-              "-",
-              { $cond: [{ $lt: ["$_id.month", 10] }, "0", ""] },
-              { $toString: "$_id.month" },
-              "-",
-              { $cond: [{ $lt: ["$_id.day", 10] }, "0", ""] },
-              { $toString: "$_id.day" }
-            ]
-          },
-          newUsers: "$count"
-        }
-      }
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } }
     ]);
+
+    let runningTotal = initialCount;
+    return rawGrowth.map((g) => {
+      const date = `${g._id.year}-${String(g._id.month).padStart(2, "0")}-${String(g._id.day).padStart(2, "0")}`;
+      runningTotal += g.count;
+      return {
+        date,
+        newRegistrations: g.count,
+        totalUsers: runningTotal
+      };
+    });
   }
 
   async computeRiderPerformance(limit = 5): Promise<any[]> {
     const rawRiders = await (Rider as any).find({})
-      .sort({ totalDeliveries: -1 })
+      .sort({ rating: -1, totalDeliveries: -1 })
       .limit(limit)
       .lean();
 
-    return rawRiders.map((r: any) => {
-      const avgRating = r.ratingCount > 0 ? Math.round((r.rating / r.ratingCount) * 10) / 10 : null;
-      return {
-        riderId: r._id ? r._id.toString() : "",
-        userId: r.userId,
-        totalDeliveries: r.totalDeliveries || 0,
-        totalEarnings: r.totalEarnings || 0,
-        rating: avgRating
-      };
-    });
+    return await Promise.all(
+      rawRiders.map(async (r: any) => {
+        const avgRating = r.ratingCount > 0 ? r.rating : null;
+        let name = "Unknown Rider";
+        if (r.userId) {
+          const userDoc = await (User as any).findOne({ _id: r.userId }).lean();
+          if (userDoc && userDoc.name) {
+            name = userDoc.name;
+          }
+        }
+        return {
+          riderId: r._id ? r._id.toString() : "",
+          userId: r.userId,
+          name,
+          totalDeliveries: r.totalDeliveries || 0,
+          totalEarnings: r.totalEarnings || 0,
+          rating: avgRating,
+          ratingCount: r.ratingCount || 0
+        };
+      })
+    );
   }
 }

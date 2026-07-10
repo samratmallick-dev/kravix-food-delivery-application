@@ -9,7 +9,7 @@ import { searchByFood as apiSearchByFood } from "../utils/menu.api";
 import RestaurantsCard from "../components/restaurant/restaurantsCard";
 import SearchBar from "../components/navbar/SearchBar";
 import { BsCartPlus } from "react-icons/bs";
-import { Loader, Minus, Plus } from "lucide-react";
+import { Loader, Minus, Plus, MapPin } from "lucide-react";
 import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
@@ -18,7 +18,7 @@ import SEO from "../components/common/SEO";
 import StructuredData from "../components/common/StructuredData";
 
 const SearchPage = () => {
-      const { location, cart, fetchCart } = useAppData();
+      const { location, locationLoading, detectUserLocation, cart, fetchCart } = useAppData();
       const [searchParams, setSearchParams] = useSearchParams();
       const search = searchParams.get("search") || "";
       const searchType = (searchParams.get("type") as "restaurant" | "food") || "restaurant";
@@ -97,6 +97,10 @@ const SearchPage = () => {
                   setLoadingItemId(null);
                   setLoadingAction(null);
             }
+      };
+
+      const handleRequestLocation = () => {
+            detectUserLocation(true);
       };
 
       useEffect(() => {
@@ -193,7 +197,7 @@ const SearchPage = () => {
                               "item": {
                                     "@type": "Restaurant",
                                     "name": r.name,
-                                    "url": `https://kravix-nu.vercel.app/restaurant/${r._id}`
+                                    "url": `https://kravix-nu.vercel.app/restaurant/${r.slug || r._id}`
                               }
                         }))
                         : foodResults.map((f, i) => ({
@@ -253,7 +257,33 @@ const SearchPage = () => {
                         </p>
                   )}
 
-                  {loading ? (
+                  {!location ? (
+                        <div className="flex flex-col items-center justify-center py-16 px-4 bg-white border border-gray-100 rounded-3xl text-center shadow-xs max-w-2xl mx-auto space-y-6 animate-fadeIn">
+                              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                    <MapPin size={32} className="animate-bounce" />
+                              </div>
+                              <div className="space-y-2">
+                                    <h3 className="text-lg font-bold text-gray-800">Location Access Required</h3>
+                                    <p className="text-xs text-text-secondary font-semibold max-w-md mx-auto leading-relaxed">
+                                          Please allow location access to discover local restaurants, calculate delivery distance, and browse menus active in your area.
+                                    </p>
+                              </div>
+                              <button 
+                                    onClick={handleRequestLocation}
+                                    disabled={locationLoading}
+                                    className="px-6 py-3 bg-primary hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                    {locationLoading ? (
+                                          <>
+                                                <Loader size={16} className="animate-spin" />
+                                                Detecting Location...
+                                          </>
+                                    ) : (
+                                          "Allow Location Access"
+                                    )}
+                              </button>
+                        </div>
+                  ) : loading ? (
                         <AppSkeleton />
                   ) : searchType === "restaurant" ? (
                         restaurants.length > 0 ? (
@@ -265,6 +295,7 @@ const SearchPage = () => {
                                                 <RestaurantsCard
                                                       key={restaurant._id}
                                                       id={restaurant._id}
+                                                      slug={restaurant.slug}
                                                       name={restaurant.name}
                                                       image={restaurant.image ?? ""}
                                                       distance={`${distance}`}

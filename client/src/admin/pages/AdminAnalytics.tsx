@@ -51,7 +51,7 @@ interface TrendData {
 interface FoodItemData {
       name: string;
       quantitySold: number;
-      totalSales: number;
+      revenue: number;
 }
 
 interface PeakHourData {
@@ -76,7 +76,7 @@ interface UserGrowthData {
 interface RiderPerformanceData {
       riderId: string;
       name: string;
-      rating: number;
+      rating: number | null;
       ratingCount: number;
       totalDeliveries: number;
 }
@@ -535,7 +535,7 @@ const AdminAnalytics = () => {
                                                                   </td>
                                                                   <td className="p-4 text-center">
                                                                         <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 font-bold px-2 py-0.5 rounded-full">
-                                                                              ⭐ {rider.rating.toFixed(1)}
+                                                                              ⭐ {rider.rating !== null && rider.rating !== undefined ? Number(rider.rating).toFixed(1) : "0.0"}
                                                                         </span>
                                                                   </td>
                                                                   <td className="p-4 text-center text-gray-500 font-semibold">{rider.ratingCount}</td>

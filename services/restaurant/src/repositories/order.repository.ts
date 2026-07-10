@@ -44,7 +44,6 @@ export class OrderRepository implements IOrderRepository {
   async findActiveOrderForRestaurant(restaurantId: string): Promise<Order | null> {
     const raw = await OrderModel.findOne({
       restaurantId,
-      paymentStatus: "paid",
       status: { $nin: ["delivered", "cancelled"] }
     }).lean();
     if (!raw) return null;

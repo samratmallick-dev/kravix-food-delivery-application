@@ -9,6 +9,7 @@ export class RestaurantResponseMapper {
     const dto: RestaurantResponseDto = {
       _id: restaurant.id,
       name: restaurant.name,
+      slug: restaurant.slug,
       description: restaurant.description,
       image: restaurant.image,
       ownerId: restaurant.ownerId,

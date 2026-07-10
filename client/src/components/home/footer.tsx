@@ -37,8 +37,8 @@ const Footer = () => {
                                     <div className="flex items-center">
                                           <Logo />
                                     </div>
-                                    <p className="text-sm text-gray-400 leading-relaxed font-semibold max-w-sm">
-                                          Your favorite food, delivered fresh and fast. Savor authentic Bengali cuisines, traditional Indian delicacies, and global flavors right at your doorstep.
+                                                                    <p className="text-sm text-gray-400 leading-relaxed font-semibold max-w-sm">
+                                          An academic final-year B.Tech graduation project prototype showcasing a hyperlocal, multi-role food delivery platform with event-driven services.
                                     </p>
                                     <div className="flex items-center gap-3">
                                           {[
@@ -61,23 +61,20 @@ const Footer = () => {
                                           ))}
                                     </div>
                               </div>
-
-                              {/* Column 2: Company */}
                               <div className="space-y-5">
                                     <h2 className="font-bold text-xs uppercase tracking-widest text-white">Company</h2>
                                     <ul className="space-y-3 text-sm font-semibold list-none p-0 m-0">
-                                          <li><Link to="/about" className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">About Us</Link></li>
-                                          <li><Link to="/careers" className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">Careers</Link></li>
-                                          <li><Link to="/blog" className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">Blog</Link></li>
+                                          <li><Link to="/about" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">About Us</Link></li>
+                                          <li><Link to="/blog" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">Blog</Link></li>
+                                          <li><Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">Contact Us</Link></li>
                                     </ul>
                               </div>
 
                               <div className="space-y-5">
                                     <h2 className="font-bold text-xs uppercase tracking-widest text-white">Support</h2>
                                     <ul className="space-y-3 text-sm font-semibold list-none p-0 m-0">
-                                          <li><Link to="/help" className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">Help Center</Link></li>
-                                          <li><Link to="/contact" className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">Contact Us</Link></li>
-                                          <li><Link to="/faq" className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">FAQs</Link></li>
+                                          <li><Link to="/help" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">Help Center</Link></li>
+                                          <li><Link to="/faq" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block">FAQs</Link></li>
                                     </ul>
                               </div>
 
@@ -109,9 +106,9 @@ const Footer = () => {
 
                         <div className="mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6">
                               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold">
-                                    <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-                                    <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
-                                    <Link to="/refunds" className="hover:text-primary transition-colors">Refund Policy</Link>
+                                    <Link to="/privacy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary transition-colors">Privacy Policy</Link>
+                                    <Link to="/terms" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary transition-colors">Terms of Service</Link>
+                                    <Link to="/refunds" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary transition-colors">Refund Policy</Link>
                               </div>
                               <div className="flex flex-col items-center sm:items-end gap-1 text-xs text-gray-500 font-semibold">
                                     <p>© {currentYear} Kravix. All rights reserved.</p>

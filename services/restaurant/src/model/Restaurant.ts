@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { getUniqueSlug } from "../utils/slugify.js";
 
 export interface IRestaurant extends Document {
       name: string;
+      slug: string;
       description: string;
       image: string;
       ownerId: string;
@@ -22,6 +24,13 @@ const restaurantSchema: Schema = new Schema<IRestaurant>(
             name: {
                   type: String,
                   required: true,
+                  trim: true,
+            },
+            slug: {
+                  type: String,
+                  required: true,
+                  unique: true,
+                  lowercase: true,
                   trim: true,
             },
             description: {
@@ -67,9 +76,17 @@ const restaurantSchema: Schema = new Schema<IRestaurant>(
 restaurantSchema.index({ autoLocation: "2dsphere" });
 restaurantSchema.index({ name: "text", description: "text" });
 restaurantSchema.index({ name: 1 });
+restaurantSchema.index({ slug: 1 }, { unique: true });
 restaurantSchema.index({ ownerId: 1 });
 restaurantSchema.index({ isVerified: 1 });
 restaurantSchema.index({ isOpen: 1 });
+
+restaurantSchema.pre("validate", async function () {
+      const doc = this as any;
+      if (!doc.slug || doc.isModified("name")) {
+            doc.slug = await getUniqueSlug(doc.name, doc._id.toString());
+      }
+});
 
 export const Restaurant = mongoose.model<IRestaurant>(
       "Restaurant",

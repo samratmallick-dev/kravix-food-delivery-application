@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { IRestaurantService } from "../interfaces/IRestaurantService.js";
 import { IRestaurantRepository } from "../interfaces/IRestaurantRepository.js";
 import { IUserRepository } from "../interfaces/IUserRepository.js";
@@ -8,6 +9,7 @@ import { Restaurant } from "../domain/entities/Restaurant.js";
 import { NotFoundError, ValidationError } from "../utils/errors.js";
 import { normalizeSearchQuery } from "../utils/searchNormalizer.js";
 import { ICache } from "../interfaces/ICache.js";
+import { getUniqueSlug } from "../utils/slugify.js";
 
 export class RestaurantService implements IRestaurantService {
   constructor(
@@ -33,9 +35,11 @@ export class RestaurantService implements IRestaurantService {
       throw new ValidationError("Seller already has a restaurant registered");
     }
 
+    const slug = await getUniqueSlug(name, "");
     const restaurant = new Restaurant(
       "",
       name,
+      slug,
       description,
       image,
       ownerId,
@@ -48,17 +52,29 @@ export class RestaurantService implements IRestaurantService {
     return await this.restaurantRepository.create(restaurant);
   }
 
-  async getRestaurantDetails(id: string): Promise<Restaurant> {
-    const cacheKey = `restaurant_details:${id}`;
+  async getRestaurantDetails(identifier: string): Promise<Restaurant> {
+    const cacheKey = `restaurant_details:${identifier}`;
     const cached = await this.cache.get(cacheKey);
     if (cached) {
       return cached;
     }
-    const restaurant = await this.restaurantRepository.findById(id);
+
+    let restaurant: Restaurant | null = null;
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      restaurant = await this.restaurantRepository.findById(identifier);
+    } else {
+      const match = identifier.match(/(.+)-([a-fA-F0-9]{24})$/);
+      if (match) {
+        restaurant = await this.restaurantRepository.findById(match[2]!);
+      } else {
+        restaurant = await this.restaurantRepository.findBySlug(identifier);
+      }
+    }
+
     if (!restaurant) {
       throw new NotFoundError("Restaurant not found");
     }
-    await this.cache.set(cacheKey, restaurant, 300); // cache for 5 minutes
+    await this.cache.set(cacheKey, restaurant, 300);
     return restaurant;
   }
 
@@ -78,6 +94,7 @@ export class RestaurantService implements IRestaurantService {
     const updated = new Restaurant(
       restaurant.id,
       restaurant.name,
+      restaurant.slug,
       restaurant.description,
       restaurant.image,
       restaurant.ownerId,
@@ -103,9 +120,12 @@ export class RestaurantService implements IRestaurantService {
       throw new NotFoundError("Restaurant not found");
     }
 
+    const updatedName = updates.name || restaurant.name;
+    const slug = updates.name ? await getUniqueSlug(updatedName, restaurant.id) : restaurant.slug;
     const updated = new Restaurant(
       restaurant.id,
-      updates.name || restaurant.name,
+      updatedName,
+      slug,
       updates.description !== undefined ? updates.description : restaurant.description,
       updates.image || restaurant.image,
       restaurant.ownerId,
