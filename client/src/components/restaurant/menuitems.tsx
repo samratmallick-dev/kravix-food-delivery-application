@@ -27,7 +27,7 @@ const PRICE_FILTERS: { label: string; value: PriceFilter }[] = [
 ];
 
 const FoodTypeBadge = ({ isVeg }: { isVeg: boolean }) => (
-      <div className={`inline-flex items-center justify-center border-2 w-4 h-4 p-0.5 rounded-sm flex-shrink-0 ${isVeg ? "border-green-600" : "border-red-600"}`}>
+      <div className={`inline-flex items-center justify-center border-2 w-4 h-4 p-0.5 rounded-sm shrink-0 ${isVeg ? "border-green-600" : "border-red-600"}`}>
             <span className={`w-2 h-2 rounded-full ${isVeg ? "bg-green-600" : "bg-red-700"}`} />
       </div>
 );
