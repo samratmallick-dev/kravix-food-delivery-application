@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import L from "leaflet";
 import { LuLocateFixed } from "react-icons/lu";
 import { BiLoader, BiPlus, BiTrash, BiMapPin, BiPhone, BiSearch } from "react-icons/bi";
+import { locationService } from "../utils/locationService";
 
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -57,19 +58,24 @@ const LocateMeButton = ({
       onLocate: (lat: number, lng: number) => void;
 }) => {
       const map = useMap();
-      const locateUser = () => {
-            if (!navigator.geolocation) {
-                  toast.error("Geolocation not supported");
+      const locateUser = async () => {
+            if (!locationService.isSupported()) {
+                  toast.error("Geolocation not supported by your browser");
                   return;
             }
-            navigator.geolocation.getCurrentPosition(
-                  (pos) => {
-                        const { latitude, longitude } = pos.coords;
-                        map.flyTo([latitude, longitude], 16, { animate: true });
-                        onLocate(latitude, longitude);
-                  },
-                  () => toast.error("Location permission denied")
-            );
+            try {
+                  const data = await locationService.getCurrentLocation();
+                  map.flyTo([data.latitude, data.longitude], 16, { animate: true });
+                  onLocate(data.latitude, data.longitude);
+            } catch (err: any) {
+                  if (err.message === "PERMISSION_DENIED") {
+                        toast.error("Location access denied. Please enable it in browser settings.");
+                  } else if (err.message === "TIMEOUT") {
+                        toast.error("Location request timed out. Please try again.");
+                  } else {
+                        toast.error("Could not retrieve your location.");
+                  }
+            }
       };
       return (
             <button
@@ -123,10 +129,13 @@ const AddAddressPage = () => {
       };
       useEffect(() => {
             fetchAddresses();
-            navigator.geolocation?.getCurrentPosition(
-                  (pos) => setLocation(pos.coords.latitude, pos.coords.longitude),
-                  () => {}
-            );
+            locationService.getPermissionState().then((state) => {
+                  if (state === "granted") {
+                        locationService.getCurrentLocation()
+                              .then((data) => setLocation(data.latitude, data.longitude))
+                              .catch(() => {});
+                  }
+            });
       }, []);
 
       const handleSearch = (query: string) => {

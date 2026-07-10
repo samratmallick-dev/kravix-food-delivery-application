@@ -14,6 +14,8 @@ import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
 import { detectSearchType } from "../utils/searchIntent";
+import SEO from "../components/common/SEO";
+import StructuredData from "../components/common/StructuredData";
 
 const SearchPage = () => {
       const { location, cart, fetchCart } = useAppData();
@@ -178,8 +180,46 @@ const SearchPage = () => {
             };
       }, [socket, searchType]);
 
+      const searchSchema = {
+            "@context": "https://schema.org",
+            "@type": "SearchResultsPage",
+            "mainEntity": {
+                  "@type": "ItemList",
+                  "numberOfItems": searchType === "restaurant" ? restaurants.length : foodResults.length,
+                  "itemListElement": searchType === "restaurant" 
+                        ? restaurants.map((r, i) => ({
+                              "@type": "ListItem",
+                              "position": i + 1,
+                              "item": {
+                                    "@type": "Restaurant",
+                                    "name": r.name,
+                                    "url": `https://kravix-nu.vercel.app/restaurant/${r._id}`
+                              }
+                        }))
+                        : foodResults.map((f, i) => ({
+                              "@type": "ListItem",
+                              "position": i + 1,
+                              "item": {
+                                    "@type": "MenuItem",
+                                    "name": f.item.name,
+                                    "offers": {
+                                          "@type": "Offer",
+                                          "price": `${f.item.price}`,
+                                          "priceCurrency": "INR"
+                                    }
+                              }
+                        }))
+            }
+      };
+
       return (
             <div className="container-app py-6 space-y-5">
+                  <SEO
+                        title="Search Restaurants & Dishes | Kravix"
+                        description="Find the best restaurants and dishes near you on Kravix. Search for Bengali, Indian, Asian, and other delicious cuisines for fast delivery."
+                        path="/search"
+                  />
+                  <StructuredData data={searchSchema} />
                   <SearchBar initialValue={search} onSearch={handleSearch} autoFocus />
 
                   <div className="flex items-center justify-between flex-wrap gap-3">
@@ -252,6 +292,9 @@ const SearchPage = () => {
                                                                   alt={item.name}
                                                                   className="w-full h-40 object-cover"
                                                                   loading="lazy"
+                                                                  width={400}
+                                                                  height={160}
+                                                                  decoding="async"
                                                             />
                                                       </div>
                                                       <div className="p-3 flex flex-col flex-1 gap-1">
@@ -271,7 +314,8 @@ const SearchPage = () => {
                                                                               <button
                                                                                     disabled={isLoading}
                                                                                     onClick={() => decreaseItem(item._id)}
-                                                                                    className="px-2 py-1 text-green-600 hover:bg-green-50 disabled:text-gray-400 transition"
+                                                                                    className="px-2 py-1 text-green-600 hover:bg-green-50 disabled:text-gray-400 transition cursor-pointer"
+                                                                                    aria-label={`Decrease quantity of ${item.name}`}
                                                                               >
                                                                                     {isLoading && loadingAction === "dec" ? <Loader size={12} className="animate-spin" /> : <Minus size={12} />}
                                                                               </button>
@@ -279,7 +323,8 @@ const SearchPage = () => {
                                                                               <button
                                                                                     disabled={isLoading}
                                                                                     onClick={() => increaseItem(item._id)}
-                                                                                    className="px-2 py-1 text-green-600 hover:bg-green-50 disabled:text-gray-400 transition"
+                                                                                    className="px-2 py-1 text-green-600 hover:bg-green-50 disabled:text-gray-400 transition cursor-pointer"
+                                                                                    aria-label={`Increase quantity of ${item.name}`}
                                                                               >
                                                                                     {isLoading && loadingAction === "inc" ? <Loader size={12} className="animate-spin" /> : <Plus size={12} />}
                                                                               </button>
@@ -288,7 +333,8 @@ const SearchPage = () => {
                                                                         <button
                                                                               disabled={isLoading}
                                                                               onClick={() => addToCart(restaurant._id, item._id)}
-                                                                              className="flex items-center justify-center rounded-lg p-2 text-red-500 hover:bg-red-50 disabled:text-gray-400 transition"
+                                                                              className="flex items-center justify-center rounded-lg p-2 text-red-500 hover:bg-red-50 disabled:text-gray-400 transition cursor-pointer"
+                                                                              aria-label={`Add ${item.name} to cart`}
                                                                         >
                                                                               {isLoading && loadingAction === "add" ? <Loader size={18} className="animate-spin" /> : <BsCartPlus size={18} />}
                                                                         </button>

@@ -17,13 +17,14 @@ const Navbar = () => {
       const isCustomer = isAuth && user?.role === "customer";
 
       return (
-            <div className="w-full bg-background shadow-xs border-b border-gray-100">
+            <header className="w-full bg-background shadow-xs border-b border-gray-100">
                   <div className="container-app w-full mx-auto flex items-center justify-between gap-3 px-4 h-16 md:h-24 transition-all duration-300">
                         <Logo />
                         <div className="flex items-center gap-3">
                               {isAuth ? (
                                     <Link
                                           to="/account"
+                                          aria-label="View user profile account"
                                           className="flex gap-2 items-center bg-gray-100/80 hover:bg-primary px-3 py-1.5 md:py-2 rounded-xl group transition-all duration-300 ease-in-out border border-gray-200/20 shadow-xs hover:shadow-sm"
                                           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                                     >
@@ -33,6 +34,7 @@ const Navbar = () => {
                               ) : (
                                     <Link
                                           to="/login"
+                                          aria-label="Login page"
                                           className="flex gap-2 items-center bg-gray-100/80 hover:bg-primary px-3 py-1.5 md:py-2 rounded-xl group transition-all duration-300 ease-in-out border border-gray-200/20 shadow-xs hover:shadow-sm"
                                           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                                     >
@@ -43,7 +45,8 @@ const Navbar = () => {
                               {isCustomer && (
                                     <Link 
                                           to="/cart" 
-                                          className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group flex items-center justify-center" 
+                                          aria-label={`Shopping Cart, ${quantity} items`}
+                                          className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group flex items-center justify-center cursor-pointer" 
                                           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                                     >
                                           <ShoppingCart size={isMobile ? 22 : 26} className="text-primary transition-transform duration-300 group-hover:scale-105" />
@@ -76,7 +79,7 @@ const Navbar = () => {
                               </div>
                         </div>
                   )}
-            </div>
+            </header>
       );
 };
 

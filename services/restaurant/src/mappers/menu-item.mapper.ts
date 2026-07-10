@@ -9,7 +9,9 @@ export class MenuItemMapper {
       raw.description || "",
       raw.price,
       raw.imageUrl || "",
-      raw.isAvailable ?? true
+      raw.isAvailable ?? true,
+      raw.isVeg ?? true,
+      raw.category || "Main Course"
     );
   }
 
@@ -20,7 +22,9 @@ export class MenuItemMapper {
       description: domain.description,
       price: domain.price,
       imageUrl: domain.imageUrl,
-      isAvailable: domain.isAvailable
+      isAvailable: domain.isAvailable,
+      isVeg: domain.isVeg,
+      category: domain.category
     };
   }
 }

@@ -1,4 +1,4 @@
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAppData } from "../context/AppContext";
 import { useMemo, useState } from "react";
 import type { IMenuItem, IRestaurant } from "../types/types";
@@ -45,12 +45,12 @@ const Cart = () => {
                               <ShoppingBag className="w-16 h-16 text-gray-300 mb-2" />
                               <h3 className="text-lg font-semibold text-gray-700">Your cart is empty</h3>
                               <p className="text-sm text-gray-400">Add items to get started</p>
-                              <Link
-                                    to="/"
+                              <button
+                                    onClick={() => { navigate("/search?type=restaurant"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                                     className="flex items-center gap-2 mt-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 transition active:scale-95"
                               >
                                     Browse Restaurants <ArrowRight className="w-4 h-4" />
-                              </Link>
+                              </button>
                         </div>
                   </div>
             );

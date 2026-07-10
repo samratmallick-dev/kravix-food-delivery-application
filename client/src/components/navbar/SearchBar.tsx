@@ -172,9 +172,14 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
 
       return (
             <div ref={containerRef} className="relative w-full">
+                  <div className="sr-only" aria-live="polite">
+                        {loading ? "Searching restaurants and dishes..." : (allSuggestions.length > 0 ? `${allSuggestions.length} suggestions found.` : "")}
+                  </div>
                   <div className="flex items-center border border-gray-300 rounded-lg bg-white px-4 py-2 gap-3 shadow-sm">
                         {locationPrefix}
+                        <label htmlFor="search-input" className="sr-only">Search for restaurants and food</label>
                         <input
+                              id="search-input"
                               ref={inputRef}
                               autoFocus={autoFocus}
                               value={value}
@@ -184,20 +189,32 @@ const SearchBar = ({ initialValue = "", onSearch, redirectOnFocus = false, autoF
                               placeholder="Search for restaurants and food"
                               className="flex-1 min-w-0 outline-none text-gray-700 text-sm bg-transparent placeholder-gray-400"
                               autoComplete="off"
+                              aria-autocomplete="list"
+                              aria-expanded={showDropdown && value.trim() ? "true" : "false"}
+                              aria-controls="search-suggestions-dropdown"
+                              aria-busy={loading}
                         />
                         {value ? (
-                              <button onClick={handleClear} className="text-gray-400 hover:text-gray-600 transition-colors">
+                              <button 
+                                    onClick={handleClear} 
+                                    className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                                    aria-label="Clear search input"
+                              >
                                     <X size={18} />
                               </button>
                         ) : (
-                              <BiSearch size={20} className="text-gray-400" />
+                              <BiSearch size={20} className="text-gray-400" aria-hidden="true" />
                         )}
                   </div>
 
                   {showDropdown && value.trim() && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                        <div 
+                              id="search-suggestions-dropdown"
+                              role="listbox"
+                              className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
+                        >
                               {loading ? (
-                                    <div className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2">
+                                    <div className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2" aria-live="polite">
                                           <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-primary rounded-full animate-spin" />
                                           Searching...
                                     </div>

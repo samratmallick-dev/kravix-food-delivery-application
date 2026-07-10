@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "../components/navbar/logo";
 import { forgotPassword } from "../utils/auth.api";
+import SEO from "../components/common/SEO";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -24,37 +25,45 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+    <main className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+      <SEO
+        title="Forgot Password | Kravix"
+        description="Reset your Kravix account password easily. Enter your email and we'll send you a password reset link."
+        path="/forgot-password"
+      />
       <div className="max-w-md w-full space-y-6">
         <div className="flex justify-center">
           <Logo auth />
         </div>
-        <p className="text-center text-sm text-gray-500">Reset your password</p>
+        <p className="text-center text-sm text-gray-500 font-semibold">Reset your password</p>
 
         {success ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center space-y-3">
+          <div role="alert" className="bg-green-50 border border-green-200 rounded-lg p-4 text-center space-y-3">
             <p className="text-green-700 font-medium">{success}</p>
-            <Link to="/login" className="text-sm text-primary hover:underline">
+            <Link to="/login" className="text-sm text-primary hover:underline font-semibold">
               Back to Sign In
             </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email-input" className="block text-sm font-medium text-gray-700 mb-1">
                 Email address
               </label>
               <input
+                id="email-input"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="you@example.com"
+                aria-invalid={!!error}
+                aria-describedby={error ? "forgot-password-error" : undefined}
               />
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p id="forgot-password-error" role="alert" className="text-sm text-red-600 font-semibold">{error}</p>}
 
             <button
               type="submit"
@@ -65,14 +74,14 @@ const ForgotPasswordPage = () => {
             </button>
 
             <p className="text-center text-sm">
-              <Link to="/login" className="text-primary hover:underline">
+              <Link to="/login" className="text-primary hover:underline font-semibold">
                 Back to Sign In
               </Link>
             </p>
           </form>
         )}
       </div>
-    </div>
+    </main>
   );
 };
 

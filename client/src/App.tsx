@@ -71,7 +71,21 @@ const App = () => {
                               <Route element={<ProtectedRoutes />}>
                                     <Route path="/seller" element={<Restaurant />} />
                                     <Route path="/rider" element={<RiderDashboard />} />
-                                    <Route element={<><Navbar /><Outlet /><Footer /></>}>
+                                    <Route element={
+                                          <>
+                                                <a 
+                                                      href="#main-content" 
+                                                      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded-lg z-50 font-bold focus:outline-none"
+                                                >
+                                                      Skip to main content
+                                                </a>
+                                                <Navbar />
+                                                <main id="main-content" className="flex-1 min-h-[60vh] focus:outline-none" tabIndex={-1}>
+                                                      <Outlet />
+                                                </main>
+                                                <Footer />
+                                          </>
+                                    }>
                                           <Route path="/" element={<Home />} />
                                           <Route path="/search" element={<SearchPage />} />
                                           <Route path="/restaurant/:id" element={<CustomerRestaurantPage />} />
@@ -85,6 +99,7 @@ const App = () => {
                                           <Route path="/orders/:id" element={<OrderDetails />} />
                                           <Route path="/select-role" element={<SelectRole />} />
                                           <Route path="/account" element={<Account />} />
+                                          
                                           <Route path="*" element={<Navigate to="/" replace />} />
                                     </Route>
                               </Route>

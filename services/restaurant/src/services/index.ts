@@ -7,6 +7,7 @@ import { RestaurantRepository } from "../repositories/restaurant.repository.js";
 import { ReviewRepository } from "../repositories/review.repository.js";
 import { UserRepository } from "../repositories/user.repository.js";
 import { RestaurantEventPublisher } from "../events/RestaurantEvents.js";
+import { RedisCache } from "../cache/redis.cache.js";
 
 import { AddressService } from "./AddressService.js";
 import { CartService } from "./CartService.js";
@@ -25,17 +26,19 @@ export const restaurantRepository = new RestaurantRepository();
 export const reviewRepository = new ReviewRepository();
 export const userRepository = new UserRepository();
 export const eventPublisher = new RestaurantEventPublisher();
+export const cache = new RedisCache();
 
 export const addressService = new AddressService(addressRepository);
 export const cartService = new CartService(cartRepository);
 export const couponService = new CouponService(couponRepository);
-export const menuItemService = new MenuItemService(menuItemRepository, restaurantRepository, eventPublisher);
+export const menuItemService = new MenuItemService(menuItemRepository, restaurantRepository, eventPublisher, cache);
 export const restaurantService = new RestaurantService(
   restaurantRepository,
   userRepository,
   menuItemRepository,
   orderRepository,
-  eventPublisher
+  eventPublisher,
+  cache
 );
 export const reviewService = new ReviewService(reviewRepository, orderRepository, eventPublisher);
 export const orderService = new OrderService(

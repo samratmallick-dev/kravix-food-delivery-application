@@ -9,8 +9,10 @@ export interface MenuItemRequestDto {
   name: string;
   description?: string;
   price: number;
-  imageUrl?: string;
-  isAvailable?: boolean;
+  imageUrl?: string | undefined;
+  isAvailable?: boolean | undefined;
+  isVeg?: boolean | undefined;
+  category?: string | undefined;
 }
 
 export interface CouponRequestDto {
@@ -62,6 +64,8 @@ export interface MenuItemResponseDto {
   price: number;
   imageUrl: string;
   isAvailable: boolean;
+  isVeg: boolean;
+  category: string;
 }
 
 export interface CartResponseDto {

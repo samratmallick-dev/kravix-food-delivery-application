@@ -1,5 +1,6 @@
-import { useParams, useNavigate } from "react-router-dom";
-import type { IMenuItem, IRestaurant } from "../types/types";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import type { IMenuItem, IRestaurant, IReview } from "../types/types";
+import type { ReviewRatingsSummary } from "../utils/review.api";
 import { useEffect, useState } from "react";
 import { fetchSingleRestaurant } from "../utils/restaurant.api";
 import { getAllMenuItems } from "../utils/menu.api";
@@ -12,6 +13,8 @@ import { useMobile } from "../components/common/useMobile";
 import { useSocket } from "../context/SocketContext";
 import AppSkeleton from "../components/common/AppSkeleton";
 import toast from "react-hot-toast";
+import SEO from "../components/common/SEO";
+import StructuredData from "../components/common/StructuredData";
 
 const CustomerRestaurantPage = () => {
       const { id } = useParams();
@@ -24,11 +27,18 @@ const CustomerRestaurantPage = () => {
       const [menuItem, setMenuItem] = useState<IMenuItem[]>([]);
       const [loading, setLoading] = useState(true);
       const [activeTab, setActiveTab] = useState<"menu" | "reviews">("menu");
+      const [summary, setSummary] = useState<ReviewRatingsSummary | null>(null);
 
-      const fetchRestaurant = async () => {
+      const loadRestaurantData = async () => {
+            if (!id) return;
             try {
-                  const data = await fetchSingleRestaurant(id!);
-                  setRestaurant(data.data || null);
+                  setLoading(true);
+                  const [resData, menuData] = await Promise.all([
+                        fetchSingleRestaurant(id),
+                        getAllMenuItems(id)
+                  ]);
+                  setRestaurant(resData.data || null);
+                  setMenuItem(Array.isArray(menuData.data) ? menuData.data : []);
             } catch (error: any) {
                   console.log(error);
                   if (error.status === 404) {
@@ -40,20 +50,8 @@ const CustomerRestaurantPage = () => {
             }
       };
 
-      const fetchMenuItem = async () => {
-            try {
-                  const data = await getAllMenuItems(id!);
-                  setMenuItem(Array.isArray(data.data) ? data.data : []);
-            } catch (error) {
-                  console.log(error);
-            }
-      };
-
       useEffect(() => {
-            if (id) {
-                  fetchRestaurant();
-                  fetchMenuItem();
-            }
+            loadRestaurantData();
       }, [id]);
 
       useEffect(() => {
@@ -100,13 +98,109 @@ const CustomerRestaurantPage = () => {
             );
       }
 
+      const [resLong, resLat] = restaurant.autoLocation.coordinates;
+      const restaurantSchema = {
+            "@context": "https://schema.org",
+            "@graph": [
+                  {
+                        "@type": "Restaurant",
+                        "@id": `https://kravix-nu.vercel.app/restaurant/${restaurant._id}#restaurant`,
+                        "name": restaurant.name,
+                        "image": restaurant.image,
+                        "description": restaurant.description || `Order fresh meals online from ${restaurant.name}.`,
+                        "telephone": `${restaurant.phone}`,
+                        "address": {
+                              "@type": "PostalAddress",
+                              "streetAddress": restaurant.autoLocation.formattedAddress,
+                              "addressLocality": "Kolkata",
+                              "addressRegion": "West Bengal",
+                              "addressCountry": "IN"
+                        },
+                        "geo": {
+                              "@type": "GeoCoordinates",
+                              "latitude": resLat,
+                              "longitude": resLong
+                        },
+                        "url": `https://kravix-nu.vercel.app/restaurant/${restaurant._id}`,
+                        ...(summary ? {
+                              "aggregateRating": {
+                                    "@type": "AggregateRating",
+                                    "ratingValue": `${summary.averageRating}`,
+                                    "reviewCount": `${summary.totalReviews}`
+                              }
+                        } : {}),
+                        "hasMenu": {
+                              "@type": "Menu",
+                              "@id": `https://kravix-nu.vercel.app/restaurant/${restaurant._id}#menu`,
+                              "name": `${restaurant.name} Menu`,
+                              "hasMenuSection": menuItem.length > 0 ? Array.from(new Set(menuItem.map(m => m.category))).map(cat => ({
+                                    "@type": "MenuSection",
+                                    "name": cat,
+                                    "hasMenuItem": menuItem.filter(m => m.category === cat).map(item => ({
+                                          "@type": "MenuItem",
+                                          "name": item.name,
+                                          "description": item.description,
+                                          "offers": {
+                                                "@type": "Offer",
+                                                "price": `${item.price}`,
+                                                "priceCurrency": "INR"
+                                          }
+                                    }))
+                              })) : []
+                        }
+                  },
+                  {
+                        "@type": "BreadcrumbList",
+                        "itemListElement": [
+                              {
+                                    "@type": "ListItem",
+                                    "position": 1,
+                                    "name": "Home",
+                                    "item": "https://kravix-nu.vercel.app/"
+                              },
+                              {
+                                    "@type": "ListItem",
+                                    "position": 2,
+                                    "name": "Restaurants",
+                                    "item": "https://kravix-nu.vercel.app/search"
+                              },
+                              {
+                                    "@type": "ListItem",
+                                    "position": 3,
+                                    "name": restaurant.name,
+                                    "item": `https://kravix-nu.vercel.app/restaurant/${restaurant._id}`
+                              }
+                        ]
+                  }
+            ]
+      };
+
       return (
-            <div className="w-full min-h-auto bg-background">
+            <div className="w-full min-h-auto bg-background pb-8">
+                  <SEO
+                        title={`${restaurant.name} | Kravix`}
+                        description={`Order online from ${restaurant.name} on Kravix. Explore their menu of ${restaurant.description || "delicious cuisines"} for fast, hot delivery.`}
+                        path={`/restaurant/${restaurant._id}`}
+                        image={restaurant.image}
+                        type="restaurant"
+                  />
+                  <StructuredData data={restaurantSchema} />
+
                   <RestaurantProfile
                         restaurant={restaurant} onUpdate={setRestaurant} isSeller={false}
-                        fetchMyRestaurant={fetchRestaurant}
+                        fetchMyRestaurant={loadRestaurantData}
                   />
                   <div className="container-app p-4">
+                        <nav aria-label="Breadcrumb" className="text-xs text-text-secondary font-semibold mb-4">
+                              <ol className="flex items-center gap-1.5 list-none p-0 m-0">
+                                    <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
+                                    <li className="select-none">/</li>
+                                    <li><Link to="/search" className="hover:text-primary transition-colors">Restaurants</Link></li>
+                                    <li className="select-none">/</li>
+                                    <li className="text-gray-800 truncate animate-fadeIn font-bold" aria-current="page">{restaurant.name}</li>
+                              </ol>
+                        </nav>
+
                         {/* Tabs */}
                         <div className="flex border-b border-gray-100 mb-5">
                               <button
@@ -134,7 +228,11 @@ const CustomerRestaurantPage = () => {
                         {activeTab === "menu" ? (
                               <Menuitems items={menuItem} onItemDelete={() => {}} isSeller={false} />
                         ) : (
-                              <RestaurantReviewsSection restaurantId={restaurant._id} />
+                              <RestaurantReviewsSection 
+                                    restaurantId={restaurant._id} 
+                                    summary={summary} 
+                                    setSummary={setSummary} 
+                              />
                         )}
                   </div>
                   {cart.length > 0 && (
@@ -143,7 +241,7 @@ const CustomerRestaurantPage = () => {
                                     navigate("/cart");
                                     window.scrollTo({ top: 0, behavior: "smooth" });
                               }}
-                              className="fixed left-1/2 -translate-x-1/2 flex items-center gap-2 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-all z-50"
+                              className="fixed left-1/2 -translate-x-1/2 flex items-center gap-2 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 focus:ring-2 focus:ring-red-650 focus:outline-none transition-all z-50 font-bold"
                               style={{ bottom: isMobile ? 16 : 24, padding: isMobile ? "10px 20px" : "12px 24px", fontSize: isMobile ? "0.875rem" : "1rem" }}
                         >
                               <ShoppingCart size={isMobile ? 16 : 18} />
@@ -154,12 +252,16 @@ const CustomerRestaurantPage = () => {
       );
 }
 
-import type { IReview } from "../types/types";
-import type { ReviewRatingsSummary } from "../utils/review.api";
-
-const RestaurantReviewsSection = ({ restaurantId }: { restaurantId: string }) => {
+const RestaurantReviewsSection = ({ 
+      restaurantId, 
+      summary, 
+      setSummary 
+}: { 
+      restaurantId: string; 
+      summary: ReviewRatingsSummary | null; 
+      setSummary: React.Dispatch<React.SetStateAction<ReviewRatingsSummary | null>>;
+}) => {
       const [reviews, setReviews] = useState<IReview[]>([]);
-      const [summary, setSummary] = useState<ReviewRatingsSummary | null>(null);
       const [loading, setLoading] = useState(true);
       const [selectedRatingFilter, setSelectedRatingFilter] = useState<number | null>(null);
       const [sortBy, setSortBy] = useState<"createdAt" | "rating">("createdAt");
@@ -306,8 +408,9 @@ const RestaurantReviewsSection = ({ restaurantId }: { restaurantId: string }) =>
                               </div>
 
                               <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-400 font-medium">Sort:</span>
+                                    <label htmlFor="sort-reviews-select" className="text-xs text-gray-400 font-medium">Sort:</label>
                                     <select
+                                          id="sort-reviews-select"
                                           value={`${sortBy}-${sortOrder}`}
                                           onChange={(e) => {
                                                 const [field, order] = e.target.value.split("-");
@@ -376,7 +479,9 @@ const RestaurantReviewsSection = ({ restaurantId }: { restaurantId: string }) =>
 
                                                             {reportingId === review._id ? (
                                                                   <div className="flex items-center gap-1.5 w-full max-w-xs mt-2 md:mt-0">
+                                                                        <label htmlFor={`report-reason-${review._id}`} className="sr-only">Report Reason</label>
                                                                         <input
+                                                                              id={`report-reason-${review._id}`}
                                                                               type="text"
                                                                               value={reportReason}
                                                                               onChange={(e) => setReportReason(e.target.value)}

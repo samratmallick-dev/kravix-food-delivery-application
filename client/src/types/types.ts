@@ -35,6 +35,7 @@ export interface AppContextType {
       fetchCurrentUser: () => Promise<void>;
       subTotal: number;
       quantity: number;
+      detectUserLocation: (forcePrompt?: boolean) => Promise<boolean>;
 };
 
 export interface IRestaurant {

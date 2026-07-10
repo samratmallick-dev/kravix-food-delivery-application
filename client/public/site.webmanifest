@@ -1,6 +1,8 @@
 {
     "name": "Kravix - Be Smart, Eat Better",
     "short_name": "Kravix",
+    "start_url": "/",
+    "scope": "/",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",

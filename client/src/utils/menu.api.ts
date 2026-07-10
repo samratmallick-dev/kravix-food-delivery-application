@@ -13,6 +13,15 @@ export interface AddMenuItemPayload {
       category: string;
 }
 
+export interface UpdateMenuItemPayload {
+      name: string;
+      description?: string;
+      price: string | number;
+      image?: File;
+      isVeg: boolean;
+      category: string;
+}
+
 export interface AutocompleteParams {
       q?: string;
       latitude: number;
@@ -78,4 +87,30 @@ export const deleteMenuItem = (itemId: string): Promise<SuccessResponse> =>
 export const toggleMenuItemAvailability = (itemId: string): Promise<ApiResponse<IMenuItem>> =>
       request<ApiResponse<IMenuItem>>(`${menuBaseUrl}/${itemId}/availability`, {
             method: "PATCH",
+      });
+
+export const updateMenuItem = (itemId: string, payload: UpdateMenuItemPayload): Promise<ApiResponse<IMenuItem>> => {
+      const formData = new FormData();
+      formData.append("name", payload.name);
+      if (payload.description) formData.append("description", payload.description);
+      formData.append("price", payload.price.toString());
+      if (payload.image) formData.append("image", payload.image);
+      formData.append("isVeg", payload.isVeg.toString());
+      formData.append("category", payload.category);
+
+      return request<ApiResponse<IMenuItem>>(`${menuBaseUrl}/${itemId}`, {
+            method: "PUT",
+            body: formData,
+      });
+};
+
+export interface ICategory {
+      name: string;
+      count: number;
+      image: string;
+}
+
+export const getAvailableCategories = (): Promise<ApiResponse<ICategory[]>> =>
+      request<ApiResponse<ICategory[]>>(`${menuBaseUrl}/categories`, {
+            method: "GET",
       });

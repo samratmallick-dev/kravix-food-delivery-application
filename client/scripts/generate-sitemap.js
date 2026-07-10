@@ -1,0 +1,100 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const APP_TSX_PATH = path.join(__dirname, '..', 'src', 'App.tsx');
+const SITEMAP_PATH = path.join(__dirname, '..', 'public', 'sitemap.xml');
+
+const PRIORITY_SCORES = {
+      '/': 1.0,
+      '/search': 0.9,
+      '/about': 0.8,
+      '/contact': 0.8,
+      '/faq': 0.8,
+      '/careers': 0.7,
+      '/blog': 0.7,
+      '/login': 0.5,
+      '/register': 0.5,
+};
+
+function generateSitemap() {
+      try {
+            console.log('Generating sitemap dynamically from router...');
+            if (!fs.existsSync(APP_TSX_PATH)) {
+                  throw new Error(`App.tsx not found at ${APP_TSX_PATH}`);
+            }
+
+            const appContent = fs.readFileSync(APP_TSX_PATH, 'utf-8');
+            
+            const pathRegex = /path=["']([^"']+)["']/g;
+            const extractedRoutes = new Set();
+            
+            let match;
+            while ((match = pathRegex.exec(appContent)) !== null) {
+                  const routePath = match[1];
+                  extractedRoutes.add(routePath);
+            }
+
+            const isExcluded = (route) => {
+                  const cleaned = route.replace(/^\//, '');
+                  return (
+                        route === '*' ||
+                        route === '/*' ||
+                        route.includes(':') ||
+                        route.includes('*') ||
+                        cleaned.startsWith('admin') ||
+                        cleaned.startsWith('seller') ||
+                        cleaned.startsWith('rider') ||
+                        [
+                              'dashboard', 'users', 'restaurants', 'riders', 'orders', 
+                              'analytics', 'coupons', 'reviews', 'cart', 'checkout', 
+                              'address', 'account', 'select-role', 'payment-success', 
+                              'order-success', 'ordersuccess'
+                        ].includes(cleaned)
+                  );
+            };
+
+            const cleanRoutes = Array.from(extractedRoutes)
+                  .map(route => {
+                        let r = route;
+                        if (!r.startsWith('/')) r = '/' + r;
+                        return r;
+                  })
+                  .filter(route => !isExcluded(route));
+
+            if (!cleanRoutes.includes('/')) {
+                  cleanRoutes.unshift('/');
+            }
+
+            const xmlUrls = cleanRoutes.map(route => {
+                  const priority = PRIORITY_SCORES[route] !== undefined ? PRIORITY_SCORES[route] : 0.6;
+                  const changefreq = route === '/' || route === '/search' ? 'daily' : 'weekly';
+                  return `  <url>
+    <loc>https://kravix-nu.vercel.app${route === '/' ? '' : route}</loc>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority.toFixed(1)}</priority>
+  </url>`;
+            }).join('\n');
+
+            const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${xmlUrls}
+</urlset>`;
+
+            const dir = path.dirname(SITEMAP_PATH);
+            if (!fs.existsSync(dir)){
+                  fs.mkdirSync(dir, { recursive: true });
+            }
+
+            fs.writeFileSync(SITEMAP_PATH, sitemapXml);
+            console.log(`Successfully generated sitemap.xml with ${cleanRoutes.length} public paths!`);
+      } catch (err) {
+            console.error('Error generating sitemap:', err);
+            process.exit(1);
+      }
+}
+
+generateSitemap();

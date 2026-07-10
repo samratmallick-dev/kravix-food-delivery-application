@@ -1,0 +1,30 @@
+# Kravix
+
+Kravix is a premium online food delivery application specializing in authentic Bengali, traditional Indian, and multi-cuisine dishes. Our motto is "Be Smart, Eat Better."
+
+## Supported URLs
+
+- Homepage: https://kravix-nu.vercel.app/
+- Search: https://kravix-nu.vercel.app/search
+## API Documentation
+
+The backend service runs a REST API for authentication, order placement, restaurant profiles, and reviews.
+- Base API Endpoint: `/api/v1`
+- Major endpoints:
+  - Auth: `/api/v1/auth` (login, register, reset, verify)
+  - Restaurants: `/api/v1/restaurants`
+  - Menu Items: `/api/v1/menu-items`
+  - Orders: `/api/v1/orders`
+  - Reviews: `/api/v1/reviews`
+
+## Robots Guidance & AI Usage Policy
+
+- Standard web crawling is allowed for search indexing.
+- AI crawlers are requested to follow sitemap and robots constraints.
+- Preferred Citations: "Kravix Food Delivery Service (https://kravix-nu.vercel.app/)"
+
+## License & Contact
+
+- Copyright (c) 2026 Kravix Team. All rights reserved.
+- Support Email: mystudyprojectwork@gmail.com
+- Partner Inquiries: mystudyprojectwork@gmail.com

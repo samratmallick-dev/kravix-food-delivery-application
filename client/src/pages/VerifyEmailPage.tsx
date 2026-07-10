@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import Logo from "../components/navbar/logo";
 import { verifyEmail, resendVerificationEmail } from "../utils/auth.api";
+import SEO from "../components/common/SEO";
 
 const VerifyEmailPage = () => {
   const [searchParams] = useSearchParams();
@@ -42,23 +43,28 @@ const VerifyEmailPage = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+    <main className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+      <SEO
+        title="Verify Email | Kravix"
+        description="Verify your email address to secure your Kravix account and start ordering delicious meals."
+        path="/verify-email"
+      />
       <div className="max-w-md w-full space-y-6 text-center">
         <div className="flex justify-center">
           <Logo auth />
         </div>
 
         {status === "loading" && (
-          <div className="space-y-3">
+          <div className="space-y-3" aria-live="polite" aria-busy="true">
             <Loader2 className="w-10 h-10 animate-spin text-orange-500 mx-auto" />
-            <p className="text-gray-500">Verifying your email...</p>
+            <p className="text-gray-500 font-semibold">Verifying your email...</p>
           </div>
         )}
 
         {status === "success" && (
-          <div className="space-y-4">
+          <div className="space-y-4" role="alert" aria-live="polite">
             <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-            <p className="text-gray-700 font-medium">{message}</p>
+            <p className="text-gray-700 font-semibold">{message}</p>
             <Link
               to="/login"
               className="inline-block bg-primary text-white px-6 py-2 rounded-md text-sm font-semibold hover:bg-red-700"
@@ -69,14 +75,15 @@ const VerifyEmailPage = () => {
         )}
 
         {status === "error" && (
-          <div className="space-y-4">
+          <div className="space-y-4" role="alert" aria-live="polite">
             <XCircle className="w-12 h-12 text-red-500 mx-auto" />
-            <p className="text-red-600 font-medium">{message}</p>
+            <p className="text-red-600 font-semibold">{message}</p>
             <form onSubmit={handleResend} className="space-y-3 text-left">
-              <label className="block text-sm font-medium text-gray-700">
+              <label htmlFor="resend-email-input" className="block text-sm font-medium text-gray-700">
                 Resend verification email
               </label>
               <input
+                id="resend-email-input"
                 type="email"
                 value={resendEmail}
                 onChange={(e) => setResendEmail(e.target.value)}
@@ -85,7 +92,7 @@ const VerifyEmailPage = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {resendMsg && (
-                <p className="text-sm text-green-600">{resendMsg}</p>
+                <p className="text-sm text-green-600 font-semibold">{resendMsg}</p>
               )}
               <button
                 type="submit"
@@ -97,7 +104,7 @@ const VerifyEmailPage = () => {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 };
 

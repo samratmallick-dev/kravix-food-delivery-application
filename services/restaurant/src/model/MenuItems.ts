@@ -60,5 +60,8 @@ const menuItemSchema: Schema = new Schema<IMenuItem>(
 
 menuItemSchema.index({ name: "text", description: "text" });
 menuItemSchema.index({ name: 1 });
+menuItemSchema.index({ isAvailable: 1 });
+menuItemSchema.index({ category: 1 });
+menuItemSchema.index({ isVeg: 1 });
 
 export const MenuItem = mongoose.model<IMenuItem>("MenuItem", menuItemSchema);

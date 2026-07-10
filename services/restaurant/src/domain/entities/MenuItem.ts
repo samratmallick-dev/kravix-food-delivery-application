@@ -6,6 +6,8 @@ export class MenuItem {
     public readonly description: string,
     public readonly price: number,
     public readonly imageUrl: string,
-    public readonly isAvailable: boolean
+    public readonly isAvailable: boolean,
+    public readonly isVeg: boolean,
+    public readonly category: string
   ) {}
 }

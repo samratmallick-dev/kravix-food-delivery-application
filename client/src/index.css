@@ -6,6 +6,9 @@
       --color-primary: #C22630;
       --color-background: oklch(98% 0.02 30);
       --color-border: oklch(90% 0.015 30);
+      --color-text-primary: oklch(20% 0.02 30);
+      --color-text-secondary: oklch(40% 0.02 30);
+      --color-text-muted: oklch(60% 0.015 30);
       --animate-subtle-zoom: subtle-zoom 20s ease-in-out infinite alternate;
 
       @keyframes subtle-zoom {

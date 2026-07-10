@@ -153,7 +153,9 @@ const AiAssistant: React.FC = () => {
                     </div>
 
                     <div className="flex items-end gap-2 px-2.5 py-2.5 sm:px-3 sm:py-3 border-t border-border bg-white shrink-0">
+                        <label htmlFor="ai-assistant-input" className="sr-only">Ask Kravix Assistant</label>
                         <textarea
+                            id="ai-assistant-input"
                             rows={1}
                             value={inputValue}
                             onChange={e => setInputValue(e.target.value)}
@@ -164,7 +166,7 @@ const AiAssistant: React.FC = () => {
                         <button
                             onClick={handleSend}
                             disabled={!inputValue.trim() || isTyping}
-                            className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-white disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
+                            className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-white disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0 cursor-pointer"
                             aria-label="Send"
                         >
                             <Send size={15} />

@@ -46,7 +46,9 @@ export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Resp
     description,
     price: Number(price),
     imageUrl: updateResult.data.url,
-    isAvailable: true
+    isAvailable: true,
+    isVeg: isVeg === "true" || isVeg === true,
+    category
   });
 
   return successResponse(res, 201, "Menu item added successfully", RestaurantResponseMapper.toMenuItemDto(menuItems));
@@ -140,4 +142,58 @@ export const toggleMenuItemAvailability = TryCatch(async (req: AuthenticatedRequ
 
   const updated = await menuItemService.toggleMenuItemAvailability(itemId, user._id.toString());
   return successResponse(res, 200, "Menu item availability toggled successfully", RestaurantResponseMapper.toMenuItemDto(updated));
+});
+
+export const updateMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user) {
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
+  }
+
+  const menuItemId = req.params["menuItemId"] as string;
+  if (!menuItemId) {
+    throw new ValidationError("Menu Item ID is required");
+  }
+
+  const { name, description, price, isVeg, category } = req.body;
+  if ([name, price, category].some((field) => !field || String(field).trim() === "")) {
+    throw new ValidationError("Name, price and category are required fields");
+  }
+
+  const file = req.file;
+  let imageUrl: string | undefined;
+
+  if (file) {
+    const fileBuffer = getBuffer(file);
+    if (!fileBuffer) {
+      throw new ValidationError("Failed to process image file");
+    }
+
+    const { data: uploadResult } = await axios.post(
+      `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
+      { image: fileBuffer },
+      {
+        headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
+      }
+    );
+    imageUrl = uploadResult.data.url;
+  }
+
+  const updated = await menuItemService.updateMenuItem(menuItemId, user._id.toString(), {
+    name,
+    description,
+    price: Number(price),
+    imageUrl,
+    isVeg: isVeg === "true" || isVeg === true,
+    category
+  });
+
+  return successResponse(res, 200, "Menu item updated successfully", RestaurantResponseMapper.toMenuItemDto(updated));
+});
+
+export const getAvailableCategories = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const categories = await menuItemService.getAvailableCategories();
+  return successResponse(res, 200, "Available food categories fetched successfully", categories);
 });

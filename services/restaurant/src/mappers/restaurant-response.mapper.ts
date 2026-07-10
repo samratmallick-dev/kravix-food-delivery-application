@@ -35,7 +35,9 @@ export class RestaurantResponseMapper {
       description: item.description,
       price: item.price,
       imageUrl: item.imageUrl,
-      isAvailable: item.isAvailable
+      isAvailable: item.isAvailable,
+      isVeg: item.isVeg,
+      category: item.category
     };
   }
 

@@ -168,6 +168,13 @@ const AddMenuItems = (
                                           <option value="Beverage">Beverage</option>
                                           <option value="Bread">Bread</option>
                                           <option value="Side Dish">Side Dish</option>
+                                          <option value="Bengali">Bengali</option>
+                                          <option value="Indian">Indian</option>
+                                          <option value="Chinese">Chinese</option>
+                                          <option value="Biryani">Biryani</option>
+                                          <option value="Italian">Italian</option>
+                                          <option value="Pizza">Pizza</option>
+                                          <option value="Burger">Burger</option>
                                     </select>
                               </div>
                         </div>

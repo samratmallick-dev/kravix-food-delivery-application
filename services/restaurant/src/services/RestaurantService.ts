@@ -7,6 +7,7 @@ import { IRestaurantEventPublisher } from "../interfaces/IRestaurantEventPublish
 import { Restaurant } from "../domain/entities/Restaurant.js";
 import { NotFoundError, ValidationError } from "../utils/errors.js";
 import { normalizeSearchQuery } from "../utils/searchNormalizer.js";
+import { ICache } from "../interfaces/ICache.js";
 
 export class RestaurantService implements IRestaurantService {
   constructor(
@@ -14,7 +15,8 @@ export class RestaurantService implements IRestaurantService {
     private userRepository: IUserRepository,
     private menuItemRepository: IMenuItemRepository,
     private orderRepository: IOrderRepository,
-    private eventPublisher: IRestaurantEventPublisher
+    private eventPublisher: IRestaurantEventPublisher,
+    private cache: ICache
   ) {}
 
   async createRestaurant(
@@ -47,10 +49,16 @@ export class RestaurantService implements IRestaurantService {
   }
 
   async getRestaurantDetails(id: string): Promise<Restaurant> {
+    const cacheKey = `restaurant_details:${id}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
     const restaurant = await this.restaurantRepository.findById(id);
     if (!restaurant) {
       throw new NotFoundError("Restaurant not found");
     }
+    await this.cache.set(cacheKey, restaurant, 300); // cache for 5 minutes
     return restaurant;
   }
 
@@ -81,6 +89,9 @@ export class RestaurantService implements IRestaurantService {
 
     const saved = await this.restaurantRepository.update(updated);
 
+    // Invalidate caches
+    await this.cache.delete(`restaurant_details:${saved.id}`);
+
     await this.eventPublisher.publishRestaurantStatus(saved.id, saved.isOpen);
 
     return saved;
@@ -104,7 +115,12 @@ export class RestaurantService implements IRestaurantService {
       restaurant.isOpen
     );
 
-    return await this.restaurantRepository.update(updated);
+    const saved = await this.restaurantRepository.update(updated);
+
+    // Invalidate caches
+    await this.cache.delete(`restaurant_details:${saved.id}`);
+
+    return saved;
   }
 
   async getMyRestaurant(ownerId: string): Promise<Restaurant> {

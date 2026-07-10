@@ -17,6 +17,9 @@ const Hero = () => {
                               className="w-full h-full object-cover animate-subtle-zoom" 
                               fetchPriority="high" 
                               decoding="sync" 
+                              loading="eager"
+                              width={1920}
+                              height={1080}
                         />
                         <div className="absolute inset-0 bg-linear-to-t from-gray-950 via-black/55 to-black/80" />
                   </div>
@@ -31,10 +34,7 @@ const Hero = () => {
                         </div>
                         
                         <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white text-center tracking-tight leading-[1.2] max-w-4xl">
-                              Order Your Favorite Food From
-                              <span className="block mt-2 bg-linear-to-r from-red-500 via-orange-400 to-amber-300 bg-clip-text text-transparent drop-shadow-xs font-extrabold">
-                                    Kravix
-                              </span>
+                              Order Bengali, Indian & Multi-Cuisine Food Online
                         </h1>
                         
                         <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-200/90 mt-5 max-w-lg md:max-w-xl lg:max-w-2xl text-center leading-relaxed font-medium">

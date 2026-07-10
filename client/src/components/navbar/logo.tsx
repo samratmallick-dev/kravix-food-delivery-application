@@ -8,6 +8,7 @@ const Logo = ({ auth }: LogoProps) => {
       return (
             <Link 
                   to="/" 
+                  aria-label="Kravix Homepage"
                   className="flex items-center gap-3 z-10 border-0 outline-none select-none group" 
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >

@@ -9,12 +9,14 @@ import { MenuItem as MenuItemModel } from "../model/MenuItems.js";
 import { Restaurant as RestaurantModel } from "../model/Restaurant.js";
 import { NotFoundError, AuthorizationError } from "../utils/errors.js";
 import { normalizeSearchQuery, prefixExpand } from "../utils/searchNormalizer.js";
+import { ICache } from "../interfaces/ICache.js";
 
 export class MenuItemService implements IMenuItemService {
   constructor(
     private menuItemRepository: IMenuItemRepository,
     private restaurantRepository: IRestaurantRepository,
-    private eventPublisher: IRestaurantEventPublisher
+    private eventPublisher: IRestaurantEventPublisher,
+    private cache: ICache
   ) {}
 
   async createMenuItem(restaurantId: string, dto: MenuItemRequestDto): Promise<MenuItem> {
@@ -25,18 +27,37 @@ export class MenuItemService implements IMenuItemService {
       dto.description || "",
       dto.price,
       dto.imageUrl || "",
-      dto.isAvailable !== undefined ? dto.isAvailable : true
+      dto.isAvailable !== undefined ? dto.isAvailable : true,
+      dto.isVeg !== undefined ? dto.isVeg : true,
+      dto.category || "Main Course"
     );
-    return await this.menuItemRepository.create(menuItem);
+    const created = await this.menuItemRepository.create(menuItem);
+    
+    // Invalidate caches
+    await this.cache.delete("available_categories");
+    await this.cache.delete(`menu_items:${restaurantId}`);
+
+    return created;
   }
 
   async deleteMenuItem(restaurantId: string, itemId: string): Promise<void> {
     await this.menuItemRepository.delete(itemId, restaurantId);
     await this.eventPublisher.publishMenuItemDeleted(restaurantId, itemId);
+
+    // Invalidate caches
+    await this.cache.delete("available_categories");
+    await this.cache.delete(`menu_items:${restaurantId}`);
   }
 
   async getMenuItems(restaurantId: string): Promise<MenuItem[]> {
-    return await this.menuItemRepository.find(restaurantId);
+    const cacheKey = `menu_items:${restaurantId}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    const items = await this.menuItemRepository.find(restaurantId);
+    await this.cache.set(cacheKey, items, 300); // Cache for 5 minutes
+    return items;
   }
 
   async searchByFood(
@@ -54,8 +75,15 @@ export class MenuItemService implements IMenuItemService {
     };
 
     const findByRegex = (regex: RegExp) =>
-      MenuItemModel.find({ name: { $regex: regex }, isAvailable: true })
-        .select("restaurantId name price imageUrl description isAvailable")
+      MenuItemModel.find({
+        $or: [
+          { name: { $regex: regex } },
+          { category: { $regex: regex } },
+          { description: { $regex: regex } }
+        ],
+        isAvailable: true
+      })
+        .select("restaurantId name price imageUrl description isAvailable category isVeg")
         .limit(50);
 
     const { regex: rawRegex, tokens: rawTokens } = buildAndRegex(rawSearch);
@@ -125,7 +153,9 @@ export class MenuItemService implements IMenuItemService {
           price: item.price,
           imageUrl: item.imageUrl,
           description: item.description,
-          isAvailable: item.isAvailable
+          isAvailable: item.isAvailable,
+          category: item.category,
+          isVeg: item.isVeg
         },
         restaurant: restaurantMap.get(item.restaurantId.toString())
       }));
@@ -265,10 +295,16 @@ export class MenuItemService implements IMenuItemService {
       menuItem.description,
       menuItem.price,
       menuItem.imageUrl,
-      !menuItem.isAvailable
+      !menuItem.isAvailable,
+      menuItem.isVeg,
+      menuItem.category
     );
 
     const saved = await this.menuItemRepository.update(updated);
+
+    // Invalidate caches
+    await this.cache.delete("available_categories");
+    await this.cache.delete(`menu_items:${saved.restaurantId}`);
 
     const payload: Record<string, any> = {
       itemId: saved.id,
@@ -282,7 +318,9 @@ export class MenuItemService implements IMenuItemService {
         price: saved.price,
         imageUrl: saved.imageUrl,
         description: saved.description,
-        isAvailable: true
+        isAvailable: true,
+        isVeg: saved.isVeg,
+        category: saved.category
       };
       payload.restaurant = restaurant;
     }
@@ -290,5 +328,99 @@ export class MenuItemService implements IMenuItemService {
     await this.eventPublisher.publishMenuItemAvailability(saved.restaurantId, payload);
 
     return saved;
+  }
+
+  async updateMenuItem(
+    itemId: string,
+    ownerId: string,
+    dto: MenuItemRequestDto
+  ): Promise<MenuItem> {
+    const menuItem = await this.menuItemRepository.findById(itemId);
+    if (!menuItem) {
+      throw new NotFoundError("Menu item not found");
+    }
+
+    const restaurant = await this.restaurantRepository.findById(menuItem.restaurantId);
+    if (!restaurant || restaurant.ownerId !== ownerId) {
+      throw new AuthorizationError("Access denied. You don't own this restaurant.");
+    }
+
+    const updated = new MenuItem(
+      menuItem.id,
+      menuItem.restaurantId,
+      dto.name,
+      dto.description || "",
+      dto.price,
+      dto.imageUrl || menuItem.imageUrl,
+      dto.isAvailable !== undefined ? dto.isAvailable : menuItem.isAvailable,
+      dto.isVeg !== undefined ? dto.isVeg : menuItem.isVeg,
+      dto.category || menuItem.category
+    );
+
+    const saved = await this.menuItemRepository.update(updated);
+
+    // Invalidate caches
+    await this.cache.delete("available_categories");
+    await this.cache.delete(`menu_items:${saved.restaurantId}`);
+
+    const broadcastPayload = {
+      _id: saved.id,
+      name: saved.name,
+      price: saved.price,
+      imageUrl: saved.imageUrl,
+      description: saved.description,
+      isAvailable: saved.isAvailable,
+      isVeg: saved.isVeg,
+      category: saved.category
+    };
+
+    await this.eventPublisher.publishMenuItemAvailability(saved.restaurantId, {
+      itemId: saved.id,
+      isAvailable: saved.isAvailable,
+      item: broadcastPayload,
+      restaurant
+    });
+
+    return saved;
+  }
+
+  async getAvailableCategories(): Promise<any[]> {
+    const cacheKey = "available_categories";
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const categories = await MenuItemModel.aggregate([
+      { $match: { isAvailable: true } },
+      {
+        $lookup: {
+          from: "restaurants",
+          localField: "restaurantId",
+          foreignField: "_id",
+          as: "restaurant"
+        }
+      },
+      { $unwind: "$restaurant" },
+      { $match: { "restaurant.isVerified": true } },
+      {
+        $group: {
+          _id: { $toLower: "$category" },
+          originalName: { $first: "$category" },
+          count: { $sum: 1 },
+          image: { $first: "$imageUrl" }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    const result = categories.map((cat: any) => ({
+      name: cat.originalName,
+      count: cat.count,
+      image: cat.image || ""
+    }));
+
+    await this.cache.set(cacheKey, result, 300); // cache for 5 minutes
+    return result;
   }
 }

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import type { IMenuItem } from "../../types/types";
-import { Eye, Loader, Minus, Plus, Trash2 } from "lucide-react";
+import { Eye, Loader, Minus, Plus, Trash2, Pencil } from "lucide-react";
 import { BsCartPlus, BsEyeSlash } from "react-icons/bs";
 import { addToCart as apiAddToCart, incrementCartQuantity, decrementCartQuantity } from "../../utils/cart.api";
 import { deleteMenuItem, toggleMenuItemAvailability as apiToggleMenuItemAvailability } from "../../utils/menu.api";
 import toast from "react-hot-toast";
 import { useAppData } from "../../context/AppContext";
 import { useSocket } from "../../context/SocketContext";
+import EditMenuItems from "./editMenuItems";
 
 interface MenuItemProps {
       items: IMenuItem[];
@@ -26,8 +27,8 @@ const PRICE_FILTERS: { label: string; value: PriceFilter }[] = [
 ];
 
 const FoodTypeBadge = ({ isVeg }: { isVeg: boolean }) => (
-      <div className={`inline-flex items-center justify-center border-2 w-4 h-4 p-0.5 rounded flex-shrink-0 ${isVeg ? "border-green-600" : "border-red-600"}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${isVeg ? "bg-green-600" : "bg-red-600"}`} />
+      <div className={`inline-flex items-center justify-center border-2 w-4 h-4 p-0.5 rounded-sm flex-shrink-0 ${isVeg ? "border-green-600" : "border-red-600"}`}>
+            <span className={`w-2 h-2 rounded-full ${isVeg ? "bg-green-600" : "bg-red-700"}`} />
       </div>
 );
 
@@ -41,6 +42,14 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
       const [sortOption, setSortOption] = useState<SortOption>("default");
       const { fetchCart, cart } = useAppData();
       const { socket } = useSocket();
+
+      const [isEditOpen, setIsEditOpen] = useState(false);
+      const [selectedItem, setSelectedItem] = useState<IMenuItem | null>(null);
+
+      const handleEditItem = (item: IMenuItem) => {
+            setSelectedItem(item);
+            setIsEditOpen(true);
+      };
 
       useEffect(() => {
             setLocalItems(items);
@@ -168,12 +177,9 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
 
       return (
             <div>
-                  {/* Filter Bar */}
                   <div className="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl p-3 mb-5 shadow-sm space-y-3">
-                        {/* Row 1: Diet + Availability + Sort */}
                         <div className="flex flex-wrap items-center gap-2 justify-between">
                               <div className="flex items-center gap-2">
-                                    {/* Diet filter */}
                                     {(["all", "veg", "nonveg"] as DietFilter[]).map((d) => (
                                           <button
                                                 key={d}
@@ -193,8 +199,6 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                                 {d === "all" ? "All" : d === "veg" ? "Veg" : "Non-Veg"}
                                           </button>
                                     ))}
-
-                                    {/* Available only toggle */}
                                     <button
                                           onClick={() => setOnlyAvailable((p) => !p)}
                                           className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
@@ -206,8 +210,6 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                           Available Only
                                     </button>
                               </div>
-
-                              {/* Sort */}
                               <select
                                     value={sortOption}
                                     onChange={(e) => setSortOption(e.target.value as SortOption)}
@@ -219,8 +221,6 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                     <option value="name_asc">Name: A – Z</option>
                               </select>
                         </div>
-
-                        {/* Row 2: Price range */}
                         <div className="flex flex-wrap gap-2">
                               {PRICE_FILTERS.map((f) => (
                                     <button
@@ -237,7 +237,6 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                               ))}
                         </div>
 
-                        {/* Active filter count + reset */}
                         {activeFilterCount > 0 && (
                               <div className="flex items-center justify-between pt-1 border-t border-gray-50">
                                     <span className="text-[11px] text-gray-400">{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active · {filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""} shown</span>
@@ -275,7 +274,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                           </div>
                                           <div className="flex flex-col flex-1 p-3 gap-1.5">
                                                 <div className="flex items-center gap-2">
-                                                      <FoodTypeBadge isVeg={item.isVeg !== false} />
+                                                      <FoodTypeBadge isVeg={!!item.isVeg} />
                                                       <h3 className="text-sm font-semibold leading-tight line-clamp-1 flex-1">{item.name}</h3>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
@@ -290,6 +289,13 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                                       <span className="text-sm font-bold text-primary">₹{item.price.toFixed(2)}</span>
                                                       {isSeller ? (
                                                             <div className="flex items-center gap-1">
+                                                                  <button
+                                                                        onClick={() => handleEditItem(item)}
+                                                                        className="p-1 rounded text-blue-500 hover:bg-blue-50 transition"
+                                                                        aria-label="Edit item"
+                                                                  >
+                                                                        <Pencil size={16} />
+                                                                  </button>
                                                                   <button
                                                                         onClick={() => toggleMenuItemAvailability(item._id)}
                                                                         className="p-1 rounded text-gray-500 hover:bg-gray-100 hover:text-primary transition"
@@ -343,6 +349,17 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
             </div>
             {filteredItems.length === 0 && (
                   <p className="text-center text-sm text-gray-400 py-10">No items match the selected filters.</p>
+            )}
+
+            {isEditOpen && selectedItem && (
+                  <EditMenuItems
+                        item={selectedItem}
+                        onItemUpdated={onItemDelete}
+                        onClose={() => {
+                              setIsEditOpen(false);
+                              setSelectedItem(null);
+                        }}
+                  />
             )}
             </div>
       );

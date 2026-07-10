@@ -13,4 +13,6 @@ export interface IMenuItemService {
   ): Promise<{ results: any[]; correctedQuery?: string }>;
   autocomplete(q: string, longitude: number, latitude: number, radius: number): Promise<any[]>;
   toggleMenuItemAvailability(itemId: string, ownerId: string): Promise<MenuItem>;
+  updateMenuItem(itemId: string, ownerId: string, dto: MenuItemRequestDto): Promise<MenuItem>;
+  getAvailableCategories(): Promise<any[]>;
 }
