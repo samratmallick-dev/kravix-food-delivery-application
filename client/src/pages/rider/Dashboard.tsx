@@ -1,11 +1,11 @@
 import { useCallback, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 import { useAppData } from "../../context/AppContext";
 import { useSocket } from "../../context/SocketContext";
 import { useRiderProfile } from "../../hooks/useRiderProfile";
 import { useActiveOrder } from "../../hooks/useActiveOrder";
 import { useDeliveryHistory } from "../../hooks/useDeliveryHistory";
 import { useEarnings } from "../../hooks/useEarnings";
-import { useSocketOrders } from "../../hooks/useSocketOrders";
 import { useAvailabilityToggle } from "../../hooks/useAvailabilityToggle";
 import { usePermissions } from "../../hooks/usePermissions";
 import { acceptOrder } from "../../utils/rider.api";
@@ -38,15 +38,26 @@ const Dashboard = () => {
     }, [setProfile, fetchHistory])
   );
 
-  const onOrderUpdate = useCallback((orderId: string) => {
-    if (currentOrderRef.current?._id === orderId || !currentOrderRef.current) fetchCurrentOrder();
-  }, [fetchCurrentOrder, currentOrderRef]);
+  useEffect(() => {
+    if (!socket) return;
+    const onUpdate = ({ orderId }: { orderId: string }) => {
+      if (currentOrderRef.current?._id === orderId || !currentOrderRef.current) {
+        fetchCurrentOrder();
+      }
+    };
+    socket.on("order:update", onUpdate);
+    return () => {
+      socket.off("order:update", onUpdate);
+    };
+  }, [socket, fetchCurrentOrder]);
 
-  const onRiderVerified = useCallback((isVerified: boolean) => {
-    setProfile((prev) => prev ? { ...prev, isVerified } : prev);
-  }, [setProfile]);
+  const { incomingOrders, dismissOrder, audioUnlocked, enableAudio } = useOutletContext<{
+    incomingOrders: string[];
+    dismissOrder: (orderId: string) => void;
+    audioUnlocked: boolean;
+    enableAudio: () => Promise<boolean>;
+  }>();
 
-  const { incomingOrders, dismissOrder, audioUnlocked, enableAudio } = useSocketOrders(onOrderUpdate, onRiderVerified);
   const { toggling, toggle } = useAvailabilityToggle(profile, setProfile, location);
   const { locationPerm } = usePermissions();
 
@@ -57,13 +68,6 @@ const Dashboard = () => {
     fetchHistory();
     fetchEarnings();
   }, [user?._id, user?.role]);
-
-  useEffect(() => {
-    if (socket) {
-      if (user?._id) socket.emit("join:rider", user._id);
-      if (profile?._id) socket.emit("join:rider", profile._id);
-    }
-  }, [socket, user?._id, profile?._id]);
 
   const handleLogout = async () => {
     if (profile?.isAvailable) {

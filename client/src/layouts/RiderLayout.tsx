@@ -2,6 +2,8 @@ import { memo, Suspense, useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAppData } from "../context/AppContext";
 import { useRiderProfile } from "../hooks/useRiderProfile";
+import { useSocket } from "../context/SocketContext";
+import { useSocketOrders } from "../hooks/useSocketOrders";
 import {
   LayoutDashboard, Package, TrendingUp, Wallet, User,
   FileText, Settings, ChevronLeft, ChevronRight, Bike, Menu, X
@@ -23,7 +25,6 @@ const NAV_ITEMS = [
 
 const BOTTOM_NAV = NAV_ITEMS.slice(0, 5);
 
-/* ── Registration form (shown when no profile exists) ── */
 const RegistrationForm = ({ fetchProfile }: { fetchProfile: () => Promise<void> }) => {
   const { location, locationLoading } = useAppData();
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -113,10 +114,8 @@ const RegistrationForm = ({ fetchProfile }: { fetchProfile: () => Promise<void> 
   );
 };
 
-/* ── Sidebar ── */
 const RiderSidebar = memo(({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) => (
   <aside className={`hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white border-r border-gray-100 shadow-[var(--shadow-sm)] z-30 transition-all duration-300 ${collapsed ? "w-16" : "w-60"}`}>
-    {/* Brand */}
     <div className={`flex items-center gap-3 px-4 py-5 border-b border-gray-50 ${collapsed ? "justify-center" : ""}`}>
       <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--gradient-rider)" }}>
         <Bike size={16} className="text-white" />
@@ -124,7 +123,6 @@ const RiderSidebar = memo(({ collapsed, onToggle }: { collapsed: boolean; onTogg
       {!collapsed && <span className="font-bold text-gray-800 text-sm">Kravix Rider</span>}
     </div>
 
-    {/* Nav */}
     <nav className="flex-1 py-4 space-y-1 px-2" aria-label="Rider navigation">
       {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
         <NavLink
@@ -141,7 +139,6 @@ const RiderSidebar = memo(({ collapsed, onToggle }: { collapsed: boolean; onTogg
       ))}
     </nav>
 
-    {/* Collapse toggle */}
     <button
       onClick={onToggle}
       aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -152,7 +149,6 @@ const RiderSidebar = memo(({ collapsed, onToggle }: { collapsed: boolean; onTogg
   </aside>
 ));
 
-/* ── Top bar ── */
 const RiderTopBar = memo(({ mobileMenuOpen, onMobileMenuToggle }: { mobileMenuOpen: boolean; onMobileMenuToggle: () => void }) => (
   <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between lg:hidden">
     <div className="flex items-center gap-2">
@@ -171,7 +167,6 @@ const RiderTopBar = memo(({ mobileMenuOpen, onMobileMenuToggle }: { mobileMenuOp
   </header>
 ));
 
-/* ── Mobile drawer ── */
 const MobileDrawer = memo(({ open, onClose }: { open: boolean; onClose: () => void }) => (
   <>
     {open && <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onClose} />}
@@ -201,7 +196,6 @@ const MobileDrawer = memo(({ open, onClose }: { open: boolean; onClose: () => vo
   </>
 ));
 
-/* ── Bottom nav ── */
 const RiderBottomNav = memo(() => (
   <nav
     className="fixed bottom-0 left-0 right-0 z-20 bg-white/90 backdrop-blur-md border-t border-gray-100 flex lg:hidden"
@@ -227,14 +221,37 @@ const RiderBottomNav = memo(() => (
   </nav>
 ));
 
-/* ── Layout ── */
 const RiderLayout = () => {
   const { user } = useAppData();
-  const { profile, loading, fetchProfile } = useRiderProfile();
+  const { profile, setProfile, loading, fetchProfile } = useRiderProfile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { socket } = useSocket();
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
+
+  useEffect(() => {
+    if (socket) {
+      if (user?._id) socket.emit("join:rider", user._id);
+      if (profile?._id) socket.emit("join:rider", profile._id);
+    }
+  }, [socket, user?._id, profile?._id]);
+
+  const { incomingOrders, dismissOrder, audioUnlocked, enableAudio } = useSocketOrders(
+    () => {},
+    (isVerified) => {
+      setProfile((prev) => prev ? { ...prev, isVerified } : prev);
+    }
+  );
+
+  useEffect(() => {
+    if (incomingOrders.length > 0 && window.location.pathname !== "/rider/dashboard") {
+      toast("🛎️ New order available! Go to Dashboard to accept it.", {
+        duration: 5000,
+        icon: "🛵",
+      });
+    }
+  }, [incomingOrders]);
 
   if (user?.role !== "rider") {
     return (
@@ -259,7 +276,7 @@ const RiderLayout = () => {
       <main className={`${mainPadding} pb-20 lg:pb-8 transition-all duration-300`}>
         <div className="max-w-2xl mx-auto px-4 py-4 lg:py-6">
           <Suspense fallback={<DashboardSkeleton />}>
-            <Outlet />
+            <Outlet context={{ incomingOrders, dismissOrder, audioUnlocked, enableAudio }} />
           </Suspense>
         </div>
       </main>

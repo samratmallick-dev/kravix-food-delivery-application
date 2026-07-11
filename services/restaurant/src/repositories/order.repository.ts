@@ -60,7 +60,7 @@ export class OrderRepository implements IOrderRepository {
   }
 
   async findDeliveredByRider(riderId: string): Promise<Order[]> {
-    const raw = await OrderModel.find({ riderId, status: "delivered" }).sort({ createdAt: -1 }).lean();
+    const raw = await OrderModel.find({ riderId }).sort({ createdAt: -1 }).lean();
     return raw.map(OrderMapper.toDomain);
   }
 }
