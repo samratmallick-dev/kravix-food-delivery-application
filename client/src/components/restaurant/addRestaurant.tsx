@@ -152,26 +152,37 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
                                     </div>
                               </div>
 
-                              <button
-                                    type="button"
-                                    onClick={() => detectUserLocation(true)}
-                                    disabled={locationLoading}
-                                    className="w-full flex items-center justify-between gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 transition-colors cursor-pointer text-left"
-                              >
-                                    <div className="flex items-center gap-2 min-w-0">
-                                          <MapPin size={16} className="text-primary shrink-0" />
-                                          <span className="text-sm text-gray-600 truncate">
-                                                {locationLoading
-                                                      ? "Detecting location..."
-                                                      : location?.formattedAddress ?? "Location not available"}
-                                          </span>
+                              {/* Location section */}
+                              {locationLoading ? (
+                                    <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+                                          <Loader2 size={16} className="text-blue-500 animate-spin shrink-0" />
+                                          <span className="text-sm text-blue-700 font-medium">Detecting your location...</span>
                                     </div>
-                                    {!locationLoading && (
-                                          <span className="text-xs text-primary font-semibold shrink-0">
-                                                {location ? "Change" : "Detect"}
-                                          </span>
-                                    )}
-                              </button>
+                              ) : location ? (
+                                    <button
+                                          type="button"
+                                          onClick={() => detectUserLocation(true)}
+                                          className="w-full flex items-center justify-between gap-2 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg px-3 py-2.5 transition-colors cursor-pointer text-left"
+                                    >
+                                          <div className="flex items-center gap-2 min-w-0">
+                                                <MapPin size={16} className="text-green-600 shrink-0" />
+                                                <span className="text-sm text-green-800 truncate font-medium">{location.formattedAddress}</span>
+                                          </div>
+                                          <span className="text-xs text-green-700 font-semibold shrink-0">Change</span>
+                                    </button>
+                              ) : (
+                                    <button
+                                          type="button"
+                                          onClick={() => detectUserLocation(true)}
+                                          className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 border-2 border-dashed border-primary/40 hover:border-primary rounded-lg px-4 py-3 transition-all cursor-pointer group"
+                                    >
+                                          <MapPin size={18} className="text-primary group-hover:scale-110 transition-transform" />
+                                          <div className="text-left">
+                                                <p className="text-sm font-semibold text-primary">Allow Location Access</p>
+                                                <p className="text-xs text-gray-500">Required to add your restaurant</p>
+                                          </div>
+                                    </button>
+                              )}
 
                               <button
                                     onClick={handlesubmitting}

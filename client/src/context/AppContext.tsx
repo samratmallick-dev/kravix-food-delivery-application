@@ -157,7 +157,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                 }
             }
             const permission = await locationService.getPermissionState();
-            if (permission === "granted") {
+            if (permission === "granted" || permission === "prompt") {
                 await detectUserLocation(false);
             }
         };
