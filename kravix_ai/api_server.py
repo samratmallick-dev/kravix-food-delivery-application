@@ -1289,6 +1289,32 @@ async def feedback_endpoint(req: FeedbackRequest):
     except Exception as e:
         logger.error("feedback_endpoint DB error: %s", e, exc_info=True)
 
+def parse_budget_from_message(message: str) -> dict:
+    msg = message.lower()
+    bengali_digits = {'০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9'}
+    hindi_digits = {'०': '0', '१': '1', '२': '2', '३': '3', '४': '4', '५': '5', '६': '6', '७': '7', '८': '8', '९': '9'}
+    for k, v in bengali_digits.items():
+        msg = msg.replace(k, v)
+    for k, v in hindi_digits.items():
+        msg = msg.replace(k, v)
+        
+    range_match = re.search(r'(?:between|from)?\s*(?:₹|rs\.?|usd|\$)?\s*(\d+)\s*(?:to|and|-|–|—|se|theke|থেকে|সে|से)\s*(?:₹|rs\.?|usd|\$)?\s*(\d+)', msg)
+    if range_match:
+        min_b = int(range_match.group(1))
+        max_b = int(range_match.group(2))
+        if min_b > max_b:
+            min_b, max_b = max_b, min_b
+        return {"min": min_b, "max": max_b}
+        
+    under_match1 = re.search(r'(?:under|below|less than|within|upto|up to|কম|নিচে|কমের মধ্যে|se kam|kam)\s*(?:₹|rs\.?|usd|\$)?\s*(\d+)', msg)
+    under_match2 = re.search(r'(\d+)\s*(?:টাকার|টাকা|rupee|rupees|rs)?\s*(?:নিচে|কম|কমের মধ্যে|কমের|se kam|kam|below|under)', msg)
+    if under_match1:
+        return {"min": 1, "max": int(under_match1.group(1))}
+    elif under_match2:
+        return {"min": 1, "max": int(under_match2.group(1))}
+        
+    return {"min": 1, "max": 2000}
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(req: ChatRequest):
     cid = correlation_id_var.get()
@@ -1316,6 +1342,12 @@ async def chat_endpoint(req: ChatRequest):
 
         safe_message = ConversationResolver.resolve(history, safe_message)
 
+        # Fallback budget parsing if context is missing budgetRange
+        detected_intent = IntentClassifier.classify(safe_message)
+        if detected_intent == Intent.BUDGET_RECOMMENDATION and "budgetRange" not in ctx:
+            ctx["budgetRange"] = parse_budget_from_message(safe_message)
+            if "budgetRecommendations" not in ctx:
+                ctx["budgetRecommendations"] = []
 
         history.append({"role": "user", "content": safe_message})
         if len(history) > MAX_HISTORY_TURNS:

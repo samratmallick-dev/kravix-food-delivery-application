@@ -42,7 +42,6 @@ export class AIService implements IAIService {
 
     const ctx = await this.fetchContext(token, dto.restaurantId, requestId, role);
 
-    // 1. Parse budget range
     let minBudget: number | null = null;
     let maxBudget: number | null = null;
 
