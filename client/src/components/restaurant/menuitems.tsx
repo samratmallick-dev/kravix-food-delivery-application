@@ -262,11 +262,11 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                           key={item._id}
                                           className={`relative flex flex-col rounded-xl bg-white shadow-md overflow-hidden transition ${!item.isAvailable ? "opacity-70" : ""}`}
                                     >
-                                          <div className="relative w-full h-36">
+                                          <div className="relative w-full h-64">
                                                 <img
                                                       src={item.imageUrl}
                                                       alt={item.name}
-                                                      className={`w-full h-full object-fill ${!item.isAvailable ? "grayscale brightness-75" : ""}`}
+                                                      className={`w-full h-full object-cover ${!item.isAvailable ? "grayscale brightness-75" : ""}`}
                                                 />
                                                 {!item.isAvailable && (
                                                       <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white bg-black/50">Unavailable</span>

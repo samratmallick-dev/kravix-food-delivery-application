@@ -80,9 +80,9 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate, fetchMyRestaurant }
       return (
             <div className="w-full bg-white rounded-b-2xl shadow-md overflow-hidden">
                   <div className="relative">
-                        <div className={`h-56 bg-linear-to-r from-primary/20 to-orange-100 overflow-hidden ${!restaurant.isOpen && "grayscale brightness-75 opacity-80"}`}>
+                        <div className={`h-64 bg-linear-to-r from-primary/20 to-orange-100 overflow-hidden ${!restaurant.isOpen && "grayscale brightness-75 opacity-80"}`}>
                               {(imagePreview || restaurant.image) && (
-                                    <img src={imagePreview ?? restaurant.image} alt={restaurant.name} className="w-full h-full object-fill object-center" />
+                                    <img src={imagePreview ?? restaurant.image} alt={restaurant.name} className="w-full h-full object-cover object-center" />
                               )}
                         </div>
                         {editMode && (
