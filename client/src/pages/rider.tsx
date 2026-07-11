@@ -92,8 +92,11 @@ const RiderDashboard = () => {
       }, [user?._id, user?.role]);
 
       useEffect(() => {
-            if (socket && user?._id) socket.emit("join:rider", user._id);
-      }, [socket, user?._id]);
+            if (socket) {
+                  if (user?._id) socket.emit("join:rider", user._id);
+                  if (profile?._id) socket.emit("join:rider", profile._id);
+            }
+      }, [socket, user?._id, profile?._id]);
 
       const fetchCurrentOrder = async () => {
             try {
