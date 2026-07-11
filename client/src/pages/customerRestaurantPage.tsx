@@ -448,7 +448,7 @@ const RestaurantReviewsSection = ({
                                           return (
                                                 <div
                                                       key={review._id}
-                                                      className="bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 shadow-sm space-y-2.5 transition-all hover:translate-y-[-1px] hover:shadow-md"
+                                                      className="bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 shadow-sm space-y-2.5 transition-all hover:-translate-y-px hover:shadow-md"
                                                 >
                                                       <div className="flex justify-between items-start">
                                                             <div className="flex items-center gap-3">

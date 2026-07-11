@@ -33,10 +33,10 @@ const RestaurantsCard = ({ id, slug, name, image, distance, isOpen }: Restaurant
                   tabIndex={0}
                   role="link"
                   aria-label={`View details of restaurant ${name}`}
-                  className="group cursor-pointer rounded-2xl overflow-hidden border border-gray-100 hover:border-transparent bg-white shadow-xs hover:shadow-lg transition-all duration-300 hover:translate-y-[-4px] focus:ring-2 focus:ring-primary/20 focus:outline-none relative flex flex-col"
+                  className="group cursor-pointer rounded-2xl overflow-hidden border border-gray-100 hover:border-transparent bg-white shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-primary/20 focus:outline-none relative flex flex-col h-36 w-full"
             >
                   {/* Image container */}
-                  <div className="relative h-44 w-full overflow-hidden shrink-0">
+                  <div className="relative h-full w-full overflow-hidden shrink-0">
                         <img 
                               src={image} 
                               alt={name} 
@@ -49,7 +49,7 @@ const RestaurantsCard = ({ id, slug, name, image, distance, isOpen }: Restaurant
                               decoding="async" 
                         />
                         {/* Shadow vignette cover */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         
                         {/* Glassmorphic status indicator */}
                         <span className="absolute top-3 right-3 text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-lg backdrop-blur-md border border-white/10 text-white bg-black/45 shadow-sm flex items-center gap-1.5 select-none">
@@ -65,7 +65,7 @@ const RestaurantsCard = ({ id, slug, name, image, distance, isOpen }: Restaurant
                         <h3 className="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors duration-200 line-clamp-1">
                               {name}
                         </h3>
-                        <div className="flex items-center justify-between text-[11px] text-gray-500 mt-2 font-semibold border-t border-gray-50 pt-2.5 mt-auto">
+                        <div className="flex items-center justify-between text-[11px] text-gray-500 font-semibold border-t border-gray-50 pt-2.5 mt-auto">
                               <div className="flex items-center gap-1">
                                     <MapPin size={12} className="text-gray-400 shrink-0" />
                                     <span>{formattedDistance} KM Away</span>

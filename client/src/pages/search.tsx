@@ -287,7 +287,7 @@ const SearchPage = () => {
                         <AppSkeleton />
                   ) : searchType === "restaurant" ? (
                         restaurants.length > 0 ? (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                              <div className="container-app py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                                     {restaurants.map((restaurant) => {
                                           const [resLong, resLat] = restaurant.autoLocation.coordinates;
                                           const distance = getDistanceKm(location!.latitude, location!.longitude, resLat, resLong);
@@ -309,19 +309,19 @@ const SearchPage = () => {
                         )
                   ) : (
                         foodResults.length > 0 ? (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                              <div className="container-app py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                                     {foodResults.map(({ item, restaurant }) => {
                                           const isLoading = loadingItemId === item._id;
                                           const cartItem = cart.find(c =>
                                                 (typeof c.itemId === "object" ? c.itemId._id : c.itemId) === item._id
                                           );
                                           return (
-                                                <div key={item._id} className="bg-white rounded-xl shadow hover:shadow-md transition-shadow overflow-hidden flex flex-col">
+                                                <div key={item._id} className="bg-white rounded-xl shadow hover:shadow-md transition-shadow overflow-hidden flex flex-col h-36 w-full">
                                                       <div>
                                                             <img
                                                                   src={item.imageUrl || "https://placehold.co/400x160?text=Food"}
                                                                   alt={item.name}
-                                                                  className="w-full h-40 object-cover"
+                                                                  className="w-full h-full object-cover"
                                                                   loading="lazy"
                                                                   width={400}
                                                                   height={160}

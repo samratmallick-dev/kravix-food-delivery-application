@@ -227,7 +227,7 @@ const Home = () => {
                                           { icon: Clock, title: "Live Order Tracking", desc: "Track your food order in real-time from the kitchen counter all the way to your door.", border: "hover:border-blue-200 hover:shadow-blue-100/40", badge: "text-blue-500 bg-blue-500/10" },
                                           { icon: Heart, title: "AI-Powered Recommendations", desc: "Get smart recommendations based on your cuisine preferences and location history.", border: "hover:border-rose-200 hover:shadow-rose-100/40", badge: "text-rose-500 bg-rose-500/10" }
                                     ].map((item, idx) => (
-                                          <div key={idx} className={`flex flex-col items-center text-center p-6 bg-white rounded-2xl border border-gray-100 shadow-3xs transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg group ${item.border}`}>
+                                          <div key={idx} className={`flex flex-col items-center text-center p-6 bg-white rounded-2xl border border-gray-100 shadow-3xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group ${item.border}`}>
                                                 <div className={`w-12 h-12 rounded-2xl ${item.badge} flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110`}>
                                                       <item.icon className="w-5 h-5" />
                                                 </div>
@@ -349,7 +349,7 @@ const Home = () => {
                                           <p className="text-sm text-gray-400 animate-pulse" aria-live="polite">Searching...</p>
                                     )}
                                     {retaurants.length > 0 ? (
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                          <div className="container-app py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                                                 {retaurants.map((restaurant) => {
                                                       const [resLong, resLat] = restaurant.autoLocation.coordinates;
                                                       const distance = getDistanceKm(
@@ -408,9 +408,9 @@ const Home = () => {
                                     ].map((cuisine, idx) => (
                                           <article 
                                                 key={idx} 
-                                                className={`bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-3xs flex flex-col justify-between transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg group ${cuisine.border}`}
+                                                className={`bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-3xs flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group ${cuisine.border}`}
                                           >
-                                                <div className={`h-24 bg-gradient-to-br ${cuisine.gradient} p-5 flex items-end shrink-0`}>
+                                                <div className={`h-24 bg-linear-to-br ${cuisine.gradient} p-5 flex items-end shrink-0`}>
                                                       <h3 className="text-xs md:text-sm font-black text-gray-800 uppercase tracking-wider">{cuisine.title}</h3>
                                                 </div>
                                                 <div className="p-5 flex flex-col flex-1 justify-between gap-4">
