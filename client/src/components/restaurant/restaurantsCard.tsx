@@ -33,10 +33,9 @@ const RestaurantsCard = ({ id, slug, name, image, distance, isOpen }: Restaurant
                   tabIndex={0}
                   role="link"
                   aria-label={`View details of restaurant ${name}`}
-                  className="group cursor-pointer rounded-2xl overflow-hidden border border-gray-100 hover:border-transparent bg-white shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-primary/20 focus:outline-none relative flex flex-col h-36 w-full"
+                  className="group cursor-pointer rounded-2xl overflow-hidden border border-gray-100 hover:border-transparent bg-white shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-primary/20 focus:outline-none relative flex flex-col w-full"
             >
-                  {/* Image container */}
-                  <div className="relative h-full w-full overflow-hidden shrink-0">
+                  <div className="relative h-32 sm:h-36 md:h-40 w-full overflow-hidden shrink-0">
                         <img 
                               src={image} 
                               alt={name} 
@@ -48,10 +47,8 @@ const RestaurantsCard = ({ id, slug, name, image, distance, isOpen }: Restaurant
                               height={176} 
                               decoding="async" 
                         />
-                        {/* Shadow vignette cover */}
                         <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         
-                        {/* Glassmorphic status indicator */}
                         <span className="absolute top-3 right-3 text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-lg backdrop-blur-md border border-white/10 text-white bg-black/45 shadow-sm flex items-center gap-1.5 select-none">
                               <span className={`w-1.5 h-1.5 rounded-full ${
                                     isOpen ? "bg-green-400 animate-pulse" : "bg-red-500"
