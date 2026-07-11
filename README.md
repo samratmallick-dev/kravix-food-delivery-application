@@ -429,6 +429,47 @@ Kravix uses **MongoDB** as its primary persistent database. Individual schemas a
 }
 ```
 
+### 5. Shift Log Schema (`Rider Service`)
+```typescript
+{
+  _id: ObjectId,
+  riderId: string,               // Index: true
+  startTime: Date,
+  endTime: Date | null,
+  breaks: [
+    {
+      start: Date,
+      end: Date | null,
+      durationSeconds: number
+    }
+  ],
+  durationMinutes: number,
+  status: "active" | "completed",
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### 6. Rider Wallet Schema (`Rider Service`)
+```typescript
+{
+  _id: ObjectId,
+  riderId: string,               // Unique: true
+  balance: number,
+  pendingSettlement: number,
+  codCollection: number,
+  tipsEarned: number,
+  referralEarnings: number,
+  bonuses: number,
+  bankName: string | null,
+  bankAccountNumber: string | null,
+  bankIfsc: string | null,
+  upiId: string | null,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
 ---
 
 ## ⚡ Microservices Architecture

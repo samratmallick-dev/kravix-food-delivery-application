@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Bot, X, Send, ChevronDown } from "lucide-react";
+import { Bot, X, Send } from "lucide-react";
 import { aiApi } from "../../utils/ai.api";
 import { useAppData } from "../../context/AppContext";
 import { useAdminAuth } from "../../admin/context/AdminAuthContext";
@@ -98,9 +98,9 @@ const AiAssistant: React.FC = () => {
             <button
                 onClick={() => setIsOpen(o => !o)}
                 aria-label="Toggle AI Assistant"
-                className="fixed bottom-4 right-4 z-50 flex items-center justify-center w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-primary text-white shadow-xl hover:scale-105 active:scale-95 transition-transform sm:bottom-6 sm:right-6"
+                className={`fixed bottom-18 right-4 z-50 flex items-center justify-center w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-primary text-white shadow-xl hover:scale-105 active:scale-95 transition-transform sm:bottom-6 sm:right-6 ${isOpen ? "hidden sm:flex" : "flex"}`}
             >
-                {isOpen ? <ChevronDown size={22} /> : <Bot size={22} />}
+                {isOpen ? <X size={20} /> : <Bot size={20} />}
             </button>
 
             {isOpen && (

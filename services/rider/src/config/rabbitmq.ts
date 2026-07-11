@@ -1,6 +1,6 @@
 import amqp from "amqplib";
 import { OrderReadyWorker } from "../workers/orderReady.worker.js";
-import { RatingWorker } from "../workers/rating.worker.js";
+import { RiderEventWorker } from "../workers/riderEvent.worker.js";
 import { riderRepository, riderService } from "../services/index.js";
 
 let channel: amqp.Channel | null = null;
@@ -37,8 +37,8 @@ export const connectRabbitMQ = async (): Promise<void> => {
     const orderReadyWorker = new OrderReadyWorker(chan, process.env.ORDER_READY_QUEUE!, riderRepository);
     await orderReadyWorker.start();
 
-    const ratingWorker = new RatingWorker(chan, process.env.RIDER_QUEUE!, riderService);
-    await ratingWorker.start();
+    const riderEventWorker = new RiderEventWorker(chan, process.env.RIDER_QUEUE!, riderService);
+    await riderEventWorker.start();
 
     conn.on("error", (err) => {
       console.error("RabbitMQ connection error in Rider Service:", err.message);

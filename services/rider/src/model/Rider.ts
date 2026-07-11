@@ -14,6 +14,7 @@ export interface IRider extends Document {
       };
 
       isAvailable: boolean;
+      availabilityStatus: "ONLINE" | "OFFLINE" | "BUSY" | "BREAK" | "DELIVERING" | "RETURNING" | "UNAVAILABLE" | "SUSPENDED";
       lastActiveAt: Date;
 
       totalEarnings: number;
@@ -23,6 +24,13 @@ export interface IRider extends Document {
 
       deliveryOtp?: string | null;
       deliveryOtpExpiry?: Date | null;
+
+      emergencyContact?: {
+            name: string;
+            phone: string;
+            relation: string;
+      } | null;
+      address?: string | null;
 
       createdAt: Date;
       updatedAt: Date;
@@ -75,6 +83,12 @@ const riderSchema: Schema = new Schema<IRider>(
                   required: true,
                   default: false,
             },
+            availabilityStatus: {
+                  type: String,
+                  enum: ["ONLINE", "OFFLINE", "BUSY", "BREAK", "DELIVERING", "RETURNING", "UNAVAILABLE", "SUSPENDED"],
+                  required: true,
+                  default: "OFFLINE",
+            },
             lastActiveAt: {
                   type: Date,
                   required: true,
@@ -103,6 +117,15 @@ const riderSchema: Schema = new Schema<IRider>(
             deliveryOtpExpiry: {
                   type: Date,
                   default: null,
+            },
+            emergencyContact: {
+                  name: { type: String, default: "" },
+                  phone: { type: String, default: "" },
+                  relation: { type: String, default: "" },
+            },
+            address: {
+                  type: String,
+                  default: "",
             },
       },
       { timestamps: true },

@@ -1,5 +1,5 @@
-import { RiderRepository } from "../repositories/rider.repository.js";
+import { riderRepository } from "../repositories/index.js";
 import { RiderService } from "./RiderService.js";
 
-export const riderRepository = new RiderRepository();
 export const riderService = new RiderService(riderRepository);
+export { riderRepository };
