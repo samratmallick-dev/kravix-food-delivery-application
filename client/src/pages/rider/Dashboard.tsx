@@ -34,8 +34,10 @@ const Dashboard = () => {
   const { currentOrder, currentOrderRef, fetchCurrentOrder, handleStatusUpdate, handleGenerateOtp } = useActiveOrder(
     useCallback(() => {
       setProfile((prev) => prev ? { ...prev, isAvailable: false } : prev);
+      fetchProfile();
+      fetchEarnings();
       fetchHistory();
-    }, [setProfile, fetchHistory])
+    }, [setProfile, fetchProfile, fetchEarnings, fetchHistory])
   );
 
   useEffect(() => {

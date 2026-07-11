@@ -230,6 +230,7 @@ const RiderDashboard = () => {
                   if (nextStatus === "delivered") {
                         setCurrentOrder(null);
                         setProfile((prev) => prev ? { ...prev, isAvailable: false } : prev);
+                        fetchProfile();
                         fetchDeliveryHistory();
                   } else if (nextStatus) {
                         setCurrentOrder((prev) => prev ? { ...prev, status: nextStatus as IOrder["status"] } : prev);
