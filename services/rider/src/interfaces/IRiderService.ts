@@ -14,4 +14,5 @@ export interface IRiderService {
   getEarnings(userId: string): Promise<any>;
   getDeliveryHistory(userId: string): Promise<any>;
   handleRiderRated(riderId: string, rating: number): Promise<void>;
+  getRiderLocation(riderId: string): Promise<{ latitude: number; longitude: number }>;
 }

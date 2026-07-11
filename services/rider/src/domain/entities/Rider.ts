@@ -9,6 +9,7 @@ export class Rider {
     public readonly phoneNumber: string,
     public readonly aadhaarNumber: string,
     public readonly drivingLicesce: string,
+    public panNumber: string | null,
     public isVerified: boolean,
     public location: Coordinates,
     public isAvailable: boolean,
@@ -23,7 +24,7 @@ export class Rider {
     public readonly updatedAt?: Date
   ) {}
 
-  updateProfile(picture?: string, phoneNumber?: string, aadhaarNumber?: string, drivingLicesce?: string): void {
+  updateProfile(picture?: string, phoneNumber?: string, aadhaarNumber?: string, drivingLicesce?: string, panNumber?: string | null): void {
     if (phoneNumber && phoneNumber.trim().length === 0) {
       throw new ValidationError("Phone number cannot be empty");
     }

@@ -9,6 +9,7 @@ export class RiderMapper {
       raw.phoneNumber,
       raw.aadhaarNumber,
       raw.drivingLicesce,
+      raw.panNumber || null,
       raw.isVerified ?? false,
       { coordinates: raw.location?.coordinates || [0, 0] },
       raw.isAvailable ?? false,
@@ -24,6 +25,7 @@ export class RiderMapper {
       phoneNumber: domain.phoneNumber,
       aadhaarNumber: domain.aadhaarNumber,
       drivingLicesce: domain.drivingLicesce,
+      panNumber: domain.panNumber,
       isVerified: domain.isVerified,
       location: {
         type: "Point",

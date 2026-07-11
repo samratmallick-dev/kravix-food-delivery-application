@@ -43,6 +43,7 @@ export interface RiderResponseDto {
   phoneNumber: string;
   aadhaarNumber: string;
   drivingLicesce: string;
+  panNumber?: string | null;
   isVerified: boolean;
   location: { coordinates: [number, number] };
   isAvailable: boolean;

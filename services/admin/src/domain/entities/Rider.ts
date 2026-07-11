@@ -6,6 +6,7 @@ export class Rider {
     public readonly phoneNumber: string,
     public readonly aadhaarNumber: string,
     public readonly drivingLicesce: string,
+    public readonly panNumber: string | null,
     public isVerified: boolean,
     public readonly location: { coordinates: [number, number] },
     public readonly isAvailable: boolean,

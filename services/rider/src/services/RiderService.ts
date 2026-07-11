@@ -31,12 +31,13 @@ export class RiderService implements IRiderService {
     const phoneNumber = updates.phoneNumber ?? rider.phoneNumber;
     const aadhaarNumber = updates.aadhaarNumber ?? rider.aadhaarNumber;
     const drivingLicesce = updates.drivingLicesce ?? rider.drivingLicesce;
+    const panNumber = updates.panNumber !== undefined ? updates.panNumber : rider.panNumber;
 
-    rider.updateProfile(picture, phoneNumber, aadhaarNumber, drivingLicesce);
+    rider.updateProfile(picture, phoneNumber, aadhaarNumber, drivingLicesce, panNumber);
 
     const updatedRider = await this.riderRepository.findOneAndUpdate(
       { userId },
-      { picture, phoneNumber, aadhaarNumber, drivingLicesce }
+      { picture, phoneNumber, aadhaarNumber, drivingLicesce, panNumber }
     );
 
     if (!updatedRider) {
@@ -310,11 +311,11 @@ export class RiderService implements IRiderService {
       weekAgo.setDate(weekAgo.getDate() - 6);
 
       const todayEarnings = orders
-        .filter((o) => new Date(o.createdAt) >= today)
+        .filter((o) => o.createdAt && new Date(o.createdAt) >= today)
         .reduce((sum, o) => sum + (o.riderAmount ?? 0), 0);
 
       const weekEarnings = orders
-        .filter((o) => new Date(o.createdAt) >= weekAgo)
+        .filter((o) => o.createdAt && new Date(o.createdAt) >= weekAgo)
         .reduce((sum, o) => sum + (o.riderAmount ?? 0), 0);
 
       const getLocalDateString = (d: Date) => {
@@ -328,6 +329,7 @@ export class RiderService implements IRiderService {
         dailyMap[getLocalDateString(d)] = 0;
       }
       orders.forEach((o) => {
+        if (!o.createdAt) return;
         const day = getLocalDateString(new Date(o.createdAt));
         if (day in dailyMap) {
           dailyMap[day] += o.riderAmount ?? 0;
@@ -374,5 +376,14 @@ export class RiderService implements IRiderService {
     rider.updateRating(rating);
     await this.riderRepository.save(rider);
     console.log(`Updated Rider ${riderId}: ratingCount=${rider.ratingCount}, rating=${rider.rating}`);
+  }
+
+  async getRiderLocation(riderId: string): Promise<{ latitude: number; longitude: number }> {
+    const rider = await this.riderRepository.findById(riderId);
+    if (!rider) {
+      throw new NotFoundError("Rider not found");
+    }
+    const [lng, lat] = rider.location.toArray();
+    return { latitude: lat, longitude: lng };
   }
 }

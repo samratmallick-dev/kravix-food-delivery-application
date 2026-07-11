@@ -3,40 +3,40 @@ import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "leaflet-routing-machine";
 import { useSocket } from "../../context/SocketContext";
+import { fetchRiderLocation } from "../../utils/rider.api";
 import deliveryIconImage from "../../assets/Delivery_man.jpg";
 import homeIconImage from "../../assets/Home.jpg";
-
-declare module "leaflet" {
-      namespace Routing {
-            function control(option: any): any;
-            function osrmv1(option?: any): any;
-      }
-}
 
 const riderIcon = new L.Icon({ iconUrl: deliveryIconImage, iconSize: [50, 50], iconAnchor: [25, 50], popupAnchor: [0, -45] });
 const homeIcon = new L.Icon({ iconUrl: homeIconImage, iconSize: [50, 50], iconAnchor: [25, 50], popupAnchor: [0, -45] });
 
 const ACTIVE_TRACKING_STATUSES = ["rider_assigned", "picked_up", "out_for_delivery", "reached_delivery_location"];
-const INTERPOLATION_DURATION = 2000; 
+const INTERPOLATION_DURATION = 2000;
 
-const Routing = ({ from, to }: { from: [number, number]; to: [number, number] }) => {
+const RoutePolyline = ({ from, to }: { from: [number, number]; to: [number, number] }) => {
       const map = useMap();
       useEffect(() => {
-            const control = L.Routing.control({
-                  waypoints: [L.latLng(from), L.latLng(to)],
-                  lineOptions: { style: [{ color: "#C22630", weight: 4, opacity: 0.8 }] },
-                  addWaypoints: false,
-                  draggableWaypoints: false,
-                  show: false,
-                  createMarker: () => null,
-                  router: L.Routing.osrmv1({ serviceUrl: "https://router.project-osrm.org/route/v1", useHints: false, timeout: 10000 }),
-            }).addTo(map);
+            let polyline: L.Polyline | null = null;
+            let cancelled = false;
+            const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+            fetch(url)
+                  .then(r => r.json())
+                  .then(data => {
+                        if (cancelled) return;
+                        const coords: [number, number][] = data?.routes?.[0]?.geometry?.coordinates?.map(
+                              ([lng, lat]: [number, number]) => [lat, lng]
+                        );
+                        if (coords?.length) {
+                              polyline = L.polyline(coords, { color: "#C22630", weight: 4, opacity: 0.8 }).addTo(map);
+                        }
+                  })
+                  .catch(() => {});
             return () => {
-                  try { control.getPlan().setWaypoints([]); map.removeControl(control); } catch (_) { }
+                  cancelled = true;
+                  polyline?.remove();
             };
-      }, [from, to, map]);
+      }, [from[0], from[1], to[0], to[1], map]);
       return null;
 };
 
@@ -97,6 +97,8 @@ const AutoFitBounds = ({ rider, delivery }: { rider: [number, number]; delivery:
       return null;
 };
 
+const POLL_INTERVAL_MS = 5000;
+
 const CustomerTrackingMap = ({ order }: { order: IOrder }) => {
       const { socket } = useSocket();
       const [riderLocation, setRiderLocation] = useState<[number, number] | null>(null);
@@ -104,7 +106,23 @@ const CustomerTrackingMap = ({ order }: { order: IOrder }) => {
       const isActive = ACTIVE_TRACKING_STATUSES.includes(order.status);
       const hasDeliveryCoords = order.deliveryAddress?.latitude != null && order.deliveryAddress?.longitude != null;
 
-      useEffect(() => { setRiderLocation(null); }, [order._id]);
+      useEffect(() => {
+            setRiderLocation(null);
+            if (!isActive || !order.riderId) return;
+
+            const fetchLocation = () =>
+                  fetchRiderLocation(order.riderId)
+                        .then(res => {
+                              if (res.data?.latitude != null && res.data?.longitude != null) {
+                                    setRiderLocation([res.data.latitude, res.data.longitude]);
+                              }
+                        })
+                        .catch(() => {});
+
+            fetchLocation();
+            const intervalId = setInterval(fetchLocation, POLL_INTERVAL_MS);
+            return () => clearInterval(intervalId);
+      }, [order._id, order.riderId, isActive]);
 
       useEffect(() => {
             if (!socket || !isActive) return;
@@ -141,7 +159,7 @@ const CustomerTrackingMap = ({ order }: { order: IOrder }) => {
                               <>
                                     <SmoothRiderMarker target={riderLocation} />
                                     <AutoFitBounds rider={riderLocation} delivery={deliveryLocation} />
-                                    <Routing from={riderLocation} to={deliveryLocation} />
+                                    <RoutePolyline from={riderLocation} to={deliveryLocation} />
                               </>
                         )}
                   </MapContainer>

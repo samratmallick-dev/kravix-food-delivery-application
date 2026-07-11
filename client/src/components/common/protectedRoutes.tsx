@@ -15,7 +15,7 @@ const ProtectedRoutes = () => {
       if (user.role === null && location.pathname !== "/select-role") return <Navigate to="/select-role" replace />;
 
       if (user.role === "seller" && location.pathname !== "/seller") return <Navigate to="/seller" replace />;
-      if (user.role === "rider" && location.pathname !== "/rider") return <Navigate to="/rider" replace />;
+  if (user.role === "rider" && !location.pathname.startsWith("/rider")) return <Navigate to="/rider/dashboard" replace />;
 
       if (user.role !== null && location.pathname === "/select-role") return <Navigate to="/" replace />;
 

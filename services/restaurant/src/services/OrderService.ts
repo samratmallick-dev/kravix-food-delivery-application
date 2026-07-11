@@ -304,7 +304,7 @@ export class OrderService implements IOrderService {
   }
 
   async getDeliveredOrdersByRider(riderId: string): Promise<Order[]> {
-    return await this.orderRepository.findByUser(riderId);
+    return await this.orderRepository.findDeliveredByRider(riderId);
   }
 
   async setOrderOtp(orderId: string, otp: number): Promise<Order> {

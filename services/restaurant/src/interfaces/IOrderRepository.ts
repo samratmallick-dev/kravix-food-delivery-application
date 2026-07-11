@@ -8,4 +8,5 @@ export interface IOrderRepository {
   update(order: Order, session?: any): Promise<Order>;
   findActiveOrderForRestaurant(restaurantId: string): Promise<Order | null>;
   findActiveOrderForRider(riderId: string): Promise<Order | null>;
+  findDeliveredByRider(riderId: string): Promise<Order[]>;
 }

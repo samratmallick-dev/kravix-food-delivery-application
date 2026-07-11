@@ -6,7 +6,7 @@ import AdminTable from "../components/AdminTable";
 import VerifyToggle from "../components/VerifyToggle";
 import toast from "react-hot-toast";
 
-interface Rider { _id: string; userId: string; picture: string; phoneNumber: string; aadhaarNumber: string; drivingLicesce: string; isVerified: boolean; isAvailable: boolean; lastActiveAt: string; createdAt: string; }
+interface Rider { _id: string; userId: string; picture: string; phoneNumber: string; aadhaarNumber: string; drivingLicesce: string; panNumber?: string | null; isVerified: boolean; isAvailable: boolean; lastActiveAt: string; createdAt: string; }
 
 const AdminRiders = () => {
 
@@ -174,6 +174,7 @@ const AdminRiders = () => {
                                                 ["Phone", selected.phoneNumber],
                                                 ["Aadhaar", `XXXX-XXXX-${selected.aadhaarNumber.slice(-4)}`],
                                                 ["License", selected.drivingLicesce],
+                                                ...(selected.panNumber ? [["PAN", selected.panNumber.toUpperCase()]] : []),
                                                 ["Verified", selected.isVerified ? "✅ Yes" : "⏳ Pending"],
                                                 ["Status", selected.isAvailable ? "🟢 Online" : "⚫ Offline"],
                                           ].map(([label, value]) => (

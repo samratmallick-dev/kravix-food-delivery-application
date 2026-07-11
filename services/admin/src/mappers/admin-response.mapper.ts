@@ -45,6 +45,7 @@ export class AdminResponseMapper {
       phoneNumber: rider.phoneNumber,
       aadhaarNumber: rider.aadhaarNumber,
       drivingLicesce: rider.drivingLicesce,
+      panNumber: rider.panNumber,
       isVerified: rider.isVerified,
       location: rider.location,
       isAvailable: rider.isAvailable,

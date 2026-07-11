@@ -61,8 +61,8 @@ const RiderOrderMap = ({ order }: { order: IOrder }) => {
 
                         const now = Date.now();
                         const last = lastEmitRef.current;
-                        const movedEnough = !last || haversineMeters(last.lat, last.lng, latitude, longitude) > 10;
-                        const timeElapsed = !last || now - last.time > 15000;
+                        const movedEnough = !last || haversineMeters(last.lat, last.lng, latitude, longitude) > 5;
+                        const timeElapsed = !last || now - last.time > 5000;
 
                         if (movedEnough || timeElapsed) {
                               lastEmitRef.current = { lat: latitude, lng: longitude, time: now };
@@ -75,7 +75,7 @@ const RiderOrderMap = ({ order }: { order: IOrder }) => {
                         }
                   },
                   (err) => console.error("Geolocation error:", err),
-                  { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+                  { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
             );
 
             return () => {

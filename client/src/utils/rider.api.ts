@@ -9,6 +9,7 @@ export interface AddRiderProfilePayload {
       phoneNumber: string;
       aadhaarNumber: string;
       drivingLicesce: string;
+      panNumber?: string;
       latitude: number;
       longitude: number;
       image: File;
@@ -18,6 +19,7 @@ export interface UpdateRiderProfilePayload {
       phoneNumber?: string;
       aadhaarNumber?: string;
       drivingLicesce?: string;
+      panNumber?: string;
       image?: File;
 }
 
@@ -53,6 +55,7 @@ export const addRiderProfile = async (payload: AddRiderProfilePayload): Promise<
                   phoneNumber: payload.phoneNumber,
                   aadhaarNumber: payload.aadhaarNumber,
                   drivingLicesce: payload.drivingLicesce,
+                  ...(payload.panNumber && { panNumber: payload.panNumber }),
                   latitude: payload.latitude,
                   longitude: payload.longitude,
                   pictureUrl,
@@ -70,6 +73,7 @@ export const updateRiderProfile = async (payload: UpdateRiderProfilePayload): Pr
       if (payload.phoneNumber) body.phoneNumber = payload.phoneNumber;
       if (payload.aadhaarNumber) body.aadhaarNumber = payload.aadhaarNumber;
       if (payload.drivingLicesce) body.drivingLicesce = payload.drivingLicesce;
+      if (payload.panNumber) body.panNumber = payload.panNumber;
       if (payload.image) {
             const compressed = await compressImage(payload.image);
             body.pictureUrl = await uploadImage(compressed);
@@ -123,4 +127,9 @@ export const generateDeliveryOtp = (orderId: string): Promise<SuccessResponse> =
       request<SuccessResponse>(`${riderBaseUrl}/orders/${orderId}/otp/generate`, {
             method: "POST",
             body: JSON.stringify({ orderId }),
+      });
+
+export const fetchRiderLocation = (riderId: string | null | undefined): Promise<ApiResponse<{ latitude: number; longitude: number }>> =>
+      request<ApiResponse<{ latitude: number; longitude: number }>>(`${riderBaseUrl}/${riderId}/location`, {
+            method: "GET",
       });

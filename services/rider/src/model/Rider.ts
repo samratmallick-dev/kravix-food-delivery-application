@@ -6,6 +6,7 @@ export interface IRider extends Document {
       phoneNumber: string;
       aadhaarNumber: string;
       drivingLicesce: string;
+      panNumber?: string | null;
       isVerified: boolean;
 
       location: {
@@ -50,6 +51,11 @@ const riderSchema: Schema = new Schema<IRider>(
             drivingLicesce: {
                   type: String,
                   required: true,
+            },
+            panNumber: {
+                  type: String,
+                  required: false,
+                  default: null,
             },
             isVerified: {
                   type: Boolean,

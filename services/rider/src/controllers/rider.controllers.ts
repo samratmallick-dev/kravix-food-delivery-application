@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { getBuffer } from "../config/datauri.js";
 import { AuthenticatedRequest } from "../middleware/authenticate.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
@@ -18,8 +18,8 @@ export const addRiderProfile = TryCatch(
       return errorResponse(res, 403, "Access denied. Riders only.", "FORBIDDEN");
     }
 
-    const { phoneNumber, aadhaarNumber, drivingLicesce, latitude, longitude, pictureUrl } = req.body;
-    const validated = createRiderSchema.parse({ phoneNumber, aadhaarNumber, drivingLicesce, latitude, longitude, pictureUrl });
+    const { phoneNumber, aadhaarNumber, drivingLicesce, latitude, longitude, pictureUrl, panNumber } = req.body;
+    const validated = createRiderSchema.parse({ phoneNumber, aadhaarNumber, drivingLicesce, panNumber, latitude, longitude, pictureUrl });
 
     let resolvedPictureUrl = validated.pictureUrl || "";
     if (!resolvedPictureUrl) {
@@ -45,6 +45,7 @@ export const addRiderProfile = TryCatch(
       phoneNumber: validated.phoneNumber,
       aadhaarNumber: validated.aadhaarNumber,
       drivingLicesce: validated.drivingLicesce,
+      panNumber: validated.panNumber,
       latitude: validated.latitude,
       longitude: validated.longitude,
       pictureUrl: resolvedPictureUrl
@@ -64,11 +65,12 @@ export const updateRiderProfile = TryCatch(
       return errorResponse(res, 403, "Access denied. Riders only.", "FORBIDDEN");
     }
 
-    const { phoneNumber, aadhaarNumber, drivingLicesce, pictureUrl } = req.body;
+    const { phoneNumber, aadhaarNumber, drivingLicesce, pictureUrl, panNumber } = req.body;
     const updates: any = {};
     if (phoneNumber) updates.phoneNumber = phoneNumber;
     if (aadhaarNumber) updates.aadhaarNumber = aadhaarNumber;
     if (drivingLicesce) updates.drivingLicesce = drivingLicesce;
+    if (panNumber) updates.panNumber = panNumber.toUpperCase();
 
     const file = req.file;
     if (file) {
@@ -229,5 +231,13 @@ export const fetchDeliveryHistory = TryCatch(
 
     const data = await riderService.getDeliveryHistory(user._id.toString());
     return successResponse(res, 200, "Delivery history fetched successfully", data);
+  }
+);
+
+export const getRiderLocation = TryCatch(
+  async (req: Request<{ riderId: string }>, res: Response) => {
+    const { riderId } = req.params;
+    const data = await riderService.getRiderLocation(riderId);
+    return successResponse(res, 200, "Rider location fetched", data);
   }
 );

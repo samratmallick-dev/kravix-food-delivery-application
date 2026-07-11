@@ -4,6 +4,7 @@ import { useSocket } from "../context/SocketContext";
 import type { IOrder, IRider } from "../types/types";
 import toast from "react-hot-toast";
 import { fetchMyRiderProfile, fetchCurrentOrder as apiFetchCurrentOrder, fetchDeliveryHistory as apiFetchDeliveryHistory, updateRiderProfile, toggleRiderAvailability, updateOrderStatusByRider, generateDeliveryOtp, addRiderProfile, acceptOrder } from "../utils/rider.api";
+import { invalidateCache } from "../utils/request";
 import {
       ImagePlus, Loader2, Phone, MapPin, CreditCard, FileText,
       Bike, VolumeX, History, LogOut, TrendingUp, Pencil, X
@@ -30,6 +31,7 @@ const RiderDashboard = () => {
       const [phoneNumber, setPhoneNumber] = useState("");
       const [aadhaarNumber, setAadhaarNumber] = useState("");
       const [drivingLicesce, setDrivingLicesce] = useState("");
+      const [panNumber, setPanNumber] = useState("");
       const [image, setImage] = useState<File | null>(null);
       const [preview, setPreview] = useState<string | null>(null);
       const [submitting, setSubmitting] = useState(false);
@@ -39,6 +41,7 @@ const RiderDashboard = () => {
       const [editPhone, setEditPhone] = useState("");
       const [editAadhaar, setEditAadhaar] = useState("");
       const [editLicense, setEditLicense] = useState("");
+      const [editPan, setEditPan] = useState("");
       const [editImageFile, setEditImageFile] = useState<File | null>(null);
       const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
       const [savingProfile, setSavingProfile] = useState(false);
@@ -153,6 +156,7 @@ const RiderDashboard = () => {
                   if (editPhone) payload.phoneNumber = editPhone;
                   if (editAadhaar) payload.aadhaarNumber = editAadhaar;
                   if (editLicense) payload.drivingLicesce = editLicense;
+                  if (editPan) payload.panNumber = editPan.toUpperCase();
                   if (editImageFile) payload.image = editImageFile;
 
                   const data = await updateRiderProfile(payload);
@@ -270,12 +274,18 @@ const RiderDashboard = () => {
                         phoneNumber,
                         aadhaarNumber,
                         drivingLicesce,
+                        ...(panNumber && { panNumber: panNumber.toUpperCase() }),
                         image,
                         latitude: location.latitude,
                         longitude: location.longitude,
                   });
-                  if (data) { toast.success("Rider profile created successfully."); fetchProfile(); }
-                  else toast.error("Failed to create profile.");
+                  if (data?.data) {
+                        toast.success("Rider profile created successfully.");
+                        invalidateCache("/riders/me");
+                        setProfile(data.data);
+                  } else {
+                        toast.error("Failed to create profile.");
+                  }
             } catch (error: any) {
                   toast.error(error.message || "An error occurred.");
             } finally {
@@ -333,6 +343,13 @@ const RiderDashboard = () => {
                                     <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 focus-within:border-primary transition-colors">
                                           <FileText size={16} className="text-gray-400 shrink-0" />
                                           <input value={drivingLicesce} onChange={(e) => setDrivingLicesce(e.target.value)} placeholder="e.g. WB-0420110012345" className="flex-1 outline-none text-sm text-gray-700 bg-transparent" />
+                                    </div>
+                              </div>
+                              <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-700">PAN Number <span className="text-gray-400 text-xs">(optional)</span></label>
+                                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 focus-within:border-primary transition-colors">
+                                          <CreditCard size={16} className="text-gray-400 shrink-0" />
+                                          <input value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase())} placeholder="ABCDE1234F" maxLength={10} className="flex-1 outline-none text-sm text-gray-700 bg-transparent uppercase" />
                                     </div>
                               </div>
                               <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5">
@@ -415,6 +432,7 @@ const RiderDashboard = () => {
                                                 setEditPhone(profile.phoneNumber);
                                                 setEditAadhaar(profile.aadhaarNumber);
                                                 setEditLicense(profile.drivingLicesce);
+                                                setEditPan(profile.panNumber ?? "");
                                                 setEditingProfile(true);
                                           }
                                     }}
@@ -448,6 +466,13 @@ const RiderDashboard = () => {
                                                       <input value={editLicense} onChange={(e) => setEditLicense(e.target.value)} className="flex-1 outline-none text-sm text-gray-700 bg-transparent" placeholder="WB-0420110012345" />
                                                 </div>
                                           </div>
+                                          <div className="space-y-1">
+                                                <label className="text-xs font-medium text-gray-500">PAN Number <span className="text-gray-400">(optional)</span></label>
+                                                <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 focus-within:border-primary">
+                                                      <CreditCard size={14} className="text-gray-400 shrink-0" />
+                                                      <input value={editPan} onChange={(e) => setEditPan(e.target.value.toUpperCase())} className="flex-1 outline-none text-sm text-gray-700 bg-transparent uppercase" placeholder="ABCDE1234F" maxLength={10} />
+                                                </div>
+                                          </div>
                                           <button
                                                 onClick={handleProfileUpdate}
                                                 disabled={savingProfile}
@@ -478,6 +503,15 @@ const RiderDashboard = () => {
                                           <p className="text-sm font-medium text-gray-700">{profile.drivingLicesce}</p>
                                     </div>
                               </div>
+                              {profile.panNumber && (
+                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                          <CreditCard size={18} className="text-primary shrink-0" />
+                                          <div>
+                                                <p className="text-xs text-gray-400">PAN Number</p>
+                                                <p className="text-sm font-medium text-gray-700">{profile.panNumber.toUpperCase()}</p>
+                                          </div>
+                                    </div>
+                              )}
                               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                                     <Bike size={18} className="text-primary shrink-0" />
                                     <div>

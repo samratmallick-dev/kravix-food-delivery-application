@@ -150,6 +150,7 @@ export interface IRider {
       phoneNumber: string;
       aadhaarNumber: string;
       drivingLicesce: string;
+      panNumber?: string;
       isVerified: boolean;
       isAvailable: boolean;
       totalEarnings: number;

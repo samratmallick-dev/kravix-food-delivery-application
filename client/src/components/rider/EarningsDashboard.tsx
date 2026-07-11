@@ -66,22 +66,25 @@ const EarningsDashboard = () => {
 
                   <div>
                         <p className="text-xs font-semibold text-gray-500 mb-3">Last 7 Days</p>
-                        <div className="flex items-end gap-1.5" style={{ height: CHART_H + 16 }}>
+                        <div className="flex items-end gap-1.5" style={{ height: CHART_H }}>
                               {earnings.weeklyBreakdown.map(({ date, amount }) => {
                                     const barH = amount === 0 ? 3 : Math.max((amount / maxAmount) * CHART_H, 6);
+                                    return (
+                                          <div
+                                                key={date}
+                                                className="flex-1 rounded-t-md transition-all duration-500"
+                                                style={{ height: barH, backgroundColor: amount === 0 ? "#e5e7eb" : "#C22630" }}
+                                                title={`₹${amount}`}
+                                          />
+                                    );
+                              })}
+                        </div>
+                        <div className="flex gap-1.5 mt-1">
+                              {earnings.weeklyBreakdown.map(({ date }) => {
                                     const [year, month, day] = date.split("-");
                                     const label = new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString("en-IN", { weekday: "short" });
                                     return (
-                                          <div key={date} className="flex-1 flex flex-col items-center justify-end gap-1" style={{ height: CHART_H + 16 }}>
-                                                <div
-                                                      className={`w-full rounded-t-md transition-all duration-500 ${
-                                                            amount === 0 ? "bg-gray-200" : "bg-primary/80"
-                                                      }`}
-                                                      style={{ height: barH }}
-                                                      title={`₹${amount}`}
-                                                />
-                                                <span className="text-[9px] text-gray-400 leading-none">{label}</span>
-                                          </div>
+                                          <span key={date} className="flex-1 text-center text-[9px] text-gray-400 leading-none">{label}</span>
                                     );
                               })}
                         </div>

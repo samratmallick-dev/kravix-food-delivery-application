@@ -100,7 +100,7 @@ export interface OrderResponseDto {
   riderName?: string | null;
   riderPhoneNumber?: number | null;
   distance?: number;
-  createdAt?: string;
+  createdAt: string;
   addressId?: string;
   deliveryAddress?: {
     formatedAddress: string;

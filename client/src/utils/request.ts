@@ -3,6 +3,12 @@ import { storage } from "./secureStorage";
 const cache = new Map<string, { data: any; expiresAt: number }>();
 const pendingRequests = new Map<string, Promise<any>>();
 
+export function invalidateCache(pathPrefix: string): void {
+    for (const key of cache.keys()) {
+        if (key.includes(pathPrefix)) cache.delete(key);
+    }
+}
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function request<T>(

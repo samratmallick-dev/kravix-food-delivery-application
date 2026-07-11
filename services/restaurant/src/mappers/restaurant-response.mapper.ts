@@ -86,9 +86,7 @@ export class RestaurantResponseMapper {
     if (order.distance !== undefined) {
       dto.distance = order.distance;
     }
-    if (order.createdAt) {
-      dto.createdAt = order.createdAt.toISOString();
-    }
+    dto.createdAt = order.createdAt ? order.createdAt.toISOString() : new Date().toISOString();
     return dto;
   }
 }

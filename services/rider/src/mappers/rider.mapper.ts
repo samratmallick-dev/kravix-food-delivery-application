@@ -12,6 +12,7 @@ export class RiderMapper {
       raw.phoneNumber,
       raw.aadhaarNumber,
       raw.drivingLicesce,
+      raw.panNumber || null,
       raw.isVerified ?? false,
       new Coordinates(coords[0], coords[1]),
       raw.isAvailable ?? false,
@@ -34,6 +35,7 @@ export class RiderMapper {
       phoneNumber: domain.phoneNumber,
       aadhaarNumber: domain.aadhaarNumber,
       drivingLicesce: domain.drivingLicesce,
+      panNumber: domain.panNumber,
       isVerified: domain.isVerified,
       location: {
         type: "Point",
@@ -59,6 +61,7 @@ export class RiderMapper {
       phoneNumber: domain.phoneNumber,
       aadhaarNumber: domain.aadhaarNumber,
       drivingLicesce: domain.drivingLicesce,
+      panNumber: domain.panNumber,
       isVerified: domain.isVerified,
       isAvailable: domain.isAvailable,
       location: {
@@ -73,12 +76,8 @@ export class RiderMapper {
       rating: domain.ratingCount > 0 ? +(domain.rating / domain.ratingCount).toFixed(1) : 0,
       ratingCount: domain.ratingCount
     };
-    if (domain.createdAt) {
-      dto.createdAt = domain.createdAt;
-    }
-    if (domain.updatedAt) {
-      dto.updatedAt = domain.updatedAt;
-    }
+    if (domain.createdAt) dto.createdAt = domain.createdAt;
+    if (domain.updatedAt) dto.updatedAt = domain.updatedAt;
     return dto;
   }
 }

@@ -2,6 +2,7 @@ export interface CreateRiderDto {
   phoneNumber: string;
   aadhaarNumber: string;
   drivingLicesce: string;
+  panNumber?: string;
   latitude: number;
   longitude: number;
   pictureUrl?: string;
@@ -21,6 +22,7 @@ export interface RiderResponseDto {
   phoneNumber: string;
   aadhaarNumber: string;
   drivingLicesce: string;
+  panNumber?: string | null;
   isVerified: boolean;
   isAvailable: boolean;
   location: {

@@ -26,7 +26,15 @@ const PaymentSuccess = lazy(() => import("./pages/paymentSuccess"));
 const OrderSuccess = lazy(() => import("./pages/orderSuccess"));
 const CustomerOrder = lazy(() => import("./pages/customerOrder"));
 const OrderDetails = lazy(() => import("./pages/orderDetails"));
-const RiderDashboard = lazy(() => import("./pages/rider"));
+const RiderLayout = lazy(() => import("./layouts/RiderLayout"));
+const RiderDashboardPage = lazy(() => import("./pages/rider/Dashboard"));
+const RiderOrdersPage = lazy(() => import("./pages/rider/Orders"));
+const RiderOrderDetailsPage = lazy(() => import("./pages/rider/OrderDetails"));
+const RiderEarningsPage = lazy(() => import("./pages/rider/Earnings"));
+const RiderWalletPage = lazy(() => import("./pages/rider/Wallet"));
+const RiderProfilePage = lazy(() => import("./pages/rider/Profile"));
+const RiderDocumentsPage = lazy(() => import("./pages/rider/Documents"));
+const RiderSettingsPage = lazy(() => import("./pages/rider/Settings"));
 const CodOrderSuccess = lazy(() => import("./pages/codOrderSuccess"));
 const AdminLayout = lazy(() => import("./admin/components/AdminLayout"));
 const AdminLogin = lazy(() => import("./admin/pages/AdminLogin"));
@@ -102,7 +110,17 @@ const App = () => {
                               </Route>
                               <Route element={<ProtectedRoutes />}>
                                     <Route path="/seller" element={<Restaurant />} />
-                                    <Route path="/rider" element={<RiderDashboard />} />
+                                    <Route path="/rider" element={<RiderLayout />}>
+                                          <Route index element={<Navigate to="dashboard" replace />} />
+                                          <Route path="dashboard" element={<RiderDashboardPage />} />
+                                          <Route path="orders" element={<RiderOrdersPage />} />
+                                          <Route path="orders/:id" element={<RiderOrderDetailsPage />} />
+                                          <Route path="earnings" element={<RiderEarningsPage />} />
+                                          <Route path="wallet" element={<RiderWalletPage />} />
+                                          <Route path="profile" element={<RiderProfilePage />} />
+                                          <Route path="documents" element={<RiderDocumentsPage />} />
+                                          <Route path="settings" element={<RiderSettingsPage />} />
+                                    </Route>
                                     <Route element={
                                           <>
                                                 <a 

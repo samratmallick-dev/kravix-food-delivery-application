@@ -11,6 +11,7 @@ export class RiderFactory {
       dto.phoneNumber,
       dto.aadhaarNumber,
       dto.drivingLicesce,
+      dto.panNumber || null,
       false,
       new Coordinates(dto.longitude, dto.latitude),
       false,

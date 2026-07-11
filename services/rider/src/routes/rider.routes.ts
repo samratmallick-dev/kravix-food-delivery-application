@@ -10,6 +10,7 @@ import {
   fetchEarnings,
   fetchMyProfile,
   generateDeliveryOtp,
+  getRiderLocation,
   toggleRiderAvailability,
   updateLiveLocation,
   updateOrderStatus,
@@ -63,5 +64,8 @@ router.route(ROUTES.RIDERS.DELIVER)
 
 router.route("/orders/:orderId/otp/generate")
   .post(authenticate, generateDeliveryOtp);
+
+router.route("/:riderId/location")
+  .get(getRiderLocation);
 
 export default router;
