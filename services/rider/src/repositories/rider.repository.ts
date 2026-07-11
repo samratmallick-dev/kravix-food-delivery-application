@@ -1,90 +1,46 @@
 import { IRiderRepository } from "../interfaces/IRiderRepository.js";
-import { RiderAggregate } from "../domain/aggregates/RiderAggregate.js";
+import { Rider } from "../domain/entities/Rider.js";
 import { Rider as RiderModel } from "../model/Rider.js";
-import { Vehicle as VehicleModel } from "../model/Vehicle.js";
 import { RiderMapper } from "../mappers/rider.mapper.js";
 
 export class RiderRepository implements IRiderRepository {
-  async findById(id: string): Promise<RiderAggregate | null> {
+  async findById(id: string): Promise<Rider | null> {
     const raw = await RiderModel.findById(id);
     if (!raw) return null;
-    const rawVehicle = await VehicleModel.findOne({ riderId: id });
-    return RiderMapper.toDomain(raw, rawVehicle);
+    return RiderMapper.toDomain(raw);
   }
 
-  async findByUserId(userId: string): Promise<RiderAggregate | null> {
+  async findByUserId(userId: string): Promise<Rider | null> {
     const raw = await RiderModel.findOne({ userId });
     if (!raw) return null;
-    const rawVehicle = await VehicleModel.findOne({ riderId: (raw as any)._id.toString() });
-    return RiderMapper.toDomain(raw, rawVehicle);
+    return RiderMapper.toDomain(raw);
   }
 
-  async findOneAndUpdate(query: any, update: any, options?: any): Promise<RiderAggregate | null> {
+  async findOneAndUpdate(query: any, update: any, options?: any): Promise<Rider | null> {
     const updated = await RiderModel.findOneAndUpdate(query, update, { new: true, ...options });
     if (!updated) return null;
-    const rawVehicle = await VehicleModel.findOne({ riderId: (updated as any)._id.toString() });
-    return RiderMapper.toDomain(updated, rawVehicle);
+    return RiderMapper.toDomain(updated);
   }
 
-  async create(rider: RiderAggregate): Promise<RiderAggregate> {
+  async create(rider: Rider): Promise<Rider> {
     const persistence = RiderMapper.toPersistence(rider);
     const created = await RiderModel.create(persistence);
-    
-    let rawVehicle: any = null;
-    if (rider.vehicle) {
-      rawVehicle = await VehicleModel.findOneAndUpdate(
-        { riderId: (created as any)._id.toString() },
-        {
-          type: rider.vehicle.type,
-          fuelType: rider.vehicle.fuelType,
-          number: rider.vehicle.number,
-          manufacturer: rider.vehicle.manufacturer,
-          vehicleModel: rider.vehicle.vehicleModel,
-          color: rider.vehicle.color,
-          ownership: rider.vehicle.ownership,
-          insuranceExpiry: rider.vehicle.insuranceExpiry,
-          rcExpiry: rider.vehicle.rcExpiry,
-          isVerified: rider.vehicle.isVerified
-        },
-        { new: true, upsert: true }
-      );
-    }
-    return RiderMapper.toDomain(created, rawVehicle);
+    return RiderMapper.toDomain(created);
   }
 
-  async save(rider: RiderAggregate): Promise<RiderAggregate> {
+  async save(rider: Rider): Promise<Rider> {
     const persistence = RiderMapper.toPersistence(rider);
     const saved = await RiderModel.findOneAndUpdate(
       { userId: rider.userId },
       persistence,
       { new: true, upsert: true }
     );
-    
-    let rawVehicle: any = null;
-    if (rider.vehicle) {
-      rawVehicle = await VehicleModel.findOneAndUpdate(
-        { riderId: (saved as any)._id.toString() },
-        {
-          type: rider.vehicle.type,
-          fuelType: rider.vehicle.fuelType,
-          number: rider.vehicle.number,
-          manufacturer: rider.vehicle.manufacturer,
-          vehicleModel: rider.vehicle.vehicleModel,
-          color: rider.vehicle.color,
-          ownership: rider.vehicle.ownership,
-          insuranceExpiry: rider.vehicle.insuranceExpiry,
-          rcExpiry: rider.vehicle.rcExpiry,
-          isVerified: rider.vehicle.isVerified
-        },
-        { new: true, upsert: true }
-      );
-    }
-    return RiderMapper.toDomain(saved, rawVehicle);
+    return RiderMapper.toDomain(saved);
   }
 
-  async findNearbyAvailable(coordinates: [number, number], maxDistanceMeters: number): Promise<RiderAggregate[]> {
+  async findNearbyAvailable(coordinates: [number, number], maxDistanceMeters: number): Promise<Rider[]> {
     const rawList = await RiderModel.find({
-      availabilityStatus: "ONLINE",
+      isAvailable: true,
       isVerified: true,
       location: {
         $near: {
@@ -96,12 +52,6 @@ export class RiderRepository implements IRiderRepository {
         }
       }
     });
-    
-    const results: RiderAggregate[] = [];
-    for (const raw of rawList) {
-      const rawVehicle = await VehicleModel.findOne({ riderId: (raw as any)._id.toString() });
-      results.push(RiderMapper.toDomain(raw, rawVehicle));
-    }
-    return results;
+    return rawList.map(RiderMapper.toDomain);
   }
 }

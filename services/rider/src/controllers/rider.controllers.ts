@@ -5,9 +5,8 @@ import { AuthenticatedRequest } from "../middleware/authenticate.js";
 import { TryCatch } from "../middleware/TryCatchHandler.js";
 import { riderService } from "../services/index.js";
 import { createRiderSchema, updateRiderLocationSchema, toggleAvailabilitySchema } from "../validators/RiderValidator.js";
-import { ValidationError, AuthenticationError } from "../utils/errors.js";
+import { ValidationError, AuthenticationError, AuthorizationError } from "../utils/errors.js";
 import { successResponse, errorResponse } from "../utils/response.js";
-
 
 export const addRiderProfile = TryCatch(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -65,19 +64,11 @@ export const updateRiderProfile = TryCatch(
       return errorResponse(res, 403, "Access denied. Riders only.", "FORBIDDEN");
     }
 
-    const { phoneNumber, aadhaarNumber, drivingLicesce, pictureUrl, address, emergencyContact } = req.body;
+    const { phoneNumber, aadhaarNumber, drivingLicesce, pictureUrl } = req.body;
     const updates: any = {};
     if (phoneNumber) updates.phoneNumber = phoneNumber;
     if (aadhaarNumber) updates.aadhaarNumber = aadhaarNumber;
     if (drivingLicesce) updates.drivingLicesce = drivingLicesce;
-    if (address) updates.address = address;
-    if (emergencyContact) {
-      try {
-        updates.emergencyContact = typeof emergencyContact === "string" ? JSON.parse(emergencyContact) : emergencyContact;
-      } catch (e) {
-        updates.emergencyContact = emergencyContact;
-      }
-    }
 
     const file = req.file;
     if (file) {
@@ -94,6 +85,10 @@ export const updateRiderProfile = TryCatch(
       updates.picture = uploadResult.data.url;
     } else if (pictureUrl) {
       updates.picture = pictureUrl;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      throw new ValidationError("No fields to update");
     }
 
     const data = await riderService.updateProfile(user._id.toString(), updates);
@@ -136,7 +131,7 @@ export const toggleRiderAvailability = TryCatch(
       validated.longitude
     );
 
-    return successResponse(res, 200, `Rider availability updated`, data);
+    return successResponse(res, 200, `Rider is now ${validated.isAvailable ? "available" : "unavailable"}`, data);
   }
 );
 
@@ -234,209 +229,5 @@ export const fetchDeliveryHistory = TryCatch(
 
     const data = await riderService.getDeliveryHistory(user._id.toString());
     return successResponse(res, 200, "Delivery history fetched successfully", data);
-  }
-);
-
-export const startShiftController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.startShift(user._id.toString());
-    return successResponse(res, 200, "Shift started successfully", data);
-  }
-);
-
-export const endShiftController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.endShift(user._id.toString());
-    return successResponse(res, 200, "Shift ended successfully", data);
-  }
-);
-
-export const pauseShiftController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.pauseShift(user._id.toString());
-    return successResponse(res, 200, "Shift paused successfully", data);
-  }
-);
-
-export const resumeShiftController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.resumeShift(user._id.toString());
-    return successResponse(res, 200, "Shift resumed successfully", data);
-  }
-);
-
-export const getShiftHistoryController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.getShiftHistory(user._id.toString());
-    return successResponse(res, 200, "Shift history fetched successfully", data);
-  }
-);
-
-export const getVehicleController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.getVehicle(user._id.toString());
-    return successResponse(res, 200, "Vehicle details fetched successfully", data);
-  }
-);
-
-export const updateVehicleController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.updateVehicle(user._id.toString(), req.body);
-    return successResponse(res, 200, "Vehicle details updated successfully", data);
-  }
-);
-
-export const getWalletSummaryController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.getWalletSummary(user._id.toString());
-    return successResponse(res, 200, "Wallet summary fetched successfully", data);
-  }
-);
-
-export const getWalletTransactionsController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.getWalletTransactions(user._id.toString());
-    return successResponse(res, 200, "Transactions history fetched successfully", data);
-  }
-);
-
-export const getWalletSettlementsController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.getWalletSettlements(user._id.toString());
-    return successResponse(res, 200, "Settlements history fetched successfully", data);
-  }
-);
-
-export const withdrawFundsController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const { amount } = req.body;
-    if (!amount || Number(amount) <= 0) throw new ValidationError("Invalid amount requested");
-    const data = await riderService.withdrawFunds(user._id.toString(), Number(amount));
-    return successResponse(res, 200, "Withdrawal initiated successfully", data);
-  }
-);
-
-export const configureBankDetailsController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.configureBankDetails(user._id.toString(), req.body);
-    return successResponse(res, 200, "Bank details configured successfully", data);
-  }
-);
-
-export const getDocumentsController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.getDocuments(user._id.toString());
-    return successResponse(res, 200, "Documents details fetched successfully", data);
-  }
-);
-
-export const uploadDocumentController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    
-    const { pictureUrl, drivingLicenseUrl, aadhaarUrl } = req.body;
-    const updates: any = {};
-    if (pictureUrl) updates.pictureUrl = pictureUrl;
-    if (drivingLicenseUrl) updates.drivingLicenseUrl = drivingLicenseUrl;
-    if (aadhaarUrl) updates.aadhaarUrl = aadhaarUrl;
-
-    const file = req.file;
-    if (file) {
-      const fileBuffer = getBuffer(file);
-      if (!fileBuffer) {
-        throw new ValidationError("Error processing the uploaded document file");
-      }
-
-      const { data: uploadResult } = await axios.post(
-        `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
-        { image: fileBuffer },
-        { headers: { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! } }
-      );
-      updates.drivingLicenseUrl = uploadResult.data.url;
-    }
-
-    const data = await riderService.uploadDocument(user._id.toString(), updates);
-    return successResponse(res, 200, "Document uploaded successfully", data);
-  }
-);
-
-export const getNotificationsController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.getNotifications(user._id.toString());
-    return successResponse(res, 200, "Notifications fetched successfully", data);
-  }
-);
-
-export const markNotificationReadController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const { id } = req.params;
-    if (!id) throw new ValidationError("Notification ID is required");
-    const data = await riderService.markNotificationRead(user._id.toString(), id as string);
-    return successResponse(res, 200, "Notification marked as read", data);
-  }
-);
-
-export const markAllNotificationsReadController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    await riderService.markAllNotificationsRead(user._id.toString());
-    return successResponse(res, 200, "All notifications marked as read");
-  }
-);
-
-export const getPerformanceStatisticsController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.getPerformanceStatistics(user._id.toString());
-    return successResponse(res, 200, "Performance statistics fetched successfully", data);
-  }
-);
-
-export const getLeaderboardController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const data = await riderService.getLeaderboard();
-    return successResponse(res, 200, "Leaderboard fetched successfully", data);
-  }
-);
-
-export const getAnalyticsController = TryCatch(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const user = req.user;
-    if (!user) throw new AuthenticationError("User not authenticated");
-    const data = await riderService.getAnalytics(user._id.toString());
-    return successResponse(res, 200, "Rider analytics fetched successfully", data);
   }
 );

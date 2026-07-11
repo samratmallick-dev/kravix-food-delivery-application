@@ -152,29 +152,10 @@ export interface IRider {
       drivingLicesce: string;
       isVerified: boolean;
       isAvailable: boolean;
-      availabilityStatus?: "ONLINE" | "OFFLINE" | "BUSY" | "BREAK" | "DELIVERING" | "RETURNING" | "UNAVAILABLE" | "SUSPENDED";
       totalEarnings: number;
       totalDeliveries: number;
       rating: number | null;
       ratingCount: number;
-      address?: string | null;
-      emergencyContact?: {
-            name: string;
-            phone: string;
-            relation: string;
-      } | null;
-      vehicle?: {
-            type: "bike" | "scooter" | "cycle" | "ev";
-            fuelType: "petrol" | "electric" | "none";
-            number: string;
-            manufacturer: string;
-            model: string;
-            color: string;
-            ownership: "owned" | "rented" | "leased";
-            insuranceExpiry: string | null;
-            rcExpiry: string | null;
-            isVerified: boolean;
-      } | null;
 };
 
 export interface IRiderEarnings {
