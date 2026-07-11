@@ -8,6 +8,7 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 import { ValidationError } from "../utils/errors.js";
 import { successResponse, errorResponse } from "../utils/response.js";
+import { postWithRetry } from "../utils/axiosHelper.js";
 
 interface TokenPayload {
   _id: string;
@@ -46,7 +47,7 @@ export const createRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
     throw new ValidationError("Failed to create file buffer.");
   }
 
-  const { data: updateResult } = await axios.post(
+  const { data: updateResult } = await postWithRetry(
     `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
     { image: fileBuffer },
     {
@@ -141,7 +142,7 @@ export const updateRestaurant = TryCatch(async (req: AuthenticatedRequest, res: 
     if (!fileBuffer) {
       throw new ValidationError("Failed to create file buffer.");
     }
-    const { data: uploadResult } = await axios.post(
+    const { data: uploadResult } = await postWithRetry(
       `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
       { image: fileBuffer },
       {

@@ -7,6 +7,7 @@ import { getBuffer } from "../config/datauri.js";
 import axios from "axios";
 import { ValidationError, NotFoundError } from "../utils/errors.js";
 import { successResponse, errorResponse } from "../utils/response.js";
+import { postWithRetry } from "../utils/axiosHelper.js";
 
 export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user;
@@ -31,7 +32,7 @@ export const addMenuItems = TryCatch(async (req: AuthenticatedRequest, res: Resp
     throw new ValidationError("Failed to process image file");
   }
 
-  const { data: updateResult } = await axios.post(
+  const { data: updateResult } = await postWithRetry(
     `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
     { image: fileBuffer },
     {
@@ -170,7 +171,7 @@ export const updateMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Re
       throw new ValidationError("Failed to process image file");
     }
 
-    const { data: uploadResult } = await axios.post(
+    const { data: uploadResult } = await postWithRetry(
       `${process.env.UTILS_SERVICE_URI}/api/v1/uploads/images`,
       { image: fileBuffer },
       {
