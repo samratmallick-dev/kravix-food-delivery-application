@@ -14,7 +14,12 @@ export const getUniqueSlug = async (name: string, id: string): Promise<string> =
   let counter = 1;
   const RestaurantModel = mongoose.model("Restaurant");
   while (true) {
-    const existing = await RestaurantModel.findOne({ slug, _id: { $ne: id } });
+    // Only exclude by _id when updating an existing restaurant (id is non-empty)
+    const filter: Record<string, any> = { slug };
+    if (id) {
+      filter._id = { $ne: id };
+    }
+    const existing = await RestaurantModel.findOne(filter);
     if (!existing) {
       break;
     }
