@@ -249,7 +249,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                               </div>
                         )}
                   </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="container-app py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {
                         filteredItems.map((item) => {
                               const isLoading = loadingItemId === item._id;
@@ -260,9 +260,9 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                               return (
                                     <div
                                           key={item._id}
-                                          className={`relative flex flex-col rounded-xl bg-white shadow-md overflow-hidden transition ${!item.isAvailable ? "opacity-70" : ""}`}
+                                          className={`relative flex flex-col rounded-xl overflow-hidden border bg-white border-border transition ${!item.isAvailable ? "opacity-70" : ""}`}
                                     >
-                                          <div className="relative w-full h-64">
+                                          <div className="relative h-36 w-full rounded-none">
                                                 <img
                                                       src={item.imageUrl}
                                                       alt={item.name}
