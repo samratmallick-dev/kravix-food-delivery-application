@@ -29,6 +29,7 @@ const EXCLUDED_PATHS = new Set([
       'address', 'account', 'select-role', 'payment-success',
       'order-success', 'ordersuccess', 'verify-email',
       'forgot-password', 'reset-password',
+      'earnings', 'wallet', 'profile', 'documents', 'settings',
 ]);
 
 function generateSitemap() {

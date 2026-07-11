@@ -2,10 +2,10 @@ export interface CreateRiderDto {
   phoneNumber: string;
   aadhaarNumber: string;
   drivingLicesce: string;
-  panNumber?: string;
+  panNumber?: string | undefined;
   latitude: number;
   longitude: number;
-  pictureUrl?: string;
+  pictureUrl?: string | undefined;
 }
 
 export interface UpdateRiderLocationDto {

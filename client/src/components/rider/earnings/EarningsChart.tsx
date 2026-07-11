@@ -28,14 +28,14 @@ const EarningsChart = memo(({ earnings, type = "bar" }: EarningsChartProps) => {
             </defs>
             <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-            <Tooltip formatter={(v: number) => [`₹${v}`, "Earnings"]} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+            <Tooltip formatter={(v: any) => [`₹${v}`, "Earnings"]} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
             <Area type="monotone" dataKey="amount" stroke="#C22630" strokeWidth={2} fill="url(#earningsGrad)" />
           </AreaChart>
         ) : (
           <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
             <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-            <Tooltip formatter={(v: number) => [`₹${v}`, "Earnings"]} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+            <Tooltip formatter={(v: any) => [`₹${v}`, "Earnings"]} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
             <Bar dataKey="amount" fill="#C22630" radius={[4, 4, 0, 0]} />
           </BarChart>
         )}

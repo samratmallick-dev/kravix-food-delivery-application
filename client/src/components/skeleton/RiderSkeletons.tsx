@@ -1,7 +1,8 @@
 import { memo } from "react";
+import type { CSSProperties } from "react";
 
-const Bone = ({ className = "" }: { className?: string }) => (
-  <div className={`shimmer-bg rounded-xl ${className}`} />
+const Bone = ({ className = "", style }: { className?: string; style?: CSSProperties }) => (
+  <div className={`shimmer-bg rounded-xl ${className}`} style={style} />
 );
 
 export const DashboardSkeleton = memo(() => (

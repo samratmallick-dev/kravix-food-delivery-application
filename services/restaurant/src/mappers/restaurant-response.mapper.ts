@@ -75,7 +75,8 @@ export class RestaurantResponseMapper {
       paymentStatus: order.paymentStatus,
       addressId: order.addressId,
       deliveryAddress: order.deliveryAddress,
-      riderAmount: order.riderAmount
+      riderAmount: order.riderAmount,
+      createdAt: order.createdAt ? order.createdAt.toISOString() : new Date().toISOString()
     };
     if (order.riderName !== undefined && order.riderName !== null) {
       dto.riderName = order.riderName;
@@ -86,7 +87,6 @@ export class RestaurantResponseMapper {
     if (order.distance !== undefined) {
       dto.distance = order.distance;
     }
-    dto.createdAt = order.createdAt ? order.createdAt.toISOString() : new Date().toISOString();
     return dto;
   }
 }
