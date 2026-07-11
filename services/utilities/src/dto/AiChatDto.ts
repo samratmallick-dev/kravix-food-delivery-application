@@ -5,6 +5,8 @@ export interface AiChatDto {
   currentModule?: string | undefined;
   preferredLanguage?: string | undefined;
   recentActions?: string[] | undefined;
+  latitude?: number | undefined;
+  longitude?: number | undefined;
 }
 
 export interface AiResponseDto {

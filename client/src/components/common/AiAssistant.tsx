@@ -12,7 +12,7 @@ interface Message {
 }
 
 const AiAssistant: React.FC = () => {
-    const { user } = useAppData();
+    const { user, location } = useAppData();
     const { isAdminAuth, getAdminToken } = useAdminAuth();
     const [isOpen, setIsOpen] = useState(false);
     
@@ -63,7 +63,9 @@ const AiAssistant: React.FC = () => {
                 currentPage: window.location.pathname,
                 currentModule: window.location.pathname.split("/")[1] || "home",
                 preferredLanguage: navigator.language || "en",
-                recentActions: []
+                recentActions: [],
+                latitude: location?.latitude || undefined,
+                longitude: location?.longitude || undefined
             }, tokenOverride);
 
             setMessages(prev => [

@@ -6,7 +6,9 @@ export const aiChatSchema = z.object({
   currentPage: z.string().optional(),
   currentModule: z.string().optional(),
   preferredLanguage: z.string().optional(),
-  recentActions: z.array(z.string()).optional()
+  recentActions: z.array(z.string()).optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional()
 });
 
 export const aiFeedbackSchema = z.object({
