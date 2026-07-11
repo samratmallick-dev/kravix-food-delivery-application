@@ -4,6 +4,31 @@ import SEO from "../components/common/SEO";
 import toast from "react-hot-toast";
 import { Mail, Github, Linkedin, Globe, BookOpen, GraduationCap, User, ArrowRight } from "lucide-react";
 
+const TEAM_MEMBERS = [
+      {
+            name: "Samrat Mallick",
+            role: "Team Lead & Full Stack Developer",
+            roll: "28100122019",
+            reg: "222810110089",
+            initials: "SM",
+            gradient: "from-red-500 to-orange-500",
+            email: "samratmallick832@gmail.com",
+            github: "https://github.com/samratmallick-dev",
+            linkedin: "https://www.linkedin.com/in/samrat-mallick01"
+      },
+      {
+            name: "Shubhranil Chowdhury",
+            role: "Frontend Developer & UI Designer",
+            roll: "28100122046",
+            reg: "222810110096",
+            initials: "SC",
+            gradient: "from-pink-500 to-rose-500",
+            email: "subhranilchowdhury27@gmail.com",
+            github: "https://github.com/shubhranil1",
+            linkedin: "https://www.linkedin.com/in/shubhranil-chowdhury"
+      },
+];
+
 const ContactPage = () => {
       const [formData, setFormData] = useState({
             name: "",
@@ -47,7 +72,7 @@ const ContactPage = () => {
 
                   <div className="container-app px-4 max-w-5xl mt-12">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                              
+
                               <div className="lg:col-span-5 space-y-6">
                                     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs space-y-5">
                                           <div className="flex items-center gap-3 pb-3 border-b border-gray-50">
@@ -72,33 +97,6 @@ const ContactPage = () => {
                                                 <div>
                                                       <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider block">Academic Session</span>
                                                       <span className="text-sm font-bold text-gray-800">2022 - 2026</span>
-                                                </div>
-                                          </div>
-                                    </div>
-
-                                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs space-y-5">
-                                          <div className="flex items-center gap-3 pb-3 border-b border-gray-50">
-                                                <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                                                      <User size={20} />
-                                                </div>
-                                                <h3 className="font-bold text-gray-800 text-sm md:text-base uppercase tracking-wider">Developer Profile</h3>
-                                          </div>
-                                          <div className="space-y-4">
-                                                <div>
-                                                      <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider block">Project Developer</span>
-                                                      <span className="text-sm font-bold text-gray-800">Samrat Mallick</span>
-                                                </div>
-                                                <div>
-                                                      <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider block">Roll Number</span>
-                                                      <span className="text-sm font-bold text-gray-800">CSE/2022/0832 (Demo Placeholder)</span>
-                                                </div>
-                                                <div>
-                                                      <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider block">Registration Number</span>
-                                                      <span className="text-sm font-bold text-gray-800">REG-832-2022-CSE (Demo Placeholder)</span>
-                                                </div>
-                                                <div>
-                                                      <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider block">University affiliation</span>
-                                                      <span className="text-sm font-bold text-gray-800">State University of Technology (Demo Placeholder)</span>
                                                 </div>
                                           </div>
                                     </div>
@@ -214,6 +212,85 @@ const ContactPage = () => {
                                     </form>
                               </div>
 
+                        </div>
+                  </div>
+
+                  {/* Our Development Team Section */}
+                  <div className="container-app px-4 max-w-5xl mt-12 space-y-6">
+                        <div className="text-center md:text-left">
+                              <h2 className="text-xl md:text-2xl font-black text-gray-805 tracking-tight flex items-center justify-center md:justify-start gap-2.5">
+                                    <span className="p-2 rounded-lg bg-primary/10 text-primary">
+                                          <User size={22} />
+                                    </span>
+                                    Our Development Team
+                              </h2>
+                              <p className="text-xs md:text-sm text-text-secondary mt-1.5 font-semibold">
+                                    The talented team of developers, designers, and administrators behind Kravix.
+                              </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {TEAM_MEMBERS.map((member, index) => (
+                                    <div
+                                          key={index}
+                                          className="bg-white rounded-2xl border border-gray-100 hover:border-transparent p-6 shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group flex flex-col items-center text-center relative overflow-hidden"
+                                    >
+                                          {/* Accent line */}
+                                          <div className={`absolute top-0 inset-x-0 h-1.5 bg-linear-to-r ${member.gradient}`} />
+
+                                          {/* Avatar Circle */}
+                                          <div className={`w-16 h-16 rounded-full bg-linear-to-br ${member.gradient} text-white font-black text-xl flex items-center justify-center shadow-md select-none group-hover:scale-105 transition-transform duration-300 mb-4`}>
+                                                {member.initials}
+                                          </div>
+
+                                          <h3 className="font-bold text-gray-805 text-base group-hover:text-primary transition-colors duration-200">
+                                                {member.name}
+                                          </h3>
+                                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary bg-primary/5 px-2.5 py-1 rounded-full mt-1.5 text-center">
+                                                {member.role}
+                                          </span>
+
+                                          <div className="w-full border-t border-gray-50 pt-4 mt-4 space-y-2 text-left">
+                                                <div className="flex justify-between items-center text-xs">
+                                                      <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider">Roll No:</span>
+                                                      <span className="font-bold text-gray-800">{member.roll}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-xs">
+                                                      <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider">Reg No:</span>
+                                                      <span className="font-bold text-gray-800 text-right">{member.reg}</span>
+                                                </div>
+                                          </div>
+
+                                          {/* Social links */}
+                                          <div className="flex gap-2.5 mt-5">
+                                                <a
+                                                      href={`mailto:${member.email}`}
+                                                      className="p-2 rounded-xl border border-gray-100 hover:border-primary/20 hover:bg-primary/5 text-gray-400 hover:text-primary transition-all duration-300"
+                                                      aria-label={`Email ${member.name}`}
+                                                >
+                                                      <Mail size={16} />
+                                                </a>
+                                                <a
+                                                      href={member.github}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className="p-2 rounded-xl border border-gray-100 hover:border-primary/20 hover:bg-primary/5 text-gray-400 hover:text-primary transition-all duration-300"
+                                                      aria-label={`${member.name}'s GitHub`}
+                                                >
+                                                      <Github size={16} />
+                                                </a>
+                                                <a
+                                                      href={member.linkedin}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className="p-2 rounded-xl border border-gray-100 hover:border-primary/20 hover:bg-primary/5 text-gray-400 hover:text-primary transition-all duration-300"
+                                                      aria-label={`${member.name}'s LinkedIn`}
+                                                >
+                                                      <Linkedin size={16} />
+                                                </a>
+                                          </div>
+                                    </div>
+                              ))}
                         </div>
                   </div>
             </div>
