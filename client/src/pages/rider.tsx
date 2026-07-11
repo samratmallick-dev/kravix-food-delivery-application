@@ -21,7 +21,7 @@ import { storage } from "../utils/secureStorage";
 type Tab = "orders" | "earnings";
 
 const RiderDashboard = () => {
-      const { user, location, locationLoading, setUser, setIsAuth } = useAppData();
+      const { user, location, locationLoading, detectUserLocation, setUser, setIsAuth } = useAppData();
       const { socket } = useSocket();
       const isBlocked = !!(user?.isBlocked && user.blockedUntil && new Date(user.blockedUntil) > new Date());
 
@@ -149,6 +149,12 @@ const RiderDashboard = () => {
             fetchCurrentOrder();
             fetchDeliveryHistory();
       }, [user?._id, user?.role]);
+
+      useEffect(() => {
+            if (!location) {
+                  detectUserLocation(false);
+            }
+      }, [location, detectUserLocation]);
 
       const handleProfileUpdate = async () => {
             try {
@@ -352,12 +358,24 @@ const RiderDashboard = () => {
                                           <input value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase())} placeholder="ABCDE1234F" maxLength={10} className="flex-1 outline-none text-sm text-gray-700 bg-transparent uppercase" />
                                     </div>
                               </div>
-                              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5">
-                                    <MapPin size={16} className="text-primary shrink-0" />
-                                    <span className="text-sm text-gray-600 truncate">
-                                          {locationLoading ? "Detecting location..." : location?.formattedAddress ?? "Location not available"}
-                                    </span>
-                              </div>
+                              <button
+                                    type="button"
+                                    onClick={() => detectUserLocation(true)}
+                                    disabled={locationLoading}
+                                    className="w-full flex items-center justify-between gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 transition-colors cursor-pointer text-left"
+                              >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                          <MapPin size={16} className="text-primary shrink-0" />
+                                          <span className="text-sm text-gray-600 truncate">
+                                                {locationLoading ? "Detecting location..." : location?.formattedAddress ?? "Location not available"}
+                                          </span>
+                                    </div>
+                                    {!locationLoading && (
+                                          <span className="text-xs text-primary font-semibold shrink-0">
+                                                {location ? "Change" : "Detect"}
+                                          </span>
+                                    )}
+                              </button>
                               <button
                                     onClick={handleSubmit}
                                     disabled={submitting || locationLoading}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppData } from "../../context/AppContext";
 import toast from "react-hot-toast";
 import { ImagePlus, Loader2, MapPin, Phone, Store, FileText } from "lucide-react";
@@ -18,7 +18,13 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
       const [image, setImage] = useState<File | null>(null);
       const [submitting, setSubmitting] = useState(false);
 
-      const { location, locationLoading } = useAppData();
+      const { location, locationLoading, detectUserLocation } = useAppData();
+
+      useEffect(() => {
+            if (!location) {
+                  detectUserLocation(false);
+            }
+      }, [location, detectUserLocation]);
 
       const handlesubmitting = async () => {
             if (!location) {
@@ -146,14 +152,26 @@ const AddRestaurant = ({fetchMyRestaurant}: props) => {
                                     </div>
                               </div>
 
-                              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5">
-                                    <MapPin size={16} className="text-primary shrink-0" />
-                                    <span className="text-sm text-gray-600 truncate">
-                                          {locationLoading
-                                                ? "Detecting location..."
-                                                : location?.formattedAddress ?? "Location not available"}
-                                    </span>
-                              </div>
+                              <button
+                                    type="button"
+                                    onClick={() => detectUserLocation(true)}
+                                    disabled={locationLoading}
+                                    className="w-full flex items-center justify-between gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 transition-colors cursor-pointer text-left"
+                              >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                          <MapPin size={16} className="text-primary shrink-0" />
+                                          <span className="text-sm text-gray-600 truncate">
+                                                {locationLoading
+                                                      ? "Detecting location..."
+                                                      : location?.formattedAddress ?? "Location not available"}
+                                          </span>
+                                    </div>
+                                    {!locationLoading && (
+                                          <span className="text-xs text-primary font-semibold shrink-0">
+                                                {location ? "Change" : "Detect"}
+                                          </span>
+                                    )}
+                              </button>
 
                               <button
                                     onClick={handlesubmitting}
