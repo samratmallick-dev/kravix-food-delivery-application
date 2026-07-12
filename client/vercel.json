@@ -1,5 +1,18 @@
 {
+  "cleanUrls": true,
   "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/googled9224c27f8ea2d12.html",
+      "destination": "/googled9224c27f8ea2d12.html"
+    },
     {
       "source": "/((?!sitemap.xml|robots.txt|googled9224c27f8ea2d12.html).*)",
       "destination": "/index.html"

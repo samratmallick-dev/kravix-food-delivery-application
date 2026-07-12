@@ -62,12 +62,12 @@ const PRIORITY_SCORES = {
 };
 
 const EXCLUDED_PATHS = new Set([
-      'dashboard', 'users', 'restaurants', 'riders', 'orders',
-      'analytics', 'coupons', 'reviews', 'cart', 'checkout',
-      'address', 'account', 'select-role', 'payment-success',
-      'order-success', 'ordersuccess', 'verify-email',
-      'forgot-password', 'reset-password',
-      'earnings', 'wallet', 'profile', 'documents', 'settings',
+      'admin', 'seller', 'rider', 'cart', 'checkout', 'orders', 'account',
+      'dashboard', 'users', 'restaurants', 'menu-items', 'payments', 'riders',
+      'reviews', 'coupons', 'analytics', 'ai', 'address', 'select-role', 
+      'payment-success', 'order-success', 'ordersuccess', 'verify-email',
+      'forgot-password', 'reset-password', 'earnings', 'wallet', 'profile', 
+      'documents', 'settings'
 ]);
 
 function generateSitemap() {
@@ -95,16 +95,13 @@ function generateSitemap() {
 
             const isExcluded = (route) => {
                   const cleaned = route.replace(/^\//, '');
-                  return (
-                        route === '*' ||
-                        route === '/*' ||
-                        route.includes(':') ||
-                        route.includes('*') ||
-                        cleaned.startsWith('admin') ||
-                        cleaned.startsWith('seller') ||
-                        cleaned.startsWith('rider') ||
-                        EXCLUDED_PATHS.has(cleaned)
-                  );
+                  
+                  if (route === '*' || route === '/*' || route.includes(':') || route.includes('*')) {
+                        return true;
+                  }
+
+                  const baseSegment = cleaned.split('/')[0];
+                  return EXCLUDED_PATHS.has(baseSegment) || EXCLUDED_PATHS.has(cleaned);
             };
 
             const cleanRoutes = Array.from(extractedRoutes)
@@ -130,18 +127,18 @@ function generateSitemap() {
             const xmlUrls = sortedRoutes.map(route => {
                   const priority = PRIORITY_SCORES[route] !== undefined ? PRIORITY_SCORES[route] : 0.6;
                   const changefreq = route === '/' || route === '/search' ? 'daily' : 'weekly';
-                  return `  <url>
-    <loc>${SITE_URL}${route === '/' ? '' : route}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>${changefreq}</changefreq>
-    <priority>${priority.toFixed(1)}</priority>
-  </url>`;
-            }).join('\n');
+                  return `<url>
+                              <loc>${SITE_URL}${route === '/' ? '' : route}</loc>
+                              <lastmod>${now}</lastmod>
+                              <changefreq>${changefreq}</changefreq>
+                              <priority>${priority.toFixed(1)}</priority>
+                        </url>`;
+            }).join('\n');    
 
             const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${xmlUrls}
-</urlset>`;
+                                    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                                          ${xmlUrls}
+                                    </urlset>`;
 
             const dir = path.dirname(SITEMAP_PATH);
             if (!fs.existsSync(dir)) {

@@ -1,4 +1,23 @@
 User-agent: *
 Allow: /
+Allow: /search
+Allow: /about
+Allow: /contact
+Allow: /faq
+Allow: /help
+Allow: /blog
+Disallow: /admin
+Disallow: /seller
+Disallow: /rider
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /account
+Disallow: /login
+Disallow: /register
+Disallow: /refunds
+Disallow: /privacy
+Disallow: /terms
+Disallow: /api/v1
 
 Sitemap: https://kravix-nu.vercel.app/sitemap.xml
