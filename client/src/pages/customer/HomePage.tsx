@@ -269,7 +269,7 @@ const Home = () => {
                         <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-10 shadow-xs space-y-6">
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-5">
                                     <div className="space-y-1">
-                                          <h2 id="popular-foods-heading" className="text-2xl font-black text-gray-850">Popular Foods Near You</h2>
+                                          <h2 id="popular-foods-heading" className="text-2xl font-black text-gray-800">Popular Foods Near You</h2>
                                           <p className="text-xs text-text-secondary font-semibold">Quickly browse popular food categories in your area</p>
                                     </div>
                                     <div className="flex gap-2 text-xs font-bold text-text-secondary flex-wrap items-center">
@@ -337,7 +337,7 @@ const Home = () => {
 
                   <section id="nearest-restaurants" aria-labelledby="nearest-restaurants-heading" className="container-app py-5 space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              <h2 id="nearest-restaurants-heading" className={`font-black text-gray-850 ${isMobile ? "text-xl" : "text-2xl"}`}>
+                              <h2 id="nearest-restaurants-heading" className={`font-black text-gray-800 ${isMobile ? "text-xl" : "text-2xl"}`}>
                                     Your Nearest Restaurants
                               </h2>
                         </div>
@@ -475,7 +475,7 @@ const Home = () => {
                                                       <button
                                                             type="button"
                                                             onClick={() => setActiveFaq(isOpen ? null : index)}
-                                                            className="w-full flex justify-between items-center p-5 text-left font-bold text-xs md:text-sm text-gray-850 cursor-pointer select-none focus:outline-none"
+                                                            className="w-full flex justify-between items-center p-5 text-left font-bold text-xs md:text-sm text-gray-800 cursor-pointer select-none focus:outline-none"
                                                       >
                                                             <span>{faq.q}</span>
                                                             <ChevronDown

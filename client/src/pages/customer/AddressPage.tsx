@@ -253,7 +253,7 @@ const AddAddressPage = () => {
                                     <MapContainer
                                           center={[latitude || 28.6139, longitude || 77.209]}
                                           zoom={13}
-                                          className="h-full w-full"
+                                          className="h-full w-full text-gray-800"
                                           style={{ height: "100%", width: "100%" }}
                                     >
                                           <TileLayer
