@@ -349,7 +349,7 @@ const Home = () => {
                                           <p className="text-sm text-gray-400 animate-pulse" aria-live="polite">Searching...</p>
                                     )}
                                     {retaurants.length > 0 ? (
-                                          <div className="container-app py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                                          <div className="container-app py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                                 {retaurants.map((restaurant) => {
                                                       const [resLong, resLat] = restaurant.autoLocation.coordinates;
                                                       const distance = getDistanceKm(

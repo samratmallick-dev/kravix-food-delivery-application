@@ -25,14 +25,13 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <main className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+    <div className="w-full max-w-md space-y-6">
       <SEO
         title="Forgot Password | Kravix"
         description="Reset your Kravix account password easily. Enter your email and we'll send you a password reset link."
         path="/forgot-password"
       />
-      <div className="max-w-md w-full space-y-6">
-        <div className="flex justify-center">
+      <div className="flex justify-center">
           <Logo auth />
         </div>
         <p className="text-center text-sm text-gray-500 font-semibold">Reset your password</p>
@@ -80,8 +79,12 @@ const ForgotPasswordPage = () => {
             </p>
           </form>
         )}
-      </div>
-    </main>
+        <p className="text-center text-xs text-gray-400 mt-4">
+          By continuing, you agree with our{" "}
+          <Link to="/terms" className="text-xs text-primary hover:underline font-semibold">Terms & Services</Link> &{" "}
+          <Link to="/privacy" className="text-xs text-primary hover:underline font-semibold">Privacy Policy</Link>
+        </p>
+    </div>
   );
 };
 

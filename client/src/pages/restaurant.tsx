@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { IMenuItem, IRestaurant } from "../types/types";
+import Footer from "../components/home/footer";
 import { fetchMyRestaurant as apiFetchMyRestaurant } from "../utils/restaurant.api";
 import { getAllMenuItems } from "../utils/menu.api";
 import AddRestaurant from "../components/restaurant/addRestaurant";
@@ -115,7 +116,7 @@ const Restaurant = () => {
             return <AddRestaurant fetchMyRestaurant={fetchMyRestaurant} />
       }
       return (
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen bg-background flex flex-col">
                   {isBlocked && (
                         <div className="flex items-center gap-3 bg-red-50 border-b border-red-200 px-6 py-3">
                               <span className="text-red-500 text-xl">🚫</span>
@@ -166,6 +167,7 @@ const Restaurant = () => {
                               </div>
                         </div>
                   </div>
+                  <Footer />
             </div>
       );
 }

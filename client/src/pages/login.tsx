@@ -99,7 +99,7 @@ const Login = () => {
   };
 
   return (
-    <main className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+    <div className="w-full max-w-md">
       <SEO 
         title="Login to Kravix | Be Smart, Eat Better" 
         description="Sign in to your Kravix account to order delicious Bengali and multi-cuisine food, track orders, and view exclusive offers." 
@@ -214,13 +214,13 @@ const Login = () => {
             Register
           </Link>
         </p>
-        <p className="text-center text-xs text-gray-400">
+        <p className="text-center text-xs text-gray-400 mt-2">
           By continuing, you agree with our{" "}
-          <span className="text-sm text-gradient">Terms & Services</span> &{" "}
-          <span className="text-sm text-gradient">Privacy Policy</span>
+          <Link to="/terms" className="text-xs text-primary hover:underline font-semibold">Terms & Services</Link> &{" "}
+          <Link to="/privacy" className="text-xs text-primary hover:underline font-semibold">Privacy Policy</Link>
         </p>
       </div>
-    </main>
+    </div>
   );
 };
 

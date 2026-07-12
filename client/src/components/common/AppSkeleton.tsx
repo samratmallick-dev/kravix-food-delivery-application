@@ -24,7 +24,7 @@ const AppSkeleton = () => (
             <Shimmer className="w-full h-64 rounded-none" />
 
             {/* Cards grid skeleton */}
-            <div className="container-app py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="container-app py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {Array.from({ length: 8 }).map((_, i) => (
                         <div key={i} className="rounded-xl overflow-hidden border border-border">
                               <Shimmer className="h-36 w-full rounded-none" />

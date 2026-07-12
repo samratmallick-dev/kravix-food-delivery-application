@@ -54,6 +54,23 @@ const Refunds = lazy(() => import("./pages/refunds"));
 const Blog = lazy(() => import("./pages/blog"));
 const Contact = lazy(() => import("./pages/contact"));
 const FAQ = lazy(() => import("./pages/faq"));
+const AuthLayout = lazy(() => import("./layouts/AuthLayout"));
+
+const PublicLayout = () => (
+      <>
+            <a
+                  href="#main-content"
+                  className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded-lg z-50 font-bold focus:outline-none"
+            >
+                  Skip to main content
+            </a>
+            <Navbar />
+            <main id="main-content" className="flex-1 min-h-[60vh] focus:outline-none" tabIndex={-1}>
+                  <Outlet />
+            </main>
+            <Footer />
+      </>
+);
 
 const App = () => {
       const { loading } = useAppData();
@@ -77,28 +94,17 @@ const App = () => {
                                     <Route path="reviews" element={<AdminReviews />} />
                               </Route>
 
-                              <Route path="/verify-email" element={<VerifyEmailPage />} />
-                              <Route element={<PublicRoutes />}>
-                                    <Route path="/login" element={<Login />} />
-                                    <Route path="/register" element={<RegisterPage />} />
-                                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                              <Route element={<AuthLayout />}>
+                                    <Route path="/verify-email" element={<VerifyEmailPage />} />
+                                    <Route element={<PublicRoutes />}>
+                                          <Route path="/login" element={<Login />} />
+                                          <Route path="/register" element={<RegisterPage />} />
+                                          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                                          <Route path="/reset-password" element={<ResetPasswordPage />} />
+                                    </Route>
                               </Route>
-                              <Route element={
-                                    <>
-                                          <a 
-                                                href="#main-content" 
-                                                className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded-lg z-50 font-bold focus:outline-none"
-                                          >
-                                                Skip to main content
-                                          </a>
-                                          <Navbar />
-                                          <main id="main-content" className="flex-1 min-h-[60vh] focus:outline-none" tabIndex={-1}>
-                                                <Outlet />
-                                          </main>
-                                          <Footer />
-                                    </>
-                              }>
+
+                              <Route element={<PublicLayout />}>
                                     <Route path="/about" element={<About />} />
                                     <Route path="/help" element={<Help />} />
                                     <Route path="/privacy" element={<Privacy />} />
@@ -108,6 +114,7 @@ const App = () => {
                                     <Route path="/contact" element={<Contact />} />
                                     <Route path="/faq" element={<FAQ />} />
                               </Route>
+
                               <Route element={<ProtectedRoutes />}>
                                     <Route path="/seller" element={<Restaurant />} />
                                     <Route path="/rider" element={<RiderLayout />}>
@@ -121,21 +128,7 @@ const App = () => {
                                           <Route path="documents" element={<RiderDocumentsPage />} />
                                           <Route path="settings" element={<RiderSettingsPage />} />
                                     </Route>
-                                    <Route element={
-                                          <>
-                                                <a 
-                                                      href="#main-content" 
-                                                      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded-lg z-50 font-bold focus:outline-none"
-                                                >
-                                                      Skip to main content
-                                                </a>
-                                                <Navbar />
-                                                <main id="main-content" className="flex-1 min-h-[60vh] focus:outline-none" tabIndex={-1}>
-                                                      <Outlet />
-                                                </main>
-                                                <Footer />
-                                          </>
-                                    }>
+                                    <Route element={<PublicLayout />}>
                                           <Route path="/" element={<Home />} />
                                           <Route path="/search" element={<SearchPage />} />
                                           <Route path="/restaurant/:id" element={<CustomerRestaurantPage />} />
@@ -149,7 +142,6 @@ const App = () => {
                                           <Route path="/orders/:id" element={<OrderDetails />} />
                                           <Route path="/select-role" element={<SelectRole />} />
                                           <Route path="/account" element={<Account />} />
-                                          
                                           <Route path="*" element={<Navigate to="/" replace />} />
                                     </Route>
                               </Route>

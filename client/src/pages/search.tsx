@@ -287,7 +287,7 @@ const SearchPage = () => {
                         <AppSkeleton />
                   ) : searchType === "restaurant" ? (
                         restaurants.length > 0 ? (
-                              <div className="container-app py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                              <div className="container-app py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                     {restaurants.map((restaurant) => {
                                           const [resLong, resLat] = restaurant.autoLocation.coordinates;
                                           const distance = getDistanceKm(location!.latitude, location!.longitude, resLat, resLong);
@@ -309,13 +309,13 @@ const SearchPage = () => {
                         )
                   ) : (
                         foodResults.length > 0 ? (
-                              <div className="container-app py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                              <div className="container-app py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                     {foodResults.map(({ item, restaurant }) => {
                                           const isLoading = loadingItemId === item._id;
                                           const cartItem = cart.find(c =>
                                                 (typeof c.itemId === "object" ? c.itemId._id : c.itemId) === item._id
                                           );
-                                           return (
+                                          return (
                                                 <div key={item._id} className="group bg-white rounded-2xl border border-gray-100 hover:border-transparent shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col w-full overflow-hidden">
                                                       <div className="relative h-32 sm:h-36 w-full overflow-hidden shrink-0">
                                                             <img

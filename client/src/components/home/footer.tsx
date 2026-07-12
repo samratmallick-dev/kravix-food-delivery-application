@@ -1,9 +1,8 @@
 import Logo from "../navbar/logo";
-import { 
-      FaFacebook, 
-      FaInstagram, 
-      FaTwitter, 
-      FaLinkedin, 
+import {
+      FaFacebook,
+      FaInstagram,
+      FaLinkedin,
       FaGithub,
       FaEnvelope
 } from "react-icons/fa";
@@ -32,28 +31,26 @@ const Footer = () => {
 
                   <div className="container-app py-16 relative z-10">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
-                              {/* Brand Section */}
                               <div className="lg:col-span-2 space-y-6">
                                     <div className="flex items-center">
                                           <Logo />
                                     </div>
-                                                                    <p className="text-sm text-gray-400 leading-relaxed font-semibold max-w-sm">
+                                    <p className="text-sm text-gray-400 leading-relaxed font-semibold max-w-sm">
                                           An academic final-year B.Tech graduation project prototype showcasing a hyperlocal, multi-role food delivery platform with event-driven services.
                                     </p>
                                     <div className="flex items-center gap-3">
                                           {[
-                                                { icon: <FaFacebook size={16} />, label: "Facebook" },
-                                                { icon: <FaInstagram size={16} />, label: "Instagram" },
-                                                { icon: <FaTwitter size={16} />, label: "Twitter" },
-                                                { icon: <FaLinkedin size={16} />, label: "LinkedIn" },
-                                                { icon: <FaGithub size={16} />, label: "GitHub" },
+                                                { icon: <FaFacebook size={16} />, label: "Facebook", link: "https://www.facebook.com/samratmallick.dev" },
+                                                { icon: <FaInstagram size={16} />, label: "Instagram", link: "https://www.instagram.com/samratmallick.dev/" },
+                                                { icon: <FaLinkedin size={16} />, label: "LinkedIn", link: "https://www.linkedin.com/in/samrat-mallick01/" },
+                                                { icon: <FaGithub size={16} />, label: "GitHub", link: "https://www.github.com/samratmallick-dev/" },
                                           ].map((social, i) => (
-                                                <a 
-                                                      key={i} 
-                                                      href="#" 
-                                                      target="_blank" 
-                                                      rel="noopener noreferrer" 
-                                                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-gray-400 hover:text-white hover:bg-primary hover:border-transparent transition-all duration-300 hover:scale-[1.08] shadow-xs" 
+                                                <a
+                                                      key={i}
+                                                      href={social.link}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-gray-400 hover:text-white hover:bg-primary hover:border-transparent transition-all duration-300 hover:scale-[1.08] shadow-xs"
                                                       aria-label={social.label}
                                                 >
                                                       {social.icon}

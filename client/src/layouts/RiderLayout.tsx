@@ -1,5 +1,6 @@
 import { memo, Suspense, useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import Footer from "../components/home/footer";
 import { useAppData } from "../context/AppContext";
 import { useRiderProfile } from "../hooks/useRiderProfile";
 import { useSocket } from "../context/SocketContext";
@@ -279,6 +280,7 @@ const RiderLayout = () => {
             <Outlet context={{ incomingOrders, dismissOrder, audioUnlocked, enableAudio }} />
           </Suspense>
         </div>
+        <Footer />
       </main>
 
       <RiderBottomNav />

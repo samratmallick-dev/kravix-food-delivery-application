@@ -111,14 +111,13 @@ const RegisterPage = () => {
   });
 
   return (
-    <main className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+    <div className="w-full max-w-md space-y-6 py-8">
       <SEO 
         title="Create Kravix Account | Be Smart, Eat Better" 
         description="Join Kravix today. Sign up to explore top restaurants near you, save your addresses, and experience lightning fast delivery." 
         path="/register" 
       />
-      <div className="max-w-md w-full space-y-6 py-8">
-        <div className="flex justify-center">
+      <div className="flex justify-center">
           <Logo auth />
         </div>
         <p className="text-center text-sm text-gray-500 font-semibold">Create your account</p>
@@ -290,8 +289,12 @@ const RegisterPage = () => {
             Sign In
           </Link>
         </p>
-      </div>
-    </main>
+        <p className="text-center text-xs text-gray-400 mt-2">
+          By continuing, you agree with our{" "}
+          <Link to="/terms" className="text-xs text-primary hover:underline font-semibold">Terms & Services</Link> &{" "}
+          <Link to="/privacy" className="text-xs text-primary hover:underline font-semibold">Privacy Policy</Link>
+        </p>
+    </div>
   );
 };
 

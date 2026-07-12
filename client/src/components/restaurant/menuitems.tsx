@@ -249,7 +249,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                               </div>
                         )}
                   </div>
-            <div className="container-app py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="container-app py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {
                         filteredItems.map((item) => {
                               const isLoading = loadingItemId === item._id;

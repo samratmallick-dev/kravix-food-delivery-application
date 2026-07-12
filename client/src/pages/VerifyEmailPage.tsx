@@ -43,14 +43,13 @@ const VerifyEmailPage = () => {
   };
 
   return (
-    <main className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+    <div className="w-full max-w-md space-y-6 text-center">
       <SEO
         title="Verify Email | Kravix"
         description="Verify your email address to secure your Kravix account and start ordering delicious meals."
         path="/verify-email"
       />
-      <div className="max-w-md w-full space-y-6 text-center">
-        <div className="flex justify-center">
+      <div className="flex justify-center">
           <Logo auth />
         </div>
 
@@ -103,8 +102,7 @@ const VerifyEmailPage = () => {
             </form>
           </div>
         )}
-      </div>
-    </main>
+    </div>
   );
 };
 

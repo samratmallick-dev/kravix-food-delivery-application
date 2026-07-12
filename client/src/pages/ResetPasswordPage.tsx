@@ -58,14 +58,13 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <main className="w-full min-h-screen bg-white px-4 flex justify-center items-center">
+    <div className="w-full max-w-md space-y-6">
       <SEO
         title="Reset Password | Kravix"
         description="Choose a new secure password for your Kravix account and get back to ordering food."
         path="/reset-password"
       />
-      <div className="max-w-md w-full space-y-6">
-        <div className="flex justify-center">
+      <div className="flex justify-center">
           <Logo auth />
         </div>
         <p className="text-center text-sm text-gray-500 font-semibold">Choose a new password</p>
@@ -165,8 +164,12 @@ const ResetPasswordPage = () => {
             </button>
           </form>
         )}
-      </div>
-    </main>
+        <p className="text-center text-xs text-gray-400 mt-4">
+          By continuing, you agree with our{" "}
+          <Link to="/terms" className="text-xs text-primary hover:underline font-semibold">Terms & Services</Link> &{" "}
+          <Link to="/privacy" className="text-xs text-primary hover:underline font-semibold">Privacy Policy</Link>
+        </p>
+    </div>
   );
 };
 
