@@ -27,6 +27,39 @@ const TEAM_MEMBERS = [
             github: "https://github.com/shubhranil1",
             linkedin: "https://www.linkedin.com/in/shubhranil-chowdhury"
       },
+ {
+            name: "Tanushri Ghosh",
+            role: "Testing & Documentation",
+            roll: "28100122007",
+            reg: "222810110118",
+            initials: "TG",
+            gradient: "from-pink-500 to-rose-500",
+            email: "tanushrighosh396@gmail.com",
+            github: "https://github.com/tanushri396815",
+            linkedin: "https://www.linkedin.com/in/tanushri-ghosh1/"
+      },
+ {
+            name: "Arup Kumar Das",
+            role: "Backend and UIUX design",
+            roll: "28100122071",
+            reg: "222810110063",
+            initials: "AKD",
+            gradient: "from-pink-500 to-rose-500",
+            email: "arup80424@gmail.com",
+            github: "https://github.com/ArupKumarDas-Dev",
+            linkedin: "https://www.linkedin.com/in/arup-kumar-das-85952a273"
+      },
+ {
+            name: "Soumyajit Barick",
+            role: "Documentation",
+            roll: "28100122016",
+            reg: "222810110103",
+            initials: "SB",
+            gradient: "from-pink-500 to-rose-500",
+            email: "soumyajitbarick2004@gmail.com",
+            github: "https://github.com/Soumyajit1608",
+            linkedin: "https://www.linkedin.com/in/soumyajit-barick-113a47253"
+      },
 ];
 
 const ContactPage = () => {
