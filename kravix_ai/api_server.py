@@ -485,14 +485,6 @@ def build_system_prompt(role: str, contextData: Dict[str, Any]) -> str:
             prompt += "\nActive Coupons Context:\n"
             for coupon in contextData["coupons"][:5]:
                 prompt += f"- Code: {coupon.get('code')}, Type: {coupon.get('couponType')}, Discount: {coupon.get('discountValue')}\n"
-        if "budgetRange" in contextData and "budgetRecommendations" in contextData:
-            br = contextData["budgetRange"]
-            prompt += f"\nThe user is requesting food recommendations within the budget range: ₹{br.get('min', 1)} to ₹{br.get('max', 2000)}.\n"
-            prompt += "Here are the top ranked nearby food items matching this budget that are currently available:\n"
-            for item in contextData["budgetRecommendations"]:
-                is_alt = " (Alternative/Above Budget)" if item.get("isAlternative") else ""
-                prompt += f"- {item.get('name')} — ₹{item.get('price')} — {item.get('restaurantName')}{is_alt}\n"
-            prompt += "Use this exact data to formulate your recommendations. Tell the user you found these options within their budget from nearby restaurants, and format them clearly with bullet points showing the item name, price, and restaurant name.\n"
     return prompt
 
 class Intent(Enum):
@@ -514,19 +506,11 @@ class Intent(Enum):
     ADMIN_DASHBOARD = auto()
     ADMIN_USERS = auto()
     HELP = auto()
-    BUDGET_RECOMMENDATION = auto()
     UNKNOWN = auto()
     OFF_TOPIC = auto()
 
 class IntentClassifier:
     PATTERNS = {
-        Intent.BUDGET_RECOMMENDATION: [
-            r"\b(under|below|less than|within|budget|between|price range|cheap|expensive|low price|affordable)\b.*\b(?:₹|rs\.?|usd|\$)?\s*\d+\b",
-            r"(?:₹|rs\.?|usd|\$)?\s*\d+\s*(?:to|and|-|–|—|se|theke|থেকে|সে|से)\s*(?:₹|rs\.?|usd|\$)?\s*\d+",
-            r"\d+\s*(?:টাকার|টাকা|টাকায়|নিচে|কম|কমের|মধ্যে|অবধি|কমের মধ্যে|কমের)",
-            r"\d+\s*(?:रुपये|रुपया|नीचे|कम|तक|में|के नीचे|से कम|कम में)",
-            r"(\d+)\s*(?:taka|tk|rupee|rupees|rs|rupay|rupya)?\s*(?:নিচে|কম|কমের মধ্যে|নিচে|niche|neeche|ke niche|se kam|kam|below|under|tak|me|mein|niche ke)"
-        ],
         Intent.GREETING: [
             r"\b(hi|hello|hey|hola|howdy|wassup|what's up)\b", 
             r"\b(how are you)\b",
@@ -550,11 +534,11 @@ class IntentClassifier:
             r"\b(resturant|paas mein|khula|band)\b"
         ],
         Intent.ORDER_TRACKING: [
-            r"\b(track|where is my order|order status|my order|status|what did i order|which item i ordered|ordered items|last order|previous order|past order)\b",
-            r"(অর্ডার|ট্র্যাক|কোথায়|অবস্থা|স্ট্যাটাস|কী অর্ডার করেছি|কোন আইটেম|শেষ অর্ডার|আগের অর্ডার)",
-            r"(ऑर्डर|कहाँ है|स्थिति|स्टेटस|मेरा ऑर्डर|आखिरी ऑर्डर|पिछला ऑर्डर)",
-            r"\b(track|order status|kothay|kothai|status|ki order korechi|kon item order|last order|shesh order|sesh order|ager order)\b",
-            r"\b(mera order|kaha hai|order kahan hai|aakhri order|akhri order|pichla order)\b"
+            r"\b(track|where is my order|order status|my order|status|what did i order|which item i ordered|ordered items)\b",
+            r"(অর্ডার|ট্র্যাক|কোথায়|অবস্থা|স্ট্যাটাস|কী অর্ডার করেছি|কোন আইটেম)",
+            r"(ऑर्डर|कहाँ है|स्थिति|स्टेटस|मेरा ऑर्डर)",
+            r"\b(track|order status|kothay|kothai|status|ki order korechi|kon item order)\b",
+            r"\b(mera order|kaha hai|order kahan hai)\b"
         ],
         Intent.ORDER_CANCELLATION: [
             r"\b(cancel|stop order)\b",
@@ -1049,81 +1033,6 @@ class MockEngine:
                 intent_confidence=0.95,
                 entities={},
                 followUp=["tell me a poem", "explain compound interest"] if topic == "default" else []
-            )
-
-        if intent == Intent.BUDGET_RECOMMENDATION:
-            budget_range = context.get("budgetRange", {"min": 1, "max": 2000})
-            recs = context.get("budgetRecommendations", [])
-            
-            min_p = budget_range.get("min", 1)
-            max_p = budget_range.get("max", 2000)
-            
-            is_alt = any(item.get("isAlternative") for item in recs)
-            
-            if is_alt:
-                if lang == "bn":
-                    reply = f"দুঃখিত, আপনার বাজেট (₹{min_p}–₹{max_p}) এর মধ্যে কোনো খাবার খুঁজে পাওয়া যায়নি। তবে আপনার বাজেটের সবচেয়ে কাছাকাছি কিছু বিকল্প খাবার এখানে দেওয়া হলো:\n\n"
-                elif lang == "hi":
-                    reply = f"क्षमा करें, आपके बजट (₹{min_p}–₹{max_p}) के भीतर कोई भोजन नहीं मिला। आपके बजट के सबसे करीबी कुछ विकल्प यहाँ दिए गए हैं:\n\n"
-                elif lang == "bn_en":
-                    reply = f"Sorry, apnar budget (₹{min_p}–₹{max_p}) er moddhe kono khabar paoya jayni. Apnar budget er kachakachi kichu options niche deoya holo:\n\n"
-                elif lang == "en_hi":
-                    reply = f"Sorry, aapke budget (₹{min_p}–₹{max_p}) ke andar koi khana nahi mila. Aapke budget ke sabse paas ke options niche diye gaye hain:\n\n"
-                elif lang == "bn_hi":
-                    reply = f"Sorry, apnar budget (₹{min_p}–₹{max_p}) er moddhe koi khana nahi mila. Apnar budget er kachakachi options niche diye hain:\n\n"
-                else:
-                    reply = f"I couldn't find any food items within your budget (₹{min_p}–₹{max_p}) nearby. Here are the closest available alternatives instead:\n\n"
-            else:
-                if lang == "bn":
-                    reply = f"আমি আপনার বাজেট (₹{min_p}–₹{max_p}) এর মধ্যে আপনার আশেপাশের রেস্তোরাঁ থেকে কিছু চমৎকার খাবার খুঁজে পেয়েছি:\n\n"
-                elif lang == "hi":
-                    reply = f"मुझे आपके बजट (₹{min_p}–₹{max_p}) के भीतर आपके आस-पास के रेस्तरां से कुछ बेहतरीन विकल्प मिले हैं:\n\n"
-                elif lang == "bn_en":
-                    reply = f"Ami apnar budget (₹{min_p}–₹{max_p}) er moddhe kachakachi restaurant theke bhalo options peyechi:\n\n"
-                elif lang == "en_hi":
-                    reply = f"Mujhe aapke budget (₹{min_p}–₹{max_p}) ke andar paas ke restaurants se kuch acche options mile hain:\n\n"
-                elif lang == "bn_hi":
-                    reply = f"Ami apnar budget (₹{min_p}–₹{max_p}) er moddhe paas ke restaurant theke bhalo options peyechi:\n\n"
-                else:
-                    reply = f"I found several great options within your budget (₹{min_p}–₹{max_p}) from restaurants near your location:\n\n"
-                
-            if recs:
-                for item in recs[:8]:
-                    reply += f"• {item['name']} — ₹{item['price']} — {item['restaurantName']}\n"
-                
-                if lang == "bn":
-                    reply += "\nএই সমস্ত রেস্তোরাঁ বর্তমানে আপনার অবস্থানে ডেলিভারি দিচ্ছে।"
-                elif lang == "hi":
-                    reply += "\nये सभी रेस्तरां वर्तमान में आपके स्थान पर डिलीवरी कर रहे हैं।"
-                elif lang == "bn_en":
-                    reply += "\nEi sob restaurant ekhon apnar location-e delivery korche."
-                elif lang == "en_hi":
-                    reply += "\nYeh sabhi restaurants abhi aapke location par delivery kar rahe hain."
-                elif lang == "bn_hi":
-                    reply += "\nEi sob restaurant abhi apnar location-e delivery korche."
-                else:
-                    reply += "\nAll of these restaurants currently deliver to your location."
-            else:
-                if lang == "bn":
-                    reply = f"দুঃখিত, আপনার বাজেট (₹{min_p}–₹{max_p}) এর মধ্যে কোনো খাবার খুঁজে পাওয়া যায়নি। অনুগ্রহ করে একটু বেশি বাজেট দিয়ে চেষ্টা করুন।"
-                elif lang == "hi":
-                    reply = f"क्षमा करें, आपके बजट (₹{min_p}–₹{max_p}) के भीतर कोई भोजन नहीं मिला। कृपया थोड़ा अधिक बजट के साथ प्रयास करें।"
-                elif lang == "bn_en":
-                    reply = f"Sorry, apnar budget (₹{min_p}–₹{max_p}) er moddhe kono khabar paoya jayni. Ektu beshi budget diye try korun."
-                elif lang == "en_hi":
-                    reply = f"Sorry, aapke budget (₹{min_p}–₹{max_p}) ke andar koi khana nahi mila. Kripya thoda zyada budget se try karein."
-                elif lang == "bn_hi":
-                    reply = f"Sorry, apnar budget (₹{min_p}–₹{max_p}) er moddhe koi khana nahi mila. Ektu beshi budget diye try korun."
-                else:
-                    reply = f"I couldn't find any food items within your budget (₹{min_p}–₹{max_p}) nearby. Try suggesting a slightly higher budget."
-            
-            return ChatResponse(
-                reply=reply,
-                intent="BUDGET_RECOMMENDATION",
-                action="SHOW_BUDGET_RECOMMENDATIONS",
-                intent_confidence=0.95,
-                entities={"min": min_p, "max": max_p},
-                followUp=["show vegetarian foods", "under ₹500", "nearest restaurants"]
             )
 
         orders = context.get("orders", [])

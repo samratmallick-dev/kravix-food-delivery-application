@@ -10,8 +10,6 @@ export interface AIChatPayload {
     currentModule?: string;
     preferredLanguage?: string;
     recentActions?: string[];
-    latitude?: number;
-    longitude?: number;
 }
 
 export interface AIChatResponse {
