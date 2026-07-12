@@ -7,22 +7,26 @@ export class AdminEventPublisher implements IAdminEventPublisher {
     const eventData = { restaurantId, ownerId, isVerified };
     await this.emitSocketAndMQ("restaurant:verified", `Restaurant:${restaurantId}`, eventData, "RESTAURANT_VERIFIED");
     await this.emitSocketAndMQ("restaurant:verified", `RestaurantStatus:${restaurantId}`, eventData, "RESTAURANT_VERIFIED");
+    await this.emitSocketAndMQ("admin:restaurant:verified", "Admin", eventData, "RESTAURANT_VERIFIED");
   }
 
   async publishRestaurantDeleted(restaurantId: string, ownerId: string): Promise<void> {
     const eventData = { restaurantId, ownerId };
     await this.emitSocketAndMQ("restaurant:deleted", `Restaurant:${restaurantId}`, eventData, "RESTAURANT_DELETED");
     await this.emitSocketAndMQ("restaurant:deleted", `RestaurantStatus:${restaurantId}`, eventData, "RESTAURANT_DELETED");
+    await this.emitSocketAndMQ("admin:restaurant:deleted", "Admin", eventData, "RESTAURANT_DELETED");
   }
 
   async publishRiderVerified(riderId: string, userId: string, isVerified: boolean): Promise<void> {
     const eventData = { riderId, userId, isVerified };
     await this.emitSocketAndMQ("rider:verified", `Rider:${riderId}`, eventData, "RIDER_VERIFIED");
+    await this.emitSocketAndMQ("admin:rider:verified", "Admin", eventData, "RIDER_VERIFIED");
   }
 
   async publishRiderDeleted(riderId: string, userId: string): Promise<void> {
     const eventData = { riderId, userId };
     publishAdminEvent("RIDER_DELETED", eventData);
+    await this.emitSocketAndMQ("admin:rider:deleted", "Admin", eventData, "RIDER_DELETED");
   }
 
   async publishUserBlockStatusChanged(

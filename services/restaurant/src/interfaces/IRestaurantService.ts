@@ -20,4 +20,21 @@ export interface IRestaurantService {
     radius: number,
     search?: string
   ): Promise<{ restaurants: Restaurant[]; correctedQuery?: string }>;
+  updateRestaurantLocation(
+    userId: string,
+    locationData: {
+      address: string;
+      city: string;
+      state: string;
+      country: string;
+      pincode: string;
+      landmark?: string | null;
+      latitude: number;
+      longitude: number;
+      deliveryRadius: number;
+      placeId?: string | null;
+    },
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<{ success: boolean; message: string; status: "APPROVED" | "PENDING"; restaurant: Restaurant }>;
 }

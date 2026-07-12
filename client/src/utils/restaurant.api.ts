@@ -89,3 +89,22 @@ export const fetchSingleRestaurant = (id: string): Promise<ApiResponse<IRestaura
       request<ApiResponse<IRestaurant>>(`${restaurantBaseUrl}/${id}`, {
             method: "GET",
       });
+
+export interface UpdateRestaurantLocationPayload {
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+  landmark?: string | null;
+  latitude: number;
+  longitude: number;
+  deliveryRadius: number;
+  placeId?: string | null;
+}
+
+export const updateRestaurantLocation = (payload: UpdateRestaurantLocationPayload): Promise<ApiResponse<{ status: "APPROVED" | "PENDING"; restaurant: IRestaurant }>> =>
+      request<ApiResponse<{ status: "APPROVED" | "PENDING"; restaurant: IRestaurant }>>(`${restaurantBaseUrl}/me/location`, {
+            method: "PATCH",
+            body: JSON.stringify(payload),
+      });

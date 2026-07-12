@@ -36,3 +36,21 @@ export const deleteRestaurant = TryCatch(async (req: AdminRequest, res: Response
   await restaurantModerationService.deleteRestaurant(restaurantId);
   return successResponse(res, 200, "Restaurant and its menu items deleted");
 });
+
+export const approveLocationUpdate = TryCatch(async (req: AdminRequest, res: Response, next: NextFunction) => {
+  const restaurantId = req.params["restaurantId"] as string;
+  const adminId = req.admin?._id || "system";
+  const { reason, locationVersion } = req.body;
+
+  const restaurant = await restaurantModerationService.approveLocation(restaurantId, adminId, reason, locationVersion);
+  return successResponse(res, 200, "Location update approved successfully", AdminResponseMapper.toRestaurantDto(restaurant));
+});
+
+export const rejectLocationUpdate = TryCatch(async (req: AdminRequest, res: Response, next: NextFunction) => {
+  const restaurantId = req.params["restaurantId"] as string;
+  const adminId = req.admin?._id || "system";
+  const { reason, locationVersion } = req.body;
+
+  const restaurant = await restaurantModerationService.rejectLocation(restaurantId, adminId, reason, locationVersion);
+  return successResponse(res, 200, "Location update rejected successfully", AdminResponseMapper.toRestaurantDto(restaurant));
+});

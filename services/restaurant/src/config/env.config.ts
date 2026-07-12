@@ -12,10 +12,12 @@ const envSchema = z.object({
   ORDER_READY_QUEUE: z.string(),
   RIDER_QUEUE: z.string(),
   ADMIN_EVENT_QUEUE: z.string(),
+  RESTAURANT_ADMIN_EVENT_QUEUE: z.string(),
   UTILS_SERVICE_URI: z.string(),
   REALTIME_SOCKET_SERVICE_URI: z.string(),
   REDIS_URL: z.string(),
   GEMINI_API_KEY: z.string(),
+  REQUIRE_LOCATION_REAPPROVAL: z.string().default("false").transform((val) => val === "true"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development")
 });
 

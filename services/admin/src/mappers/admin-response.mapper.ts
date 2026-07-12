@@ -33,8 +33,18 @@ export class AdminResponseMapper {
       isVerified: restaurant.isVerified,
       autoLocation: restaurant.autoLocation,
       isOpen: restaurant.isOpen,
-      createdAt: restaurant.createdAt.toISOString()
-    };
+      createdAt: restaurant.createdAt.toISOString(),
+      location: restaurant.location,
+      pendingLocation: restaurant.pendingLocation,
+      locationReviewStatus: restaurant.locationReviewStatus ?? null,
+      locationReviewedBy: restaurant.locationReviewedBy,
+      locationReviewedAt: restaurant.locationReviewedAt,
+      locationReviewReason: restaurant.locationReviewReason,
+      locationRejectionReason: restaurant.locationRejectionReason,
+      locationUpdatedAt: restaurant.locationUpdatedAt,
+      locationUpdatedBy: restaurant.locationUpdatedBy,
+      locationVersion: restaurant.locationVersion
+    } as any;
   }
 
   static toRiderDto(rider: Rider): RiderResponseDto {

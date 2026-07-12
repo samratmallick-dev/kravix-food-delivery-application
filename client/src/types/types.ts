@@ -32,7 +32,7 @@ export interface AppContextType {
       locationLoading: boolean;
       cart: ICart[] | [];
       fetchCart: () => Promise<void>;
-      fetchCurrentUser: () => Promise<void>;
+      fetchCurrentUser: () => Promise<User | null>;
       subTotal: number;
       quantity: number;
       detectUserLocation: (forcePrompt?: boolean) => Promise<boolean>;
@@ -54,6 +54,32 @@ export interface IRestaurant {
             formattedAddress: string;
       };
       isOpen: boolean;
+      location?: {
+            address: string;
+            city: string;
+            state: string;
+            country: string;
+            pincode: string;
+            landmark?: string | null;
+            latitude: number;
+            longitude: number;
+            deliveryRadius: number;
+            placeId?: string | null;
+      };
+      pendingLocation?: {
+            address: string;
+            city: string;
+            state: string;
+            country: string;
+            pincode: string;
+            landmark?: string | null;
+            latitude: number;
+            longitude: number;
+            deliveryRadius: number;
+            placeId?: string | null;
+      };
+      locationReviewStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
+      locationVersion?: number;
       createdAt: Date;
 };
 

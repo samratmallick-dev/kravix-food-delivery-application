@@ -3,6 +3,7 @@ import { app } from "./app.js";
 import ConnectDb from "./config/db/db.js";
 import { connectRabbitMQ } from "./config/rabbitmq.js";
 import { runMigration } from "./scripts/migrate-slugs.js";
+import { runLocationMigration } from "./scripts/initialize-locations.js";
 
 const PORT = process.env.PORT || 9000;
 
@@ -10,6 +11,7 @@ const start = async () => {
       try {
             await ConnectDb();
             await runMigration();
+            await runLocationMigration();
             connectRabbitMQ();
 
             const server = app.listen(PORT, () => {

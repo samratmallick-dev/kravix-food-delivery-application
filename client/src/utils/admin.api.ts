@@ -58,6 +58,24 @@ export const deleteRestaurant = (restaurantId: string): Promise<SuccessResponse>
             method: "DELETE",
       });
 
+export const approveLocationUpdate = (
+      restaurantId: string,
+      payload?: { reason?: string; locationVersion?: number },
+): Promise<ApiResponse<any>> =>
+      adminReq<ApiResponse<any>>(`${adminBaseUrl}/restaurants/${restaurantId}/location/approve`, {
+            method: "PATCH",
+            body: JSON.stringify(payload || {}),
+      });
+
+export const rejectLocationUpdate = (
+      restaurantId: string,
+      payload?: { reason?: string; locationVersion?: number },
+): Promise<ApiResponse<any>> =>
+      adminReq<ApiResponse<any>>(`${adminBaseUrl}/restaurants/${restaurantId}/location/reject`, {
+            method: "PATCH",
+            body: JSON.stringify(payload || {}),
+      });
+
 export const getAllRiders = (params?: any): Promise<ApiResponse<any>> => {
       const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
       return adminReq<ApiResponse<any>>(`${adminBaseUrl}/riders${qs}`, {

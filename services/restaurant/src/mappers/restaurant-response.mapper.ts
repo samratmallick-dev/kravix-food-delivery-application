@@ -6,7 +6,7 @@ import { RestaurantResponseDto, MenuItemResponseDto, CartResponseDto, OrderRespo
 
 export class RestaurantResponseMapper {
   static toRestaurantDto(restaurant: Restaurant): RestaurantResponseDto {
-    const dto: RestaurantResponseDto = {
+    const dto = {
       _id: restaurant.id,
       name: restaurant.name,
       slug: restaurant.slug,
@@ -20,8 +20,18 @@ export class RestaurantResponseMapper {
         coordinates: restaurant.autoLocation.coordinates,
         formattedAddress: restaurant.autoLocation.formattedAddress
       },
-      isOpen: restaurant.isOpen
-    };
+      isOpen: restaurant.isOpen,
+      location: restaurant.location,
+      pendingLocation: restaurant.pendingLocation,
+      locationReviewStatus: restaurant.locationReviewStatus ?? null,
+      locationReviewedBy: restaurant.locationReviewedBy,
+      locationReviewedAt: restaurant.locationReviewedAt,
+      locationReviewReason: restaurant.locationReviewReason,
+      locationRejectionReason: restaurant.locationRejectionReason,
+      locationUpdatedAt: restaurant.locationUpdatedAt,
+      locationUpdatedBy: restaurant.locationUpdatedBy,
+      locationVersion: restaurant.locationVersion
+    } as any;
     if (restaurant.distanceKm !== undefined) {
       dto.distanceKm = restaurant.distanceKm;
     }

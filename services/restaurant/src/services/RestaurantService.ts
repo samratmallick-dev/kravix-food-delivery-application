@@ -6,10 +6,16 @@ import { IMenuItemRepository } from "../interfaces/IMenuItemRepository.js";
 import { IOrderRepository } from "../interfaces/IOrderRepository.js";
 import { IRestaurantEventPublisher } from "../interfaces/IRestaurantEventPublisher.js";
 import { Restaurant } from "../domain/entities/Restaurant.js";
-import { NotFoundError, ValidationError } from "../utils/errors.js";
+import { NotFoundError, ValidationError, ConflictError, AuthorizationError } from "../utils/errors.js";
 import { normalizeSearchQuery } from "../utils/searchNormalizer.js";
 import { ICache } from "../interfaces/ICache.js";
 import { getUniqueSlug } from "../utils/slugify.js";
+import { Restaurant as RestaurantModel } from "../model/Restaurant.js";
+import { RestaurantLocationHistory } from "../model/RestaurantLocationHistory.js";
+import { LocationValidationService } from "./LocationValidationService.js";
+import { RestaurantMapper } from "../mappers/restaurant.mapper.js";
+import axios from "axios";
+import { env } from "../config/env.config.js";
 
 export class RestaurantService implements IRestaurantService {
   constructor(
@@ -137,7 +143,6 @@ export class RestaurantService implements IRestaurantService {
 
     const saved = await this.restaurantRepository.update(updated);
 
-    // Invalidate caches
     await this.cache.delete(`restaurant_details:${saved.id}`);
 
     return saved;
@@ -194,5 +199,176 @@ export class RestaurantService implements IRestaurantService {
     }
 
     return response;
+  }
+
+  async updateRestaurantLocation(
+    userId: string,
+    locationData: {
+      address: string;
+      city: string;
+      state: string;
+      country: string;
+      pincode: string;
+      landmark?: string | null;
+      latitude: number;
+      longitude: number;
+      deliveryRadius: number;
+      placeId?: string | null;
+    },
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<{ success: boolean; message: string; status: "APPROVED" | "PENDING"; restaurant: Restaurant }> {
+    const restaurantRaw = await RestaurantModel.findOne({ ownerId: userId });
+    if (!restaurantRaw) {
+      throw new NotFoundError("Restaurant not found for this user");
+    }
+
+    if (restaurantRaw.ownerId !== userId) {
+      throw new AuthorizationError("You do not own this restaurant");
+    }
+
+    if (restaurantRaw.locationReviewStatus === "PENDING") {
+      throw new ConflictError("Location update is already pending review");
+    }
+
+    const valService = new LocationValidationService();
+    const geoValidation = await valService.validateCoordinates(locationData.latitude, locationData.longitude);
+    if (!geoValidation.isValid) {
+      throw new ValidationError(geoValidation.errorReason || "Invalid coordinates location");
+    }
+
+    if (restaurantRaw.locationUpdatedAt && new Date().getTime() - new Date(restaurantRaw.locationUpdatedAt).getTime() < 300000) {
+      throw new ValidationError("Please wait at least 5 minutes before submitting another location update");
+    }
+
+    const requireReapproval = env.REQUIRE_LOCATION_REAPPROVAL;
+    console.log("DEBUG: env.REQUIRE_LOCATION_REAPPROVAL =", env.REQUIRE_LOCATION_REAPPROVAL, "process.env.REQUIRE_LOCATION_REAPPROVAL =", process.env.REQUIRE_LOCATION_REAPPROVAL);
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    let savedRestaurantRaw: any;
+    let action: "PROPOSED" | "IMMEDIATE_UPDATE" = requireReapproval ? "PROPOSED" : "IMMEDIATE_UPDATE";
+
+    try {
+      const oldLoc = restaurantRaw.location || {
+        address: restaurantRaw.autoLocation.formattedAddress,
+        city: "",
+        state: "",
+        country: "",
+        pincode: "",
+        landmark: "",
+        latitude: restaurantRaw.autoLocation.coordinates[1],
+        longitude: restaurantRaw.autoLocation.coordinates[0],
+        deliveryRadius: 5000
+      };
+
+      const newLoc = {
+        address: locationData.address,
+        city: locationData.city,
+        state: locationData.state,
+        country: locationData.country,
+        pincode: locationData.pincode,
+        landmark: locationData.landmark || "",
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        placeId: locationData.placeId || "",
+        deliveryRadius: locationData.deliveryRadius,
+        updatedAt: new Date()
+      };
+
+      if (requireReapproval) {
+        savedRestaurantRaw = await RestaurantModel.findByIdAndUpdate(
+          restaurantRaw._id,
+          {
+            $set: {
+              pendingLocation: newLoc,
+              locationReviewStatus: "PENDING",
+              locationUpdatedAt: new Date(),
+              locationUpdatedBy: userId
+            }
+          },
+          { new: true, session }
+        );
+      } else {
+        savedRestaurantRaw = await RestaurantModel.findByIdAndUpdate(
+          restaurantRaw._id,
+          {
+            $set: {
+              location: newLoc,
+              locationReviewStatus: "APPROVED",
+              locationUpdatedAt: new Date(),
+              locationUpdatedBy: userId,
+              autoLocation: {
+                type: "Point",
+                coordinates: [locationData.longitude, locationData.latitude],
+                formattedAddress: locationData.address
+              }
+            }
+          },
+          { new: true, session }
+        );
+      }
+
+      await RestaurantLocationHistory.create(
+        [
+          {
+            restaurantId: restaurantRaw._id.toString(),
+            sellerId: restaurantRaw.ownerId,
+            action,
+            oldLocation: oldLoc,
+            newLocation: newLoc,
+            ipAddress,
+            userAgent,
+            triggeredBy: userId,
+            timestamp: new Date()
+          }
+        ] as any[],
+        { session }
+      );
+
+      await session.commitTransaction();
+    } catch (err) {
+      await session.abortTransaction();
+      throw err;
+    } finally {
+      session.endSession();
+    }
+
+    await this.cache.delete(`restaurant_details:${savedRestaurantRaw._id}`);
+    await this.cache.delete(`restaurant_details:${savedRestaurantRaw.slug}`);
+
+    try {
+      if (requireReapproval) {
+        const emitUrl = `${process.env.REALTIME_SOCKET_SERVICE_URI}/api/v1/socket/events`;
+        const emitHeaders = { "x-internal-key": process.env.INTERNAL_SERVICE_KEY! };
+        await axios.post(
+          emitUrl,
+          {
+            event: "restaurant:location_review_pending",
+            room: "Admin",
+            payload: {
+              restaurantId: savedRestaurantRaw._id.toString(),
+              ownerId: savedRestaurantRaw.ownerId,
+              locationReviewStatus: "PENDING"
+            }
+          },
+          { headers: emitHeaders }
+        ).catch((err) => console.error("Realtime emit failed for location review:", err.message));
+      } else {
+        await this.eventPublisher.publishRestaurantStatus(savedRestaurantRaw._id.toString(), savedRestaurantRaw.isOpen);
+      }
+    } catch (evtErr: any) {
+      console.error("Failed to emit location update events:", evtErr.message);
+    }
+
+    const domain = RestaurantMapper.toDomain(savedRestaurantRaw);
+    return {
+      success: true,
+      message: requireReapproval
+        ? "Your updated location has been submitted for admin review."
+        : "Restaurant location updated successfully.",
+      status: requireReapproval ? "PENDING" : "APPROVED",
+      restaurant: domain
+    };
   }
 }

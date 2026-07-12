@@ -24,6 +24,20 @@ export const publishAdminEvent = (type: string, data: Record<string, unknown>): 
       else console.log(`📤 Published admin event "${type}"`);
 };
 
+export const publishToQueue = (queueName: string, type: string, data: Record<string, unknown>): void => {
+      if (!channel) {
+            console.warn(`RabbitMQ unavailable — dropped event "${type}" for queue "${queueName}"`);
+            return;
+      }
+      const sent = channel.sendToQueue(
+            queueName,
+            Buffer.from(JSON.stringify({ type, data })),
+            { persistent: true },
+      );
+      if (!sent) console.error(`RabbitMQ buffer full — failed to publish event "${type}" to queue "${queueName}"`);
+      else console.log(`📤 Published event "${type}" to queue "${queueName}"`);
+};
+
 export const connectRabbitMQ = async (): Promise<void> => {
       try {
             connection = await amqp.connect(process.env.RABITMQ_URL!);
@@ -31,6 +45,7 @@ export const connectRabbitMQ = async (): Promise<void> => {
             channel.prefetch(1);
 
             await channel.assertQueue(process.env.ADMIN_EVENT_QUEUE!, { durable: true });
+            await channel.assertQueue(process.env.RESTAURANT_ADMIN_EVENT_QUEUE!, { durable: true });
 
             reconnectDelay = 2000;
             console.log("✅ Connected to RabbitMQ in Admin Service");

@@ -46,7 +46,29 @@ const reviewSchema = z.object({
   comment: z.string().min(1)
 });
 
+const locationSchema = z.object({
+  address: z.string().trim().min(1, "Address is required"),
+  city: z.string().trim().min(1, "City is required"),
+  state: z.string().trim().min(1, "State is required"),
+  country: z.string().trim().min(1, "Country is required"),
+  pincode: z.string().trim().min(1, "Pincode is required"),
+  landmark: z.string().trim().optional().nullable(),
+  latitude: z.coerce.number().min(-90, "Latitude must be between -90 and 90").max(90, "Latitude must be between -90 and 90"),
+  longitude: z.coerce.number().min(-180, "Longitude must be between -180 and 180").max(180, "Longitude must be between -180 and 180"),
+  deliveryRadius: z.coerce.number().int().min(500, "Delivery radius must be at least 500m").max(15000, "Delivery radius cannot exceed 15km").default(5000),
+  placeId: z.string().trim().optional().nullable()
+});
+
 export class RestaurantValidator {
+  static validateLocation(data: any) {
+    const result = locationSchema.safeParse(data);
+    if (!result.success) {
+      const msg = result.error?.issues[0]?.message || "Invalid location data";
+      throw new ValidationError(msg);
+    }
+    return result.data;
+  }
+
   static validateAddress(data: any) {
     const result = addressSchema.safeParse(data);
     if (!result.success) {

@@ -15,7 +15,17 @@ export class RestaurantMapper {
         formattedAddress: raw.autoLocation?.formattedAddress || ""
       },
       raw.isOpen ?? false,
-      raw.createdAt ? new Date(raw.createdAt) : new Date()
+      raw.createdAt ? new Date(raw.createdAt) : new Date(),
+      raw.location,
+      raw.pendingLocation,
+      raw.locationReviewStatus,
+      raw.locationReviewedBy,
+      raw.locationReviewedAt,
+      raw.locationReviewReason,
+      raw.locationRejectionReason,
+      raw.locationUpdatedAt,
+      raw.locationUpdatedBy,
+      raw.locationVersion
     );
   }
 
@@ -32,7 +42,17 @@ export class RestaurantMapper {
         coordinates: domain.autoLocation.coordinates,
         formattedAddress: domain.autoLocation.formattedAddress
       },
-      isOpen: domain.isOpen
+      isOpen: domain.isOpen,
+      location: domain.location,
+      pendingLocation: domain.pendingLocation,
+      locationReviewStatus: domain.locationReviewStatus,
+      locationReviewedBy: domain.locationReviewedBy,
+      locationReviewedAt: domain.locationReviewedAt,
+      locationReviewReason: domain.locationReviewReason,
+      locationRejectionReason: domain.locationRejectionReason,
+      locationUpdatedAt: domain.locationUpdatedAt,
+      locationUpdatedBy: domain.locationUpdatedBy,
+      locationVersion: domain.locationVersion
     };
   }
 }

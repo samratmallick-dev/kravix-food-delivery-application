@@ -62,6 +62,7 @@ export const initializeSocket = (server: http.Server) => {
       });
       io.on("connection", (socket) => {
             const user = socket.data.user;
+            console.log(`[realtime] Client connected: socket.id = ${socket.id}, userId = ${user?._id}, role = ${user?.role}`);
 
             if (!user) {
                   return socket.disconnect();
@@ -88,12 +89,18 @@ export const initializeSocket = (server: http.Server) => {
             });
 
             socket.on("join:admin", () => {
+                  console.log(`[realtime] Client ${socket.id} requesting join:admin, role = ${user.role}`);
                   if (user.role === "admin") {
                         socket.join("Admin");
+                        console.log(`[realtime] Client ${socket.id} successfully joined Admin room`);
+                  } else {
+                        console.log(`[realtime] Client ${socket.id} join:admin rejected (not admin)`);
                   }
             });
 
-            socket.on("disconnect", (_reason) => { });
+            socket.on("disconnect", (reason) => {
+                  console.log(`[realtime] Client disconnected: socket.id = ${socket.id}, reason = ${reason}`);
+            });
       });
 
       return io;

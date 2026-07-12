@@ -1,5 +1,6 @@
 import amqp from "amqplib";
 import { startPayment } from "./paymentConsumer.js";
+import { startAdminEventConsumer } from "./adminEventConsumer.js";
 
 let channel: amqp.Channel | null = null;
 let connection: amqp.ChannelModel | null = null;
@@ -20,11 +21,13 @@ export const connectRabbitMQ = async (): Promise<void> => {
             await channel.assertQueue(process.env.RIDER_QUEUE!, { durable: true });
             await channel.assertQueue(process.env.ORDER_READY_QUEUE!, { durable: true });
             await channel.assertQueue(process.env.ADMIN_EVENT_QUEUE!, { durable: true });
+            await channel.assertQueue(process.env.RESTAURANT_ADMIN_EVENT_QUEUE!, { durable: true });
 
             reconnectDelay = 2000;
             console.log("✅ Connected to RabbitMQ in Restaurant Service");
 
             await startPayment();
+            await startAdminEventConsumer();
 
             connection.on("error", (err) => {
                   console.error("RabbitMQ connection error in Restaurant Service:", err.message);

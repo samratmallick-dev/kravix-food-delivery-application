@@ -55,6 +55,16 @@ export interface RestaurantResponseDto {
   autoLocation: { type: "Point"; coordinates: [number, number]; formattedAddress: string };
   isOpen: boolean;
   distanceKm?: number;
+  location?: any;
+  pendingLocation?: any;
+  locationReviewStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
+  locationReviewedBy?: string;
+  locationReviewedAt?: Date;
+  locationReviewReason?: string;
+  locationRejectionReason?: string;
+  locationUpdatedAt?: Date;
+  locationUpdatedBy?: string;
+  locationVersion?: number;
 }
 
 export interface MenuItemResponseDto {

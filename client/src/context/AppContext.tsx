@@ -31,12 +31,13 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         if (!token) {
             setUser(null);
             setIsAuth(false);
-            return;
+            return null;
         }
         try {
             const res = await getMyProfile(token);
             setUser(res.data);
             setIsAuth(true);
+            return res.data;
         } catch (error: any) {
             const status = error.status;
             if (status === 401 || status === 403) {
@@ -46,12 +47,19 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             } else {
                 console.error("auth fetch failed:", error.message);
             }
+            return null;
         }
     }, []);
 
     const fetchCart = useCallback(async () => {
         const token = storage.getToken();
         if (!token) { setCart([]); setSubTotal(0); setQuantity(0); return; }
+        if (user && user.role !== "customer") {
+            setCart([]);
+            setSubTotal(0);
+            setQuantity(0);
+            return;
+        }
         try {
             const res = await apiFetchCart(token);
             setCart(res.data?.cart || []);
@@ -60,7 +68,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         } catch (error: any) {
             console.error(error);
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         const token = storage.getToken();
@@ -73,10 +81,24 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
             Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
 
-        Promise.allSettled([
-            withTimeout(fetchCurrentUser(), 15000),
-            withTimeout(fetchCart(), 15000),
-        ]).finally(() => setLoading(false));
+        const init = async () => {
+            try {
+                const userData = await withTimeout(fetchCurrentUser(), 15000);
+                if (userData && userData.role === "customer") {
+                    await withTimeout(fetchCart(), 15000);
+                } else {
+                    setCart([]);
+                    setSubTotal(0);
+                    setQuantity(0);
+                }
+            } catch (error) {
+                console.error("Init failed:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        init();
     }, [fetchCurrentUser, fetchCart]);
 
     const detectUserLocation = useCallback(async (forcePrompt = false): Promise<boolean> => {

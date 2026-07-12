@@ -13,6 +13,7 @@ const envSchema = z.object({
   RABITMQ_URL: z.string(),
   PAYMENT_QUEUE: z.string(),
   ADMIN_EVENT_QUEUE: z.string(),
+  RESTAURANT_ADMIN_EVENT_QUEUE: z.string(),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development")
 });
 

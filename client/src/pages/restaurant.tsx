@@ -75,14 +75,26 @@ const Restaurant = () => {
             const onStatus = ({ isOpen }: { isOpen: boolean }) => {
                   setRestaurant((prev) => prev ? { ...prev, isOpen } : prev);
             };
+            const onLocationApproved = () => {
+                  fetchMyRestaurant();
+                  toast.success("Your location update request has been approved!");
+            };
+            const onLocationRejected = () => {
+                  fetchMyRestaurant();
+                  toast.error("Your location update request has been declined by the admin.");
+            };
             socket.emit("join:restaurant", restaurant._id);
             socket.on("restaurant:verified", onVerified);
             socket.on("restaurant:deleted", onDeleted);
             socket.on("restaurant:status", onStatus);
+            socket.on("restaurant:location_approved", onLocationApproved);
+            socket.on("restaurant:location_rejected", onLocationRejected);
             return () => {
                   socket.off("restaurant:verified", onVerified);
                   socket.off("restaurant:deleted", onDeleted);
                   socket.off("restaurant:status", onStatus);
+                  socket.off("restaurant:location_approved", onLocationApproved);
+                  socket.off("restaurant:location_rejected", onLocationRejected);
             };
       }, [socket, restaurant?._id]);
 

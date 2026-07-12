@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 import { ValidationError } from "../utils/errors.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 import { postWithRetry } from "../utils/axiosHelper.js";
+import { RestaurantValidator } from "../validators/restaurant.validator.js";
 
 interface TokenPayload {
   _id: string;
@@ -179,4 +180,31 @@ export const fetchSingleRestaurant = TryCatch(async (req: AuthenticatedRequest, 
   const { restaurantId: id } = req.params;
   const restaurant = await restaurantService.getRestaurantDetails(id as string);
   return successResponse(res, 200, "Restaurant fetched successfully", RestaurantResponseMapper.toRestaurantDto(restaurant));
+});
+
+export const updateRestaurantLocation = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user) {
+    return errorResponse(res, 401, "User not authenticated", "UNAUTHORIZED");
+  }
+
+  const locationData = RestaurantValidator.validateLocation(req.body);
+  const ipAddress = req.ip || (req.headers["x-forwarded-for"] as string) || "";
+  const userAgent = req.headers["user-agent"] || "";
+
+  const result = await restaurantService.updateRestaurantLocation(
+    user._id.toString(),
+    {
+      ...locationData,
+      landmark: locationData.landmark ?? null,
+      placeId: locationData.placeId ?? null,
+    },
+    ipAddress,
+    userAgent
+  );
+
+  return successResponse(res, 200, result.message, {
+    status: result.status,
+    restaurant: RestaurantResponseMapper.toRestaurantDto(result.restaurant)
+  });
 });

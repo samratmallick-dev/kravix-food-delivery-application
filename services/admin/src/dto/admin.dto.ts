@@ -34,6 +34,16 @@ export interface RestaurantResponseDto {
   autoLocation: { coordinates: [number, number]; formattedAddress: string };
   isOpen: boolean;
   createdAt: string;
+  location?: any;
+  pendingLocation?: any;
+  locationReviewStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
+  locationReviewedBy?: string;
+  locationReviewedAt?: Date;
+  locationReviewReason?: string;
+  locationRejectionReason?: string;
+  locationUpdatedAt?: Date;
+  locationUpdatedBy?: string;
+  locationVersion?: number;
 }
 
 export interface RiderResponseDto {
