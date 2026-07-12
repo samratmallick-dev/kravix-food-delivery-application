@@ -95,18 +95,18 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                 const cachedRole = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
 
                 if (isNonCustomerPath || (cachedRole && cachedRole !== "customer")) {
-                    const userData = await withTimeout(fetchCurrentUser(), 5000);
+                    const userData = await withTimeout(fetchCurrentUser(), 15000);
                     if (userData && userData.role !== "customer") {
                         setCart([]);
                         setSubTotal(0);
                         setQuantity(0);
                     } else if (userData && userData.role === "customer") {
-                        await withTimeout(fetchCart(), 5000);
+                        await withTimeout(fetchCart(), 15000);
                     }
                 } else {
                     const [userData] = await Promise.all([
-                        withTimeout(fetchCurrentUser(), 5000),
-                        withTimeout(fetchCart(), 5000)
+                        withTimeout(fetchCurrentUser(), 15000),
+                        withTimeout(fetchCart(), 15000)
                     ]);
                     if (userData && userData.role !== "customer") {
                         setCart([]);
