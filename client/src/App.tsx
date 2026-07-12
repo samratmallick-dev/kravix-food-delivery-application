@@ -4,6 +4,7 @@ import { ProtectedRoutes, PublicRoutes } from "@/features/auth";
 import { useAppData } from "@/context/AppContext";
 import { AppSkeleton, AiAssistant } from "@/components/common";
 import { PublicLayout, AdminLayout, RiderLayout, AuthLayout } from "@/layouts";
+import { storage } from "@/utils";
 
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
@@ -58,7 +59,7 @@ const FaqPage = lazy(() => import("@/pages/common/FaqPage"));
 const App = () => {
       const { loading } = useAppData();
 
-      if (loading) return <AppSkeleton />;
+      if (loading && !!storage.getToken()) return <AppSkeleton />;
 
       return (
             <BrowserRouter>

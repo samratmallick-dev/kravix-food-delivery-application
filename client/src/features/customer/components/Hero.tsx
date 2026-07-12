@@ -1,5 +1,3 @@
-import heroImage from "@/assets/hero_background.jpg";
-
 const Hero = () => {
       const handleScrollToRestaurants = () => {
             const el = document.getElementById("nearest-restaurants");
@@ -11,16 +9,23 @@ const Hero = () => {
       return (
             <div className="relative w-full flex items-center justify-center overflow-hidden min-h-[45vh] sm:min-h-[55vh] md:min-h-[65vh] lg:min-h-[70vh] bg-gray-950 select-none">
                   <div className="absolute inset-0 z-0">
-                        <img 
-                              src={heroImage} 
-                              alt="Delicious food background" 
-                              className="w-full h-full object-cover animate-subtle-zoom" 
-                              fetchPriority="high" 
-                              decoding="sync" 
-                              loading="eager"
-                              width={1920}
-                              height={1080}
-                        />
+                        <picture>
+                              <source
+                                    srcSet="/hero_background-mobile.webp 768w, /hero_background.webp 1920w"
+                                    sizes="100vw"
+                                    type="image/webp"
+                              />
+                              <img
+                                    src="/hero_background.webp"
+                                    alt="Delicious food background"
+                                    className="w-full h-full object-cover animate-subtle-zoom"
+                                    fetchPriority="high"
+                                    decoding="sync"
+                                    loading="eager"
+                                    width={1920}
+                                    height={1080}
+                              />
+                        </picture>
                         <div className="absolute inset-0 bg-linear-to-t from-gray-950 via-black/55 to-black/80" />
                   </div>
                   

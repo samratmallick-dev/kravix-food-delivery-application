@@ -30,12 +30,22 @@ export default defineConfig({
             cssCodeSplit: true,
             rollupOptions: {
                   output: {
-                        manualChunks: {
-                              vendor: ['react', 'react-dom', 'react-router-dom'],
-                              icons: ['lucide-react', 'react-icons'],
-                              maps: ['leaflet', 'react-leaflet', 'leaflet-routing-machine'],
-                              socket: ['socket.io-client'],
-                              payment: ['@stripe/stripe-js'],
+                        manualChunks(id) {
+                              if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-router-dom')) {
+                                    return 'vendor';
+                              }
+                              if (id.includes('node_modules/lucide-react') || id.includes('node_modules/react-icons')) {
+                                    return 'icons';
+                              }
+                              if (id.includes('node_modules/leaflet') || id.includes('node_modules/react-leaflet') || id.includes('node_modules/leaflet-routing-machine')) {
+                                    return 'maps';
+                              }
+                              if (id.includes('node_modules/socket.io-client')) {
+                                    return 'socket';
+                              }
+                              if (id.includes('node_modules/@stripe')) {
+                                    return 'payment';
+                              }
                         },
                   },
             },
