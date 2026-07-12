@@ -57,7 +57,7 @@ const TEAM_MEMBERS = [
             initials: "SB",
             gradient: "from-pink-500 to-rose-500",
             email: "soumyajitbarick2004@gmail.com",
-            github: "#",
+            github: "https://github.com/Soumyajit1608",
             linkedin: "https://www.linkedin.com/in/soumyajit-barick-113a47253"
       },
 ];
