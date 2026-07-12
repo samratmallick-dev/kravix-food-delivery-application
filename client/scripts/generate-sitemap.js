@@ -8,6 +8,44 @@ const __dirname = path.dirname(__filename);
 const APP_TSX_PATH = path.join(__dirname, '..', 'src', 'App.tsx');
 const SITEMAP_PATH = path.join(__dirname, '..', 'public', 'sitemap.xml');
 
+const loadEnv = () => {
+      const paths = [
+            path.join(__dirname, '..', '.env'),
+            path.join(__dirname, '..', '.env.production')
+      ];
+
+      paths.forEach(envPath => {
+            if (fs.existsSync(envPath)) {
+                  const content = fs.readFileSync(envPath, 'utf-8');
+                  content.split('\n').forEach(line => {
+                        const trimmed = line.trim();
+                        if (!trimmed || trimmed.startsWith('#')) return;
+                        
+                        const match = trimmed.match(/^([\w.-]+)\s*=\s*(.*)$/);
+                        if (match) {
+                              const key = match[1];
+                              let val = match[2] || '';
+                              if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+                                    val = val.slice(1, -1);
+                              }
+                              process.env[key] = val;
+                        }
+                  });
+            }
+      });
+};
+
+loadEnv();
+
+const getBaseUrl = () => {
+      if (process.env.SITE_URL) {
+            return process.env.SITE_URL.replace(/\/$/, '');
+      }
+      return 'https://kravix-nu.vercel.app';
+};
+
+const SITE_URL = getBaseUrl();
+
 const PRIORITY_SCORES = {
       '/': 1.0,
       '/search': 0.9,
@@ -40,12 +78,17 @@ function generateSitemap() {
             }
 
             const appContent = fs.readFileSync(APP_TSX_PATH, 'utf-8');
+            
+            const cleanLines = appContent
+                  .split('\n')
+                  .filter(line => !line.trim().startsWith('//'))
+                  .join('\n');
 
-            const pathRegex = /path=[\"']([^\"']+)[\"']/g;
+            const pathRegex = /path=\{?[\"']([^\"']+)[\"']\}?/g;
             const extractedRoutes = new Set();
 
             let match;
-            while ((match = pathRegex.exec(appContent)) !== null) {
+            while ((match = pathRegex.exec(cleanLines)) !== null) {
                   const routePath = match[1];
                   extractedRoutes.add(routePath);
             }
@@ -88,7 +131,7 @@ function generateSitemap() {
                   const priority = PRIORITY_SCORES[route] !== undefined ? PRIORITY_SCORES[route] : 0.6;
                   const changefreq = route === '/' || route === '/search' ? 'daily' : 'weekly';
                   return `  <url>
-    <loc>https://kravix-nu.vercel.app${route === '/' ? '' : route}</loc>
+    <loc>${SITE_URL}${route === '/' ? '' : route}</loc>
     <lastmod>${now}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority.toFixed(1)}</priority>
