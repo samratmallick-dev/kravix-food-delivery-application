@@ -94,35 +94,39 @@ const About = () => {
                                     Technology Stack
                               </h2>
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                                    <div className="p-3 bg-gray-50 rounded-xl">
+                                    <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
                                           <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">Frontend</span>
                                           <span className="text-xs font-bold text-gray-800">React + Vite</span>
                                     </div>
-                                    <div className="p-3 bg-gray-50 rounded-xl">
+                                    <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
+                                          <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">Backend</span>
+                                          <span className="text-xs font-bold text-gray-800">Node.js + Express</span>
+                                    </div>
+                                    <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
                                           <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">Language</span>
                                           <span className="text-xs font-bold text-gray-800">TypeScript</span>
                                     </div>
-                                    <div className="p-3 bg-gray-50 rounded-xl">
+                                    <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
                                           <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">Styling</span>
                                           <span className="text-xs font-bold text-gray-800">Tailwind CSS v4</span>
                                     </div>
-                                    <div className="p-3 bg-gray-50 rounded-xl">
+                                    <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
                                           <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">State Caching</span>
                                           <span className="text-xs font-bold text-gray-800">Redis</span>
                                     </div>
-                                    <div className="p-3 bg-gray-50 rounded-xl">
+                                    <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
                                           <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">Databases</span>
                                           <span className="text-xs font-bold text-gray-800">MongoDB + Mongoose</span>
                                     </div>
-                                    <div className="p-3 bg-gray-50 rounded-xl">
+                                    <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
                                           <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">Event Broker</span>
                                           <span className="text-xs font-bold text-gray-800">RabbitMQ</span>
                                     </div>
-                                    <div className="p-3 bg-gray-50 rounded-xl">
+                                    <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
                                           <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">WebSockets</span>
                                           <span className="text-xs font-bold text-gray-800">Socket.io</span>
                                     </div>
-                                    <div className="p-3 bg-gray-50 rounded-xl">
+                                    <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
                                           <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">Gateways</span>
                                           <span className="text-xs font-bold text-gray-800">Stripe & Razorpay</span>
                                     </div>

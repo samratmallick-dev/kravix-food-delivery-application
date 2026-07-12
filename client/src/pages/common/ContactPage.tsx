@@ -7,7 +7,7 @@ import { Mail, Github, Linkedin, Globe, BookOpen, GraduationCap, User, ArrowRigh
 const TEAM_MEMBERS = [
       {
             name: "Samrat Mallick",
-            role: "Team Lead & Full Stack Developer",
+            role: "Team Lead, Full Stack Developer & Full Project Management",
             roll: "28100122019",
             reg: "222810110089",
             initials: "SM",
@@ -18,45 +18,45 @@ const TEAM_MEMBERS = [
       },
       {
             name: "Shubhranil Chowdhury",
-            role: "Frontend Developer & UI Designer",
+            role: "Frontend Developer",
             roll: "28100122046",
             reg: "222810110096",
             initials: "SC",
-            gradient: "from-pink-500 to-rose-500",
+            gradient: "from-blue-500 to-cyan-500",
             email: "subhranilchowdhury27@gmail.com",
             github: "https://github.com/shubhranil1",
             linkedin: "https://www.linkedin.com/in/shubhranil-chowdhury"
       },
- {
+      {
             name: "Tanushri Ghosh",
-            role: "Testing & Documentation",
+            role: "Documentation",
             roll: "28100122007",
             reg: "222810110118",
             initials: "TG",
-            gradient: "from-pink-500 to-rose-500",
+            gradient: "from-violet-500 to-purple-500",
             email: "tanushrighosh396@gmail.com",
             github: "https://github.com/tanushri396815",
             linkedin: "https://www.linkedin.com/in/tanushri-ghosh1/"
       },
- {
+      {
             name: "Arup Kumar Das",
-            role: "Backend and UIUX design",
+            role: "UI/UX designer",
             roll: "28100122071",
             reg: "222810110063",
             initials: "AKD",
-            gradient: "from-pink-500 to-rose-500",
+            gradient: "from-emerald-500 to-teal-500",
             email: "arup80424@gmail.com",
             github: "https://github.com/ArupKumarDas-Dev",
             linkedin: "https://www.linkedin.com/in/arup-kumar-das-85952a273"
       },
- {
+      {
             name: "Soumyajit Barick",
             role: "Documentation",
             roll: "28100122016",
             reg: "222810110103",
             initials: "SB",
-            gradient: "from-pink-500 to-rose-500",
-            email: "soumyajitbarick2004@gmail.com",
+            gradient: "from-amber-500 to-yellow-400",
+            email: "soumyajitbarick2004@gmail.com",   
             github: "https://github.com/Soumyajit1608",
             linkedin: "https://www.linkedin.com/in/soumyajit-barick-113a47253"
       },
@@ -248,10 +248,9 @@ const ContactPage = () => {
                         </div>
                   </div>
 
-                  {/* Our Development Team Section */}
                   <div className="container-app px-4 max-w-5xl mt-12 space-y-6">
                         <div className="text-center md:text-left">
-                              <h2 className="text-xl md:text-2xl font-black text-gray-805 tracking-tight flex items-center justify-center md:justify-start gap-2.5">
+                              <h2 className="text-xl md:text-2xl font-black text-gray-800 tracking-tight flex items-center justify-center md:justify-start gap-2.5">
                                     <span className="p-2 rounded-lg bg-primary/10 text-primary">
                                           <User size={22} />
                                     </span>
@@ -268,10 +267,8 @@ const ContactPage = () => {
                                           key={index}
                                           className="bg-white rounded-2xl border border-gray-100 hover:border-transparent p-6 shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group flex flex-col items-center text-center relative overflow-hidden"
                                     >
-                                          {/* Accent line */}
                                           <div className={`absolute top-0 inset-x-0 h-1.5 bg-linear-to-r ${member.gradient}`} />
 
-                                          {/* Avatar Circle */}
                                           <div className={`w-16 h-16 rounded-full bg-linear-to-br ${member.gradient} text-white font-black text-xl flex items-center justify-center shadow-md select-none group-hover:scale-105 transition-transform duration-300 mb-4`}>
                                                 {member.initials}
                                           </div>
