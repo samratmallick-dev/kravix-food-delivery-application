@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { compression } from 'vite-plugin-compression2';
+import path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,6 +12,11 @@ export default defineConfig({
             compression({ algorithms: ['gzip'] }),
             compression({ algorithms: ['brotliCompress'], filename: '[path][base].br' }),
       ],
+      resolve: {
+            alias: {
+                  '@': path.resolve(__dirname, './src'),
+            },
+      },
       server: {
             headers: {
                   "Cross-Origin-Opener-Policy": "unsafe-none",

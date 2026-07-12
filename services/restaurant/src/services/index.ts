@@ -40,7 +40,7 @@ export const restaurantService = new RestaurantService(
   eventPublisher,
   cache
 );
-export const reviewService = new ReviewService(reviewRepository, orderRepository, eventPublisher);
+export const reviewService = new ReviewService(reviewRepository, orderRepository, eventPublisher, cache);
 export const orderService = new OrderService(
   orderRepository,
   restaurantRepository,
@@ -48,5 +48,6 @@ export const orderService = new OrderService(
   couponRepository,
   addressRepository,
   menuItemRepository,
-  eventPublisher
+  eventPublisher,
+  cache
 );

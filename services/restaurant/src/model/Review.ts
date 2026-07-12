@@ -81,7 +81,8 @@ const reviewSchema: Schema = new Schema<IReview>(
       { timestamps: true },
 );
 
-reviewSchema.index({ restaurantId: 1, type: 1 });
-reviewSchema.index({ riderId: 1, type: 1 });
+reviewSchema.index({ restaurantId: 1, type: 1, status: 1 });
+reviewSchema.index({ riderId: 1, type: 1, status: 1 });
+reviewSchema.index({ orderId: 1, userId: 1, type: 1 });
 
 export const Review = mongoose.model<IReview>("Review", reviewSchema);

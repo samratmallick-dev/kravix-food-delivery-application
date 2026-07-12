@@ -196,4 +196,10 @@ const orderSchema: Schema = new Schema<IOrder>(
       { timestamps: true },
 );
 
+orderSchema.index({ userId: 1, createdAt: -1 });
+orderSchema.index({ restaurantId: 1, createdAt: -1 });
+orderSchema.index({ riderId: 1, status: 1 });
+orderSchema.index({ restaurantId: 1, status: 1 });
+orderSchema.index({ status: 1 });
+
 export const Order = mongoose.model<IOrder>("Order", orderSchema);

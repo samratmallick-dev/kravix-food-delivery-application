@@ -163,7 +163,13 @@ export class RestaurantService implements IRestaurantService {
     search?: string
   ): Promise<{ restaurants: Restaurant[]; correctedQuery?: string }> {
     const now = new Date();
-    const blockedOwnerIds = await this.userRepository.findBlockedOwnerIds(now);
+
+    const BLOCKED_CACHE_KEY = "blocked_owner_ids";
+    let blockedOwnerIds: string[] = await this.cache.get(BLOCKED_CACHE_KEY) ?? [];
+    if (!(await this.cache.get(BLOCKED_CACHE_KEY))) {
+      blockedOwnerIds = await this.userRepository.findBlockedOwnerIds(now);
+      await this.cache.set(BLOCKED_CACHE_KEY, blockedOwnerIds, 30);
+    }
 
     let nameRegex: RegExp | undefined;
     let restaurantIds: string[] | undefined;

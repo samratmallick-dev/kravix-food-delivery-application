@@ -12,7 +12,7 @@ interface PageHeaderProps {
 const PageHeader: React.FC<PageHeaderProps> = ({ title, description, subtitle, lastUpdated, icon: Icon }) => {
       const displayDesc = description || subtitle;
       return (
-            <div className="text-center py-12 md:py-16 bg-gradient-to-br from-gray-50 to-white rounded-3xl border border-gray-100 shadow-xs mb-8 flex flex-col items-center">
+            <div className="text-center py-12 md:py-16 bg-linear-to-br from-gray-50 to-white rounded-3xl border border-gray-100 shadow-xs mb-8 flex flex-col items-center">
                   {Icon && (
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 select-none">
                               <Icon size={24} />

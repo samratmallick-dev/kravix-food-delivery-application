@@ -1,0 +1,109 @@
+import { restaurantBaseUrl } from "@/constants";
+import { request } from "@/services/apiClient";
+import { buildQueryString } from "@/utils";
+import type { ApiResponse, IRestaurant } from "@/types";
+
+export interface AddRestaurantPayload {
+      name: string;
+      description: string;
+      latitude: number;
+      longitude: number;
+      formattedAddress: string;
+      phone: string;
+      image: File;
+}
+
+export interface UpdateRestaurantPayload {
+      name?: string;
+      description?: string;
+      image?: File;
+}
+
+export interface GetNearestRestaurantParams {
+      latitude: number;
+      longitude: number;
+      radius?: number;
+      search?: string;
+}
+
+export interface NearestRestaurantResponse {
+      count: number;
+      data: (IRestaurant & { distanceKm: number })[];
+      correctedQuery?: string;
+}
+
+export interface FetchMyRestaurantResponse {
+      success: boolean;
+      message: string;
+      data: IRestaurant | { restaurant: IRestaurant; token: string };
+}
+
+export const fetchMyRestaurant = (): Promise<FetchMyRestaurantResponse> =>
+      request<FetchMyRestaurantResponse>(`${restaurantBaseUrl}/me`, {
+            method: "GET",
+      });
+
+export const updateRestaurant = (payload: UpdateRestaurantPayload): Promise<ApiResponse<IRestaurant>> => {
+      const formData = new FormData();
+      if (payload.name) formData.append("name", payload.name);
+      if (payload.description) formData.append("description", payload.description);
+      if (payload.image) formData.append("image", payload.image);
+
+      return request<ApiResponse<IRestaurant>>(`${restaurantBaseUrl}/me`, {
+            method: "PATCH",
+            body: formData,
+      });
+};
+
+export const updateRestaurantStatus = (status: boolean): Promise<ApiResponse<IRestaurant>> =>
+      request<ApiResponse<IRestaurant>>(`${restaurantBaseUrl}/me/status`, {
+            method: "PATCH",
+            body: JSON.stringify({ status }),
+      });
+
+export const addRestaurant = (payload: AddRestaurantPayload): Promise<ApiResponse<{ restaurant: IRestaurant; token: string }>> => {
+      const formData = new FormData();
+      formData.append("name", payload.name);
+      formData.append("description", payload.description);
+      formData.append("latitude", payload.latitude.toString());
+      formData.append("longitude", payload.longitude.toString());
+      formData.append("formattedAddress", payload.formattedAddress);
+      formData.append("phone", payload.phone);
+      formData.append("image", payload.image);
+
+      return request<ApiResponse<{ restaurant: IRestaurant; token: string }>>(`${restaurantBaseUrl}/`, {
+            method: "POST",
+            body: formData,
+      });
+};
+
+export const getNearestRestaurant = (params: GetNearestRestaurantParams): Promise<ApiResponse<NearestRestaurantResponse['data']> & { count: number; correctedQuery?: string }> => {
+      const qs = buildQueryString(params as any);
+      return request<ApiResponse<NearestRestaurantResponse['data']> & { count: number; correctedQuery?: string }>(`${restaurantBaseUrl}/${qs}`, {
+            method: "GET",
+      });
+};
+
+export const fetchSingleRestaurant = (id: string): Promise<ApiResponse<IRestaurant>> =>
+      request<ApiResponse<IRestaurant>>(`${restaurantBaseUrl}/${id}`, {
+            method: "GET",
+      });
+
+export interface UpdateRestaurantLocationPayload {
+      address: string;
+      city: string;
+      state: string;
+      country: string;
+      pincode: string;
+      landmark?: string | null;
+      latitude: number;
+      longitude: number;
+      deliveryRadius: number;
+      placeId?: string | null;
+}
+
+export const updateRestaurantLocation = (payload: UpdateRestaurantLocationPayload): Promise<ApiResponse<{ status: "APPROVED" | "PENDING"; restaurant: IRestaurant }>> =>
+      request<ApiResponse<{ status: "APPROVED" | "PENDING"; restaurant: IRestaurant }>>(`${restaurantBaseUrl}/me/location`, {
+            method: "PATCH",
+            body: JSON.stringify(payload),
+      });

@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap&font-display=swap');
 @import "tailwindcss";
 
-/* ── Rider Design System Tokens ── */
 :root {
   --space-1: 4px; --space-2: 8px; --space-3: 12px;
   --space-4: 16px; --space-6: 24px; --space-8: 32px;
@@ -23,7 +22,6 @@
   --glass-blur: blur(16px);
 }
 
-/* ── Rider Animations ── */
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }

@@ -49,5 +49,6 @@ const userSchema: Schema<IUser> = new Schema(
     },
   },
 );
+userSchema.index({ isBlocked: 1, blockedUntil: 1 });
 
 export const User = mongoose.model<IUser>("User", userSchema);

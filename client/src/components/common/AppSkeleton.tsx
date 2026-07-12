@@ -4,7 +4,6 @@ const Shimmer = ({ className }: { className: string }) => (
 
 const AppSkeleton = () => (
       <div className="min-h-screen bg-background">
-            {/* Navbar skeleton */}
             <div className="w-full bg-background shadow-md">
                   <div className="container-app flex items-center justify-between py-4 h-24">
                         <Shimmer className="h-10 w-32" />
@@ -20,10 +19,8 @@ const AppSkeleton = () => (
                   </div>
             </div>
 
-            {/* Hero skeleton */}
             <Shimmer className="w-full h-64 rounded-none" />
 
-            {/* Cards grid skeleton */}
             <div className="container-app py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {Array.from({ length: 8 }).map((_, i) => (
                         <div key={i} className="rounded-xl overflow-hidden border border-border">

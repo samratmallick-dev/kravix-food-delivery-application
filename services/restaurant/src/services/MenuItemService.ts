@@ -510,7 +510,7 @@ export class MenuItemService implements IMenuItemService {
       image: cat.image || ""
     }));
 
-    await this.cache.set(cacheKey, result, 300); // cache for 5 minutes
+    await this.cache.set(cacheKey, result, 900);
     return result;
   }
 }

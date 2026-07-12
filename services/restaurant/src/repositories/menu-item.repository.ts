@@ -15,6 +15,12 @@ export class MenuItemRepository implements IMenuItemRepository {
     return MenuItemMapper.toDomain(raw);
   }
 
+  async findByIds(ids: string[]): Promise<MenuItem[]> {
+    if (ids.length === 0) return [];
+    const raw = await MenuItemModel.find({ _id: { $in: ids } }).lean();
+    return raw.map(MenuItemMapper.toDomain);
+  }
+
   async create(menuItem: MenuItem): Promise<MenuItem> {
     const persistence = MenuItemMapper.toPersistence(menuItem);
     const raw = await MenuItemModel.create(persistence);

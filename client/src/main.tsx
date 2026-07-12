@@ -3,11 +3,10 @@ import './index.css';
 import App from './App.tsx';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'react-hot-toast';
-import { googleClientId } from './components/common/constant.ts';
-import { AppProvider } from './context/AppContext.tsx';
-import { SocketProvider } from './context/SocketContext.tsx';
-import { AdminAuthProvider } from './admin/context/AdminAuthContext.tsx';
-import { AdminSocketProvider } from './admin/context/AdminSocketContext.tsx';
+import { googleClientId } from '@/constants';
+import { AppProvider } from '@/context/AppContext.tsx';
+import { SocketProvider } from '@/context/SocketContext.tsx';
+import { AdminAuthProvider, AdminSocketProvider } from '@/features/admin';
 import { HelmetProvider } from 'react-helmet-async';
 
 window.addEventListener('unhandledrejection', (event) => {

@@ -9,7 +9,7 @@ interface DashboardCardProps {
 const DashboardCard = memo(({ children, className = "", onClick }: DashboardCardProps) => (
   <div
     onClick={onClick}
-    className={`bg-white rounded-2xl border border-gray-100 shadow-[var(--shadow-md)] transition-shadow hover:shadow-[var(--shadow-lg)] ${onClick ? "cursor-pointer" : ""} ${className}`}
+    className={`bg-white rounded-2xl border border-gray-100 shadow-(--shadow-md) transition-shadow hover:shadow-(--shadow-lg) ${onClick ? "cursor-pointer" : ""} ${className}`}
   >
     {children}
   </div>

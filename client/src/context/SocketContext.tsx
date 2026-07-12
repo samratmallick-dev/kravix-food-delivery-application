@@ -9,9 +9,9 @@ import {
 import toast from "react-hot-toast";
 
 import { Socket, io } from "socket.io-client";
-import { realtimeSocketBaseUrl } from "../components/common/constant";
+import { realtimeSocketBaseUrl } from "@/constants";
 import { useAppData } from "./AppContext";
-import { storage } from "../utils/secureStorage";
+import { storage } from "@/utils";
 
 interface SocketContextType {
       socket: Socket | null;

@@ -32,7 +32,7 @@ const SEO: React.FC<SEOProps> = ({
                   <meta property="og:url" content={canonicalUrl} />
                   <meta property="og:image" content={image} />
                   <meta property="og:site_name" content="Kravix" />
-                  <meta property="og:locale" content="en_US" />
+                  <meta property="og:locale" content="en_IN" />
 
                   <meta name="twitter:card" content="summary_large_image" />
                   <meta name="twitter:title" content={title} />

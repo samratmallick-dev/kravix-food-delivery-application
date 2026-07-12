@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Footer from "../components/home/footer";
+import { Footer } from "@/components/layout";
 
 const AuthLayout = () => (
       <div className="flex flex-col min-h-screen bg-white">

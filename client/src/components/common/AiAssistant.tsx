@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Bot, X, Send, ChevronDown } from "lucide-react";
-import { aiApi } from "../../utils/ai.api";
+import { aiApi } from "@/services/api/ai.services";
 import { useAppData } from "../../context/AppContext";
-import { useAdminAuth } from "../../admin/context/AdminAuthContext";
+import { useAdminAuth } from "@/features/admin";
 
 interface Message {
     id: string;

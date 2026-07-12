@@ -1,10 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import toast from "react-hot-toast";
-import type { ICart, AppContextType, LocationData, User } from "../types/types";
-import { storage } from "../utils/secureStorage";
-import { getMyProfile } from "../utils/auth.api";
-import { fetchCart as apiFetchCart } from "../utils/cart.api";
-import { locationService } from "../utils/locationService";
+import type { ICart, AppContextType, LocationData, User } from "@/types";
+import { storage } from "@/utils";
+import { getMyProfile } from "@/services/api/auth.services";
+import { fetchCart as apiFetchCart } from "@/services/api/cart.services";
+import { locationService } from "@/utils";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -37,6 +37,9 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             const res = await getMyProfile(token);
             setUser(res.data);
             setIsAuth(true);
+            if (res.data?.role) {
+                localStorage.setItem("userRole", res.data.role);
+            }
             return res.data;
         } catch (error: any) {
             const status = error.status;
@@ -54,7 +57,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     const fetchCart = useCallback(async () => {
         const token = storage.getToken();
         if (!token) { setCart([]); setSubTotal(0); setQuantity(0); return; }
-        if (user && user.role !== "customer") {
+        
+        const path = typeof window !== "undefined" ? window.location.pathname : "";
+        const isNonCustomerPath = path.startsWith("/seller") || path.startsWith("/rider") || path.startsWith("/admin");
+        const cachedRole = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
+        if (isNonCustomerPath || (cachedRole && cachedRole !== "customer") || (user && user.role !== "customer")) {
             setCart([]);
             setSubTotal(0);
             setQuantity(0);
@@ -83,13 +90,29 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
         const init = async () => {
             try {
-                const userData = await withTimeout(fetchCurrentUser(), 15000);
-                if (userData && userData.role === "customer") {
-                    await withTimeout(fetchCart(), 15000);
+                const path = typeof window !== "undefined" ? window.location.pathname : "";
+                const isNonCustomerPath = path.startsWith("/seller") || path.startsWith("/rider") || path.startsWith("/admin");
+                const cachedRole = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
+
+                if (isNonCustomerPath || (cachedRole && cachedRole !== "customer")) {
+                    const userData = await withTimeout(fetchCurrentUser(), 15000);
+                    if (userData && userData.role !== "customer") {
+                        setCart([]);
+                        setSubTotal(0);
+                        setQuantity(0);
+                    } else if (userData && userData.role === "customer") {
+                        await withTimeout(fetchCart(), 15000);
+                    }
                 } else {
-                    setCart([]);
-                    setSubTotal(0);
-                    setQuantity(0);
+                    const [userData] = await Promise.all([
+                        withTimeout(fetchCurrentUser(), 15000),
+                        withTimeout(fetchCart(), 15000)
+                    ]);
+                    if (userData && userData.role !== "customer") {
+                        setCart([]);
+                        setSubTotal(0);
+                        setQuantity(0);
+                    }
                 }
             } catch (error) {
                 console.error("Init failed:", error);
@@ -186,27 +209,40 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         initLocation();
     }, [detectUserLocation]);
 
+    const contextValue = useMemo(() => ({
+        isAuth,
+        setIsAuth,
+        loading,
+        setLoading,
+        locationLoading,
+        user,
+        setUser,
+        location,
+        setLocation,
+        city,
+        cart,
+        fetchCart,
+        fetchCurrentUser,
+        quantity,
+        subTotal,
+        detectUserLocation
+    }), [
+        isAuth,
+        loading,
+        locationLoading,
+        user,
+        location,
+        city,
+        cart,
+        fetchCart,
+        fetchCurrentUser,
+        quantity,
+        subTotal,
+        detectUserLocation
+    ]);
+
     return (
-        <AppContext.Provider
-            value={{
-                isAuth,
-                setIsAuth,
-                loading,
-                setLoading,
-                locationLoading,
-                user,
-                setUser,
-                location,
-                setLocation,
-                city,
-                cart,
-                fetchCart,
-                fetchCurrentUser,
-                quantity,
-                subTotal,
-                detectUserLocation
-            }}
-        >
+        <AppContext.Provider value={contextValue}>
             {children}
         </AppContext.Provider>
     );

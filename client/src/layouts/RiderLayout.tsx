@@ -1,10 +1,10 @@
 import { memo, Suspense, useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import Footer from "../components/home/footer";
+import { Footer } from "@/components/layout";
 import { useAppData } from "../context/AppContext";
-import { useRiderProfile } from "../hooks/useRiderProfile";
+import { useRiderProfile } from "@/features/rider";
 import { useSocket } from "../context/SocketContext";
-import { useSocketOrders } from "../hooks/useSocketOrders";
+import { useSocketOrders } from "@/features/rider";
 import {
   LayoutDashboard,
   Package,
@@ -19,8 +19,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { DashboardSkeleton } from "../components/skeleton/RiderSkeletons";
-import { addRiderProfile } from "../utils/rider.api";
+import { DashboardSkeleton } from "@/features/rider";
+import { addRiderProfile } from "@/services/api/rider.services";
 import toast from "react-hot-toast";
 import { Phone, CreditCard, MapPin, ImagePlus, Loader2 } from "lucide-react";
 

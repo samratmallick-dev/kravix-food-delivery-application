@@ -12,9 +12,12 @@ const connectDb = async () => {
                   process.env.MONGO_URI as string,
                   {
                         dbName: process.env.DB_NAME as string,
-                        serverSelectionTimeoutMS: 30000,
+                        maxPoolSize: 20,
+                        minPoolSize: 5,
+                        maxIdleTimeMS: 30000,
+                        serverSelectionTimeoutMS: 10000,
                         socketTimeoutMS: 45000,
-                        connectTimeoutMS: 30000,
+                        connectTimeoutMS: 10000,
                   },
             );
             console.log(

@@ -7,6 +7,7 @@ import { ICouponRepository } from "../interfaces/ICouponRepository.js";
 import { IAddressRepository } from "../interfaces/IAddressRepository.js";
 import { IMenuItemRepository } from "../interfaces/IMenuItemRepository.js";
 import { IRestaurantEventPublisher } from "../interfaces/IRestaurantEventPublisher.js";
+import { ICache } from "../interfaces/ICache.js";
 import { Order, OrderItem } from "../domain/entities/Order.js";
 import { Distance } from "../domain/valueObjects/Distance.js";
 import { Cart } from "../domain/entities/Cart.js";
@@ -40,7 +41,8 @@ export class OrderService implements IOrderService {
     private couponRepository: ICouponRepository,
     private addressRepository: IAddressRepository,
     private menuItemRepository: IMenuItemRepository,
-    private eventPublisher: IRestaurantEventPublisher
+    private eventPublisher: IRestaurantEventPublisher,
+    private cache?: ICache
   ) {}
 
   async createOrder(userId: string, userName: string, dto: PlaceOrderRequestDto): Promise<any> {
@@ -51,8 +53,9 @@ export class OrderService implements IOrderService {
 
     const itemsInput = dto.items;
     const itemIds = itemsInput.map((i: any) => i.itemId as string);
-    const menuItems = await Promise.all(itemIds.map((id: string) => this.menuItemRepository.findById(id)));
-    const menuItemMap = new Map(menuItems.filter(Boolean).map((m: any) => [m!.id, m!]));
+    const menuItemsArr = await this.menuItemRepository.findByIds(itemIds);
+    const menuItemMap = new Map(menuItemsArr.map((m) => [m.id, m]));
+    const menuItems = itemIds.map((id: string) => menuItemMap.get(id) ?? null);
 
     if (menuItems.some((m: any) => !m)) {
       throw new NotFoundError("Some items not found in menu");
@@ -204,8 +207,12 @@ export class OrderService implements IOrderService {
     }
 
     const itemIds = order.items.map((i) => i.itemId);
-    const menuItems = await Promise.all(itemIds.map((id) => this.menuItemRepository.findById(id)));
-    const availableItemMap = new Map(menuItems.filter((m) => m && m.isAvailable && m.restaurantId === order.restaurantId).map((m) => [m!.id, m!]));
+    const menuItemsArr = await this.menuItemRepository.findByIds(itemIds);
+    const availableItemMap = new Map(
+      menuItemsArr
+        .filter((m) => m && m.isAvailable && m.restaurantId === order.restaurantId)
+        .map((m) => [m!.id, m!])
+    );
 
     const unavailableNames = order.items
       .filter((i) => !availableItemMap.has(i.itemId))
@@ -298,6 +305,10 @@ export class OrderService implements IOrderService {
     order.updateStatus(nextStatus);
     const updated = await this.orderRepository.update(order);
 
+    if (updated.status === "delivered") {
+      await this.invalidateSalesStatsCache(updated.restaurantId);
+    }
+
     await this.eventPublisher.publishOrderUpdate(updated.id, updated.userId, updated.restaurantId, updated.status, null);
 
     return updated;
@@ -331,7 +342,9 @@ export class OrderService implements IOrderService {
     order.paymentStatus = "cod_paid";
     (order as any).codPaymentMode = codPaymentMode;
 
-    return await this.orderRepository.update(order);
+    const updated = await this.orderRepository.update(order);
+    await this.invalidateSalesStatsCache(updated.restaurantId);
+    return updated;
   }
 
   async getOrderByIdInternal(orderId: string): Promise<Order> {
@@ -346,7 +359,19 @@ export class OrderService implements IOrderService {
     return await this.orderRepository.findByRestaurant(restaurantId);
   }
 
+  private async invalidateSalesStatsCache(restaurantId: string): Promise<void> {
+    if (this.cache) {
+      await this.cache.delete(`sales_stats:${restaurantId}`);
+    }
+  }
+
   async getRestaurantSalesStats(restaurantId: string): Promise<any> {
+    const cacheKey = `sales_stats:${restaurantId}`;
+    if (this.cache) {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -405,7 +430,7 @@ export class OrderService implements IOrderService {
 
     const s = summary[0] ?? { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 };
 
-    return {
+    const result = {
       summary: {
         totalRevenue: s.totalRevenue,
         totalOrders: s.totalOrders,
@@ -415,6 +440,12 @@ export class OrderService implements IOrderService {
       topItems,
       orderDistribution
     };
+
+    if (this.cache) {
+      await this.cache.set(cacheKey, result, 300);
+    }
+
+    return result;
   }
 
   async updateOrderStatus(restaurantId: string, orderId: string, status: string): Promise<Order> {
@@ -428,6 +459,10 @@ export class OrderService implements IOrderService {
 
     order.updateStatus(status);
     const updated = await this.orderRepository.update(order);
+
+    if (status === "delivered") {
+      await this.invalidateSalesStatsCache(updated.restaurantId);
+    }
 
     const riderId = (updated as any).riderId || null;
     await this.eventPublisher.publishOrderUpdate(updated.id, updated.userId, updated.restaurantId, status, riderId);

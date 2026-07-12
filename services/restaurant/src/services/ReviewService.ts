@@ -2,13 +2,15 @@ import { IReviewService } from "../interfaces/IReviewService.js";
 import { IReviewRepository } from "../interfaces/IReviewRepository.js";
 import { IOrderRepository } from "../interfaces/IOrderRepository.js";
 import { IRestaurantEventPublisher } from "../interfaces/IRestaurantEventPublisher.js";
+import { ICache } from "../interfaces/ICache.js";
 import { NotFoundError, ValidationError, AuthorizationError } from "../utils/errors.js";
 
 export class ReviewService implements IReviewService {
   constructor(
     private reviewRepository: IReviewRepository,
     private orderRepository: IOrderRepository,
-    private eventPublisher: IRestaurantEventPublisher
+    private eventPublisher: IRestaurantEventPublisher,
+    private cache?: ICache
   ) {}
 
   async addReview(
@@ -72,6 +74,10 @@ export class ReviewService implements IReviewService {
 
     const review = await this.reviewRepository.create(reviewData);
 
+    if (type === "restaurant" && restaurantId) {
+      await this.invalidateReviewCache(restaurantId);
+    }
+
     if (type === "rider" && riderId) {
       await this.eventPublisher.publishRiderRated(riderId, rating);
     }
@@ -79,43 +85,52 @@ export class ReviewService implements IReviewService {
     return review;
   }
 
-  async getRestaurantReviews(restaurantId: string, rating?: number, sortBy?: string, order?: string): Promise<{ reviews: any[]; ratingsSummary: any }> {
-    const raw = await this.reviewRepository.find(restaurantId);
-
-    let reviews = raw;
-    if (rating) {
-      reviews = reviews.filter((r) => r.rating === Number(rating));
-    }
-
-    const field = sortBy || "createdAt";
-    const sortOrder = order === "asc" ? 1 : -1;
-    reviews.sort((a, b) => {
-      const valA = a[field];
-      const valB = b[field];
-      if (valA < valB) return -sortOrder;
-      if (valA > valB) return sortOrder;
-      return 0;
-    });
-
-    const averageRating = await this.reviewRepository.getAverageRating(restaurantId);
-    const starCounts = { star1: 0, star2: 0, star3: 0, star4: 0, star5: 0 };
-    for (const r of raw) {
-      if (r.rating === 1) starCounts.star1++;
-      if (r.rating === 2) starCounts.star2++;
-      if (r.rating === 3) starCounts.star3++;
-      if (r.rating === 4) starCounts.star4++;
-      if (r.rating === 5) starCounts.star5++;
-    }
-
-    return {
-      reviews,
-      ratingsSummary: {
-        averageRating,
-        totalReviews: raw.length,
-        ...starCounts
+  private async invalidateReviewCache(restaurantId: string): Promise<void> {
+    if (this.cache) {
+      const ratings = ["all", "1", "2", "3", "4", "5"];
+      const sortBys = ["createdAt", "rating"];
+      const orders = ["desc", "asc"];
+      const promises: Promise<void>[] = [];
+      for (const r of ratings) {
+        for (const s of sortBys) {
+          for (const o of orders) {
+            promises.push(this.cache.delete(`restaurant:${restaurantId}:reviews:${r}:${s}:${o}`));
+          }
+        }
       }
-    };
+      await Promise.all(promises);
+    }
   }
+
+  async getRestaurantReviews(restaurantId: string, rating?: number, sortBy?: string, order?: string): Promise<{ reviews: any[]; ratingsSummary: any }> {
+    const cacheKey = `restaurant:${restaurantId}:reviews:${rating ?? "all"}:${sortBy ?? "createdAt"}:${order ?? "desc"}`;
+    if (this.cache) {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
+
+    const params: { rating?: number; sortBy?: string; order?: string } = {};
+    if (rating !== undefined) params.rating = rating;
+    if (sortBy !== undefined) params.sortBy = sortBy;
+    if (order !== undefined) params.order = order;
+
+    const { reviews, summary } = await this.reviewRepository.getReviewsWithSummary(
+      restaurantId,
+      params
+    );
+
+    const result = {
+      reviews,
+      ratingsSummary: summary
+    };
+
+    if (this.cache) {
+      await this.cache.set(cacheKey, result, 60);
+    }
+
+    return result;
+  }
+
 
   async getRiderReviews(riderId: string): Promise<{ reviews: any[]; ratingsSummary: any }> {
     const reviews = await this.reviewRepository.findRiderReviews(riderId);
@@ -140,7 +155,11 @@ export class ReviewService implements IReviewService {
     review.reportReason = reason;
     review.status = "flagged";
 
-    return await this.reviewRepository.update(review);
+    const updated = await this.reviewRepository.update(review);
+    if (updated.type === "restaurant" && updated.restaurantId) {
+      await this.invalidateReviewCache(updated.restaurantId);
+    }
+    return updated;
   }
 
   async getAdminReviews(reportedOnly: boolean): Promise<any[]> {
@@ -162,7 +181,12 @@ export class ReviewService implements IReviewService {
     }
 
     if (action === "delete") {
+      const restaurantId = review.restaurantId;
+      const type = review.type;
       await this.reviewRepository.delete(reviewId);
+      if (type === "restaurant" && restaurantId) {
+        await this.invalidateReviewCache(restaurantId);
+      }
       return { id: reviewId, deleted: true };
     }
 
@@ -172,6 +196,10 @@ export class ReviewService implements IReviewService {
       review.reportReason = "";
     }
 
-    return await this.reviewRepository.update(review);
+    const updated = await this.reviewRepository.update(review);
+    if (updated.type === "restaurant" && updated.restaurantId) {
+      await this.invalidateReviewCache(updated.restaurantId);
+    }
+    return updated;
   }
 }

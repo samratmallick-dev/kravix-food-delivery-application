@@ -6,7 +6,7 @@ export class UserRepository implements IUserRepository {
     const blockedOwners = await UserModel.find({
       isBlocked: true,
       blockedUntil: { $gt: now }
-    }).distinct("_id");
-    return blockedOwners.map((id: any) => id.toString());
+    }).select('_id').lean();
+    return blockedOwners.map((id: any) => id._id.toString());
   }
 }
