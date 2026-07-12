@@ -319,7 +319,7 @@ const SearchPage = () => {
                                                 <div key={item._id} className="group bg-white rounded-2xl border border-gray-100 hover:border-transparent shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col w-full overflow-hidden">
                                                       <div className="relative h-32 sm:h-36 w-full overflow-hidden shrink-0">
                                                             <img
-                                                                  src={item.imageUrl || "https://placehold.co/400x160?text=Food"}
+                                                                  src={item.imageUrl || `"https://placehold.co/400x160?text=${encodeURIComponent(item.name)}`}
                                                                   alt={item.name}
                                                                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                                   loading="lazy"

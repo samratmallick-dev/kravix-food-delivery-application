@@ -37,7 +37,7 @@ const RestaurantsCard = ({ id, slug, name, image, distance, isOpen }: Restaurant
             >
                   <div className="relative h-32 sm:h-36 md:h-40 w-full overflow-hidden shrink-0">
                         <img 
-                              src={image} 
+                              src={image || `https://placehold.co/400x176?text=${encodeURIComponent(name)}`} 
                               alt={name} 
                               className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
                                     !isOpen ? "grayscale brightness-75 opacity-80" : ""

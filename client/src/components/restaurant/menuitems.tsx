@@ -264,7 +264,7 @@ const Menuitems = ({ items, onItemDelete, isSeller }: MenuItemProps) => {
                                     >
                                           <div className="relative h-36 w-full rounded-none">
                                                 <img
-                                                      src={item.imageUrl}
+                                                      src={item.imageUrl || `https://placehold.co/400x160?text=${encodeURIComponent(item.name)}`}
                                                       alt={item.name}
                                                       className={`w-full h-full object-cover ${!item.isAvailable ? "grayscale brightness-75" : ""}`}
                                                 />
