@@ -23,10 +23,16 @@ const SelectRole = () => {
 
                   if (token) {
                         storage.setToken(token);
-                        await fetchCurrentUser();
+                        const userData = await fetchCurrentUser();
                         await fetchCart();
                         toast.success("Role Updated Successfully");
-                        navigate("/", { replace: true });
+                        if (userData?.role === "seller") {
+                              navigate("/seller", { replace: true });
+                        } else if (userData?.role === "rider") {
+                              navigate("/rider/dashboard", { replace: true });
+                        } else {
+                              navigate("/", { replace: true });
+                        }
                   } else {
                         toast.error("Failed to update role");
                   }

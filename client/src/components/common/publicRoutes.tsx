@@ -7,9 +7,11 @@ const PublicRoutes = () => {
 
       if (loading) return <AppSkeleton />;
 
-      return (
-            isAuth ? <Navigate to={"/"} replace /> : <Outlet />
-      );
+      if (isAuth) {
+            return <Navigate to={"/"} replace />;
+      }
+
+      return <Outlet />;
 };
 
 export default PublicRoutes;

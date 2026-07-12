@@ -24,14 +24,20 @@ const Login = () => {
 
   const handleAuthSuccess = async (token: string, needsRoleSelection?: boolean, message?: string) => {
     storage.setToken(token);
-    await fetchCurrentUser();
+    const userData = await fetchCurrentUser();
     await fetchCart();
     if (needsRoleSelection) {
       toast.success("Please select your role to continue.");
       navigate("/select-role");
     } else {
       toast.success(message || "Login successful");
-      navigate("/");
+      if (userData?.role === "seller") {
+        navigate("/seller");
+      } else if (userData?.role === "rider") {
+        navigate("/rider/dashboard");
+      } else {
+        navigate("/");
+      }
     }
   };
 
