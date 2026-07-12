@@ -93,6 +93,24 @@ export const deleteMenuItem = TryCatch(async (req: AuthenticatedRequest, res: Re
   return successResponse(res, 200, "Menu item deleted successfully");
 });
 
+export const searchByBudget = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const { minPrice = 1, maxPrice = 2000, latitude, longitude, radius = 10000 } = req.query;
+
+  if (!latitude || !longitude) {
+    throw new ValidationError("Latitude and longitude are required");
+  }
+
+  const results = await menuItemService.searchByBudget(
+    Number(minPrice),
+    Number(maxPrice),
+    Number(longitude),
+    Number(latitude),
+    Number(radius)
+  );
+
+  return successResponse(res, 200, "Budget food search results fetched successfully", results);
+});
+
 export const searchByFood = TryCatch(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const { search = "", latitude, longitude, radius = 5000 } = req.query;
 

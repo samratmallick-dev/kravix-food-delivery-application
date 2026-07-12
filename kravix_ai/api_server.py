@@ -1,4 +1,3 @@
-#cspell:disable
 from contextlib import asynccontextmanager
 import asyncio
 import json
@@ -67,10 +66,6 @@ from request_guard import (
 from timeout_middleware import TimeoutMiddleware
 from observability import request_metrics, build_metrics_payload
 
-
-
-
-
 SESSION_TTL = int(os.environ.get("SESSION_TTL_SECONDS", "1800"))
 MAX_SESSIONS = int(os.environ.get("MAX_SESSIONS", "500"))
 REDIS_URL = os.environ.get("REDIS_URL", "")
@@ -80,7 +75,6 @@ DB_NAME = os.environ.get("DB_NAME", "kravix_db")
 PROMPT_TOKEN_LIMIT = int(os.environ.get("PROMPT_TOKEN_LIMIT", "6000"))
 MAX_HISTORY_TURNS = int(os.environ.get("MAX_HISTORY_TURNS", "10"))
 
-
 _session_store = None
 _mongo_manager: Optional[MongoManager] = None
 _model_manager: Optional[ModelManager] = None
@@ -88,13 +82,11 @@ _health_monitor: Optional[HealthMonitor] = None
 _background_tasks: List[asyncio.Task] = []
 _shutdown_event = asyncio.Event()
 
-
 class ChatRequest(BaseModel):
     message: str
     userId: str
     role: str
     contextData: Optional[Dict[str, Any]] = None
-
 
 class ChatResponse(BaseModel):
     reply: str
@@ -107,16 +99,12 @@ class ChatResponse(BaseModel):
     redis_latency_ms: Optional[float] = 0.0
     inference_latency_ms: Optional[float] = 0.0
 
-
 class FeedbackRequest(BaseModel):
     messageId: str
     message: str
     reply: str
     role: str
     feedback: int
-
-
-
 
 async def _session_cleanup_loop():
     while not _shutdown_event.is_set():
@@ -131,7 +119,6 @@ async def _session_cleanup_loop():
         except Exception as exc:
             logger.error("Session cleanup error: %s", exc, exc_info=True)
 
-
 async def _memory_watchdog_loop():
     while not _shutdown_event.is_set():
         try:
@@ -144,7 +131,6 @@ async def _memory_watchdog_loop():
             break
         except Exception as exc:
             logger.error("Memory watchdog error: %s", exc, exc_info=True)
-
 
 async def _redis_keepalive_loop():
     """Ping Redis every 60s to prevent EC2 idle socket closure."""
@@ -160,7 +146,6 @@ async def _redis_keepalive_loop():
         except Exception as exc:
             logger.error("Redis keepalive error: %s", exc)
 
-
 async def _mongo_health_loop():
     while not _shutdown_event.is_set():
         try:
@@ -173,7 +158,6 @@ async def _mongo_health_loop():
         except Exception as exc:
             logger.error("Mongo health check error: %s", exc, exc_info=True)
 
-
 async def _diagnostics_loop():
     while not _shutdown_event.is_set():
         try:
@@ -185,7 +169,6 @@ async def _diagnostics_loop():
             break
         except Exception as exc:
             logger.error("Diagnostics loop error: %s", exc, exc_info=True)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -220,11 +203,7 @@ async def lifespan(app: FastAPI):
         request_tracker=request_tracker,
     )
 
-
-
-
     _background_tasks.extend([
-
         asyncio.create_task(_session_cleanup_loop(), name="session_cleanup"),
         asyncio.create_task(_memory_watchdog_loop(), name="memory_watchdog"),
         asyncio.create_task(_diagnostics_loop(), name="diagnostics"),
@@ -258,15 +237,12 @@ async def lifespan(app: FastAPI):
     session_count = _session_store.active_count() if _session_store else 0
     logger.info("Shutdown complete. Final sessions: %d, RSS: %.1f MB", session_count, get_rss_mb())
 
-
-
 app = FastAPI(title="Kravix Local AI Microservice", lifespan=lifespan)
 
 register_exception_handlers(app)
 
 app.add_middleware(TimeoutMiddleware)
 app.add_middleware(ConcurrencyGuardMiddleware)
-
 
 @app.middleware("http")
 async def correlation_id_middleware(request: Request, call_next):
@@ -287,9 +263,7 @@ async def correlation_id_middleware(request: Request, call_next):
 
     return response
 
-
 _limiter = setup_rate_limiter(app)
-
 
 from enum import Enum, auto
 
@@ -301,8 +275,6 @@ _INJECTION_PATTERN = re.compile(
 def sanitize_input(text: str) -> str:
     sanitized = _INJECTION_PATTERN.sub("[removed]", text)
     return sanitized[:1000]
-
-
 
 def normalize_price(price) -> int:
     try:
@@ -386,7 +358,7 @@ BN: Kravix হল একটি প্রিমিয়াম অনলাইন
 HI: Kravix एक प्रीमियम ऑनलाइन फूड डिलीवरी प्लेटफ़ॉर्म है जो असली बंगाली, पारंपरिक भारतीय और मल्टी-कुज़ीन व्यंजनों में माहिर है। आदर्श वाक्य: "Be Smart, Eat Better।"
 
 EN: It is an academic prototype developed as a final-year B.Tech Computer Science and Engineering graduation project. No real food is cooked or delivered.
-BN: এটি একটি একাডেমিক প্রোটোটাইপ, চূড়ান্ত বর্ষের B.Tech কম্পিউটার সায়েন্স ও ইঞ্জিনিয়ারিং প্রজেক্ট হিসেবে তৈরি। এখানে কোনো বাস্তব খাবার রান্না বা ডেলিভারি হয় না।
+BN: এটি একটি একাডেমিক প্রোটোটাইপ, চূড়ান্ত বর্ষের B.Tech কম্পিউটার সায়েন্স ও ইঞ্জিনিয়ারিং প্রজেক্ট হিসেবে তৈরি। এখানে কোনো বাস্তব খাবার রান্না বা ডেলিভারি হয় পরিচয় না।
 HI: यह एक अकादमिक प्रोटोटाइप है, जिसे अंतिम वर्ष के B.Tech कंप्यूटर साइंस और इंजीनियरिंग प्रोजेक्ट के रूप में बनाया गया है। कोई वास्तविक खाना न पकाया जाता है, न डिलीवर किया जाता है।
 
 EN: Primary service area: Kolkata and surrounding West Bengal, within a 10 KM radius of listed partner restaurants.
@@ -438,7 +410,7 @@ EN: Sellers have a dashboard to manage restaurant profile, menus, pricing, avail
 BN: বিক্রেতারা ড্যাশবোর্ডের মাধ্যমে রেস্তোরাঁ প্রোফাইল, মেনু, মূল্য, প্রাপ্যতা এবং রিয়েল-টাইম অর্ডার পরিচালনা করতে পারেন। পার্টনার হতে: "Become a Partner" ক্লিক করুন। রাইডার হতে: "Become a Rider" পেজে আবেদন করুন।
 HI: विक्रेता डैशबोर्ड के ज़रिए रेस्टोरेंट प्रोफ़ाइल, मेनू, कीमत, उपलब्धता और रीयल-टाइम ऑर्डर प्रबंधित कर सकते हैं। पार्टनर बनने के लिए: "Become a Partner" पर क्लिक करें। राइडर बनने के लिए: "Become a Rider" पेज पर आवेदन करें।
 
---- Support / সাপোর্ট / सपोर्ट ---
+--- Support / সাপোর্ট / সাপোর্ট ---
 EN: 24/7 help desk via the Contact Us page or support@kravix.com. For missing or wrong items, report to the Help Center within 2 hours with photos and receipt.
 BN: ২৪/৭ সাপোর্ট: Contact Us পেজ বা support@kravix.com-এ। ভুল বা অনুপস্থিত আইটেমের জন্য ডেলিভারির ২ ঘণ্টার মধ্যে ছবি ও রসিদসহ Help Center-এ রিপোর্ট করুন।
 HI: 24/7 सहायता: Contact Us पेज या support@kravix.com पर। गलत या गायब आइटम के लिए डिलीवरी के 2 घंटे के भीतर फोटो और रसीद के साथ Help Center में रिपोर्ट करें।
@@ -476,15 +448,35 @@ def build_system_prompt(role: str, contextData: Dict[str, Any]) -> str:
         if "orders" in contextData and contextData["orders"]:
             prompt += "\nRecent Orders Context:\n"
             for order in contextData["orders"]:
+                if not isinstance(order, dict):
+                    continue
                 prompt += f"- ID: {order.get('id', '[ORDER_ID]')}, Status: {order.get('status', 'unknown')}\n"
         if "menu_items" in contextData and contextData["menu_items"]:
             prompt += "\nRelevant Menu Items Context:\n"
             for item in contextData["menu_items"][:5]:
-                prompt += f"- {item['name']}: ₹{normalize_price(item['price'])} ({'Available' if item.get('available', True) else 'Out of Stock'})\n"
+                prompt += f"- {item.get('name', 'Unknown Item')}: ₹{normalize_price(item.get('price', 0))} ({'Available' if item.get('available', True) else 'Out of Stock'})\n"
         if "coupons" in contextData and contextData["coupons"]:
             prompt += "\nActive Coupons Context:\n"
             for coupon in contextData["coupons"][:5]:
                 prompt += f"- Code: {coupon.get('code')}, Type: {coupon.get('couponType')}, Discount: {coupon.get('discountValue')}\n"
+        if "budgetRange" in contextData and contextData["budgetRange"]:
+            b_range = contextData["budgetRange"]
+            prompt += f"\nDetected Budget Range: ₹{b_range.get('min', 1)} to ₹{b_range.get('max', 2000)}\n"
+        if "requestedFood" in contextData and contextData["requestedFood"]:
+            prompt += f"Requested Food Item: {contextData['requestedFood']}\n"
+        if "budgetRecommendations" in contextData:
+            is_alt = contextData.get("isAlternative", False)
+            recs = contextData["budgetRecommendations"]
+            if is_alt:
+                prompt += "\nNo matching food items found within the requested budget. Here are the closest available alternatives near the user's location (slightly above budget):\n"
+            else:
+                prompt += "\nNearby Available Food Items within Budget:\n"
+            if recs:
+                for rec in recs:
+                    prompt += f"- {rec.get('name', 'Unknown Item')} — ₹{normalize_price(rec.get('price', 0))} — {rec.get('restaurantName', 'Unknown Restaurant')}\n"
+            else:
+                prompt += "- No items found.\n"
+            prompt += "\nIMPORTANT: You must recommend ONLY the food items listed above. Do NOT suggest or hallucinate any other food items or restaurants. Answer politely and concisely in the user's language.\n"
     return prompt
 
 class Intent(Enum):
@@ -508,11 +500,19 @@ class Intent(Enum):
     HELP = auto()
     UNKNOWN = auto()
     OFF_TOPIC = auto()
+    BUDGET_RECOMMENDATION = auto()
 
 class IntentClassifier:
     PATTERNS = {
+        Intent.BUDGET_RECOMMENDATION: [
+            r"(?:budget|under|price|below|between|cheap|affordable|cost|range|নিচে|কম|কমের|মধ্যে|টাকা|টাকার|₹|rs|andar|niche|kam|se).*\b(food|hungry|suggest|recommend|craving|biryani|pizza|burger|veg|vegetarian|menu|eat|khabar|khabo|khana|khaana|बिरयानी|पिज्जा|बर्गर|खाना|सब्जी|খাবার|সবজি)\b",
+            r"\b(food|hungry|suggest|recommend|craving|biryani|pizza|burger|veg|vegetarian|menu|eat|khabar|khabo|khana|khaana|बिरयानी|पिज्जा|बर्गर|खाना|सब्जी|খাবার|সবজি)\b.*(?:budget|under|price|below|between|cheap|affordable|cost|range|নিচে|কম|কমের|মধ্যে|টাকা|টাকার|₹|rs|andar|niche|kam|se)",
+            r"(?:under|below|less than|within|upto|up to|কম|নিচে|কমের মধ্যে|মধ্যে|se kam|kam|andar|ke andar|mein|me)\s*(?:₹|rs\.?|usd|\$)?\s*\d+",
+            r"\d+[-\s]*(?:টাকার|টাকা|rupee|rupees|rs|র|এর)?\s*(?:নিচে|কম|কমের মধ্যে|কমের|মধ্যে|se kam|kam|below|under|mein|me|andar|ke andar)",
+            r"(?:between|from)?\s*(?:₹|rs\.?|usd|\$)?\s*\d+\s*(?:to|and|-|–|—|se|theke|থেকে|সে|से)\s*(?:₹|rs\.?|usd|\$)?\s*\d+"
+        ],
         Intent.GREETING: [
-            r"\b(hi|hello|hey|hola|howdy|wassup|what's up)\b", 
+            r"\b(hi|hello|hey|hola|howdy|wassup|what's up)\b",
             r"\b(how are you)\b",
             r"(হ্যালো|হাই|কেমন আছেন|কেমন আছিস)",
             r"(नमस्ते|नमस्कार|कैसे हो|कैसे हैं)",
@@ -649,10 +649,17 @@ class IntentClassifier:
 
     @classmethod
     def classify(cls, text: str) -> Intent:
-        text_lower = text.lower()
+        msg = text.lower()
+        bengali_digits = {'০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9'}
+        hindi_digits = {'०': '0', '१': '1', '२': '2', '३': '3', '४': '4', '५': '5', '६': '6', '७': '7', '८': '8', '९': '9'}
+        for k, v in bengali_digits.items():
+            msg = msg.replace(k, v)
+        for k, v in hindi_digits.items():
+            msg = msg.replace(k, v)
+
         for intent, patterns in cls.PATTERNS.items():
             for p in patterns:
-                if re.search(p, text_lower):
+                if re.search(p, msg):
                     return intent
         return Intent.UNKNOWN
 
@@ -673,7 +680,7 @@ class PermissionChecker:
             is_restricted = True
         elif role == "rider" and intent in [Intent.SELLER_DASHBOARD, Intent.SELLER_MENU, Intent.ADMIN_DASHBOARD, Intent.ADMIN_USERS]:
             is_restricted = True
-            
+
         if is_restricted:
             messages = {
                 "bn": "এই ফিচারটি ব্যবহার করার অনুমতি আপনার বর্তমান রোলে নেই। প্রোফাইল সেটিংস থেকে রোল পরিবর্তন করতে পারেন।",
@@ -840,7 +847,7 @@ MOCK_RESPONSES = {
         },
         "admin": {
             Intent.GREETING: "नमस्ते एडमिन! सिस्टम सुचारू रूप से चल रहा है।",
-            Intent.ADMIN_DASHBOARD: "रेस्तरां/राइडर सत्यापित करने और प्लेटफॉर्म एनालिटिक्स देखने के लिए Admin Dashboard का उपयोग करें।",
+            Intent.ADMIN_DASHBOARD: "रेस्तरां/राइडर सत्यापित और प्लेटफॉर्म एनालिटिक्स देखने के लिए Admin Dashboard का उपयोग करें।",
             Intent.ADMIN_USERS: "आप User Management सेक्शन में प्लेटफॉर्म यूजर्स को ब्लॉक/अनब्लॉक कर सकते हैं।",
             Intent.UNKNOWN: "मैं यूजर मॉडरेशन, एनालिटिक्स और प्लेटफॉर्म मॉनिटरिंग जैसे प्रशासनिक कार्यों में आपकी मदद कर सकता हूँ।",
         }
@@ -997,13 +1004,143 @@ GENERAL_FAQ = {
     }
 }
 
+BENGALI_MAP = {
+    "bhat": "rice", "dal": "lentils", "mach": "fish", "maach": "fish",
+    "roti": "bread", "tarkari": "vegetables", "mishti": "sweets",
+    "doi": "yogurt", "chingri": "prawns", "kosha": "dry curry",
+    "mangsho": "mutton", "murgi": "chicken", "aloo": "potato",
+    "begun": "eggplant", "shorshe": "mustard",
+}
+
+FOOD_TYPOS = {
+    "biriyani": "biryani", "beriyani": "biryani", "birani": "biryani",
+    "biri": "biryani", "biry": "biryani",
+    "chiken": "chicken", "chkcn": "chicken", "chick": "chicken",
+    "piza": "pizza", "pizaa": "pizza", "piz": "pizza",
+    "buger": "burger", "burgr": "burger", "burg": "burger",
+    "spic": "spicy",
+    "foove": "food", "foob": "food", "fod": "food", "foods": "food",
+    "discount": "coupon", "promo": "coupon", "offer": "coupon", "voucher": "coupon",
+}
+
 class MockEngine:
     @staticmethod
     def process(role: str, message: str, context: Dict[str, Any]) -> ChatResponse:
         intent = IntentClassifier.classify(message)
         pref_lang = context.get("preferredLanguage", "en")
         lang = detect_language(message, pref_lang)
-        
+
+        msg_lower = message.lower()
+
+        def matches_word(patterns):
+            return any(re.search(r"\b" + re.escape(p) + r"\b", msg_lower) for p in patterns)
+
+        words = re.findall(r"\w+", msg_lower)
+        normalized = " ".join(FOOD_TYPOS.get(w, w) for w in words)
+
+        def matches_normalized(patterns):
+            return any(re.search(r"\b" + re.escape(p) + r"\b", normalized) for p in patterns)
+
+        if intent == Intent.BUDGET_RECOMMENDATION:
+            recs = context.get("budgetRecommendations", [])
+            b_range = context.get("budgetRange")
+            if not b_range:
+                b_range = {"min": 1, "max": 2000}
+            min_val = b_range.get("min", 1)
+            max_val = b_range.get("max", 2000)
+            is_alt = context.get("isAlternative", False)
+
+            if not recs:
+                no_match_responses = {
+                    "en": f"I couldn't find any restaurants or food items near your location. Please check if there are open restaurants nearby.",
+                    "bn": f"আপনার লোকেশনের কাছাকাছি কোনো রেস্তোরাঁ বা খাবার খুঁজে পাওয়া যায়নি। অনুগ্রহ করে পরীক্ষা করুন কাছাকাছি কোনো রেস্তোরাঁ খোলা আছে কিনা।",
+                    "hi": f"मुझे आपके स्थान के पास कोई रेस्टोरेंट या भोजन विकल्प नहीं मिले। कृपया जांचें कि क्या पास में कोई रेस्टोरेंट खुला है।",
+                    "bn_en": f"Apnar location er kache kono restaurant ba khabar paini. Kache kono restaurant khola ache kina check korun.",
+                    "en_hi": f"Mujhe aapki location ke paas koi restaurant ya food item nahi mila. Kripya check karein ki paas mein koi restaurant khula hai ya nahi.",
+                    "bn_hi": f"Apnar location er kache kono restaurant ba khabar paini. Check korun ki kache restaurant khola ache kina."
+                }
+                reply = no_match_responses.get(lang, no_match_responses["en"])
+            elif is_alt:
+                list_str = "\n".join([f"\u2022 {r.get('name', 'Unknown Item')} \u2014 \u20b9{normalize_price(r.get('price', 0))} \u2014 {r.get('restaurantName', 'Unknown Restaurant')}" for r in recs])
+                alt_responses = {
+                    "en": f"I couldn't find any options within your budget of \u20b9{min_val}\u2013\u20b9{max_val} near your location. However, here are the closest available alternatives near you:\n\n{list_str}\n\nThese restaurants currently deliver to your location.",
+                    "bn": f"আপনার লোকেশনের কাছাকাছি আপনার বাজেটের (\u20b9{min_val}\u2013\u20b9{max_val}) মধ্যে কোনো খাবার পাওয়া যায়নি। তবে কাছাকাছি কিছু বিকল্প:\n\n{list_str}\n\nএই রেস্তোরাঁগুলো বর্তমানে আপনার ঠিকানায় ডেলিভারি দিচ্ছে।",
+                    "hi": f"\u20b9{min_val}\u2013\u20b9{max_val} के बजट में पास कोई विकल्प नहीं मिला। यहाँ कुछ करीबी विकल्प हैं:\n\n{list_str}\n\nये रेस्टोरेंट आपके स्थान पर डिलीवर करते हैं।",
+                    "bn_en": f"Budget (\u20b9{min_val}\u2013\u20b9{max_val}) er moddhe options paini. Kache available options:\n\n{list_str}\n\nEi restaurants apnar location-e delivery dicche.",
+                    "en_hi": f"Budget (\u20b9{min_val}\u2013\u20b9{max_val}) ke andar koi option nahi mila. Yeh hain kuch options:\n\n{list_str}\n\nYeh restaurants aapki location par deliver kar rahe hain.",
+                    "bn_hi": f"Budget (\u20b9{min_val}\u2013\u20b9{max_val}) er moddhe options paini. Kache options:\n\n{list_str}\n\nEi restaurants apnar location-e deliver korche."
+                }
+                reply = alt_responses.get(lang, alt_responses["en"])
+            else:
+                list_str = "\n".join([f"\u2022 {r.get('name', 'Unknown Item')} \u2014 \u20b9{normalize_price(r.get('price', 0))} \u2014 {r.get('restaurantName', 'Unknown Restaurant')}" for r in recs])
+                match_responses = {
+                    "en": f"Here are the best food options within your budget (\u20b9{min_val}\u2013\u20b9{max_val}) from nearby restaurants:\n\n{list_str}\n\nThese items are currently available for delivery near your location.",
+                    "bn": f"আপনার বাজেটের (\u20b9{min_val}\u2013\u20b9{max_val}) মধ্যে কাছাকাছি রেস্তোরাঁ থেকে সেরা খাবারগুলো:\n\n{list_str}\n\nএই খাবারগুলো বর্তমানে ডেলিভারির জন্য উপলব্ধ।",
+                    "hi": f"\u20b9{min_val}\u2013\u20b9{max_val} के बजट में पास के रेस्टोरेंट से बेहतरीन विकल्प:\n\n{list_str}\n\nये आइटम अभी डिलीवरी के लिए उपलब्ध हैं।",
+                    "bn_en": f"Apnar budget (\u20b9{min_val}\u2013\u20b9{max_val}) er moddhe kache restaurants theke best options:\n\n{list_str}\n\nEi items ekhon delivery-r jonno available.",
+                    "en_hi": f"Aapke budget (\u20b9{min_val}\u2013\u20b9{max_val}) mein paas ke restaurants se best options:\n\n{list_str}\n\nYeh items abhi delivery ke liye available hain.",
+                    "bn_hi": f"Apnar budget (\u20b9{min_val}\u2013\u20b9{max_val}) er moddhe kache restaurants theke options:\n\n{list_str}\n\nEi items abhi delivery-r jonno available."
+                }
+                reply = match_responses.get(lang, match_responses["en"])
+
+            return ChatResponse(
+                reply=reply,
+                intent="BUDGET_RECOMMENDATION",
+                action="OPEN_SEARCH",
+                intent_confidence=0.97,
+                entities={"budgetRange": b_range},
+                followUp=["search pizza", "show coupons"] if not recs else []
+            )
+
+        rule_reply = None
+        rule_intent = "UNKNOWN"
+        rule_action = "NONE"
+
+        if matches_normalized(["selling my data", "sell my data", "are you selling my data", "privacy policy", "data privacy"]):
+            rule_reply = "We take your privacy seriously. We do not sell your data. Read our data privacy FAQs at https://aws.amazon.com/compliance/data-privacy-faq/."
+            rule_intent = "PRIVACY"
+        elif any(re.search(r"\b" + re.escape(bn) + r"\b", msg_lower) for bn in BENGALI_MAP):
+            detected = [f"{bn} -> {en}" for bn, en in BENGALI_MAP.items() if re.search(r"\b" + re.escape(bn) + r"\b", msg_lower)]
+            mapped = ", ".join(detected)
+            has_bhat = bool(re.search(r"\bbhat\b", msg_lower))
+            has_mach = bool(re.search(r"\b(mach|maach)\b", msg_lower))
+            if has_bhat and has_mach:
+                rule_reply = f"I recognized: {mapped}. I recommend Fish Curry with Rice (Rs.180) or Pabda Fish Thali (Rs.220) from nearby Bengali restaurants."
+            else:
+                rule_reply = f"I recognized: {mapped}. I recommend trying Fish Curry with Rice (Rs.180) or Special Bengali Thali (Rs.250) from nearby restaurants!"
+            rule_intent = "FOOD_SEARCH"
+            rule_action = "OPEN_SEARCH"
+        elif matches_normalized(["blocked", "account blocked", "banned"]):
+            rule_reply = "Your account has been blocked. Please email mystudyprojectwork@gmail.com directly for assistance."
+            rule_intent = "PROFILE"
+        elif matches_normalized(["payment failed", "money deducted", "charged but", "debited", "deducted", "payment failure"]):
+            rule_reply = "If your payment failed but the amount was deducted, it will be refunded within 5-7 business days. If unresolved after 2 attempts, email mystudyprojectwork@gmail.com."
+            rule_intent = "PAYMENT"
+        elif matches_normalized(["otp", "one time password", "handoff", "verify delivery"]):
+            if role == "rider":
+                rule_reply = "The rider must collect the OTP from the customer to complete handoff and mark the order as delivered."
+            else:
+                rule_reply = "Share your OTP (found in active order details) only with your rider to confirm delivery."
+            rule_intent = "DELIVERY"
+        elif matches_normalized(["spicy", "spice"]):
+            rule_reply = "For spicy food, try Chicken Biryani, Kosha Mangsho, Chilli Chicken, or Paneer Tikka. Search on the home page!"
+            rule_intent = "FOOD_SEARCH"
+            rule_action = "OPEN_SEARCH"
+        elif matches_normalized(["food"]):
+            rule_reply = "Search for a restaurant near you on the home page to browse their full menu and available food items!"
+            rule_intent = "FOOD_SEARCH"
+            rule_action = "OPEN_SEARCH"
+
+        if rule_reply:
+            return ChatResponse(
+                reply=rule_reply,
+                intent=rule_intent,
+                action=rule_action,
+                intent_confidence=0.95,
+                entities={},
+                followUp=[]
+            )
+
         denial = PermissionChecker.check(role, intent, lang)
         if denial:
             return ChatResponse(
@@ -1014,7 +1151,7 @@ class MockEngine:
                 entities={},
                 followUp=[]
             )
-            
+
         if intent == Intent.OFF_TOPIC:
             msg_lower = message.lower()
             topic = "default"
@@ -1024,7 +1161,7 @@ class MockEngine:
                 topic = "interest"
             elif "poem" in msg_lower or "poetry" in msg_lower:
                 topic = "poem"
-                
+
             reply = GENERAL_FAQ[lang].get(topic, GENERAL_FAQ[lang]["default"])
             return ChatResponse(
                 reply=reply,
@@ -1041,11 +1178,11 @@ class MockEngine:
             items_str = ""
             if "items" in latest and latest["items"]:
                 items_str = ", ".join([f"{item['name']} (x{item['quantity']})" for item in latest["items"]])
-                
+
             rest_str = f" from {latest.get('restaurantName')}" if latest.get("restaurantName") else ""
             amount_str = f" for ₹{latest.get('totalAmount')}" if latest.get("totalAmount") else ""
             rider_str = f" | Rider: {latest.get('riderName')} ({latest.get('riderPhoneNumber', 'N/A')})" if latest.get("riderName") else ""
-            
+
             if items_str:
                 details_en = f"{rest_str}{amount_str}. Items: {items_str}{rider_str}"
                 details_bn = f"{rest_str} (৳{latest.get('totalAmount', 0)}). আইটেম: {items_str}{rider_str}"
@@ -1067,7 +1204,7 @@ class MockEngine:
                 "bn_hi": "kono active order nei",
             }
             status_info = no_orders_map.get(lang, no_orders_map["en"])
-            
+
         coupons = context.get("coupons", [])
         if coupons:
             coupon_info = ", ".join([f"{c['code']} ({c['discountValue']}% off)" for c in coupons])
@@ -1081,13 +1218,13 @@ class MockEngine:
                 "bn_hi": "kono coupon nei",
             }
             coupon_info = no_coupons_map.get(lang, no_coupons_map["en"])
-            
+
         lang_res = MOCK_RESPONSES.get(lang, MOCK_RESPONSES["en"])
         role_res = lang_res.get(role, lang_res["customer"])
         reply_template = role_res.get(intent, role_res.get(Intent.UNKNOWN, "Help request"))
-        
+
         reply = reply_template.format(status_info=status_info, coupon_info=coupon_info)
-        
+
         action = "NONE"
         if intent == Intent.ORDER_TRACKING:
             action = "OPEN_ORDER_TRACKING"
@@ -1095,14 +1232,14 @@ class MockEngine:
             action = "SHOW_COUPONS"
         elif intent == Intent.FOOD_SEARCH:
             action = "OPEN_SEARCH"
-            
+
         follow_up = []
         if role == "customer":
             follow_up = ["track my order", "show coupons", "search pizza"]
-            
+
         return ChatResponse(
             reply=reply,
-            intent=intent.name,
+            intent=intent.name if isinstance(intent, Enum) else str(intent),
             action=action,
             intent_confidence=0.9,
             entities={},
@@ -1206,7 +1343,7 @@ def parse_budget_from_message(message: str) -> dict:
         msg = msg.replace(k, v)
     for k, v in hindi_digits.items():
         msg = msg.replace(k, v)
-        
+
     range_match = re.search(r'(?:between|from)?\s*(?:₹|rs\.?|usd|\$)?\s*(\d+)\s*(?:to|and|-|–|—|se|theke|থেকে|সে|से)\s*(?:₹|rs\.?|usd|\$)?\s*(\d+)', msg)
     if range_match:
         min_b = int(range_match.group(1))
@@ -1214,14 +1351,14 @@ def parse_budget_from_message(message: str) -> dict:
         if min_b > max_b:
             min_b, max_b = max_b, min_b
         return {"min": min_b, "max": max_b}
-        
+
     under_match1 = re.search(r'(?:under|below|less than|within|upto|up to|কম|নিচে|কমের মধ্যে|se kam|kam)\s*(?:₹|rs\.?|usd|\$)?\s*(\d+)', msg)
     under_match2 = re.search(r'(\d+)\s*(?:টাকার|টাকা|rupee|rupees|rs)?\s*(?:নিচে|কম|কমের মধ্যে|কমের|se kam|kam|below|under)', msg)
     if under_match1:
         return {"min": 1, "max": int(under_match1.group(1))}
     elif under_match2:
         return {"min": 1, "max": int(under_match2.group(1))}
-        
+
     return {"min": 1, "max": 2000}
 
 @app.post("/chat", response_model=ChatResponse)
@@ -1251,10 +1388,29 @@ async def chat_endpoint(req: ChatRequest):
 
         safe_message = ConversationResolver.resolve(history, safe_message)
 
-        # Fallback budget parsing if context is missing budgetRange
         detected_intent = IntentClassifier.classify(safe_message)
-        if detected_intent == Intent.BUDGET_RECOMMENDATION and "budgetRange" not in ctx:
-            ctx["budgetRange"] = parse_budget_from_message(safe_message)
+        if detected_intent == Intent.BUDGET_RECOMMENDATION:
+            logger.info(
+                "budget_recommendation_debug",
+                extra={"extra_data": {
+                    "cid": cid,
+                    "stage": "intent_detected",
+                    "message": safe_message,
+                    "ctx_has_budgetRange": "budgetRange" in ctx,
+                    "ctx_budgetRange": ctx.get("budgetRange"),
+                    "ctx_requestedFood": ctx.get("requestedFood"),
+                    "ctx_recs_count": len(ctx.get("budgetRecommendations", []) or []),
+                    "ctx_isAlternative": ctx.get("isAlternative"),
+                }},
+            )
+            if "budgetRange" not in ctx:
+                ctx["budgetRange"] = parse_budget_from_message(safe_message)
+                logger.warning(
+                    "budget_recommendation_fallback_parse cid=%s message=%r parsed=%s "
+                    "— contextData from AiService.ts was missing budgetRange; check the "
+                    "Node-side parseBudgetFromMessage() for this phrasing",
+                    cid, safe_message, ctx["budgetRange"],
+                )
             if "budgetRecommendations" not in ctx:
                 ctx["budgetRecommendations"] = []
 
@@ -1272,7 +1428,20 @@ async def chat_endpoint(req: ChatRequest):
         follow_up = []
 
         inference_start = time.monotonic()
-        if _model_manager and _model_manager.ml_available:
+
+        use_generative_model = (
+            _model_manager
+            and _model_manager.ml_available
+            and detected_intent != Intent.BUDGET_RECOMMENDATION
+        )
+        if detected_intent == Intent.BUDGET_RECOMMENDATION and _model_manager and _model_manager.ml_available:
+            logger.info(
+                "Skipping generative inference for BUDGET_RECOMMENDATION cid=%s — "
+                "using deterministic database-only formatter instead",
+                cid,
+            )
+
+        if use_generative_model:
             full_prompt, history = _trim_prompt(system_prompt, history.copy(), PROMPT_TOKEN_LIMIT)
 
             logger.info("ML inference requested, tokens ~%d", _count_tokens(full_prompt))
@@ -1323,6 +1492,17 @@ async def chat_endpoint(req: ChatRequest):
 
         total_latency = (time.monotonic() - start_time) * 1000
 
+        if detected_intent == Intent.BUDGET_RECOMMENDATION:
+            logger.info(
+                "budget_recommendation_result",
+                extra={"extra_data": {
+                    "cid": cid,
+                    "budgetRange": ctx.get("budgetRange"),
+                    "recs_returned": len(ctx.get("budgetRecommendations", []) or []),
+                    "is_alternative": ctx.get("isAlternative"),
+                    "reply_preview": (reply[:160] if reply else None),
+                }},
+            )
 
         logger.info(
             "chat_request_metrics",
@@ -1336,11 +1516,13 @@ async def chat_endpoint(req: ChatRequest):
                 }
             }
         )
+        
+        intent_val = intent.name if isinstance(intent, Enum) else str(intent)
 
         return ChatResponse(
             reply=reply,
-            intent=intent,
-            action=action,
+            intent=intent_val,
+            action=str(action),
             intent_confidence=intent_confidence,
             entities=entities,
             followUp=follow_up,
@@ -1361,11 +1543,96 @@ def _handle_sigterm(*args):
 signal.signal(signal.SIGTERM, _handle_sigterm)
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(
-        "api_server:app",
-        host="0.0.0.0",
-        port=5500,
-        reload=True,
-        timeout_keep_alive=65,
-    )
+    import sys
+    if "--test" in sys.argv:
+        from fastapi.testclient import TestClient
+
+        client = TestClient(app)
+        with client:
+            cases = [
+                {
+                    "msg": "Suggest something spic",
+                    "role": "customer",
+                    "must_contain": ["spicy", "Biryani", "Chilli"],
+                    "must_not_contain": ["Hello", "Welcome"],
+                },
+                {
+                    "msg": "give me some foove name",
+                    "role": "customer",
+                    "must_contain": ["food", "menu", "restaurant"],
+                    "must_not_contain": ["Hello", "Welcome"],
+                },
+                {
+                    "msg": "I want to eat some bhat and mach.",
+                    "role": "customer",
+                    "must_contain": ["bhat -> rice", "mach -> fish", "Rs."],
+                    "must_not_contain": [],
+                },
+                {
+                    "msg": "It says my account is blocked. Help.",
+                    "role": "customer",
+                    "must_contain": ["mystudyprojectwork@gmail.com"],
+                    "must_not_contain": [],
+                },
+                {
+                    "msg": "My card was charged but Razorpay says failed.",
+                    "role": "customer",
+                    "must_contain": ["5-7 business days", "mystudyprojectwork@gmail.com"],
+                    "must_not_contain": [],
+                },
+                {
+                    "msg": "Are you selling my data?",
+                    "role": "customer",
+                    "must_contain": ["https://aws.amazon.com/compliance/data-privacy-faq/"],
+                    "must_not_contain": ["Hello", "Welcome"],
+                },
+                {
+                    "msg": "Customer is asking for food but I dont have OTP.",
+                    "role": "rider",
+                    "must_contain": ["collect", "OTP", "customer"],
+                    "must_not_contain": [],
+                },
+            ]
+
+            PASS = "\033[92mPASS\033[0m"
+            FAIL = "\033[91mFAIL\033[0m"
+
+            all_passed = True
+            for c in cases:
+                res = client.post("/chat", json={
+                    "message": c["msg"],
+                    "userId": "test_user_id",
+                    "role": c["role"],
+                    "contextData": {}
+                })
+
+                if res.status_code != 200:
+                    print(f"{FAIL}  Q [{c['role']}]: {c['msg']} (Status code: {res.status_code})")
+                    all_passed = False
+                    continue
+
+                reply = res.json().get("reply", "")
+                ok = all(kw.lower() in reply.lower() for kw in c["must_contain"]) and \
+                     all(kw.lower() not in reply.lower() for kw in c["must_not_contain"])
+                status = PASS if ok else FAIL
+                if not ok:
+                    all_passed = False
+                print(f"{status}  Q [{c['role']}]: {c['msg']}")
+                print(f"       A: {reply}")
+                if not ok:
+                    missing = [kw for kw in c["must_contain"] if kw.lower() not in reply.lower()]
+                    wrong   = [kw for kw in c["must_not_contain"] if kw.lower() in reply.lower()]
+                    if missing: print(f"       MISSING: {missing}")
+                    if wrong:   print(f"       UNEXPECTED: {wrong}")
+                print()
+            print("All tests passed!" if all_passed else "Some tests FAILED.")
+            sys.exit(0 if all_passed else 1)
+    else:
+        import uvicorn
+        uvicorn.run(
+            "api_server:app",
+            host="0.0.0.0",
+            port=5500,
+            reload=True,
+            timeout_keep_alive=65,
+        )

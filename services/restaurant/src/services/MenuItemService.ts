@@ -384,6 +384,96 @@ export class MenuItemService implements IMenuItemService {
     return saved;
   }
 
+  async searchByBudget(
+    minPrice: number,
+    maxPrice: number,
+    longitude: number,
+    latitude: number,
+    radius: number
+  ): Promise<any[]> {
+    let nearbyRestaurants: any[] = await RestaurantModel.aggregate([
+      {
+        $geoNear: {
+          near: { type: "Point", coordinates: [longitude, latitude] },
+          distanceField: "distance",
+          maxDistance: radius,
+          spherical: true,
+          query: { isVerified: true, isOpen: true }
+        }
+      },
+      { $addFields: { distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] } } },
+      { $sort: { distance: 1 } },
+      { $limit: 50 }
+    ]);
+
+    // Expand radius if no open restaurants found
+    if (nearbyRestaurants.length === 0) {
+      nearbyRestaurants = await RestaurantModel.aggregate([
+        {
+          $geoNear: {
+            near: { type: "Point", coordinates: [longitude, latitude] },
+            distanceField: "distance",
+            maxDistance: 50000,
+            spherical: true,
+            query: { isVerified: true }
+          }
+        },
+        { $addFields: { distanceKm: { $round: [{ $divide: ["$distance", 1000] }, 2] } } },
+        { $sort: { distance: 1 } },
+        { $limit: 50 }
+      ]);
+    }
+
+    if (nearbyRestaurants.length === 0) return [];
+
+    const restaurantMap = new Map(nearbyRestaurants.map((r: any) => [r._id.toString(), r]));
+    const restaurantIds = nearbyRestaurants.map((r: any) => r._id);
+
+    // 2. Fetch all available items from those restaurants within the price range
+    const items = await MenuItemModel.find({
+      restaurantId: { $in: restaurantIds },
+      isAvailable: true,
+      price: { $gte: minPrice, $lte: maxPrice }
+    })
+      .select("restaurantId name price imageUrl description isAvailable category isVeg")
+      .lean();
+
+    // 3. Map, attach restaurant info, sort by distance then price
+    const results = items
+      .filter((item: any) => restaurantMap.has(item.restaurantId.toString()))
+      .map((item: any) => {
+        const restaurant = restaurantMap.get(item.restaurantId.toString());
+        return {
+          item: {
+            _id: item._id,
+            name: item.name,
+            price: item.price,
+            imageUrl: item.imageUrl,
+            description: item.description,
+            isAvailable: item.isAvailable,
+            category: item.category,
+            isVeg: item.isVeg
+          },
+          restaurant: {
+            _id: restaurant._id,
+            name: restaurant.name,
+            image: restaurant.image,
+            isOpen: restaurant.isOpen,
+            distance: restaurant.distance,
+            distanceKm: restaurant.distanceKm
+          }
+        };
+      })
+      .sort((a: any, b: any) => {
+        const distDiff = (a.restaurant.distance ?? 0) - (b.restaurant.distance ?? 0);
+        if (distDiff !== 0) return distDiff;
+        return a.item.price - b.item.price;
+      })
+      .slice(0, 50);
+
+    return results;
+  }
+
   async getAvailableCategories(): Promise<any[]> {
     const cacheKey = "available_categories";
     const cached = await this.cache.get(cacheKey);

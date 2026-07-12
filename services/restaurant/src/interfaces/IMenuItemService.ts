@@ -15,4 +15,11 @@ export interface IMenuItemService {
   toggleMenuItemAvailability(itemId: string, ownerId: string): Promise<MenuItem>;
   updateMenuItem(itemId: string, ownerId: string, dto: MenuItemRequestDto): Promise<MenuItem>;
   getAvailableCategories(): Promise<any[]>;
+  searchByBudget(
+    minPrice: number,
+    maxPrice: number,
+    longitude: number,
+    latitude: number,
+    radius: number
+  ): Promise<any[]>;
 }
