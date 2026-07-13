@@ -40,6 +40,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             if (res.data?.role) {
                 localStorage.setItem("userRole", res.data.role);
             }
+            storage.setCachedUser(res.data);
             return res.data;
         } catch (error: any) {
             const status = error.status;
@@ -72,6 +73,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             setCart(res.data?.cart || []);
             setSubTotal(res.data?.subTotal || 0);
             setQuantity(res.data?.cartLength || 0);
+            storage.setCachedCart(res.data);
         } catch (error: any) {
             console.error(error);
         }
@@ -85,6 +87,21 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             setLoading(false);
             return;
         }
+
+        // Try loading from secure cache first for instant load (SWR)
+        const cachedUser = storage.getCachedUser();
+        const cachedCart = storage.getCachedCart();
+        if (cachedUser) {
+            setUser(cachedUser);
+            setIsAuth(true);
+            if (cachedUser.role === "customer" && cachedCart) {
+                setCart(cachedCart.cart || []);
+                setSubTotal(cachedCart.subTotal || 0);
+                setQuantity(cachedCart.cartLength || 0);
+            }
+            setLoading(false);
+        }
+
         const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
             Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
 
@@ -94,19 +111,21 @@ export const AppProvider = ({ children }: AppProviderProps) => {
                 const isNonCustomerPath = path.startsWith("/seller") || path.startsWith("/rider") || path.startsWith("/admin");
                 const cachedRole = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
 
+                const fetchTimeout = 45000; // Tolerant timeout for Render cold starts in background
+
                 if (isNonCustomerPath || (cachedRole && cachedRole !== "customer")) {
-                    const userData = await withTimeout(fetchCurrentUser(), 15000);
+                    const userData = await withTimeout(fetchCurrentUser(), fetchTimeout);
                     if (userData && userData.role !== "customer") {
                         setCart([]);
                         setSubTotal(0);
                         setQuantity(0);
                     } else if (userData && userData.role === "customer") {
-                        await withTimeout(fetchCart(), 15000);
+                        await withTimeout(fetchCart(), fetchTimeout);
                     }
                 } else {
                     const [userData] = await Promise.all([
-                        withTimeout(fetchCurrentUser(), 15000),
-                        withTimeout(fetchCart(), 15000)
+                        withTimeout(fetchCurrentUser(), fetchTimeout),
+                        withTimeout(fetchCart(), fetchTimeout)
                     ]);
                     if (userData && userData.role !== "customer") {
                         setCart([]);

@@ -8,6 +8,9 @@ import { AppProvider } from '@/context/AppContext.tsx';
 import { SocketProvider } from '@/context/SocketContext.tsx';
 import { AdminAuthProvider, AdminSocketProvider } from '@/features/admin';
 import { HelmetProvider } from 'react-helmet-async';
+import { prewarmServices } from '@/services/apiClient';
+
+prewarmServices();
 
 window.addEventListener('unhandledrejection', (event) => {
     console.error('[Kravix] Unhandled promise rejection:', event.reason);

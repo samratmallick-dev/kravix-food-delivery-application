@@ -2,11 +2,76 @@ import { storage } from "@/utils";
 
 const cache = new Map<string, { data: unknown; expiresAt: number }>();
 const pendingRequests = new Map<string, Promise<unknown>>();
+const CACHE_PREFIX = "kravix_api_cache_";
+
+function getSessionCache(key: string): { data: unknown; expiresAt: number } | null {
+      try {
+            const cached = sessionStorage.getItem(CACHE_PREFIX + key);
+            if (!cached) return null;
+            const parsed = JSON.parse(cached);
+            if (typeof parsed === "object" && parsed !== null && "expiresAt" in parsed && "data" in parsed) {
+                  return parsed as { data: unknown; expiresAt: number };
+            }
+      } catch (e) {
+            console.error("Cache read error:", e);
+      }
+      return null;
+}
+
+function setSessionCache(key: string, data: unknown, expiresAt: number): void {
+      try {
+            sessionStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ data, expiresAt }));
+      } catch (e) {
+            console.error("Cache write error:", e);
+      }
+}
 
 export function invalidateCache(pathPrefix: string): void {
       for (const key of cache.keys()) {
             if (key.includes(pathPrefix)) cache.delete(key);
       }
+      try {
+            for (let i = 0; i < sessionStorage.length; i++) {
+                  const key = sessionStorage.key(i);
+                  if (key && key.startsWith(CACHE_PREFIX) && key.includes(pathPrefix)) {
+                        sessionStorage.removeItem(key);
+                  }
+            }
+      } catch (e) {
+            console.error("Cache invalidation error:", e);
+      }
+}
+
+export function prewarmServices(): void {
+      if (import.meta.env.DEV) return;
+
+      const baseUrls = [
+            import.meta.env.VITE_API_URL_AUTH,
+            import.meta.env.VITE_API_URL_RESTAURANT,
+            import.meta.env.VITE_API_URL_PAYMENT,
+            import.meta.env.VITE_API_URL_RIDER,
+            import.meta.env.VITE_API_URL_ADMIN,
+            import.meta.env.VITE_API_URL_ANALYTICS,
+            import.meta.env.VITE_API_URL_REALTIME_SOCKET
+      ];
+
+      const uniqueHosts = new Set<string>();
+      baseUrls.forEach(url => {
+            try {
+                  const urlObj = new URL(url);
+                  uniqueHosts.add(`${urlObj.protocol}//${urlObj.host}`);
+            } catch {
+                  if (url.startsWith("http")) {
+                        const match = url.match(/^(https?:\/\/[^\/]+)/);
+                        if (match) uniqueHosts.add(match[1]);
+                  }
+            }
+      });
+
+      uniqueHosts.forEach(host => {
+            fetch(`${host}/health`, { mode: "no-cors" }).catch(() => {});
+            fetch(`${host}/`, { mode: "no-cors" }).catch(() => {});
+      });
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -23,6 +88,11 @@ export async function request<T>(
             const cached = cache.get(cacheKey);
             if (cached && cached.expiresAt > Date.now()) {
                   return cached.data as T;
+            }
+            const sessionCached = getSessionCache(cacheKey);
+            if (sessionCached && sessionCached.expiresAt > Date.now()) {
+                  cache.set(cacheKey, sessionCached);
+                  return sessionCached.data as T;
             }
       }
 
@@ -46,7 +116,7 @@ export async function request<T>(
                               options.signal.addEventListener("abort", () => controller.abort());
                         }
                   }
-                  const timeoutLimit = options.timeout !== undefined ? options.timeout : 10000;
+                  const timeoutLimit = options.timeout !== undefined ? options.timeout : 30000;
                   const timeoutId = setTimeout(() => controller.abort(), timeoutLimit);
 
                   const token = tokenOverride || storage.getToken();
@@ -98,10 +168,12 @@ export async function request<T>(
                                           ttl = 3000;
                                     }
                               }
+                              const expiresAt = Date.now() + ttl;
                               cache.set(cacheKey, {
                                     data,
-                                    expiresAt: Date.now() + ttl,
+                                    expiresAt,
                               });
+                              setSessionCache(cacheKey, data, expiresAt);
                         }
 
                         return data as T;

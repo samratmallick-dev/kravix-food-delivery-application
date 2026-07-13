@@ -127,18 +127,18 @@ function generateSitemap() {
             const xmlUrls = sortedRoutes.map(route => {
                   const priority = PRIORITY_SCORES[route] !== undefined ? PRIORITY_SCORES[route] : 0.6;
                   const changefreq = route === '/' || route === '/search' ? 'daily' : 'weekly';
-                  return `<url>
-                              <loc>${SITE_URL}${route === '/' ? '' : route}</loc>
-                              <lastmod>${now}</lastmod>
-                              <changefreq>${changefreq}</changefreq>
-                              <priority>${priority.toFixed(1)}</priority>
-                        </url>`;
+                  return `  <url>
+    <loc>${SITE_URL}${route === '/' ? '' : route}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority.toFixed(1)}</priority>
+  </url>`;
             }).join('\n');    
 
             const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-                                    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-                                          ${xmlUrls}
-                                    </urlset>`;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${xmlUrls}
+</urlset>`;
 
             const dir = path.dirname(SITEMAP_PATH);
             if (!fs.existsSync(dir)) {

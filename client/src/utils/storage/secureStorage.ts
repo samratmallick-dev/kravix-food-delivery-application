@@ -1,5 +1,6 @@
 import CryptoJS from "crypto-js";
 import { STORAGE_KEYS } from "@/constants/storage";
+import type { User } from "@/types";
 
 const SECRET_KEY = STORAGE_KEYS.SECURE_SECRET;
 const TOKEN_KEY = STORAGE_KEYS.TOKEN;
@@ -64,6 +65,54 @@ export const storage = {
       removeToken: (): void => {
             secureLocalStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem("userRole");
+            secureLocalStorage.removeItem("cached_user");
+            secureLocalStorage.removeItem("cached_cart");
+            try {
+                  const keysToRemove: string[] = [];
+                  for (let i = 0; i < sessionStorage.length; i++) {
+                        const key = sessionStorage.key(i);
+                        if (key && key.startsWith("kravix_api_cache_")) {
+                              keysToRemove.push(key);
+                        }
+                  }
+                  keysToRemove.forEach(k => sessionStorage.removeItem(k));
+            } catch (e) {
+                  console.error("Storage cache clear failed", e);
+            }
+      },
+
+      getCachedUser: (): User | null => {
+            try {
+                  const userStr = secureLocalStorage.getItem("cached_user");
+                  return userStr ? JSON.parse(userStr) : null;
+            } catch {
+                  return null;
+            }
+      },
+      setCachedUser: (user: User): void => {
+            try {
+                  secureLocalStorage.setItem("cached_user", JSON.stringify(user));
+            } catch {}
+      },
+      removeCachedUser: (): void => {
+            secureLocalStorage.removeItem("cached_user");
+      },
+
+      getCachedCart: (): any | null => {
+            try {
+                  const cartStr = secureLocalStorage.getItem("cached_cart");
+                  return cartStr ? JSON.parse(cartStr) : null;
+            } catch {
+                  return null;
+            }
+      },
+      setCachedCart: (cartData: any): void => {
+            try {
+                  secureLocalStorage.setItem("cached_cart", JSON.stringify(cartData));
+            } catch {}
+      },
+      removeCachedCart: (): void => {
+            secureLocalStorage.removeItem("cached_cart");
       },
 
       getAdminToken: (): string | null => secureLocalStorage.getItem(ADMIN_TOKEN_KEY),
