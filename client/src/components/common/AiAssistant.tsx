@@ -161,7 +161,7 @@ const AiAssistant: React.FC = () => {
                             onChange={e => setInputValue(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Ask me anything…"
-                            className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary transition-colors max-h-28 leading-5"
+                            className="flex-1 resize-none rounded-xl text-gray-800 border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary transition-colors max-h-28 leading-5"
                         />
                         <button
                             onClick={handleSend}
