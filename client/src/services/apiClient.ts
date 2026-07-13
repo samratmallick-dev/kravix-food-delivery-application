@@ -69,8 +69,7 @@ export function prewarmServices(): void {
       });
 
       uniqueHosts.forEach(host => {
-            fetch(`${host}/health`, { mode: "no-cors" }).catch(() => {});
-            fetch(`${host}/`, { mode: "no-cors" }).catch(() => {});
+            fetch(`${host}/health`).catch(() => {});
       });
 }
 
