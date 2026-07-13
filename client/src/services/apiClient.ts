@@ -1,7 +1,7 @@
 import { storage } from "@/utils";
 
-const cache = new Map<string, { data: any; expiresAt: number }>();
-const pendingRequests = new Map<string, Promise<any>>();
+const cache = new Map<string, { data: unknown; expiresAt: number }>();
+const pendingRequests = new Map<string, Promise<unknown>>();
 
 export function invalidateCache(pathPrefix: string): void {
       for (const key of cache.keys()) {
@@ -13,7 +13,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function request<T>(
       path: string,
-      options: RequestInit & { cacheTtl?: number } = {},
+      options: RequestInit & { cacheTtl?: number; timeout?: number } = {},
       tokenOverride?: string
 ): Promise<T> {
       const method = options.method || "GET";
@@ -39,14 +39,25 @@ export async function request<T>(
 
             while (attempt <= retries) {
                   const controller = new AbortController();
-                  const timeoutId = setTimeout(() => controller.abort(), 10000);
+                  if (options.signal) {
+                        if (options.signal.aborted) {
+                              controller.abort();
+                        } else {
+                              options.signal.addEventListener("abort", () => controller.abort());
+                        }
+                  }
+                  const timeoutLimit = options.timeout !== undefined ? options.timeout : 10000;
+                  const timeoutId = setTimeout(() => controller.abort(), timeoutLimit);
 
                   const token = tokenOverride || storage.getToken();
                   const isFormData = options.body instanceof FormData;
+                  const generatedId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
 
                   const headers: HeadersInit = {
                         ...(!isFormData ? { "Content-Type": "application/json" } : {}),
                         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                        "X-Request-ID": generatedId,
+                        "X-Correlation-ID": generatedId,
                         ...(options.headers || {}),
                   };
 
@@ -62,7 +73,7 @@ export async function request<T>(
                         const data = await res.json().catch(() => ({ message: "Failed to parse response" }));
 
                         if (!res.ok) {
-                              const error = new Error(data?.message || data?.error || "Request failed") as any;
+                              const error = new Error(data?.message || data?.error || "Request failed") as Error & { status?: number };
                               error.status = res.status;
 
                               if (method === "GET" && res.status >= 500 && attempt < retries) {
@@ -94,8 +105,19 @@ export async function request<T>(
                         }
 
                         return data as T;
-                  } catch (err: any) {
+                  } catch (err: unknown) {
                         clearTimeout(timeoutId);
+
+                        const errorObject = err as Error & { message?: string };
+                        const errMsg = (errorObject?.message ?? "").toLowerCase();
+                        const isConnectionRefused =
+                            errMsg.includes("failed to fetch") ||
+                            errMsg.includes("networkerror") ||
+                            errMsg.includes("load failed");
+
+                        if (isConnectionRefused) {
+                            throw err;
+                        }
 
                         if (method === "GET" && attempt < retries) {
                               attempt++;

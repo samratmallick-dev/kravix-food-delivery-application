@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoutes, PublicRoutes } from "@/features/auth";
 import { useAppData } from "@/context/AppContext";
-import { AppSkeleton, AiAssistant } from "@/components/common";
+import { AppSkeleton } from "@/components/common";
 import { PublicLayout, AdminLayout, RiderLayout, AuthLayout } from "@/layouts";
 import { storage } from "@/utils";
 
@@ -128,7 +128,7 @@ const App = () => {
                               </Route>
                         </Routes>
                   </Suspense>
-                  <AiAssistant />
+                  
             </BrowserRouter>
       );
 };

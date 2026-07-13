@@ -3,5 +3,16 @@ export const corsOptions = {
     ? process.env.ALLOWED_ORIGINS.split(",")
     : ["http://localhost:5173", "http://localhost:5174"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Cache-Control",
+    "Expires",
+    "Pragma",
+    "X-Requested-With",
+    "x-internal-key",
+    "X-Request-ID",
+    "X-Correlation-ID",
+  ],
 };

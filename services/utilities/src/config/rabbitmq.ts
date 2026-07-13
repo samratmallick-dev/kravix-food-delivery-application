@@ -3,6 +3,21 @@ import amqp from "amqplib";
 let channel: amqp.Channel | null = null;
 let connection: amqp.ChannelModel | null = null;
 let reconnectDelay = 2000;
+let isReconnecting = false;
+
+const log = (level: "info" | "warn" | "error", message: string, extra?: object) => {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    service: "utilities",
+    level,
+    component: "rabbitmq",
+    message,
+    ...extra
+  };
+  if (level === "error") console.error(JSON.stringify(entry));
+  else if (level === "warn") console.warn(JSON.stringify(entry));
+  else console.log(JSON.stringify(entry));
+};
 
 export const getRabbitMQChannel = (): amqp.Channel => {
   if (!channel) {
@@ -17,32 +32,38 @@ export const getRabbitMQConnection = (): amqp.ChannelModel | null => {
 
 export const connectRabbitMQ = async (): Promise<void> => {
   try {
+    isReconnecting = false;
     connection = await amqp.connect(process.env.RABITMQ_URL!);
     channel = await connection.createChannel();
 
     await channel.assertQueue(process.env.PAYMENT_QUEUE!, { durable: true });
 
     reconnectDelay = 2000;
-    console.log("✅ Connected to RabbitMQ in Utilities Service");
+    log("info", "Connected to RabbitMQ in Utilities Service");
 
     connection.on("error", (err) => {
-      console.error("RabbitMQ connection error in Utilities Service:", err.message);
+      log("error", "RabbitMQ connection error in Utilities Service", { error: err.message });
       scheduleReconnect();
     });
     connection.on("close", () => {
-      console.warn("RabbitMQ connection closed in Utilities Service — reconnecting...");
+      log("warn", "RabbitMQ connection closed in Utilities Service — reconnecting...");
       scheduleReconnect();
     });
-  } catch (error) {
-    console.error("Error while connecting to RabbitMQ in Utilities Service:", error);
+  } catch (error: any) {
+    log("error", "Error while connecting to RabbitMQ in Utilities Service", { error: error?.message });
     scheduleReconnect();
   }
 };
 
 const scheduleReconnect = () => {
+  if (isReconnecting) return;
+  isReconnecting = true;
+
   channel = null;
   connection = null;
-  console.log(`Reconnecting to RabbitMQ (Utilities) in ${reconnectDelay / 1000}s...`);
+  log("info", `Reconnecting to RabbitMQ (Utilities) in ${reconnectDelay / 1000}s...`, {
+    nextRetryMs: reconnectDelay
+  });
   setTimeout(() => {
     reconnectDelay = Math.min(reconnectDelay * 2, 30000);
     connectRabbitMQ();

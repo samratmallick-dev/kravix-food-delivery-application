@@ -18,7 +18,6 @@ import { getRabbitMQConnection } from "./config/rabbitmq.js";
 
 import cloudinaryRoutes from "./routes/cloudinary.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
-import aiRoutes from "./routes/ai.routes.js";
 
 const app = express();
 
@@ -86,7 +85,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 const masterRouter = Router();
 masterRouter.use(ROUTES.UPLOADS.BASE, cloudinaryRoutes);
 masterRouter.use(ROUTES.PAYMENTS.BASE, paymentLimiter, idempotency, paymentRoutes);
-masterRouter.use(ROUTES.AI.BASE, aiRoutes);
 app.use("/api/v1", masterRouter);
 
 app.use("/api/v1/cloudinary", (req, res) => {

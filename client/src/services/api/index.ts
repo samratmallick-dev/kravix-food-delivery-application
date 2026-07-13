@@ -10,4 +10,3 @@ export * from "./admin.services";
 export { applyCoupon, getCoupons } from "./coupon.services";
 export { createReview, getRestaurantReviews, getRiderReviews, reportReview } from "./review.services";
 export * from "./analytics.services";
-export * from "./ai.services";

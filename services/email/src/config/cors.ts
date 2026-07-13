@@ -41,6 +41,8 @@ export const corsOptions: CorsOptions = {
     "Pragma",
     "X-Requested-With",
     "x-internal-key",
+    "X-Request-ID",
+    "X-Correlation-ID",
   ],
   exposedHeaders: ["X-Cache"],
 };
