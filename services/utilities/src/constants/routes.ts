@@ -87,12 +87,6 @@ export const ROUTES = {
     BLOCK_USER: "/users/:userId/block",
     UNBLOCK_USER: "/users/:userId/unblock"
   },
-  AI: {
-    BASE: "/ai",
-    CHAT: "/chat",
-    SEARCH: "/search",
-    HEALTH: "/health"
-  },
   UPLOADS: {
     BASE: "/uploads",
     IMAGES: "/images",

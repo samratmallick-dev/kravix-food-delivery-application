@@ -15,7 +15,6 @@ const envSchema = z.object({
   PAYMENT_QUEUE: z.string(),
   RESTAURANT_BASE_URL: z.string(),
   CLIENT_URL: z.string(),
-  AI_MICROSERVICE_URL: z.string(),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development")
 });
 
