@@ -1,21 +1,30 @@
-# 🍲 Kravix - Premium Online Food Delivery Application
+<p align="center">
+  <img src="./client/public/apple-touch-icon.png" width="16%" alt="Kravix Logo" />
+</p>
 
-[![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.x-purple?logo=vite)](https://vite.dev/)
-[![Node.js](https://img.shields.io/badge/Node.js-20.x-green?logo=nodedotjs)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-4.x-black?logo=express)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-ReplicaSet-green?logo=mongodb)](https://www.mongodb.com/)
-[![Redis](https://img.shields.io/badge/Redis-Cache-red?logo=redis)](https://redis.io/)
-[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Broker-orange?logo=rabbitmq)](https://www.rabbitmq.com/)
-[![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-black?logo=socketdotio)](https://socket.io/)
-[![Gemini](https://img.shields.io/badge/Gemini-AI_Search-blue?logo=google-gemini)](https://deepmind.google/technologies/gemini/)
-[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-blue?logo=tailwindcss)](https://tailwindcss.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<h1 align="center">🍛 Kravix — Be Smart, Eat Better</h1>
+<p align="center">
+  <em>🍔 Craving something delicious? Let's eat again! A production-grade, event-driven online food delivery web application built with a modern TypeScript monorepo architecture.</em>
+</p>
 
-> **"Be Smart, Eat Better"**
->
-> **Kravix** is a premium, production-grade online food delivery application specializing in authentic Bengali, traditional Indian, and multi-cuisine dishes. Designed and developed as a university graduation capstone project, the system implements a modern **event-driven microservices architecture** on the backend and a highly responsive, feature-rich **React (TypeScript + Vite) Single Page Application (SPA)** on the frontend.
+<p align="center">
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19-blue?logo=react" alt="React" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript" alt="TypeScript" /></a>
+  <a href="https://vite.dev/"><img src="https://img.shields.io/badge/Vite-6.x-purple?logo=vite" alt="Vite" /></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-20.x-green?logo=nodedotjs" alt="Node.js" /></a>
+  <a href="https://expressjs.com/"><img src="https://img.shields.io/badge/Express-4.x-black?logo=express" alt="Express" /></a>
+  <a href="https://www.mongodb.com/"><img src="https://img.shields.io/badge/MongoDB-ReplicaSet-green?logo=mongodb" alt="MongoDB" /></a>
+  <a href="https://redis.io/"><img src="https://img.shields.io/badge/Redis-Cache-red?logo=redis" alt="Redis" /></a>
+  <a href="https://www.rabbitmq.com/"><img src="https://img.shields.io/badge/RabbitMQ-Broker-orange?logo=rabbitmq" alt="RabbitMQ" /></a>
+  <a href="https://socket.io/"><img src="https://img.shields.io/badge/Socket.io-Realtime-black?logo=socketdotio" alt="Socket.io" /></a>
+  <a href="https://deepmind.google/technologies/gemini/"><img src="https://img.shields.io/badge/Gemini-AI_Search-blue?logo=google-gemini" alt="Gemini" /></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/TailwindCSS-v4-blue?logo=tailwindcss" alt="Tailwind CSS" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+</p>
+
+---
+
+**Kravix** is a premium, production-grade online food delivery application specializing in authentic Bengali, traditional Indian, and multi-cuisine dishes. Designed and developed as a university graduation capstone project, the system implements a modern **event-driven microservices architecture** on the backend and a highly responsive, feature-rich **React (TypeScript + Vite) Single Page Application (SPA)** on the frontend.
 
 ---
 
