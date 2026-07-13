@@ -273,7 +273,7 @@ const ContactPage = () => {
                                                 {member.initials}
                                           </div>
 
-                                          <h3 className="font-bold text-gray-805 text-base group-hover:text-primary transition-colors duration-200">
+                                          <h3 className="font-bold text-gray-800 text-base group-hover:text-primary transition-colors duration-200">
                                                 {member.name}
                                           </h3>
                                           <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary bg-primary/5 px-2.5 py-1 rounded-full mt-1.5 text-center">
