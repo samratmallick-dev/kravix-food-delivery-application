@@ -7,7 +7,7 @@ import { Mail, Github, Linkedin, Globe, BookOpen, GraduationCap, User, ArrowRigh
 const TEAM_MEMBERS = [
       {
             name: "Samrat Mallick",
-            role: "Team Lead, Full Stack Developer & Full Project Management",
+            role: "Team Lead, Full Stack Developer, Database Design & Microservices Orchestration, Component Architecture, Layout Styling & API Integration",
             roll: "28100122019",
             reg: "222810110089",
             initials: "SM",
@@ -29,7 +29,7 @@ const TEAM_MEMBERS = [
       },
       {
             name: "Tanushri Ghosh",
-            role: "Documentation",
+            role: "Tech Documentation, Presentation",
             roll: "28100122007",
             reg: "222810110118",
             initials: "TG",
@@ -40,7 +40,7 @@ const TEAM_MEMBERS = [
       },
       {
             name: "Arup Kumar Das",
-            role: "UI/UX designer",
+            role: "Lead Frontend Developer, UI/UX Designer, Visual Layout Mockups, Branding & Color Palette Audits",
             roll: "28100122071",
             reg: "222810110063",
             initials: "AKD",
@@ -51,7 +51,7 @@ const TEAM_MEMBERS = [
       },
       {
             name: "Soumyajit Barick",
-            role: "Documentation",
+            role: "Tech Documentation, Presentation",
             roll: "28100122016",
             reg: "222810110103",
             initials: "SB",
