@@ -49,7 +49,7 @@ const SelectRole = () => {
                               <Logo auth />
                         </div>
                         <div className="w-full space-y-6">
-                              <h1 className="text-center text-xl font-bold text-gray-500">
+                              <h1 className="text-center text-xl font-bold text-gray-600">
                                     Select Your Role
                               </h1>
                               <div className="space-y-4">
@@ -77,7 +77,7 @@ const SelectRole = () => {
                                     className={`w-full rounded-xl px-4 py-3 text-sm font-semibold transition ${
                                           role
                                                 ? "bg-primary text-white hover:bg-red-700 cursor-pointer"
-                                                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                                : "bg-gray-100 text-gray-800 cursor-not-allowed"
                                     }`}
                               >
                                     Continue
