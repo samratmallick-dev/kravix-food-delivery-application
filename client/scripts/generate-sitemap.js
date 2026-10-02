@@ -11,7 +11,6 @@ const SITEMAP_PATH = path.join(__dirname, '..', 'public', 'sitemap.xml');
 const loadEnv = () => {
       const paths = [
             path.join(__dirname, '..', '.env'),
-            path.join(__dirname, '..', '.env.production')
       ];
 
       paths.forEach(envPath => {
@@ -41,7 +40,7 @@ const getBaseUrl = () => {
       if (process.env.SITE_URL) {
             return process.env.SITE_URL.replace(/\/$/, '');
       }
-      return 'https://kravix-nu.vercel.app';
+      return 'http://localhost:5173';
 };
 
 const SITE_URL = getBaseUrl();

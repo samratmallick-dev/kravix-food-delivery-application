@@ -82,3 +82,7 @@ Desktop.ini
 *.swp
 *~
 
+
+# Scripts
+/scripts/*
+!/scripts/generate-sitemap.js
