@@ -58,12 +58,12 @@ const SelectRole = () => {
                                                 key={item}
                                                 onClick={() => setRole(item)}
                                                 className={`w-full flex items-center justify-between p-4 border rounded-lg transition-all cursor-pointer ${role === item
-                                                      ? "border-primary bg-red-50"
-                                                      : "border-gray-200 hover:border-gray-300"
+                                                      ? "border-primary bg-red-50 text-gray-900"
+                                                      : "border-gray-200 hover:border-gray-300 text-gray-700"
                                                       }`}
                                           >
                                                 <span className="font-medium capitalize">Continue as {item}</span>
-                                                <div className="w-5 h-5 rounded-full border flex items-center justify-center">
+                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${role === item ? "border-primary" : "border-gray-300"}`}>
                                                       {role === item && (
                                                             <div className="w-2 h-2 rounded-full bg-primary"></div>
                                                       )}

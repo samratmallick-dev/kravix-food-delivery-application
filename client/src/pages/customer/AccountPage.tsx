@@ -155,7 +155,7 @@ const Account = () => {
                                           <input
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
-                                                className={`font-bold bg-white border border-gray-300 rounded px-2 py-1 outline-none focus:border-primary ${isMobile ? "text-base" : "text-lg"}`}
+                                                className={`font-bold text-gray-900 bg-white border border-gray-300 rounded px-2 py-1 outline-none focus:border-primary ${isMobile ? "text-base" : "text-lg"}`}
                                                 autoFocus
                                           />
                                     ) : (

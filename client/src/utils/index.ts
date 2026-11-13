@@ -4,3 +4,4 @@ export * from "./location";
 export * from "./search";
 export * from "./query";
 export * from "./order";
+export * from "./password";

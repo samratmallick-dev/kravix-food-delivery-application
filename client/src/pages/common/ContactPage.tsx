@@ -191,7 +191,7 @@ const ContactPage = () => {
                                                       value={formData.name}
                                                       onChange={handleChange}
                                                       placeholder="e.g. Professor Smith"
-                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs md:text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
                                                 />
                                           </div>
 
@@ -204,7 +204,7 @@ const ContactPage = () => {
                                                       value={formData.email}
                                                       onChange={handleChange}
                                                       placeholder="reviewer@university.edu"
-                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs md:text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
                                                 />
                                           </div>
 
@@ -217,7 +217,7 @@ const ContactPage = () => {
                                                       value={formData.subject}
                                                       onChange={handleChange}
                                                       placeholder="Project Evaluation / Bug Report"
-                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs md:text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
                                                 />
                                           </div>
 
@@ -230,7 +230,7 @@ const ContactPage = () => {
                                                       value={formData.message}
                                                       onChange={handleChange}
                                                       placeholder="Type your message here..."
-                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs md:text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none resize-none"
+                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none resize-none"
                                                 />
                                           </div>
 

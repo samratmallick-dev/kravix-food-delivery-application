@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import "dotenv/config";
-import connectDb from "../config/db/db.js";
+import {connectDB} from "../config/db/db.js";
 import { Restaurant as RestaurantModel } from "../model/Restaurant.js";
 
 export const runLocationMigration = async () => {
@@ -43,7 +43,7 @@ export const runLocationMigration = async () => {
 
 const runStandalone = async () => {
   try {
-    await connectDb();
+    await connectDB();
     await runLocationMigration();
     await mongoose.connection.close();
   } catch (err) {

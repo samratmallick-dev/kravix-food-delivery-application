@@ -98,7 +98,7 @@ const AddMenuItems = (
                                     placeholder="e.g. Chicken Burger"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm transition"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm text-gray-900 transition"
                               />
                         </div>
                         <div className="space-y-1.5">
@@ -108,7 +108,7 @@ const AddMenuItems = (
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows={3}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm transition resize-none"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm text-gray-900 transition resize-none"
                               />
                         </div>
                         <div className="space-y-1.5">
@@ -121,7 +121,7 @@ const AddMenuItems = (
                                           value={price}
                                           onChange={(e) => setPrice(e.target.value)}
                                           min={0}
-                                          className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm transition"
+                                          className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm text-gray-900 transition"
                                     />
                               </div>
                         </div>
@@ -160,7 +160,7 @@ const AddMenuItems = (
                                     <select
                                           value={category}
                                           onChange={(e) => setCategory(e.target.value)}
-                                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm transition bg-white cursor-pointer"
+                                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm text-gray-900 transition bg-white cursor-pointer"
                                     >
                                           <option value="Starter">Starter</option>
                                           <option value="Main Course">Main Course</option>

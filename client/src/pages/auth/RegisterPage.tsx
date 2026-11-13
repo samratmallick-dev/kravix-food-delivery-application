@@ -120,7 +120,7 @@ const RegisterPage = () => {
       <div className="flex justify-center">
           <Logo auth />
         </div>
-        <p className="text-center text-sm text-gray-500 font-semibold">Create your account</p>
+        <p className="text-center text-sm text-gray-500 font-semibold select-none">Create your account</p>
 
         {success ? (
           <div className="space-y-4 text-center">
@@ -159,8 +159,9 @@ const RegisterPage = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="John Doe"
+                autoComplete="off"
                 aria-invalid={!!error}
                 aria-describedby={error ? "register-error" : undefined}
               />
@@ -173,8 +174,9 @@ const RegisterPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="you@example.com"
+                autoComplete="off"
                 aria-invalid={!!error}
                 aria-describedby={error ? "register-error" : undefined}
               />
@@ -188,8 +190,9 @@ const RegisterPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary pr-10"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary pr-10"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   aria-invalid={!!error}
                   aria-describedby={error ? "register-error" : undefined}
                 />
@@ -204,6 +207,7 @@ const RegisterPage = () => {
               </div>
               {password && (() => {
                 const { score, label, color } = getPasswordStrength(password);
+                if (!label) return null;
                 return (
                   <div className="mt-2 space-y-1">
                     <div 
@@ -223,7 +227,7 @@ const RegisterPage = () => {
                   </div>
                 );
               })()}
-              <p className="text-xs text-gray-450 mt-1 font-medium">
+              <p className="text-xs text-gray-500 mt-1 font-medium">
                 Min 8 characters, one uppercase letter, one digit.
               </p>
             </div>
@@ -236,8 +240,9 @@ const RegisterPage = () => {
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary pr-10"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary pr-10"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   aria-invalid={!!error}
                   aria-describedby={error ? "register-error" : undefined}
                 />
@@ -268,7 +273,7 @@ const RegisterPage = () => {
           <>
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-xs text-gray-400">OR</span>
+              <span className="text-xs text-gray-400 select-none">OR</span>
               <div className="flex-1 h-px bg-gray-200" />
             </div>
 

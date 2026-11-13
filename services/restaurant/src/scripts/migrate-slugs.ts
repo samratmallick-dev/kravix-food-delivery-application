@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import "dotenv/config";
-import connectDb from "../config/db/db.js";
+import {connectDB} from "../config/db/db.js";
 import { Restaurant as RestaurantModel } from "../model/Restaurant.js";
 import { getUniqueSlug } from "../utils/slugify.js";
 
@@ -21,7 +21,7 @@ export const runMigration = async () => {
 
 const runStandalone = async () => {
   try {
-    await connectDb();
+    await connectDB();
     await runMigration();
     await mongoose.connection.close();
   } catch (err) {

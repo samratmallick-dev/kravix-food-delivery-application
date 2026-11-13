@@ -88,7 +88,7 @@ const VerifyEmailPage = () => {
                 onChange={(e) => setResendEmail(e.target.value)}
                 required
                 placeholder="your@email.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {resendMsg && (
                 <p className="text-sm text-green-600 font-semibold">{resendMsg}</p>

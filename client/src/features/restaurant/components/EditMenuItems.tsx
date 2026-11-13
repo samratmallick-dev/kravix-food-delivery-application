@@ -109,7 +109,7 @@ const EditMenuItems = ({ item, onItemUpdated, onClose }: EditMenuItemsProps) => 
                                           placeholder="e.g. Chicken Burger"
                                           value={name}
                                           onChange={(e) => setName(e.target.value)}
-                                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm font-semibold transition"
+                                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-gray-900 font-semibold transition"
                                     />
                               </div>
 
@@ -121,7 +121,7 @@ const EditMenuItems = ({ item, onItemUpdated, onClose }: EditMenuItemsProps) => 
                                           value={description}
                                           onChange={(e) => setDescription(e.target.value)}
                                           rows={2.5}
-                                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm font-semibold transition resize-none"
+                                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-gray-900 font-semibold transition resize-none"
                                     />
                               </div>
 
@@ -136,7 +136,7 @@ const EditMenuItems = ({ item, onItemUpdated, onClose }: EditMenuItemsProps) => 
                                                 value={price}
                                                 onChange={(e) => setPrice(e.target.value)}
                                                 min={0}
-                                                className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm font-semibold transition"
+                                                className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-gray-900 font-semibold transition"
                                           />
                                     </div>
                               </div>
@@ -177,7 +177,7 @@ const EditMenuItems = ({ item, onItemUpdated, onClose }: EditMenuItemsProps) => 
                                                 <select
                                                       value={category}
                                                       onChange={(e) => setCategory(e.target.value)}
-                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-xs font-bold transition bg-white cursor-pointer"
+                                                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-xs text-gray-900 font-bold transition bg-white cursor-pointer"
                                                 >
                                                       <option value="Starter">Starter</option>
                                                       <option value="Main Course">Main Course</option>

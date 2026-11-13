@@ -62,7 +62,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         const path = typeof window !== "undefined" ? window.location.pathname : "";
         const isNonCustomerPath = path.startsWith("/seller") || path.startsWith("/rider") || path.startsWith("/admin");
         const cachedRole = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
-        if (isNonCustomerPath || (cachedRole && cachedRole !== "customer") || (user && user.role !== "customer")) {
+        if (isNonCustomerPath || (cachedRole && cachedRole !== "customer")) {
             setCart([]);
             setSubTotal(0);
             setQuantity(0);
@@ -77,7 +77,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         } catch (error: any) {
             console.error(error);
         }
-    }, [user]);
+    }, []);
 
     useEffect(() => {
         const token = storage.getToken();

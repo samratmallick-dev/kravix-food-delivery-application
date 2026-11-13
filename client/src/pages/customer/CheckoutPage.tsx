@@ -614,7 +614,7 @@ const Checkout = () => {
                                                             placeholder="Enter Promo Code"
                                                             value={couponInput}
                                                             onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                                                            className="flex-1 px-3 py-2 border border-border bg-gray-50 focus:bg-white rounded-xl text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-hidden"
+                                                            className="flex-1 px-3 py-2 border border-border bg-gray-50 focus:bg-white rounded-xl text-sm text-gray-900 focus:ring-1 focus:ring-primary focus:border-primary outline-hidden"
                                                       />
                                                       <button
                                                             type="submit"
